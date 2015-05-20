@@ -33,7 +33,7 @@ import android.util.Log;
 public class CommonLauncherHelper {
 
     private static final String LOG_TAG = CommonLauncherHelper.class.getSimpleName();
-    private static final int MAX_SCROLL_ATTEMPTS = 10;
+    private static final int MAX_SCROLL_ATTEMPTS = 20;
     private static final int MIN_INTERACT_SIZE = 100;
     private static final int APP_LAUNCH_TIMEOUT = 10000;
     private static CommonLauncherHelper sInstance;
@@ -153,7 +153,7 @@ public class CommonLauncherHelper {
             if (!mDevice.hasObject(app)) {
                 scrollBackToBeginning(container, Direction.reverse(dir));
                 int attempts = 0;
-                while (!mDevice.hasObject(app) && container.scroll(dir, 0.5f)) {
+                while (!mDevice.hasObject(app) && container.scroll(dir, 0.8f)) {
                     attempts++;
                     if (attempts > maxScrollAttempts) {
                         throw new RuntimeException(
@@ -166,7 +166,7 @@ public class CommonLauncherHelper {
             ensureIconVisible(app, container, dir);
         }
 
-        if (mDevice.findObject(app).clickAndWait(Until.newWindow(), APP_LAUNCH_TIMEOUT)) {
+        if (!mDevice.findObject(app).clickAndWait(Until.newWindow(), APP_LAUNCH_TIMEOUT)) {
             Log.w(LOG_TAG, "no new window detected after app launch attempt.");
             return false;
         }
