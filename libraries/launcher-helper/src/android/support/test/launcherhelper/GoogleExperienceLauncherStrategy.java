@@ -22,15 +22,20 @@ import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.Until;
+import android.util.Log;
 import android.widget.TextView;
 
 import junit.framework.Assert;
+
+import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * Implementation of {@link ILauncherStrategy} to support Google experience launcher
  */
 public class GoogleExperienceLauncherStrategy implements ILauncherStrategy {
 
+    private static final String LOG_TAG = GoogleExperienceLauncherStrategy.class.getSimpleName();
     private static final String LAUNCHER_PKG = "com.google.android.googlequicksearchbox";
     private static final BySelector APPS_CONTAINER = By.res(LAUNCHER_PKG, "apps_list_view");
     private static final BySelector WIDGETS_CONTAINER = By.res(LAUNCHER_PKG, "widgets_list_view");
@@ -55,8 +60,27 @@ public class GoogleExperienceLauncherStrategy implements ILauncherStrategy {
         if (!mDevice.hasObject(HOTSEAT)) {
             mDevice.pressHome();
             // ensure launcher is shown
-            Assert.assertTrue("Failed to open launcher",
-                    mDevice.wait(Until.hasObject(By.res(LAUNCHER_PKG, "hotseat")), 5000));
+            if (!mDevice.wait(Until.hasObject(By.res(LAUNCHER_PKG, "hotseat")), 5000)) {
+                // HACK: dump hierarchy to logcat
+                OutputStream os = new OutputStream() {
+                    StringBuilder mLineBuffer = new StringBuilder();
+                    @Override
+                    public void write(int oneByte) throws IOException {
+                        if (oneByte == '\n' || oneByte == '\r') {
+                            Log.d(LOG_TAG, mLineBuffer.toString());
+                            mLineBuffer = new StringBuilder();
+                        } else {
+                            mLineBuffer.append(oneByte);
+                        }
+                    }
+                };
+                try {
+                    mDevice.dumpWindowHierarchy(os);
+                } catch (IOException ioe) {
+                    Log.e(LOG_TAG, "error dumping XML to logcat", ioe);
+                }
+                Assert.fail("Failed to open launcher");
+            }
             mDevice.waitForIdle();
         }
     }
