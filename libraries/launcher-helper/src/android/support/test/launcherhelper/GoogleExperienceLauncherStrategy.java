@@ -70,7 +70,7 @@ public class GoogleExperienceLauncherStrategy implements ILauncherStrategy {
                             Log.d(LOG_TAG, mLineBuffer.toString());
                             mLineBuffer = new StringBuilder();
                         } else {
-                            mLineBuffer.append(oneByte);
+                            mLineBuffer.append((char)oneByte);
                         }
                     }
                 };
