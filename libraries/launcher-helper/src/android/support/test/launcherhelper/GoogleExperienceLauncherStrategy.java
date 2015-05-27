@@ -73,6 +73,14 @@ public class GoogleExperienceLauncherStrategy implements ILauncherStrategy {
                             mLineBuffer.append((char)oneByte);
                         }
                     }
+                    @Override
+                    public void close() throws IOException {
+                        String remainder = mLineBuffer.toString().trim();
+                        if (!remainder.isEmpty()) {
+                            Log.d(LOG_TAG, remainder);
+                        }
+                        super.close();
+                    }
                 };
                 try {
                     mDevice.dumpWindowHierarchy(os);
