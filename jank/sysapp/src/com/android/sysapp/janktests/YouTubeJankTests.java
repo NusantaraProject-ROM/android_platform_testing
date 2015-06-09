@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package jank.sysapp.src.com.android.sysapp.jankTests;
+package com.android.sysapp.janktests;
 
 import android.os.RemoteException;
 import android.support.test.jank.GfxMonitor;
