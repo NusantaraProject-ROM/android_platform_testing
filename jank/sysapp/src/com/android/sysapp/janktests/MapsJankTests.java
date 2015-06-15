@@ -81,22 +81,10 @@ public class MapsJankTests extends JankTestBase {
         Assert.assertNotNull("Failed to find 'Search'", getSearchBox());
     }
 
-    @JankTest(beforeTest="launchMaps", expectedFrames=EXPECTED_FRAMES)
-    @GfxMonitor(processName=PACKAGE_NAME)
-    public void testMapsOverflowMenuTap() {
-        for (int i = 0; i < INNER_LOOP; i++) {
-            try {
-                getSearchBox().click();
-            } catch (StaleObjectException se) {
-                getSearchBox().click();
-            }
-            SystemClock.sleep(100);
-            // to go away input kb
-            mDevice.pressBack();
-            // to go back to map search
-            mDevice.pressBack();
-        }
-    }
+//    @JankTest(beforeTest="launchMaps", expectedFrames=EXPECTED_FRAMES)
+//    @GfxMonitor(processName=PACKAGE_NAME)
+//    public void testMapsIMEPopupForSearchEntry() {
+//    }
 
     private UiObject2 getSearchBox(){
         mDevice.wait(Until.findObject(By.desc("Search")), SHORT_TIMEOUT).click();

@@ -123,7 +123,7 @@ public class BooksJankTests extends JankTestBase {
     public void openMyLibrary() {
         openNavigationDrawer();
         UiObject2 library = mDevice.wait(
-            Until.findObject(By.text("My Library")), LONG_TIMEOUT);
+            Until.findObject(By.text("My Library").res("")), LONG_TIMEOUT);
         Assert.assertNotNull("Could not find 'My Library' button", library);
         library.click();
     }
