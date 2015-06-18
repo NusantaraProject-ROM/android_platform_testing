@@ -16,13 +16,16 @@
 
 package com.android.jankmicrobenchmark.janktests;
 
+import android.os.Bundle;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.support.test.jank.GfxMonitor;
 import android.support.test.jank.JankTest;
 import android.support.test.jank.JankTestBase;
 import android.support.test.launcherhelper.ILauncherStrategy;
 import android.support.test.launcherhelper.LauncherStrategyFactory;
 import android.support.test.uiautomator.By;
+import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
@@ -69,21 +72,85 @@ public class ApiDemoJankTests extends JankTestBase {
             throws UiObjectNotFoundException {
         mLauncherStrategy.launch(APP_NAME, PACKAGE_NAME);
         UiObject2 animation = mDevice.wait(Until.findObject(
-                By.res(RES_PACKAGE_NAME).text("Animation")), LONG_TIMEOUT);
+                By.res(RES_PACKAGE_NAME, "text1").text("Animation")), LONG_TIMEOUT);
         Assert.assertNotNull("Animation is null", animation);
         animation.click();
         UiObject2 option = mDevice.wait(Until.findObject(
-                By.res(RES_PACKAGE_NAME).text(optionName)), LONG_TIMEOUT);
+                By.res(RES_PACKAGE_NAME, "text1").text(optionName)), LONG_TIMEOUT);
+        int maxAttempt = 3;
+        while (option == null && maxAttempt > 0) {
+            mDevice.wait(Until.findObject(By.res(RES_PACKAGE_NAME, "content")), LONG_TIMEOUT)
+                    .scroll(Direction.DOWN, 1.0f);
+            option = mDevice.wait(Until.findObject(By.res(RES_PACKAGE_NAME, "text1")
+                    .text(optionName)), LONG_TIMEOUT);
+            --maxAttempt;
+        }
         Assert.assertNotNull("Option is null", option);
         option.click();
     }
 
-    private void selectLoadingOption() {
-        // To do
+    // Since the app doesn't start at the first page when reloaded after the first time,
+    // ensuring that we head back to the first screen before going Home so we're always
+    // on screen one.
+    public void goBackHome(Bundle metrics) throws UiObjectNotFoundException {
+        String launcherPackage = mDevice.getLauncherPackageName();
+        UiObject2 homeScreen = mDevice.findObject(By.res(launcherPackage,"workspace"));
+        while (homeScreen == null) {
+            mDevice.pressBack();
+            homeScreen = mDevice.findObject(By.res(launcherPackage,"workspace"));
+        }
+        super.afterTest(metrics);
     }
-    @JankTest(beforeTest="selectLoadingOption", expectedFrames=EXPECTED_FRAMES)
+
+    // Loads the 'activity transition' animation
+    public void selectActivityTransitionAnimation() throws UiObjectNotFoundException {
+         launchApiDemosAndSelectAnimation("Activity Transition");
+    }
+
+    // Measures jank for activity transition animation
+    @JankTest(beforeTest="selectActivityTransitionAnimation", afterTest="goBackHome",
+        expectedFrames=EXPECTED_FRAMES)
     @GfxMonitor(processName=PACKAGE_NAME)
-    public void testLoadingJank() {
-        // To do
+    public void testActivityTransitionAnimation() {
+        for (int i = 0; i < INNER_LOOP; i++) {
+            UiObject2 redBallTile = mDevice.findObject(By.res(PACKAGE_NAME, "ball"));
+            redBallTile.click();
+            SystemClock.sleep(LONG_TIMEOUT);
+            mDevice.pressBack();
+        }
+    }
+
+    // Loads the 'view flip' animation
+    public void selectViewFlipAnimation() throws UiObjectNotFoundException {
+        launchApiDemosAndSelectAnimation("View Flip");
+    }
+
+    // Measures jank for view flip animation
+    @JankTest(beforeTest="selectViewFlipAnimation", afterTest="goBackHome",
+        expectedFrames=EXPECTED_FRAMES)
+    @GfxMonitor(processName=PACKAGE_NAME)
+    public void testViewFlipAnimation() {
+        for (int i = 0; i < INNER_LOOP; i++) {
+            UiObject2 flipButton = mDevice.findObject(By.res(PACKAGE_NAME, "button"));
+            flipButton.click();
+            SystemClock.sleep(LONG_TIMEOUT);
+        }
+    }
+
+    // Loads the 'cloning' animation
+    public void selectCloningAnimation() throws UiObjectNotFoundException {
+        launchApiDemosAndSelectAnimation("Cloning");    
+    }
+
+    // Measures jank for cloning animation
+    @JankTest(beforeTest="selectCloningAnimation", afterTest="goBackHome",
+        expectedFrames=EXPECTED_FRAMES)
+    @GfxMonitor(processName=PACKAGE_NAME)
+    public void testCloningAnimation() {
+        for (int i = 0; i < INNER_LOOP; i++) {
+            UiObject2 runCloningButton = mDevice.findObject(By.res(PACKAGE_NAME, "startButton"));
+            runCloningButton.click();
+            SystemClock.sleep(LONG_TIMEOUT);
+        }
     }
 }
