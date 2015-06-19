@@ -140,7 +140,7 @@ public class ApiDemoJankTests extends JankTestBase {
 
     // Loads the 'cloning' animation
     public void selectCloningAnimation() throws UiObjectNotFoundException {
-        launchApiDemosAndSelectAnimation("Cloning");    
+        launchApiDemosAndSelectAnimation("Cloning");
     }
 
     // Measures jank for cloning animation
@@ -159,15 +159,16 @@ public class ApiDemoJankTests extends JankTestBase {
     public void selectLoadingOption() throws UiObjectNotFoundException {
         launchApiDemosAndSelectAnimation("Loading");
     }
+
     // Measures jank for 'loading' animation
-    @JankTest(beforeTest="selectLoadingOption", afterTest="goBackHome"
-            , expectedFrames=EXPECTED_FRAMES)
+    @JankTest(beforeTest="selectLoadingOption", afterTest="goBackHome",
+              expectedFrames=EXPECTED_FRAMES)
     @GfxMonitor(processName=PACKAGE_NAME)
     public void testLoadingJank() {
         UiObject2 runButton = mDevice.wait(Until.findObject(
             By.res(PACKAGE_NAME, "startButton").text("Run")), LONG_TIMEOUT);
         Assert.assertNotNull("Run button is null", runButton);
-        for(int i = 0; i < INNER_LOOP; ++i) {
+        for(int i = 0; i < INNER_LOOP; i++) {
             runButton.click();
             SystemClock.sleep(SHORT_TIMEOUT * 2);
         }
@@ -177,21 +178,23 @@ public class ApiDemoJankTests extends JankTestBase {
     public void selectSimpleTransitionOption() throws UiObjectNotFoundException {
         launchApiDemosAndSelectAnimation("Simple Transitions");
     }
+
     // Measures jank for 'simple transition' animation
-    @JankTest(beforeTest="selectSimpleTransitionOption", afterTest="goBackHome"
-            , expectedFrames=EXPECTED_FRAMES)
+    @JankTest(beforeTest="selectSimpleTransitionOption", afterTest="goBackHome",
+              expectedFrames=EXPECTED_FRAMES)
     @GfxMonitor(processName=PACKAGE_NAME)
     public void testSimpleTransitionJank() {
-        for(int i = 0; i < INNER_LOOP; ++i) {
+        for(int i = 0; i < INNER_LOOP; i++) {
             UiObject2 scene2 = mDevice.wait(Until.findObject(
                     By.res(PACKAGE_NAME, "scene2")), LONG_TIMEOUT);
             Assert.assertNotNull("Scene2 is null", scene2);
             scene2.click();
             SystemClock.sleep(SHORT_TIMEOUT);
-            UiObject2 scene4 = mDevice.wait(Until.findObject(
-                    By.res(PACKAGE_NAME, "scene4")), LONG_TIMEOUT);
-            Assert.assertNotNull("Scene3 is null", scene4);
-            scene4.click();
+
+            UiObject2 scene1 = mDevice.wait(Until.findObject(
+                    By.res(PACKAGE_NAME, "scene1")), LONG_TIMEOUT);
+            Assert.assertNotNull("Scene1 is null", scene1);
+            scene1.click();
             SystemClock.sleep(SHORT_TIMEOUT);
         }
     }
@@ -200,32 +203,37 @@ public class ApiDemoJankTests extends JankTestBase {
     public void selectHideShowAnimationOption() throws UiObjectNotFoundException {
         launchApiDemosAndSelectAnimation("Hide-Show Animations");
     }
+
     // Measures jank for 'hide/show' animation
-    @JankTest(beforeTest="selectHideShowAnimationOption", afterTest="goBackHome"
-            , expectedFrames=EXPECTED_FRAMES)
+    @JankTest(beforeTest="selectHideShowAnimationOption", afterTest="goBackHome",
+              expectedFrames=EXPECTED_FRAMES)
     @GfxMonitor(processName=PACKAGE_NAME)
     public void testHideShowAnimationJank() {
-        for(int i = 0; i < INNER_LOOP; ++i) {
+        for(int i = 0; i < INNER_LOOP; i++) {
             UiObject2 showButton = mDevice.wait(Until.findObject(By.res(
                     PACKAGE_NAME, "addNewButton").text("Show Buttons")), LONG_TIMEOUT);
-            Assert.assertNotNull("SHow Button is null", showButton);
+            Assert.assertNotNull("Show Button is null", showButton);
             showButton.click();
             SystemClock.sleep(SHORT_TIMEOUT);
+
             UiObject2 button0 = mDevice.wait(Until.findObject(
                     By.clazz(Button.class).text("0")), LONG_TIMEOUT);
             Assert.assertNotNull("Button0 is null", button0);
             button0.click();
             SystemClock.sleep(SHORT_TIMEOUT);
+
             UiObject2 button1 = mDevice.wait(Until.findObject(
                     By.clazz(Button.class).text("1")), LONG_TIMEOUT);
             Assert.assertNotNull("Button1 is null", button1);
             button1.click();
             SystemClock.sleep(SHORT_TIMEOUT);
+
             UiObject2 button2 = mDevice.wait(Until.findObject(
                     By.clazz(Button.class).text("2")), LONG_TIMEOUT);
             Assert.assertNotNull("Button2 is null", button2);
             button2.click();
             SystemClock.sleep(SHORT_TIMEOUT);
+
             UiObject2 button3 = mDevice.wait(Until.findObject(
                     By.clazz(Button.class).text("3")), LONG_TIMEOUT);
             Assert.assertNotNull("Button3 is null", button3);
