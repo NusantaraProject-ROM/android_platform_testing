@@ -16,14 +16,13 @@
 
 package com.android.jankmicrobenchmark.janktests;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.os.SystemClock;
 import android.support.test.jank.GfxMonitor;
 import android.support.test.jank.JankTest;
 import android.support.test.jank.JankTestBase;
-import android.support.test.launcherhelper.ILauncherStrategy;
-import android.support.test.launcherhelper.LauncherStrategyFactory;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
@@ -46,9 +45,7 @@ public class ApiDemoJankTests extends JankTestBase {
     private static final int EXPECTED_FRAMES = 100;
     private static final String PACKAGE_NAME = "com.example.android.apis";
     private static final String RES_PACKAGE_NAME = "android";
-    private static final String APP_NAME = "API Demos";
     private UiDevice mDevice;
-    private ILauncherStrategy mLauncherStrategy = null;
 
     @Override
     public void setUp() throws Exception {
@@ -59,8 +56,6 @@ public class ApiDemoJankTests extends JankTestBase {
         } catch (RemoteException e) {
             throw new RuntimeException("failed to freeze device orientaion", e);
         }
-        mLauncherStrategy = LauncherStrategyFactory
-                .getInstance(mDevice).getLauncherStrategy();
     }
 
     @Override
@@ -71,7 +66,10 @@ public class ApiDemoJankTests extends JankTestBase {
 
     public void launchApiDemosAndSelectAnimation(String optionName)
             throws UiObjectNotFoundException {
-        mLauncherStrategy.launch(APP_NAME, PACKAGE_NAME);
+        Intent intent = getInstrumentation().getContext().getPackageManager()
+                .getLaunchIntentForPackage(PACKAGE_NAME);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        getInstrumentation().getContext().startActivity(intent);
         UiObject2 animation = mDevice.wait(Until.findObject(
                 By.res(RES_PACKAGE_NAME, "text1").text("Animation")), LONG_TIMEOUT);
         Assert.assertNotNull("Animation is null", animation);
