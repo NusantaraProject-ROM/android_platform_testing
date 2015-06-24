@@ -16,13 +16,13 @@
 
 package com.android.sysapp.janktests;
 
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.RemoteException;
 import android.os.SystemClock;
 import android.support.test.jank.GfxMonitor;
 import android.support.test.jank.JankTest;
 import android.support.test.jank.JankTestBase;
-import android.support.test.launcherhelper.ILauncherStrategy;
-import android.support.test.launcherhelper.LauncherStrategyFactory;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
@@ -44,9 +44,7 @@ public class BooksJankTests extends JankTestBase {
     private static final int INNER_LOOP = 5;
     private static final int EXPECTED_FRAMES = 100;
     private static final String PACKAGE_NAME = "com.google.android.apps.books";
-    private static final String APP_NAME = "Play Books";
     private UiDevice mDevice;
-    private ILauncherStrategy mLauncherStrategy = null;
 
     @Override
     public void setUp() throws Exception {
@@ -57,7 +55,6 @@ public class BooksJankTests extends JankTestBase {
         } catch (RemoteException e) {
             throw new RuntimeException("failed to freeze device orientaion", e);
         }
-        mLauncherStrategy = LauncherStrategyFactory.getInstance(mDevice).getLauncherStrategy();
     }
 
     @Override
@@ -66,8 +63,16 @@ public class BooksJankTests extends JankTestBase {
         super.tearDown();
     }
 
+    public void launchApp(String packageName) throws UiObjectNotFoundException{
+        PackageManager pm = getInstrumentation().getContext().getPackageManager();
+        Intent appIntent = pm.getLaunchIntentForPackage(packageName);
+        appIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        getInstrumentation().getContext().startActivity(appIntent);
+        SystemClock.sleep(SHORT_TIMEOUT);
+    }
+
     public void launchBooks () throws UiObjectNotFoundException {
-        mLauncherStrategy.launch(APP_NAME, PACKAGE_NAME);
+        launchApp(PACKAGE_NAME);
         dismissClings();
         openMyLibrary();
         Assert.assertTrue("Books haven't loaded yet", getNumberOfVisibleBooks() > 3);

@@ -16,13 +16,13 @@
 
 package com.android.sysapp.janktests;
 
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.RemoteException;
 import android.os.SystemClock;
 import android.support.test.jank.GfxMonitor;
 import android.support.test.jank.JankTest;
 import android.support.test.jank.JankTestBase;
-import android.support.test.launcherhelper.ILauncherStrategy;
-import android.support.test.launcherhelper.LauncherStrategyFactory;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
@@ -36,14 +36,13 @@ import junit.framework.Assert;
  */
 
 public class YouTubeJankTests extends JankTestBase {
-    private static final int TIMEOUT = 5000;
+    private static final int LONG_TIMEOUT = 5000;
+    private static final int SHORT_TIMEOUT = 1000;
     private static final int INNER_LOOP = 5;
     private static final int EXPECTED_FRAMES = 100;
     private static final String PACKAGE_NAME = "com.google.android.youtube";
-    private static final String APP_NAME = "YouTube";
 
     private UiDevice mDevice;
-    private ILauncherStrategy mLauncherStrategy = null;
 
     @Override
     public void setUp() throws Exception {
@@ -54,7 +53,6 @@ public class YouTubeJankTests extends JankTestBase {
         } catch (RemoteException e) {
             throw new RuntimeException("failed to freeze device orientaion", e);
         }
-        mLauncherStrategy = LauncherStrategyFactory.getInstance(mDevice).getLauncherStrategy();
     }
 
     @Override
@@ -63,9 +61,20 @@ public class YouTubeJankTests extends JankTestBase {
         super.tearDown();
     }
 
+    public void launchApp(String packageName) throws UiObjectNotFoundException{
+        PackageManager pm = getInstrumentation().getContext().getPackageManager();
+        Intent appIntent = pm.getLaunchIntentForPackage(packageName);
+        appIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        getInstrumentation().getContext().startActivity(appIntent);
+        SystemClock.sleep(SHORT_TIMEOUT);
+    }
+
     public void launchYouTube () throws UiObjectNotFoundException {
-        mLauncherStrategy.launch(APP_NAME, PACKAGE_NAME);
+        launchApp(PACKAGE_NAME);
         dismissCling();
+        UiObject2 uiObject = mDevice.wait(
+            Until.findObject(By.res(PACKAGE_NAME, "pane_fragment_container")), LONG_TIMEOUT);
+        Assert.assertNotNull("Recommendation container is null", uiObject);
     }
 
     // Measures jank while fling YouTube recommendation
@@ -73,7 +82,7 @@ public class YouTubeJankTests extends JankTestBase {
     @GfxMonitor(processName=PACKAGE_NAME)
     public void testYouTubeRecomendationWindowFling() {
         UiObject2 uiObject = mDevice.wait(
-                Until.findObject(By.res(PACKAGE_NAME, "pane_fragment_container")), TIMEOUT);
+                Until.findObject(By.res(PACKAGE_NAME, "pane_fragment_container")), LONG_TIMEOUT);
         Assert.assertNotNull("Recommendation container is null", uiObject);
         for (int i = 0; i < INNER_LOOP; i++) {
             uiObject.scroll(Direction.DOWN, 1.0f);
@@ -85,20 +94,20 @@ public class YouTubeJankTests extends JankTestBase {
     private void dismissCling() {
         // Dismiss the dogfood splash screen that might appear on first start
         UiObject2 dialog_dismiss_btn = mDevice.wait(Until.findObject(
-                By.res(PACKAGE_NAME, "dogfood_warning_dialog_dismiss_button").text("OK")), TIMEOUT);
+                By.res(PACKAGE_NAME, "dogfood_warning_dialog_dismiss_button").text("OK")), LONG_TIMEOUT);
         if (dialog_dismiss_btn != null) {
             dialog_dismiss_btn.click();
         }
         UiObject2 welcomeSkip = mDevice.wait(
-            Until.findObject(By.res(PACKAGE_NAME, "skip_button").text("Skip")), TIMEOUT);
+            Until.findObject(By.res(PACKAGE_NAME, "skip_button").text("Skip")), LONG_TIMEOUT);
         if (welcomeSkip != null) {
             welcomeSkip.click();
         }
         UiObject2 musicFaster = mDevice.wait(
-            Until.findObject(By.res(PACKAGE_NAME, "text").text("Find music faster")), TIMEOUT);
+            Until.findObject(By.res(PACKAGE_NAME, "text").text("Find music faster")), LONG_TIMEOUT);
         if (musicFaster != null) {
             UiObject2 ok = mDevice.wait(
-                    Until.findObject(By.res(PACKAGE_NAME, "ok").text("OK")), TIMEOUT);
+                    Until.findObject(By.res(PACKAGE_NAME, "ok").text("OK")), LONG_TIMEOUT);
             Assert.assertNotNull("No 'ok' button to bypass music", ok);
             ok.click();
       }
