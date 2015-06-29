@@ -26,10 +26,13 @@ import android.support.test.jank.JankTestBase;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.Direction;
+import android.support.test.uiautomator.StaleObjectException;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.Until;
+import android.widget.ImageButton;
+
 import junit.framework.Assert;
 
 /**
@@ -38,21 +41,19 @@ import junit.framework.Assert;
 
 public class GMailJankTests extends JankTestBase {
     private static final int SHORT_TIMEOUT = 1000;
-    private static final int LONG_TIMEOUT = 30000;
+    private static final int LONG_TIMEOUT = 5000;
     private static final int INNER_LOOP = 5;
     private static final int EXPECTED_FRAMES = 100;
+    private static final int TAB_MIN_WIDTH = 600;
     private static final String PACKAGE_NAME = "com.google.android.gm";
+    private static final String RES_PACKAGE_NAME = "android";
     private UiDevice mDevice;
 
     @Override
     public void setUp() throws Exception {
         super.setUp();
         mDevice = UiDevice.getInstance(getInstrumentation());
-        try {
-            mDevice.setOrientationNatural();
-        } catch (RemoteException e) {
-            throw new RuntimeException("failed to freeze device orientaion", e);
-        }
+        mDevice.setOrientationNatural();
     }
 
     @Override
@@ -76,28 +77,79 @@ public class GMailJankTests extends JankTestBase {
         waitForEmailSync();
     }
 
+    public void prepGMailInboxFling() throws UiObjectNotFoundException {
+      launchGMail();
+      // Ensure test is ready to be executed
+      UiObject2 list = mDevice.wait(
+              Until.findObject(By.res(PACKAGE_NAME, "conversation_list_view")), SHORT_TIMEOUT);
+      Assert.assertNotNull("Failed to locate 'conversation_list_view'", list);
+    }
+
     // Measures jank while scrolling gmail inbox
-    @JankTest(beforeTest="launchGMail", expectedFrames=EXPECTED_FRAMES)
+    @JankTest(beforeTest="prepGMailInboxFling", expectedFrames=EXPECTED_FRAMES)
     @GfxMonitor(processName=PACKAGE_NAME)
     public void testGMailInboxFling() {
         UiObject2 list = mDevice.wait(
-                Until.findObject(By.res(PACKAGE_NAME, "conversation_list_view")), 5000);
-        Assert.assertNotNull("Failed to locate 'conversation_list_view", list);
+                Until.findObject(By.res(PACKAGE_NAME, "conversation_list_view")), LONG_TIMEOUT);
+        Assert.assertNotNull("Failed to locate 'conversation_list_view'", list);
         for (int i = 0; i < INNER_LOOP; i++) {
-          list.scroll(Direction.DOWN, 1.0f);
-          SystemClock.sleep(SHORT_TIMEOUT);
-          list.scroll(Direction.UP, 1.0f);
+            list.scroll(Direction.DOWN, 1.0f);
+            SystemClock.sleep(SHORT_TIMEOUT);
+            list.scroll(Direction.UP, 1.0f);
+            SystemClock.sleep(SHORT_TIMEOUT);
+        }
+    }
+
+    public void prepOpenNavDrawer() throws UiObjectNotFoundException {
+      launchGMail();
+      // Ensure test is ready to be executed
+      Assert.assertNotNull("Failed to locate Nav Drawer Openner", openNavigationDrawer());
+    }
+
+    // Measures jank while opening Navigation Drawer
+    @JankTest(beforeTest="prepOpenNavDrawer", expectedFrames=EXPECTED_FRAMES)
+    @GfxMonitor(processName=PACKAGE_NAME)
+    public void testOpenNavDrawer() {
+        UiObject2 navDrawer = openNavigationDrawer();
+        for (int i = 0; i < INNER_LOOP; i++) {
+            navDrawer.click();
+            SystemClock.sleep(SHORT_TIMEOUT);
+            mDevice.pressBack();
+            SystemClock.sleep(SHORT_TIMEOUT);
+        }
+    }
+
+    public void prepFlingNavDrawer() throws UiObjectNotFoundException{
+        launchGMail();
+        UiObject2 navDrawer = openNavigationDrawer();
+        Assert.assertNotNull("Failed to locate Nav Drawer Openner", navDrawer);
+        navDrawer.click();
+        // Ensure test is ready to be executed
+        UiObject2 container = getNavigationDrawerContainer();
+        Assert.assertNotNull("Failed to locate Nav drawer container", container);
+    }
+
+    // Measures jank while flinging Navigation Drawer
+    @JankTest(beforeTest="prepFlingNavDrawer", expectedFrames=EXPECTED_FRAMES)
+    @GfxMonitor(processName=PACKAGE_NAME)
+    public void testFlingNavDrawer() {
+        UiObject2 container = getNavigationDrawerContainer();
+        for (int i = 0; i < INNER_LOOP; i++) {
+            container.fling(Direction.DOWN);
+            SystemClock.sleep(SHORT_TIMEOUT);
+            container.fling(Direction.UP);
+            SystemClock.sleep(SHORT_TIMEOUT);
         }
     }
 
     private void dismissClings() {
         UiObject2 welcomeScreenGotIt = mDevice.wait(
-            Until.findObject(By.res(PACKAGE_NAME, "welcome_tour_got_it")), 2000);
+            Until.findObject(By.res(PACKAGE_NAME, "welcome_tour_got_it")), SHORT_TIMEOUT);
         if (welcomeScreenGotIt != null) {
             welcomeScreenGotIt.clickAndWait(Until.newWindow(), SHORT_TIMEOUT);
         }
         UiObject2 welcomeScreenSkip = mDevice.wait(
-            Until.findObject(By.res(PACKAGE_NAME, "welcome_tour_skip")), 2000);
+            Until.findObject(By.res(PACKAGE_NAME, "welcome_tour_skip")), SHORT_TIMEOUT);
         if (welcomeScreenSkip != null) {
           welcomeScreenSkip.clickAndWait(Until.newWindow(), SHORT_TIMEOUT);
         }
@@ -118,8 +170,32 @@ public class GMailJankTests extends JankTestBase {
         mDevice.wait(Until.hasObject(By.text("Waiting for sync")), 2 * SHORT_TIMEOUT);
         // Wait until any "waiting" messages are gone
         Assert.assertTrue("'Waiting for sync' timed out",
-                mDevice.wait(Until.gone(By.text("Waiting for sync")), LONG_TIMEOUT));
+                mDevice.wait(Until.gone(By.text("Waiting for sync")), LONG_TIMEOUT * 6));
         Assert.assertTrue("'Loading' timed out",
-                mDevice.wait(Until.gone(By.text("Loading")), LONG_TIMEOUT));
+                mDevice.wait(Until.gone(By.text("Loading")), LONG_TIMEOUT * 6));
+    }
+
+    public UiObject2 openNavigationDrawer() {
+        UiObject2 navDrawer = null;
+        if (mDevice.getDisplaySizeDp().x < TAB_MIN_WIDTH) {
+            navDrawer = mDevice.wait(Until.findObject(
+                    By.clazz(ImageButton.class).desc("Navigate up")), SHORT_TIMEOUT);
+        } else {
+            navDrawer = mDevice.wait(Until.findObject(
+                    By.clazz(ImageButton.class).desc("Open navigation drawer")), SHORT_TIMEOUT);
+        }
+        return navDrawer;
+    }
+
+    public UiObject2 getNavigationDrawerContainer() {
+        UiObject2 container = null;
+        if (mDevice.getDisplaySizeDp().x < TAB_MIN_WIDTH) {
+            container = mDevice.wait(
+                    Until.findObject(By.res(RES_PACKAGE_NAME, "content_pane")), SHORT_TIMEOUT);
+        } else {
+            container = mDevice.wait(
+                    Until.findObject(By.res(RES_PACKAGE_NAME, "list")), SHORT_TIMEOUT);
+        }
+        return container;
     }
 }

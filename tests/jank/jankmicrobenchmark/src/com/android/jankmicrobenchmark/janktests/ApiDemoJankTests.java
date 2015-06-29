@@ -51,11 +51,7 @@ public class ApiDemoJankTests extends JankTestBase {
     public void setUp() throws Exception {
         super.setUp();
         mDevice = UiDevice.getInstance(getInstrumentation());
-        try {
-            mDevice.setOrientationNatural();
-        } catch (RemoteException e) {
-            throw new RuntimeException("failed to freeze device orientaion", e);
-        }
+        mDevice.setOrientationNatural();
     }
 
     @Override
@@ -64,15 +60,18 @@ public class ApiDemoJankTests extends JankTestBase {
         super.tearDown();
     }
 
-    public void launchApiDemosAndSelectAnimation(String optionName)
-            throws UiObjectNotFoundException {
+    public void launchApiDemos() {
         Intent intent = getInstrumentation().getContext().getPackageManager()
                 .getLaunchIntentForPackage(PACKAGE_NAME);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         getInstrumentation().getContext().startActivity(intent);
+        mDevice.waitForIdle();
+    }
+    public void selectAnimation(String optionName) {
+        launchApiDemos();
         UiObject2 animation = mDevice.wait(Until.findObject(
                 By.res(RES_PACKAGE_NAME, "text1").text("Animation")), LONG_TIMEOUT);
-        Assert.assertNotNull("Animation is null", animation);
+        Assert.assertNotNull("Animation isn't found in ApiDemos", animation);
         animation.click();
         UiObject2 option = mDevice.wait(Until.findObject(
                 By.res(RES_PACKAGE_NAME, "text1").text(optionName)), LONG_TIMEOUT);
@@ -84,7 +83,7 @@ public class ApiDemoJankTests extends JankTestBase {
                     .text(optionName)), LONG_TIMEOUT);
             --maxAttempt;
         }
-        Assert.assertNotNull("Option is null", option);
+        Assert.assertNotNull("Target option in APiDemos animation for test isn't found", option);
         option.click();
     }
 
@@ -103,7 +102,7 @@ public class ApiDemoJankTests extends JankTestBase {
 
     // Loads the 'activity transition' animation
     public void selectActivityTransitionAnimation() throws UiObjectNotFoundException {
-         launchApiDemosAndSelectAnimation("Activity Transition");
+         selectAnimation("Activity Transition");
     }
 
     // Measures jank for activity transition animation
@@ -121,7 +120,7 @@ public class ApiDemoJankTests extends JankTestBase {
 
     // Loads the 'view flip' animation
     public void selectViewFlipAnimation() throws UiObjectNotFoundException {
-        launchApiDemosAndSelectAnimation("View Flip");
+        selectAnimation("View Flip");
     }
 
     // Measures jank for view flip animation
@@ -138,7 +137,7 @@ public class ApiDemoJankTests extends JankTestBase {
 
     // Loads the 'cloning' animation
     public void selectCloningAnimation() throws UiObjectNotFoundException {
-        launchApiDemosAndSelectAnimation("Cloning");
+        selectAnimation("Cloning");
     }
 
     // Measures jank for cloning animation
@@ -155,7 +154,7 @@ public class ApiDemoJankTests extends JankTestBase {
 
     // Loads the 'loading' animation
     public void selectLoadingOption() throws UiObjectNotFoundException {
-        launchApiDemosAndSelectAnimation("Loading");
+        selectAnimation("Loading");
     }
 
     // Measures jank for 'loading' animation
@@ -166,7 +165,7 @@ public class ApiDemoJankTests extends JankTestBase {
         UiObject2 runButton = mDevice.wait(Until.findObject(
             By.res(PACKAGE_NAME, "startButton").text("Run")), LONG_TIMEOUT);
         Assert.assertNotNull("Run button is null", runButton);
-        for(int i = 0; i < INNER_LOOP; i++) {
+        for (int i = 0; i < INNER_LOOP; i++) {
             runButton.click();
             SystemClock.sleep(SHORT_TIMEOUT * 2);
         }
@@ -174,7 +173,7 @@ public class ApiDemoJankTests extends JankTestBase {
 
     // Loads the 'simple transition' animation
     public void selectSimpleTransitionOption() throws UiObjectNotFoundException {
-        launchApiDemosAndSelectAnimation("Simple Transitions");
+        selectAnimation("Simple Transitions");
     }
 
     // Measures jank for 'simple transition' animation
@@ -182,16 +181,16 @@ public class ApiDemoJankTests extends JankTestBase {
               expectedFrames=EXPECTED_FRAMES)
     @GfxMonitor(processName=PACKAGE_NAME)
     public void testSimpleTransitionJank() {
-        for(int i = 0; i < INNER_LOOP; i++) {
+        for (int i = 0; i < INNER_LOOP; i++) {
             UiObject2 scene2 = mDevice.wait(Until.findObject(
                     By.res(PACKAGE_NAME, "scene2")), LONG_TIMEOUT);
-            Assert.assertNotNull("Scene2 is null", scene2);
+            Assert.assertNotNull("Scene2 button can't be found", scene2);
             scene2.click();
             SystemClock.sleep(SHORT_TIMEOUT);
 
             UiObject2 scene1 = mDevice.wait(Until.findObject(
                     By.res(PACKAGE_NAME, "scene1")), LONG_TIMEOUT);
-            Assert.assertNotNull("Scene1 is null", scene1);
+            Assert.assertNotNull("Scene1 button can't be found", scene1);
             scene1.click();
             SystemClock.sleep(SHORT_TIMEOUT);
         }
@@ -199,7 +198,7 @@ public class ApiDemoJankTests extends JankTestBase {
 
     // Loads the 'hide/show' animation
     public void selectHideShowAnimationOption() throws UiObjectNotFoundException {
-        launchApiDemosAndSelectAnimation("Hide-Show Animations");
+        selectAnimation("Hide-Show Animations");
     }
 
     // Measures jank for 'hide/show' animation
@@ -207,36 +206,133 @@ public class ApiDemoJankTests extends JankTestBase {
               expectedFrames=EXPECTED_FRAMES)
     @GfxMonitor(processName=PACKAGE_NAME)
     public void testHideShowAnimationJank() {
-        for(int i = 0; i < INNER_LOOP; i++) {
+        for (int i = 0; i < INNER_LOOP; i++) {
             UiObject2 showButton = mDevice.wait(Until.findObject(By.res(
                     PACKAGE_NAME, "addNewButton").text("Show Buttons")), LONG_TIMEOUT);
-            Assert.assertNotNull("Show Button is null", showButton);
+            Assert.assertNotNull("'Show Buttons' button can't be found", showButton);
             showButton.click();
             SystemClock.sleep(SHORT_TIMEOUT);
 
             UiObject2 button0 = mDevice.wait(Until.findObject(
                     By.clazz(Button.class).text("0")), LONG_TIMEOUT);
-            Assert.assertNotNull("Button0 is null", button0);
+            Assert.assertNotNull("Button0 isn't found", button0);
             button0.click();
             SystemClock.sleep(SHORT_TIMEOUT);
 
             UiObject2 button1 = mDevice.wait(Until.findObject(
                     By.clazz(Button.class).text("1")), LONG_TIMEOUT);
-            Assert.assertNotNull("Button1 is null", button1);
+            Assert.assertNotNull("Button1 isn't found", button1);
             button1.click();
             SystemClock.sleep(SHORT_TIMEOUT);
 
             UiObject2 button2 = mDevice.wait(Until.findObject(
                     By.clazz(Button.class).text("2")), LONG_TIMEOUT);
-            Assert.assertNotNull("Button2 is null", button2);
+            Assert.assertNotNull("Button2 isn't found", button2);
             button2.click();
             SystemClock.sleep(SHORT_TIMEOUT);
 
             UiObject2 button3 = mDevice.wait(Until.findObject(
                     By.clazz(Button.class).text("3")), LONG_TIMEOUT);
-            Assert.assertNotNull("Button3 is null", button3);
+            Assert.assertNotNull("Button3 isn't found", button3);
             button3.click();
             SystemClock.sleep(SHORT_TIMEOUT);
+        }
+    }
+
+    public void selectViews(String optionName) {
+        launchApiDemos();
+        UiObject2 views = null;
+        short maxAttempt = 4;
+        while (views == null && maxAttempt > 0) {
+            mDevice.wait(Until.findObject(By.res(RES_PACKAGE_NAME, "content")), LONG_TIMEOUT)
+                    .scroll(Direction.DOWN, 1.0f);
+            views = mDevice.wait(Until.findObject(By.res(RES_PACKAGE_NAME, "text1")
+                    .text("Views")), LONG_TIMEOUT);
+            --maxAttempt;
+        }
+        Assert.assertNotNull("Views item can't be found", views);
+        views.click();
+        // Opens selective view (provided as param) from different 'ApiDemos Views' options
+        UiObject2 option = null;
+        maxAttempt = 4;
+        while (option == null && maxAttempt > 0) {
+            mDevice.wait(Until.findObject(By.res(RES_PACKAGE_NAME, "content")), LONG_TIMEOUT)
+                    .scroll(Direction.DOWN, 1.0f);
+            option = mDevice.wait(Until.findObject(By.res(RES_PACKAGE_NAME, "text1")
+                    .text(optionName)), LONG_TIMEOUT);
+            --maxAttempt;
+        }
+        Assert.assertNotNull("Target option to be tested in ApiDemos Views can't be found", option);
+        option.click();
+    }
+
+    // Loads  simple listview
+    public void selectListsArray() throws UiObjectNotFoundException {
+        selectViews("Lists");
+        UiObject2 array = mDevice.wait(Until.findObject(
+                By.res(RES_PACKAGE_NAME, "text1").text("01. Array")), LONG_TIMEOUT);
+        Assert.assertNotNull("Array listview can't be found", array);
+        array.click();
+    }
+
+    // Measures jank for simple listview fling
+    @JankTest(beforeTest="selectLists_Array", afterTest="goBackHome",
+              expectedFrames=EXPECTED_FRAMES)
+    @GfxMonitor(processName=PACKAGE_NAME)
+    public void testListViewJank() {
+        for (int i = 0; i < INNER_LOOP; i++) {
+            UiObject2 listView = mDevice.wait(Until.findObject(By.res(
+                    RES_PACKAGE_NAME, "content")), LONG_TIMEOUT);
+            Assert.assertNotNull("Content pane isn't found to move up", listView);
+            listView.fling(Direction.DOWN);
+            SystemClock.sleep(SHORT_TIMEOUT);
+            listView.fling(Direction.UP);
+            SystemClock.sleep(SHORT_TIMEOUT);
+        }
+    }
+
+    // Loads simple expandable list view
+    public void selectExpandableLists_SimpleAdapter() throws UiObjectNotFoundException {
+        selectViews("Expandable Lists");
+        UiObject2 simpleAdapter = mDevice.wait(Until.findObject(
+                By.res(RES_PACKAGE_NAME, "text1").text("3. Simple Adapter")), LONG_TIMEOUT);
+        Assert.assertNotNull("Simple adapter can't be found", simpleAdapter);
+        simpleAdapter.click();
+    }
+
+    // Measures jank for simple expandable list view expansion
+    // Expansion group1, group3 and group4 arbitrarily selected
+    @JankTest(beforeTest="selectExpandableLists_SimpleAdapter", afterTest="goBackHome",
+              expectedFrames=EXPECTED_FRAMES)
+    @GfxMonitor(processName=PACKAGE_NAME)
+    public void testExapandableListViewJank() {
+        for (int i = 0; i < INNER_LOOP; i++) {
+          UiObject2 group1 = mDevice.wait(Until.findObject(By.res(
+                  RES_PACKAGE_NAME, "text1").text("Group 1")), LONG_TIMEOUT);
+          Assert.assertNotNull("Group 1 isn't found to be expanded", group1);
+          group1.click();
+          SystemClock.sleep(SHORT_TIMEOUT);
+          group1.click();
+          SystemClock.sleep(SHORT_TIMEOUT);
+          UiObject2 group3 = mDevice.wait(Until.findObject(By.res(
+                  RES_PACKAGE_NAME, "text1").text("Group 3")), LONG_TIMEOUT);
+          Assert.assertNotNull("Group 3 isn't found to be expanded", group3);
+          group3.click();
+          SystemClock.sleep(SHORT_TIMEOUT);
+          group3.click();
+          SystemClock.sleep(SHORT_TIMEOUT);
+          UiObject2 group4 = mDevice.wait(Until.findObject(By.res(
+                  RES_PACKAGE_NAME, "text1").text("Group 4")), LONG_TIMEOUT);
+          Assert.assertNotNull("Group 4 isn't found to be expanded", group4);
+          group4.click();
+          SystemClock.sleep(SHORT_TIMEOUT);
+          group4.click();
+          SystemClock.sleep(SHORT_TIMEOUT);
+          UiObject2 content = mDevice.wait(Until.findObject(By.res(
+                  RES_PACKAGE_NAME, "content")), LONG_TIMEOUT);
+          Assert.assertNotNull("Content pane isn't found to move up", content);
+          content.fling(Direction.UP);
+          SystemClock.sleep(SHORT_TIMEOUT);
         }
     }
 }
