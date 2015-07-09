@@ -244,10 +244,12 @@ public class ApiDemoJankTests extends JankTestBase {
         UiObject2 views = null;
         short maxAttempt = 4;
         while (views == null && maxAttempt > 0) {
-            mDevice.wait(Until.findObject(By.res(RES_PACKAGE_NAME, "content")), LONG_TIMEOUT)
-                    .scroll(Direction.DOWN, 1.0f);
             views = mDevice.wait(Until.findObject(By.res(RES_PACKAGE_NAME, "text1")
                     .text("Views")), LONG_TIMEOUT);
+            if (views == null) {
+                mDevice.wait(Until.findObject(By.res(RES_PACKAGE_NAME, "content")), LONG_TIMEOUT)
+                        .scroll(Direction.DOWN, 1.0f);
+            }
             --maxAttempt;
         }
         Assert.assertNotNull("Views item can't be found", views);
@@ -256,10 +258,12 @@ public class ApiDemoJankTests extends JankTestBase {
         UiObject2 option = null;
         maxAttempt = 4;
         while (option == null && maxAttempt > 0) {
-            mDevice.wait(Until.findObject(By.res(RES_PACKAGE_NAME, "content")), LONG_TIMEOUT)
-                    .scroll(Direction.DOWN, 1.0f);
             option = mDevice.wait(Until.findObject(By.res(RES_PACKAGE_NAME, "text1")
                     .text(optionName)), LONG_TIMEOUT);
+            if (option == null) {
+                mDevice.wait(Until.findObject(By.res(RES_PACKAGE_NAME, "content")), LONG_TIMEOUT)
+                .scroll(Direction.DOWN, 1.0f);
+            }
             --maxAttempt;
         }
         Assert.assertNotNull("Target option to be tested in ApiDemos Views can't be found", option);
@@ -276,7 +280,7 @@ public class ApiDemoJankTests extends JankTestBase {
     }
 
     // Measures jank for simple listview fling
-    @JankTest(beforeTest="selectLists_Array", afterTest="goBackHome",
+    @JankTest(beforeTest="selectListsArray", afterTest="goBackHome",
               expectedFrames=EXPECTED_FRAMES)
     @GfxMonitor(processName=PACKAGE_NAME)
     public void testListViewJank() {
@@ -292,7 +296,7 @@ public class ApiDemoJankTests extends JankTestBase {
     }
 
     // Loads simple expandable list view
-    public void selectExpandableLists_SimpleAdapter() throws UiObjectNotFoundException {
+    public void selectExpandableListsSimpleAdapter() throws UiObjectNotFoundException {
         selectViews("Expandable Lists");
         UiObject2 simpleAdapter = mDevice.wait(Until.findObject(
                 By.res(RES_PACKAGE_NAME, "text1").text("3. Simple Adapter")), LONG_TIMEOUT);
@@ -302,7 +306,7 @@ public class ApiDemoJankTests extends JankTestBase {
 
     // Measures jank for simple expandable list view expansion
     // Expansion group1, group3 and group4 arbitrarily selected
-    @JankTest(beforeTest="selectExpandableLists_SimpleAdapter", afterTest="goBackHome",
+    @JankTest(beforeTest="selectExpandableListsSimpleAdapter", afterTest="goBackHome",
               expectedFrames=EXPECTED_FRAMES)
     @GfxMonitor(processName=PACKAGE_NAME)
     public void testExapandableListViewJank() {
