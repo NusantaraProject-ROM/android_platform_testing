@@ -31,6 +31,7 @@ import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.Until;
+
 import junit.framework.Assert;
 
 /**
@@ -80,7 +81,7 @@ public class CalendarJankTests extends JankTestBase {
     // Measures jank of flinging calendar items
     @JankTest(beforeTest="launchCalendar", expectedFrames=EXPECTED_FRAMES)
     @GfxMonitor(processName=PACKAGE_NAME)
-    public void testCalendarItemsFling() {
+    public void disable_testCalendarItemsFling() {
         UiObject2 timelyList = mDevice.wait(
                 Until.findObject(By.res(RES_PACKAGE_NAME, "timely_list")), LONG_TIMEOUT);
         for (int i = 0; i < INNER_LOOP; i++) {

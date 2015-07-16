@@ -16,6 +16,7 @@
 
 package com.android.dialer.janktests;
 
+import android.content.ComponentName;
 import android.content.ContentProviderOperation;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -105,7 +106,7 @@ public class DialerJankTests extends JankTestBase {
             By.res(RES_PACKAGE_NAME, "cliv_name_textview").text(CONTACT_NAME)), TIMEOUT);
         assertNotNull("Contactname can't be found", contactName);
         contactName.click();
-        // Click on dial-icon beside contact-number
+        // Click on dial-icon beside contact-number to ensure test is ready to be executed
         UiObject2 contactNumber = mDevice.wait(Until.findObject(
             By.res(RES_PACKAGE_NAME2,"header").text(CONTACT_NUMBER)), TIMEOUT);
         assertNotNull("Contact number can't be found", contactNumber);
@@ -116,28 +117,20 @@ public class DialerJankTests extends JankTestBase {
         if (endCall != null) {
             endCall.clickAndWait(Until.newWindow(), TIMEOUT);;
         }
-        // To close opened contact card and move back to contacts list
-        mDevice.pressBack();
-        // To infer that test is ready to be executed
-        UiObject2 speedDial = mDevice.wait(Until.findObject(
-                By.clazz(View.class).desc("Speed dial")), TIMEOUT);
-        Assert.assertNotNull("Favorite contact card isn't found", speedDial);
-        speedDial.click();
     }
 
     @JankTest(beforeTest="launchDialer", expectedFrames=EXPECTED_FRAMES)
     @GfxMonitor(processName=PACKAGE_NAME)
     public void testDialerCallInit() {
-        UiObject2 favContact = null;
-        UiObject2 noCellNextwork = null;
         for (int i = 0; i < INNER_LOOP; i++) {
-            favContact = mDevice.wait(Until.findObject(
-                    By.res(RES_PACKAGE_NAME, "contact_favorite_card")), TIMEOUT);
-            favContact.clickAndWait(Until.newWindow(), TIMEOUT);
+            UiObject2 contactNumber = mDevice.wait(Until.findObject(
+                    By.res(RES_PACKAGE_NAME2,"header").text(CONTACT_NUMBER)), TIMEOUT);
+            assertNotNull("Contact number can't be found", contactNumber);
+            contactNumber.clickAndWait(Until.newWindow(), TIMEOUT);
             UiObject2 endCall = mDevice.wait(Until.findObject(By.res(RES_PACKAGE_NAME,
-                  "floating_end_call_action_button")), TIMEOUT);
+                      "floating_end_call_action_button")), TIMEOUT);
             if (endCall != null) {
-                endCall.click();
+                endCall.clickAndWait(Until.newWindow(), TIMEOUT);
             }
         }
     }
@@ -150,8 +143,10 @@ public class DialerJankTests extends JankTestBase {
         }
         launchApp(PACKAGE_NAME);
         Intent showCallLog = new Intent();
-        showCallLog.setAction(Intent.ACTION_VIEW);
-        showCallLog.setType(CallLog.Calls.CONTENT_TYPE);
+        showCallLog.setAction(Intent.ACTION_MAIN);
+        showCallLog.addCategory(Intent.CATEGORY_LAUNCHER);
+        showCallLog.setComponent(new ComponentName(PACKAGE_NAME,
+                "com.android.dialer.calllog.CallLogActivity"));
         showCallLog.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         getInstrumentation().getContext().startActivity(showCallLog);
     }
@@ -160,7 +155,7 @@ public class DialerJankTests extends JankTestBase {
     @GfxMonitor(processName=PACKAGE_NAME)
     public void testDialerCallLogFling() {
         UiObject2 callLog = mDevice.wait(Until.findObject(
-                By.res(RES_PACKAGE_NAME,"call_log_pager")), TIMEOUT);
+                By.res(RES_PACKAGE_NAME, "call_log_pager")), TIMEOUT);
         assertNotNull("Call log can't be found", callLog);
         for (int i = 0; i < INNER_LOOP; i++) {
             callLog.fling(Direction.DOWN);

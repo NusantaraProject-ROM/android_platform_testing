@@ -191,7 +191,7 @@ public class GMailJankTests extends JankTestBase {
         UiObject2 container = null;
         if (mDevice.getDisplaySizeDp().x < TAB_MIN_WIDTH) {
             container = mDevice.wait(
-                    Until.findObject(By.res(RES_PACKAGE_NAME, "content_pane")), SHORT_TIMEOUT);
+                    Until.findObject(By.res(PACKAGE_NAME, "content_pane")), SHORT_TIMEOUT);
         } else {
             container = mDevice.wait(
                     Until.findObject(By.res(RES_PACKAGE_NAME, "list")), SHORT_TIMEOUT);
