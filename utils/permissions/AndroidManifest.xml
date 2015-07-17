@@ -20,6 +20,8 @@
     package="com.android.permissionutils">
 
     <uses-permission android:name="android.permission.GRANT_REVOKE_PERMISSIONS" />
+    <uses-permission android:name="android.permission.GRANT_RUNTIME_PERMISSIONS" />
+    <uses-permission android:name="android.permission.REVOKE_RUNTIME_PERMISSIONS" />
 
     <application>
         <uses-library android:name="android.test.runner" />
