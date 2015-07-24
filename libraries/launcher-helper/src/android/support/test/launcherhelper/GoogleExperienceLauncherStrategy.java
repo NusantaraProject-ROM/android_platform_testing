@@ -27,8 +27,8 @@ import android.widget.TextView;
 
 import junit.framework.Assert;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 
 /**
  * Implementation of {@link ILauncherStrategy} to support Google experience launcher
@@ -62,28 +62,12 @@ public class GoogleExperienceLauncherStrategy implements ILauncherStrategy {
             // ensure launcher is shown
             if (!mDevice.wait(Until.hasObject(By.res(LAUNCHER_PKG, "hotseat")), 5000)) {
                 // HACK: dump hierarchy to logcat
-                OutputStream os = new OutputStream() {
-                    StringBuilder mLineBuffer = new StringBuilder();
-                    @Override
-                    public void write(int oneByte) throws IOException {
-                        if (oneByte == '\n' || oneByte == '\r') {
-                            Log.d(LOG_TAG, mLineBuffer.toString());
-                            mLineBuffer = new StringBuilder();
-                        } else {
-                            mLineBuffer.append((char)oneByte);
-                        }
-                    }
-                    @Override
-                    public void close() throws IOException {
-                        String remainder = mLineBuffer.toString().trim();
-                        if (!remainder.isEmpty()) {
-                            Log.d(LOG_TAG, remainder);
-                        }
-                        super.close();
-                    }
-                };
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 try {
-                    mDevice.dumpWindowHierarchy(os);
+                    mDevice.dumpWindowHierarchy(baos);
+                    Log.d(LOG_TAG, baos.toString());
+                    baos.flush();
+                    baos.close();
                 } catch (IOException ioe) {
                     Log.e(LOG_TAG, "error dumping XML to logcat", ioe);
                 }
