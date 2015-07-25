@@ -55,7 +55,7 @@ import java.util.Random;
  * fling call log
  */
 public class DialerJankTests extends JankTestBase {
-    private static final int TIMEOUT = 1000;
+    private static final int TIMEOUT = 5000;
     private static final int INNER_LOOP = 5;
     private static final int EXPECTED_FRAMES = 100;
     private static final String PACKAGE_NAME = "com.google.android.dialer";
@@ -100,12 +100,12 @@ public class DialerJankTests extends JankTestBase {
         UiObject2 contacts = mDevice.wait(Until.findObject(
                 By.clazz(View.class).desc("Contacts")), TIMEOUT);
         assertNotNull("Contacts can't be found", contacts);
-        contacts.click();
+        contacts.clickAndWait(Until.newWindow(), TIMEOUT);
         // Find a contact by a given contact-name
         UiObject2 contactName = mDevice.wait(Until.findObject(
             By.res(RES_PACKAGE_NAME, "cliv_name_textview").text(CONTACT_NAME)), TIMEOUT);
         assertNotNull("Contactname can't be found", contactName);
-        contactName.click();
+        contactName.clickAndWait(Until.newWindow(), TIMEOUT);
         // Click on dial-icon beside contact-number to ensure test is ready to be executed
         UiObject2 contactNumber = mDevice.wait(Until.findObject(
             By.res(RES_PACKAGE_NAME2,"header").text(CONTACT_NUMBER)), TIMEOUT);
