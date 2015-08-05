@@ -104,19 +104,8 @@ public class CalendarJankTests extends JankTestBase {
 
     private void dismissCling() {
         UiObject2 splashScreen = null;
-        if (mDevice.getDisplaySizeDp().x < TAB_MIN_WIDTH) {
-            splashScreen = mDevice.wait(Until.findObject(
-                By.pkg(PACKAGE_NAME).depth(0).clazz(View.class).desc("Got it")), LONG_TIMEOUT);
-        } else {
-            splashScreen = mDevice.wait(Until.findObject(
-                By.pkg(PACKAGE_NAME).depth(0).clazz(View.class)), LONG_TIMEOUT);
-            if (splashScreen != null) {
-                assertEquals("Childcount shoudl be 0", 0, splashScreen.getChildCount());
-                assertNull("Parent shoud be null", splashScreen.getParent());
-                assertEquals("Only one object exists by view class", 1, mDevice.wait(Until.findObjects(
-                        By.pkg(PACKAGE_NAME).clazz(View.class)), LONG_TIMEOUT).size());
-            }
-        }
+      splashScreen = mDevice.wait(Until.findObject(
+              By.pkg(PACKAGE_NAME).clazz(View.class).desc("Got it")), LONG_TIMEOUT);
         if (splashScreen != null) {
             splashScreen.clickAndWait(Until.newWindow(), SHORT_TIMEOUT);
         }
