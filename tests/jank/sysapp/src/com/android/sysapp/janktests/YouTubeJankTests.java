@@ -93,6 +93,11 @@ public class YouTubeJankTests extends JankTestBase {
 
     private void dismissCling() {
         // Dismiss the dogfood splash screen that might appear on first start
+        UiObject2 newNavigationDoneBtn = mDevice.wait(Until.findObject(
+            By.res(PACKAGE_NAME, "done_button").text("Done")), LONG_TIMEOUT);
+        if (newNavigationDoneBtn != null) {
+          newNavigationDoneBtn.click();
+        }
         UiObject2 dialog_dismiss_btn = mDevice.wait(Until.findObject(
                 By.res(PACKAGE_NAME, "dogfood_warning_dialog_dismiss_button").text("OK")), LONG_TIMEOUT);
         if (dialog_dismiss_btn != null) {
