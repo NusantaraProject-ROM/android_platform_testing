@@ -52,6 +52,7 @@ public class AppLaunchTests extends InstrumentationTestCase {
     private static final String TARGETPACKAGE = "targetpackage";
     private static final String ACTIVITYLIST = "activitylist";
     private static final String LAUNCHCOUNT = "launchcount";
+    private static final String RECORDTRACE = "recordtrace";
     private static final String ATRACE_START = "atrace --async_start am view gfx";
     private static final String ATRACE_DUMP = "atrace --async_dump";
     private static final String ATRACE_STOP = "atrace --async_stop";
@@ -63,6 +64,7 @@ public class AppLaunchTests extends InstrumentationTestCase {
     private int mLaunchCount;
     private String mCustomActivityList;
     private PackageInfo mPackageInfo;
+    private boolean mRecordTrace = true;
     private List<String> mActivityList;
 
     /**
@@ -88,6 +90,10 @@ public class AppLaunchTests extends InstrumentationTestCase {
         assertTrue("Activity List is empty", (mActivityList.size() > 0));
         mLaunchCount = Integer.parseInt(args.getString(LAUNCHCOUNT));
         assertTrue("Invalid Launch Count", mLaunchCount > 0);
+        if (args.getString(RECORDTRACE) != null
+                && args.getString(RECORDTRACE).equalsIgnoreCase("false")) {
+            mRecordTrace = false;
+        }
         mResult = new Bundle();
     }
 
@@ -108,48 +114,53 @@ public class AppLaunchTests extends InstrumentationTestCase {
                 intent.setComponent(cn);
 
                 // Start the atrace
-                assertNotNull(
-                        "Unable to start atrace async",
-                        getInstrumentation().getUiAutomation().executeShellCommand(ATRACE_START));
-                // Sleep for 10 secs to make sure atrace command is started
-                Thread.sleep(10 * 1000);
+                if (mRecordTrace) {
+                    assertNotNull(
+                            "Unable to start atrace async",
+                            getInstrumentation().getUiAutomation()
+                                    .executeShellCommand(ATRACE_START));
+                    // Sleep for 10 secs to make sure atrace command is started
+                    Thread.sleep(10 * 1000);
+                }
 
                 // Launch the activity
                 mContext.startActivity(intent);
                 Thread.sleep(5 * 1000);
 
                 // Dump atrace info and write it to file
-                int processId = getProcessId(mTargetPackageName);
-                assertTrue("Not able to retrive the process id for the package:"
-                        + mTargetPackageName, processId > 0);
-                String fileName = String.format("%s-%d-%d", activityName, count, processId);
-                ParcelFileDescriptor parcelFile =
-                        getInstrumentation().getUiAutomation().executeShellCommand(ATRACE_DUMP);
-                assertNotNull("Unable to get the File descriptor to standard out",
-                        parcelFile);
-                InputStream inputStream = new FileInputStream(parcelFile.getFileDescriptor());
-                File file = new File(logsDir, fileName);
-                FileOutputStream outputStream = new FileOutputStream(file);
-                try {
-                    byte[] buffer = new byte[1024];
-                    int length;
-                    while ((length = inputStream.read(buffer)) > 0) {
-                        outputStream.write(buffer, 0, length);
+                if (mRecordTrace) {
+                    int processId = getProcessId(mTargetPackageName);
+                    assertTrue("Not able to retrive the process id for the package:"
+                            + mTargetPackageName, processId > 0);
+                    String fileName = String.format("%s-%d-%d", activityName, count, processId);
+                    ParcelFileDescriptor parcelFile =
+                            getInstrumentation().getUiAutomation().executeShellCommand(ATRACE_DUMP);
+                    assertNotNull("Unable to get the File descriptor to standard out",
+                            parcelFile);
+                    InputStream inputStream = new FileInputStream(parcelFile.getFileDescriptor());
+                    File file = new File(logsDir, fileName);
+                    FileOutputStream outputStream = new FileOutputStream(file);
+                    try {
+                        byte[] buffer = new byte[1024];
+                        int length;
+                        while ((length = inputStream.read(buffer)) > 0) {
+                            outputStream.write(buffer, 0, length);
+                        }
+                    } catch (IOException e) {
+                        Log.w(TAG, "Error writing atrace info to file", e);
                     }
-                } catch (IOException e) {
-                    Log.w(TAG, "Error writing atrace info to file", e);
+                    inputStream.close();
+                    outputStream.close();
+
+                    // Stop the atrace
+                    assertNotNull(
+                            "Unable to stop the atrace",
+                            getInstrumentation().getUiAutomation().executeShellCommand(ATRACE_STOP));
+
+                    // To keep track of the activity name,list of atrace file name
+                    registerTraceFileNames(activityName, fileName);
                 }
-                inputStream.close();
-                outputStream.close();
-
-                // Stop the atrace
-                assertNotNull(
-                        "Unable to stop the atrace",
-                        getInstrumentation().getUiAutomation().executeShellCommand(ATRACE_STOP));
-
-                // To keep track of the activity name,list of atrace file name
-                registerTraceFileNames(activityName, fileName);
-                assertNotNull("Unable to stop atrace async",
+                assertNotNull("Unable to stop recent activity launched",
                         getInstrumentation().getUiAutomation().executeShellCommand(
                                 FORCE_STOP + mTargetPackageName));
                 Thread.sleep(5 * 1000);
@@ -234,3 +245,4 @@ public class AppLaunchTests extends InstrumentationTestCase {
         }
     }
 }
+
