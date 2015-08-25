@@ -113,10 +113,9 @@ public class DialerJankTests extends JankTestBase {
         contactNumber.clickAndWait(Until.newWindow(), TIMEOUT);
 
         UiObject2 endCall = mDevice.wait(Until.findObject(By.res(RES_PACKAGE_NAME,
-              "floating_end_call_action_button")), TIMEOUT);
-        if (endCall != null) {
-            endCall.clickAndWait(Until.newWindow(), TIMEOUT);;
-        }
+              "floating_end_call_action_button")), 2 * TIMEOUT);
+        endCall.clickAndWait(Until.newWindow(), TIMEOUT);;
+        SystemClock.sleep(200);
     }
 
     @JankTest(beforeTest="launchDialer", expectedFrames=EXPECTED_FRAMES)
@@ -128,10 +127,9 @@ public class DialerJankTests extends JankTestBase {
             assertNotNull("Contact number can't be found", contactNumber);
             contactNumber.clickAndWait(Until.newWindow(), TIMEOUT);
             UiObject2 endCall = mDevice.wait(Until.findObject(By.res(RES_PACKAGE_NAME,
-                      "floating_end_call_action_button")), TIMEOUT);
-            if (endCall != null) {
-                endCall.clickAndWait(Until.newWindow(), TIMEOUT);
-            }
+                      "floating_end_call_action_button")), 2 * TIMEOUT);
+            endCall.clickAndWait(Until.newWindow(), TIMEOUT);
+            SystemClock.sleep(200);
         }
     }
 
