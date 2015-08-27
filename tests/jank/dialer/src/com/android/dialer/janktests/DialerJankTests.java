@@ -140,13 +140,13 @@ public class DialerJankTests extends JankTestBase {
             }
         }
         launchApp(PACKAGE_NAME);
-        Intent showCallLog = new Intent();
-        showCallLog.setAction(Intent.ACTION_MAIN);
-        showCallLog.addCategory(Intent.CATEGORY_LAUNCHER);
-        showCallLog.setComponent(new ComponentName(PACKAGE_NAME,
-                "com.android.dialer.calllog.CallLogActivity"));
-        showCallLog.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        getInstrumentation().getContext().startActivity(showCallLog);
+        mDevice.waitForIdle();
+        // Find recents and click
+        mDevice.wait(Until.findObject(By.clazz(View.class).desc("Recents")), TIMEOUT).click();
+        // to ensure enough record for fling, expand full call-history
+        mDevice.wait(Until.findObject(
+                By.res(RES_PACKAGE_NAME,"lists_pager")), TIMEOUT).fling(Direction.DOWN);
+        mDevice.wait(Until.findObject(By.text("View full call history")), TIMEOUT).click();
     }
 
     @JankTest(beforeTest="launchCallLog", expectedFrames=EXPECTED_FRAMES)
