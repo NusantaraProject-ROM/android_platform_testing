@@ -81,7 +81,8 @@ public class BooksJankTests extends JankTestBase {
     // Measures jank while fling books mylibrary
     @JankTest(beforeTest="launchBooks", expectedFrames=EXPECTED_FRAMES)
     @GfxMonitor(processName=PACKAGE_NAME)
-    public void testBooksRecommendationPageFling() {
+    // Books is not a system app anymore
+    public void doNotRun_BooksRecommendationPageFling() {
         UiObject2 container = mDevice.wait(Until.findObject(
                 By.res(PACKAGE_NAME, "content_container")), LONG_TIMEOUT);
         for (int i = 0; i < INNER_LOOP; i++) {
