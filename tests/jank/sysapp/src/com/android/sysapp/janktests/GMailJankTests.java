@@ -16,8 +16,13 @@
 
 package com.android.sysapp.janktests;
 
+import java.io.File;
+import java.io.IOException;
+
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Bundle;
+import android.os.Environment;
 import android.os.RemoteException;
 import android.os.SystemClock;
 import android.support.test.jank.GfxMonitor;
@@ -32,8 +37,8 @@ import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.Until;
 import android.widget.ImageButton;
-
 import junit.framework.Assert;
+import android.support.test.timeresulthelper.TimeResultLogger;
 
 /**
  * Jank test for scrolling gmail inbox mails
@@ -48,6 +53,10 @@ public class GMailJankTests extends JankTestBase {
     private static final String PACKAGE_NAME = "com.google.android.gm";
     private static final String RES_PACKAGE_NAME = "android";
     private UiDevice mDevice;
+    private static final File TIMESTAMP_FILE = new File(Environment.getExternalStorageDirectory()
+            .getAbsolutePath(), "autotester.log");
+    private static final File RESULTS_FILE = new File(Environment.getExternalStorageDirectory()
+            .getAbsolutePath(), "results.log");
 
     @Override
     public void setUp() throws Exception {
@@ -77,16 +86,27 @@ public class GMailJankTests extends JankTestBase {
         waitForEmailSync();
     }
 
-    public void prepGMailInboxFling() throws UiObjectNotFoundException {
+    public void prepGMailInboxFling() throws UiObjectNotFoundException, IOException {
       launchGMail();
       // Ensure test is ready to be executed
       UiObject2 list = mDevice.wait(
               Until.findObject(By.res(PACKAGE_NAME, "conversation_list_view")), SHORT_TIMEOUT);
       Assert.assertNotNull("Failed to locate 'conversation_list_view'", list);
+      TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
+              getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+    }
+
+    public void afterTestGMailInboxFling(Bundle metrics) throws IOException {
+        TimeResultLogger.writeTimeStampLogEnd(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+        TimeResultLogger.writeResultToFile(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), RESULTS_FILE, metrics);
+        super.afterTest(metrics);
     }
 
     // Measures jank while scrolling gmail inbox
-    @JankTest(beforeTest="prepGMailInboxFling", expectedFrames=EXPECTED_FRAMES)
+    @JankTest(beforeTest="prepGMailInboxFling", expectedFrames=EXPECTED_FRAMES,
+            afterTest="afterTestGMailInboxFling")
     @GfxMonitor(processName=PACKAGE_NAME)
     public void testGMailInboxFling() {
         UiObject2 list = mDevice.wait(
@@ -100,14 +120,25 @@ public class GMailJankTests extends JankTestBase {
         }
     }
 
-    public void prepOpenNavDrawer() throws UiObjectNotFoundException {
+    public void prepOpenNavDrawer() throws UiObjectNotFoundException, IOException {
       launchGMail();
       // Ensure test is ready to be executed
       Assert.assertNotNull("Failed to locate Nav Drawer Openner", openNavigationDrawer());
+      TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
+              getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+    }
+
+    public void afterTestOpenNavDrawer(Bundle metrics) throws IOException {
+        TimeResultLogger.writeTimeStampLogEnd(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+        TimeResultLogger.writeResultToFile(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), RESULTS_FILE, metrics);
+        super.afterTest(metrics);
     }
 
     // Measures jank while opening Navigation Drawer
-    @JankTest(beforeTest="prepOpenNavDrawer", expectedFrames=EXPECTED_FRAMES)
+    @JankTest(beforeTest="prepOpenNavDrawer", expectedFrames=EXPECTED_FRAMES,
+            afterTest="afterTestOpenNavDrawer")
     @GfxMonitor(processName=PACKAGE_NAME)
     public void testOpenNavDrawer() {
         UiObject2 navDrawer = openNavigationDrawer();
@@ -119,7 +150,7 @@ public class GMailJankTests extends JankTestBase {
         }
     }
 
-    public void prepFlingNavDrawer() throws UiObjectNotFoundException{
+    public void prepFlingNavDrawer() throws UiObjectNotFoundException, IOException{
         launchGMail();
         UiObject2 navDrawer = openNavigationDrawer();
         Assert.assertNotNull("Failed to locate Nav Drawer Openner", navDrawer);
@@ -127,10 +158,21 @@ public class GMailJankTests extends JankTestBase {
         // Ensure test is ready to be executed
         UiObject2 container = getNavigationDrawerContainer();
         Assert.assertNotNull("Failed to locate Nav drawer container", container);
+        TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+    }
+
+    public void afterTestFlingNavDrawer(Bundle metrics) throws IOException {
+        TimeResultLogger.writeTimeStampLogEnd(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+        TimeResultLogger.writeResultToFile(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), RESULTS_FILE, metrics);
+        super.afterTest(metrics);
     }
 
     // Measures jank while flinging Navigation Drawer
-    @JankTest(beforeTest="prepFlingNavDrawer", expectedFrames=EXPECTED_FRAMES)
+    @JankTest(beforeTest="prepFlingNavDrawer", expectedFrames=EXPECTED_FRAMES,
+            afterTest="afterTestFlingNavDrawer")
     @GfxMonitor(processName=PACKAGE_NAME)
     public void testFlingNavDrawer() {
         UiObject2 container = getNavigationDrawerContainer();
