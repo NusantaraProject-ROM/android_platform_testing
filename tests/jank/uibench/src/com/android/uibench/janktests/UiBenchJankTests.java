@@ -31,26 +31,27 @@ import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.Until;
 import android.widget.ListView;
 
+import com.android.uibench.janktests.UiBenchJankTestsHelper;
+import static com.android.uibench.janktests.UiBenchJankTestsHelper.PACKAGE_NAME;
+import static com.android.uibench.janktests.UiBenchJankTestsHelper.EXPECTED_FRAMES;
 import junit.framework.Assert;
 
 /**
- * Jank benchmark tests for UiBench app
+ * Jank benchmark General tests for UiBench app
  */
 
 public class UiBenchJankTests extends JankTestBase {
-    private static final int LONG_TIMEOUT = 5000;
-    private static final int TIMEOUT = 250;
-    private static final int INNER_LOOP = 3;
-    private static final int EXPECTED_FRAMES = 100;
-    private static final String PACKAGE_NAME = "com.android.test.uibench";
-    private static final String RES_PACKAGE_NAME = "android";
+
     private UiDevice mDevice;
+    private UiBenchJankTestsHelper mHelper;
 
     @Override
     public void setUp() throws Exception {
         super.setUp();
         mDevice = UiDevice.getInstance(getInstrumentation());
         mDevice.setOrientationNatural();
+        mHelper = UiBenchJankTestsHelper.getInstance(mDevice,
+             this.getInstrumentation().getContext());
     }
 
     @Override
@@ -59,28 +60,19 @@ public class UiBenchJankTests extends JankTestBase {
         super.tearDown();
     }
 
-    // Launch UiBench app
-    public void launchUiBench() {
-        Intent intent = getInstrumentation().getContext().getPackageManager()
-                .getLaunchIntentForPackage(PACKAGE_NAME);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        getInstrumentation().getContext().startActivity(intent);
-        mDevice.waitForIdle();
-    }
-
     // Open General Components
     public void openGeneralComponents(String componentName) {
-        launchUiBench();
+        mHelper.launchUiBench();
         UiObject2 general = mDevice.wait(Until.findObject(
-               By.res(RES_PACKAGE_NAME, "text1").text("General")), TIMEOUT);
+               By.res(mHelper.RES_PACKAGE_NAME, "text1").text("General")), mHelper.TIMEOUT);
         Assert.assertNotNull("General isn't found in UiBench", general);
         general.click();
-        SystemClock.sleep(TIMEOUT);
+        SystemClock.sleep(mHelper.TIMEOUT);
         UiObject2 component = mDevice.wait(Until.findObject(
-                By.res(RES_PACKAGE_NAME, "text1").text(componentName)), TIMEOUT);
+                By.res(mHelper.RES_PACKAGE_NAME, "text1").text(componentName)), mHelper.TIMEOUT);
         Assert.assertNotNull(componentName + ": isn't found in General", component);
         component.click();
-        SystemClock.sleep(TIMEOUT);
+        SystemClock.sleep(mHelper.TIMEOUT);
     }
 
     // Open dialog list from General
@@ -93,14 +85,14 @@ public class UiBenchJankTests extends JankTestBase {
     @GfxMonitor(processName=PACKAGE_NAME)
     public void testDialogListFling() {
         UiObject2 dialogListContents = mDevice.wait(Until.findObject(
-                By.clazz(ListView.class)), TIMEOUT); // this is the only listview
+                By.clazz(ListView.class)), mHelper.TIMEOUT); // this is the only listview
         Assert.assertNotNull("Dialog List View isn't found", dialogListContents);
 
-        for (int i = 0; i < INNER_LOOP; i++) {
+        for (int i = 0; i < mHelper.INNER_LOOP; i++) {
             dialogListContents.fling(Direction.DOWN);
-            SystemClock.sleep(TIMEOUT);
+            SystemClock.sleep(mHelper.TIMEOUT);
             dialogListContents.fling(Direction.UP);
-            SystemClock.sleep(TIMEOUT);
+            SystemClock.sleep(mHelper.TIMEOUT);
          }
     }
 
@@ -115,14 +107,14 @@ public class UiBenchJankTests extends JankTestBase {
     @GfxMonitor(processName=PACKAGE_NAME)
     public void testTrivialListViewFling() {
         UiObject2 trivialListViewContents = mDevice.wait(Until.findObject(
-                By.res("android", "content")), TIMEOUT);
+                By.res("android", "content")), mHelper.TIMEOUT);
         Assert.assertNotNull("Trivial ListView isn't found in General", trivialListViewContents);
 
-        for (int i = 0; i < INNER_LOOP; i++) {
+        for (int i = 0; i < mHelper.INNER_LOOP; i++) {
             trivialListViewContents.fling(Direction.DOWN);
-            SystemClock.sleep(TIMEOUT);
+            SystemClock.sleep(mHelper.TIMEOUT);
             trivialListViewContents.fling(Direction.UP);
-            SystemClock.sleep(TIMEOUT);
+            SystemClock.sleep(mHelper.TIMEOUT);
          }
      }
 
@@ -137,26 +129,54 @@ public class UiBenchJankTests extends JankTestBase {
     @GfxMonitor(processName=PACKAGE_NAME)
     public void testTrivialRecyclerListViewFling() {
         UiObject2 trivialRecyclerViewContents = mDevice.wait(Until.findObject(
-                By.res("android", "content")), TIMEOUT);
+                By.res("android", "content")), mHelper.TIMEOUT);
         Assert.assertNotNull("Trivial Recycler ListView isn't found in General",
              trivialRecyclerViewContents);
 
-        for (int i = 0; i < INNER_LOOP; i++) {
+        for (int i = 0; i < mHelper.INNER_LOOP; i++) {
             trivialRecyclerViewContents.fling(Direction.DOWN);
-            SystemClock.sleep(TIMEOUT);
+            SystemClock.sleep(mHelper.TIMEOUT);
             trivialRecyclerViewContents.fling(Direction.UP);
-            SystemClock.sleep(TIMEOUT);
+            SystemClock.sleep(mHelper.TIMEOUT);
+         }
+     }
+
+    // Open Inflation Listview contents
+    public void openInflatingListView() {
+        mHelper.launchUiBench();
+        UiObject2 inflation = mDevice.wait(Until.findObject(
+               By.res(mHelper.RES_PACKAGE_NAME, "text1").text("Inflation")), mHelper.TIMEOUT);
+        Assert.assertNotNull("Inflation isn't found in UiBench", inflation);
+        inflation.click();
+        SystemClock.sleep(mHelper.TIMEOUT);
+        UiObject2 inflatingListView = mDevice.wait(Until.findObject(
+                By.res(mHelper.RES_PACKAGE_NAME, "text1").text("Inflating ListView")), mHelper.TIMEOUT);
+        Assert.assertNotNull("Inflating ListView Contents isn't found in Inflation", inflatingListView);
+        inflatingListView.click();
+        SystemClock.sleep(mHelper.TIMEOUT);
+    }
+
+    // Test Inflating List View fling
+    @JankTest(beforeTest="openInflatingListView", afterTest="goBackHome",
+        expectedFrames=EXPECTED_FRAMES)
+    @GfxMonitor(processName=PACKAGE_NAME)
+    public void testInflatingListViewFling() {
+        UiObject2 inflatingListViewContents = mDevice.wait(Until.findObject(
+                By.res("android", "content")), mHelper.TIMEOUT);
+        Assert.assertNotNull("Inflating ListView isn't found in Inflation",
+             inflatingListViewContents);
+
+        for (int i = 0; i < mHelper.INNER_LOOP; i++) {
+            inflatingListViewContents.fling(Direction.DOWN);
+            SystemClock.sleep(mHelper.TIMEOUT);
+            inflatingListViewContents.fling(Direction.UP);
+            SystemClock.sleep(mHelper.TIMEOUT);
          }
      }
 
     // Ensuring that we head back to the first screen before launching the app again
     public void goBackHome(Bundle metrics) throws UiObjectNotFoundException {
-        String launcherPackage = mDevice.getLauncherPackageName();
-        UiObject2 homeScreen = mDevice.findObject(By.res(launcherPackage,"workspace"));
-        while (homeScreen == null) {
-            mDevice.pressBack();
-            homeScreen = mDevice.findObject(By.res(launcherPackage,"workspace"));
-        }
+        mHelper.goBackHome();
         super.afterTest(metrics);
     }
 }
