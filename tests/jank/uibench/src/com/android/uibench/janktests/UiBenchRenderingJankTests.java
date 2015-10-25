@@ -71,8 +71,21 @@ public class UiBenchRenderingJankTests extends JankTestBase {
         UiObject2 component = mDevice.wait(Until.findObject(
                 By.res(mHelper.RES_PACKAGE_NAME, "text1").text(componentName)), mHelper.TIMEOUT);
         Assert.assertNotNull(componentName + ": isn't found in Rendering", component);
-        component.click();
+        component.clickAndWait(Until.newWindow(), 500);
         SystemClock.sleep(mHelper.TIMEOUT);
+    }
+
+    // Open Bitmap Upload
+    public void openBitmapUpload() {
+        openRenderingComponents("Bitmap Upload");
+    }
+
+    // Test Bitmap Upload jank
+    @JankTest(beforeTest="openBitmapUpload", afterTest="goBackHome",
+        expectedFrames=EXPECTED_FRAMES)
+    @GfxMonitor(processName=PACKAGE_NAME)
+    public void testBitmapUploadJank() {
+        SystemClock.sleep(mHelper.LONG_TIMEOUT);
     }
 
     // Open Shadow Grid
