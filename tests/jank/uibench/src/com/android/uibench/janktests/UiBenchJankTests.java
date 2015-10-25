@@ -71,7 +71,7 @@ public class UiBenchJankTests extends JankTestBase {
         UiObject2 component = mDevice.wait(Until.findObject(
                 By.res(mHelper.RES_PACKAGE_NAME, "text1").text(componentName)), mHelper.TIMEOUT);
         Assert.assertNotNull(componentName + ": isn't found in General", component);
-        component.click();
+        component.clickAndWait(Until.newWindow(), 500);
         SystemClock.sleep(mHelper.TIMEOUT);
     }
 
@@ -96,14 +96,74 @@ public class UiBenchJankTests extends JankTestBase {
          }
     }
 
+    // Open Fullscreen Overdraw from General
+    public void openFullscreenOverdraw() {
+        openGeneralComponents("Fullscreen Overdraw");
+    }
+
+    // Measure fullscreen overdraw jank
+    @JankTest(beforeTest="openFullscreenOverdraw", afterTest="goBackHome",
+            expectedFrames=EXPECTED_FRAMES)
+    @GfxMonitor(processName=PACKAGE_NAME)
+    public void testFullscreenOverdraw() {
+        UiObject2 fullscreenOverdrawScreen = mDevice.wait(Until.findObject(
+                By.res("android", "content")), mHelper.TIMEOUT);
+        Assert.assertNotNull("Fullscreen Overdraw isn't found", fullscreenOverdrawScreen);
+        SystemClock.sleep(mHelper.LONG_TIMEOUT);
+    }
+
+    // Open GL TextureView from General
+    public void openGLTextureView() {
+        openGeneralComponents("GL TextureView");
+    }
+
+    // Measure GL TextureView jank metrics
+    @JankTest(beforeTest="openGLTextureView", afterTest="goBackHome",
+            expectedFrames=EXPECTED_FRAMES)
+    @GfxMonitor(processName=PACKAGE_NAME)
+    public void testGLTextureView() {
+        SystemClock.sleep(mHelper.LONG_TIMEOUT);
+    }
+
+    // Open Invalidate from General
+    public void openInvalidate() {
+        openGeneralComponents("Invalidate");
+    }
+
+    // Measure Invalidate jank metrics
+    @JankTest(beforeTest="openInvalidate", afterTest="goBackHome", expectedFrames=EXPECTED_FRAMES)
+    @GfxMonitor(processName=PACKAGE_NAME)
+    public void testInvalidate() {
+        UiObject2 invalidateScreen = mDevice.wait(Until.findObject(
+                By.res("android", "content")), mHelper.TIMEOUT);
+        Assert.assertNotNull("Invalidate screen isn't found", invalidateScreen);
+        SystemClock.sleep(mHelper.LONG_TIMEOUT);
+    }
+
+    // Open Trivial Animation from General
+    public void openTrivialAnimation() {
+        openGeneralComponents("Trivial Animation");
+    }
+
+    // Measure TrivialAnimation jank metrics
+    @JankTest(beforeTest="openTrivialAnimation", afterTest="goBackHome",
+            expectedFrames=EXPECTED_FRAMES)
+    @GfxMonitor(processName=PACKAGE_NAME)
+    public void testTrivialAnimation() {
+        UiObject2 trivialAnimationScreen = mDevice.wait(Until.findObject(
+                By.res("android", "content")), mHelper.TIMEOUT);
+        Assert.assertNotNull("Trivial Animation isn't found", trivialAnimationScreen);
+        SystemClock.sleep(mHelper.LONG_TIMEOUT);
+    }
+
     // Open Trivial listview from General
     public void openTrivialListView() {
         openGeneralComponents("Trivial ListView");
-   }
+    }
 
     // Test trivialListView fling
     @JankTest(beforeTest="openTrivialListView", afterTest="goBackHome",
-        expectedFrames=EXPECTED_FRAMES)
+           expectedFrames=EXPECTED_FRAMES)
     @GfxMonitor(processName=PACKAGE_NAME)
     public void testTrivialListViewFling() {
         UiObject2 trivialListViewContents = mDevice.wait(Until.findObject(
@@ -116,7 +176,7 @@ public class UiBenchJankTests extends JankTestBase {
             trivialListViewContents.fling(Direction.UP);
             SystemClock.sleep(mHelper.TIMEOUT);
          }
-     }
+    }
 
     //Open Trivial Recycler List View from General
     public void openTrivialRecyclerListView() {
@@ -139,7 +199,7 @@ public class UiBenchJankTests extends JankTestBase {
             trivialRecyclerViewContents.fling(Direction.UP);
             SystemClock.sleep(mHelper.TIMEOUT);
          }
-     }
+    }
 
     // Open Inflation Listview contents
     public void openInflatingListView() {
@@ -172,7 +232,7 @@ public class UiBenchJankTests extends JankTestBase {
             inflatingListViewContents.fling(Direction.UP);
             SystemClock.sleep(mHelper.TIMEOUT);
          }
-     }
+    }
 
     // Ensuring that we head back to the first screen before launching the app again
     public void goBackHome(Bundle metrics) throws UiObjectNotFoundException {
