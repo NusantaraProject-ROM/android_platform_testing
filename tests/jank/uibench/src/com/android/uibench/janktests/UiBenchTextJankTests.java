@@ -71,8 +71,21 @@ public class UiBenchTextJankTests extends JankTestBase {
         UiObject2 component = mDevice.wait(Until.findObject(
                 By.res(mHelper.RES_PACKAGE_NAME, "text1").text(componentName)), mHelper.TIMEOUT);
         Assert.assertNotNull(componentName + ": isn't found in UiBench:Text", component);
-        component.click();
+        component.clickAndWait(Until.newWindow(), 500);
         SystemClock.sleep(mHelper.TIMEOUT);
+    }
+
+    // Open EditText Typing
+    public void openEditTextTyping() {
+        openTextComponents("EditText Typing");
+    }
+
+    // Measure jank metrics for EditText Typing
+    @JankTest(beforeTest="openEditTextTyping", afterTest="goBackHome",
+        expectedFrames=EXPECTED_FRAMES)
+    @GfxMonitor(processName=PACKAGE_NAME)
+    public void testEditTextTyping() {
+        SystemClock.sleep(mHelper.LONG_TIMEOUT);
     }
 
     // Open Layout Cache High Hitrate
