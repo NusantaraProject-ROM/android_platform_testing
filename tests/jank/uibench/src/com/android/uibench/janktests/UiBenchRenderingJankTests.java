@@ -104,9 +104,9 @@ public class UiBenchRenderingJankTests extends JankTestBase {
 
         for (int i = 0; i < mHelper.INNER_LOOP; i++) {
             shadowGridContents.fling(Direction.DOWN);
-            SystemClock.sleep(mHelper.TIMEOUT);
+            SystemClock.sleep(mHelper.SHORT_TIMEOUT);
             shadowGridContents.fling(Direction.UP);
-            SystemClock.sleep(mHelper.TIMEOUT);
+            SystemClock.sleep(mHelper.SHORT_TIMEOUT);
          }
     }
 

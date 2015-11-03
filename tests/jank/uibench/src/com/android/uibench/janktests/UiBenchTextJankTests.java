@@ -24,6 +24,7 @@ import android.support.test.jank.GfxMonitor;
 import android.support.test.jank.JankTest;
 import android.support.test.jank.JankTestBase;
 import android.support.test.uiautomator.By;
+import android.support.test.uiautomator.StaleObjectException;
 import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
@@ -100,14 +101,19 @@ public class UiBenchTextJankTests extends JankTestBase {
     public void testLayoutCacheHighHitrateFling() {
         UiObject2 layoutCacheHighHitrateContents = mDevice.wait(Until.findObject(
                 By.clazz(ListView.class)), mHelper.TIMEOUT);
-        Assert.assertNotNull("Shadow Grid list isn't found", layoutCacheHighHitrateContents);
+        Assert.assertNotNull("LayoutCacheHighHitrateContents isn't found", layoutCacheHighHitrateContents);
 
         for (int i = 0; i < mHelper.INNER_LOOP; i++) {
-            layoutCacheHighHitrateContents.fling(Direction.DOWN);
-            SystemClock.sleep(mHelper.TIMEOUT);
-            layoutCacheHighHitrateContents.fling(Direction.UP);
-            SystemClock.sleep(mHelper.TIMEOUT);
-         }
+            try {
+                layoutCacheHighHitrateContents.fling(Direction.DOWN);
+                SystemClock.sleep(mHelper.SHORT_TIMEOUT);
+                layoutCacheHighHitrateContents.fling(Direction.UP);
+                SystemClock.sleep(mHelper.SHORT_TIMEOUT);
+            } catch (StaleObjectException soex) {
+                layoutCacheHighHitrateContents = mDevice.wait(Until.findObject(
+                By.clazz(ListView.class)), mHelper.TIMEOUT);
+            }
+        }
     }
 
     // Open Layout Cache Low Hitrate
@@ -122,13 +128,18 @@ public class UiBenchTextJankTests extends JankTestBase {
     public void testLayoutCacheLowHitrateFling() {
         UiObject2 layoutCacheLowHitrateContents = mDevice.wait(Until.findObject(
                 By.clazz(ListView.class)), mHelper.TIMEOUT);
-        Assert.assertNotNull("Shadow Grid list isn't found", layoutCacheLowHitrateContents);
+        Assert.assertNotNull("LayoutCacheLowHitrateContents isn't found", layoutCacheLowHitrateContents);
 
         for (int i = 0; i < mHelper.INNER_LOOP; i++) {
-            layoutCacheLowHitrateContents.fling(Direction.DOWN);
-            SystemClock.sleep(mHelper.TIMEOUT);
-            layoutCacheLowHitrateContents.fling(Direction.UP);
-            SystemClock.sleep(mHelper.TIMEOUT);
+            try {
+                layoutCacheLowHitrateContents.fling(Direction.DOWN);
+                SystemClock.sleep(mHelper.SHORT_TIMEOUT);
+                layoutCacheLowHitrateContents.fling(Direction.UP);
+                SystemClock.sleep(mHelper.SHORT_TIMEOUT);
+            } catch (StaleObjectException soex) {
+                layoutCacheLowHitrateContents = mDevice.wait(Until.findObject(
+                By.clazz(ListView.class)), mHelper.TIMEOUT);
+            }
          }
     }
 

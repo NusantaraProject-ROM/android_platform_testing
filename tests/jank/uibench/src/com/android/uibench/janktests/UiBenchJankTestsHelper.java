@@ -22,6 +22,7 @@ import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
+import android.support.test.uiautomator.Until;
 
 /**
  * Jank benchmark tests helper for UiBench app
@@ -30,6 +31,7 @@ import android.support.test.uiautomator.UiObjectNotFoundException;
 public class UiBenchJankTestsHelper {
     public static final int LONG_TIMEOUT = 5000;
     public static final int TIMEOUT = 250;
+    public static final int SHORT_TIMEOUT = 250;
     public static final int INNER_LOOP = 3;
     public static final int EXPECTED_FRAMES = 100;
 
@@ -63,6 +65,13 @@ public class UiBenchJankTestsHelper {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         mContext.startActivity(intent);
         mDevice.waitForIdle();
+        // ensure test starts from home despite last failed test left UiBench in weird state
+        UiObject2 initScreen = mDevice.wait(Until.findObject(By.text("UiBench")), 2000);
+        int counter = 3;
+        while (initScreen == null && --counter > 0) {
+            mDevice.pressBack();
+            initScreen = mDevice.wait(Until.findObject(By.text("UiBench")), 2000);
+        }
     }
 
     // Helper method to go back to home screen

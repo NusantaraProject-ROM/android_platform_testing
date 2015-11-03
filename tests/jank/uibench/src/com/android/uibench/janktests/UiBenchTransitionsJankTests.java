@@ -82,7 +82,7 @@ public class UiBenchTransitionsJankTests extends JankTestBase {
         UiObject2 image = mDevice.wait(Until.findObject(
                By.res(mHelper.PACKAGE_NAME, imageName)), mHelper.TIMEOUT);
         Assert.assertNotNull( imageName + "Image not found", image);
-        image.clickAndWait(Until.newWindow(), 500);
+        image.clickAndWait(Until.newWindow(), mHelper.TIMEOUT);
         mDevice.pressBack();
     }
 

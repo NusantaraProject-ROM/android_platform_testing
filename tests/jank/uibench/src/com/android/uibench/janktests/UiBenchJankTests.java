@@ -90,9 +90,9 @@ public class UiBenchJankTests extends JankTestBase {
 
         for (int i = 0; i < mHelper.INNER_LOOP; i++) {
             dialogListContents.fling(Direction.DOWN);
-            SystemClock.sleep(mHelper.TIMEOUT);
+            SystemClock.sleep(mHelper.SHORT_TIMEOUT);
             dialogListContents.fling(Direction.UP);
-            SystemClock.sleep(mHelper.TIMEOUT);
+            SystemClock.sleep(mHelper.SHORT_TIMEOUT);
          }
     }
 
@@ -172,9 +172,9 @@ public class UiBenchJankTests extends JankTestBase {
 
         for (int i = 0; i < mHelper.INNER_LOOP; i++) {
             trivialListViewContents.fling(Direction.DOWN);
-            SystemClock.sleep(mHelper.TIMEOUT);
+            SystemClock.sleep(mHelper.SHORT_TIMEOUT);
             trivialListViewContents.fling(Direction.UP);
-            SystemClock.sleep(mHelper.TIMEOUT);
+            SystemClock.sleep(mHelper.SHORT_TIMEOUT);
          }
     }
 
@@ -195,9 +195,9 @@ public class UiBenchJankTests extends JankTestBase {
 
         for (int i = 0; i < mHelper.INNER_LOOP; i++) {
             trivialRecyclerViewContents.fling(Direction.DOWN);
-            SystemClock.sleep(mHelper.TIMEOUT);
+            SystemClock.sleep(mHelper.SHORT_TIMEOUT);
             trivialRecyclerViewContents.fling(Direction.UP);
-            SystemClock.sleep(mHelper.TIMEOUT);
+            SystemClock.sleep(mHelper.SHORT_TIMEOUT);
          }
     }
 
@@ -228,9 +228,9 @@ public class UiBenchJankTests extends JankTestBase {
 
         for (int i = 0; i < mHelper.INNER_LOOP; i++) {
             inflatingListViewContents.fling(Direction.DOWN);
-            SystemClock.sleep(mHelper.TIMEOUT);
+            SystemClock.sleep(mHelper.SHORT_TIMEOUT);
             inflatingListViewContents.fling(Direction.UP);
-            SystemClock.sleep(mHelper.TIMEOUT);
+            SystemClock.sleep(mHelper.SHORT_TIMEOUT);
          }
     }
 
