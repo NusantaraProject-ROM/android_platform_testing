@@ -65,9 +65,12 @@ public class GoogleExperienceLauncherStrategy implements ILauncherStrategy {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 try {
                     mDevice.dumpWindowHierarchy(baos);
-                    Log.d(LOG_TAG, baos.toString());
                     baos.flush();
                     baos.close();
+                    String[] lines = baos.toString().split("\\r?\\n");
+                    for (String line : lines) {
+                        Log.d(LOG_TAG, line.trim());
+                    }
                 } catch (IOException ioe) {
                     Log.e(LOG_TAG, "error dumping XML to logcat", ioe);
                 }
