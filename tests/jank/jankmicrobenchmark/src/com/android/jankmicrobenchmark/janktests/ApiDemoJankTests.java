@@ -60,14 +60,19 @@ public class ApiDemoJankTests extends JankTestBase {
         super.tearDown();
     }
 
-    public void launchApiDemos() {
+    public void launchApiDemos() throws UiObjectNotFoundException {
+        String launcherPackage = mDevice.getLauncherPackageName();
+        UiObject2 homeScreen = mDevice.findObject(By.res(launcherPackage,"workspace"));
+        if (homeScreen == null) 
+            navigateToHome();
         Intent intent = getInstrumentation().getContext().getPackageManager()
                 .getLaunchIntentForPackage(PACKAGE_NAME);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         getInstrumentation().getContext().startActivity(intent);
         mDevice.waitForIdle();
     }
-    public void selectAnimation(String optionName) {
+
+    public void selectAnimation(String optionName) throws UiObjectNotFoundException {
         launchApiDemos();
         UiObject2 animation = mDevice.wait(Until.findObject(
                 By.res(RES_PACKAGE_NAME, "text1").text("Animation")), LONG_TIMEOUT);
@@ -87,22 +92,33 @@ public class ApiDemoJankTests extends JankTestBase {
         option.click();
     }
 
+    // Since afterTest only runs when the test has passed, there's no way of going
+    // back to the Home Screen if a test fails. This method is a workaround. A feature
+    // request has been filed to have a per test tearDown method - b/25673300
+    public void navigateToHome() throws UiObjectNotFoundException {
+        String launcherPackage = mDevice.getLauncherPackageName();
+        UiObject2 homeScreen = mDevice.findObject(By.res(launcherPackage,"workspace"));
+        int count = 0;
+        while (homeScreen == null && count <= 10) {
+            mDevice.pressBack();
+            homeScreen = mDevice.wait(Until.findObject(By.res(launcherPackage,"workspace")),
+                    LONG_TIMEOUT);
+            count++;
+        }
+        Assert.assertNotNull("Hit maximum retries and couldn't find Home Screen", homeScreen);
+    }
+
     // Since the app doesn't start at the first page when reloaded after the first time,
     // ensuring that we head back to the first screen before going Home so we're always
     // on screen one.
     public void goBackHome(Bundle metrics) throws UiObjectNotFoundException {
-        String launcherPackage = mDevice.getLauncherPackageName();
-        UiObject2 homeScreen = mDevice.findObject(By.res(launcherPackage,"workspace"));
-        while (homeScreen == null) {
-            mDevice.pressBack();
-            homeScreen = mDevice.findObject(By.res(launcherPackage,"workspace"));
-        }
+        navigateToHome();
         super.afterTest(metrics);
     }
 
     // Loads the 'activity transition' animation
     public void selectActivityTransitionAnimation() throws UiObjectNotFoundException {
-         selectAnimation("Activity Transition");
+        selectAnimation("Activity Transition");
     }
 
     // Measures jank for activity transition animation
@@ -163,7 +179,7 @@ public class ApiDemoJankTests extends JankTestBase {
     @GfxMonitor(processName=PACKAGE_NAME)
     public void testLoadingJank() {
         UiObject2 runButton = mDevice.wait(Until.findObject(
-            By.res(PACKAGE_NAME, "startButton").text("Run")), LONG_TIMEOUT);
+            By.res(PACKAGE_NAME, "startButton").text("RUN")), LONG_TIMEOUT);
         Assert.assertNotNull("Run button is null", runButton);
         for (int i = 0; i < INNER_LOOP; i++) {
             runButton.click();
@@ -208,7 +224,7 @@ public class ApiDemoJankTests extends JankTestBase {
     public void testHideShowAnimationJank() {
         for (int i = 0; i < INNER_LOOP; i++) {
             UiObject2 showButton = mDevice.wait(Until.findObject(By.res(
-                    PACKAGE_NAME, "addNewButton").text("Show Buttons")), LONG_TIMEOUT);
+                    PACKAGE_NAME, "addNewButton").text("SHOW BUTTONS")), LONG_TIMEOUT);
             Assert.assertNotNull("'Show Buttons' button can't be found", showButton);
             showButton.click();
             SystemClock.sleep(SHORT_TIMEOUT);
@@ -239,7 +255,7 @@ public class ApiDemoJankTests extends JankTestBase {
         }
     }
 
-    public void selectViews(String optionName) {
+    public void selectViews(String optionName) throws UiObjectNotFoundException {
         launchApiDemos();
         UiObject2 views = null;
         short maxAttempt = 4;
