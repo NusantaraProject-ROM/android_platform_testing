@@ -71,7 +71,7 @@ public class YouTubeJankTests extends JankTestBase {
         super.tearDown();
     }
 
-    public void launchApp(String packageName) throws UiObjectNotFoundException{
+    public void launchApp(String packageName) throws UiObjectNotFoundException {
         PackageManager pm = getInstrumentation().getContext().getPackageManager();
         Intent appIntent = pm.getLaunchIntentForPackage(packageName);
         appIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -115,7 +115,7 @@ public class YouTubeJankTests extends JankTestBase {
     private void dismissCling() {
         // Dismiss the dogfood splash screen that might appear on first start
         UiObject2 newNavigationDoneBtn = mDevice.wait(Until.findObject(
-            By.res(PACKAGE_NAME, "done_button").text("Done")), LONG_TIMEOUT);
+            By.res(PACKAGE_NAME, "done_button")), LONG_TIMEOUT);
         if (newNavigationDoneBtn != null) {
           newNavigationDoneBtn.click();
         }
