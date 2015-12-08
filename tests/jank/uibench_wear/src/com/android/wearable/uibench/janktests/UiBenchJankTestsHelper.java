@@ -98,22 +98,21 @@ public class UiBenchJankTestsHelper {
     public void openTextInList(String itemName) {
         int count = 0;
         UiObject2 component = mDevice.wait(Until.findObject(
-                By.res(RES_PACKAGE_NAME, TEXT_OBJECT_NAME).text(itemName)), LONG_TIMEOUT);
-        
+                By.res(RES_PACKAGE_NAME, TEXT_OBJECT_NAME).text(itemName)), TIMEOUT);
         while (component == null && count < 5) {
+            swipeDown();
             component = mDevice.wait(Until.findObject(
                     By.res(RES_PACKAGE_NAME, TEXT_OBJECT_NAME).text(itemName)), TIMEOUT);
-            swipeDown();
             count ++;
         }
         while (component == null && count < 10) {
+            swipeUp();
             component = mDevice.wait(Until.findObject(
                     By.res(RES_PACKAGE_NAME, TEXT_OBJECT_NAME).text(itemName)), TIMEOUT);
-            swipeUp();
             count ++;
         }
         Assert.assertNotNull(itemName + ": isn't found", component);
-        component.clickAndWait(Until.newWindow(), 500);
+        component.clickAndWait(Until.newWindow(), LONG_TIMEOUT);
         SystemClock.sleep(TIMEOUT);
 
     }
