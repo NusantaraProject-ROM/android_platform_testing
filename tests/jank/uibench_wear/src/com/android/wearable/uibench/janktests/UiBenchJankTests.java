@@ -50,7 +50,8 @@ public class UiBenchJankTests extends JankTestBase {
         super.setUp();
         mDevice = UiDevice.getInstance(getInstrumentation());
         mHelper = UiBenchJankTestsHelper.getInstance(mDevice,
-             this.getInstrumentation().getContext());
+                this.getInstrumentation().getContext());
+        mDevice.wakeUp();
     }
 
     @Override
