@@ -20,7 +20,6 @@ import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
-import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.Until;
 import android.util.Log;
 import android.widget.TextView;
@@ -55,7 +54,7 @@ public class GoogleExperienceLauncherStrategy implements ILauncherStrategy {
      * {@inheritDoc}
      */
     @Override
-    public void open() throws UiObjectNotFoundException {
+    public void open() {
         // if we see hotseat, assume at home screen already
         if (!mDevice.hasObject(HOTSEAT)) {
             mDevice.pressHome();
@@ -84,7 +83,7 @@ public class GoogleExperienceLauncherStrategy implements ILauncherStrategy {
      * {@inheritDoc}
      */
     @Override
-    public UiObject2 openAllApps(boolean reset) throws UiObjectNotFoundException {
+    public UiObject2 openAllApps(boolean reset) {
         // if we see all apps container, skip the opening step
         if (!mDevice.hasObject(APPS_CONTAINER)) {
             open();
@@ -115,7 +114,7 @@ public class GoogleExperienceLauncherStrategy implements ILauncherStrategy {
      * {@inheritDoc}
      */
     @Override
-    public UiObject2 openAllWidgets(boolean reset) throws UiObjectNotFoundException {
+    public UiObject2 openAllWidgets(boolean reset) {
         if (!mDevice.hasObject(WIDGETS_CONTAINER)) {
             open();
             // trigger the wallpapers/widgets/settings view
@@ -145,7 +144,7 @@ public class GoogleExperienceLauncherStrategy implements ILauncherStrategy {
      * {@inheritDoc}
      */
     @Override
-    public boolean launch(String appName, String packageName) throws UiObjectNotFoundException {
+    public boolean launch(String appName, String packageName) {
         BySelector app = By.res(LAUNCHER_PKG, "icon").clazz(TextView.class).desc(appName);
         return CommonLauncherHelper.getInstance(mDevice).launchApp(this, app, packageName);
     }

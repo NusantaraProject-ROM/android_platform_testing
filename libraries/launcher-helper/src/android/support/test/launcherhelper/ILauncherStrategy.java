@@ -19,7 +19,6 @@ import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
-import android.support.test.uiautomator.UiObjectNotFoundException;
 
 /**
  * Defines the common use cases a launcher UI automation helper should fulfill.
@@ -43,17 +42,15 @@ public interface ILauncherStrategy {
 
     /**
      * Shows the home screen of launcher
-     * @throws UiObjectNotFoundException
      */
-    public void open() throws UiObjectNotFoundException;
+    public void open();
 
     /**
      * Opens the all apps drawer of launcher
      * @param reset if the all apps drawer should be reset to the beginning
      * @return {@link UiObject2} representation of the all apps drawer
-     * @throws UiObjectNotFoundException
      */
-    public UiObject2 openAllApps(boolean reset) throws UiObjectNotFoundException;
+    public UiObject2 openAllApps(boolean reset);
 
     /**
      * Returns a {@link BySelector} describing the all apps drawer
@@ -71,9 +68,8 @@ public interface ILauncherStrategy {
      * Opens the all widgets drawer of launcher
      * @param reset if the all widgets drawer should be reset to the beginning
      * @return {@link UiObject2} representation of the all widgets drawer
-     * @throws UiObjectNotFoundException
      */
-    public UiObject2 openAllWidgets(boolean reset) throws UiObjectNotFoundException;
+    public UiObject2 openAllWidgets(boolean reset);
 
     /**
      * Returns a {@link BySelector} describing the all widgets drawer
@@ -107,7 +103,6 @@ public interface ILauncherStrategy {
      *                    performed.
      * @return <code>true</code> if application is verified to be in foreground after launch, or the
      *   verification is skipped; <code>false</code> otherwise.
-     * @throws UiObjectNotFoundException
      */
-    public boolean launch(String appName, String packageName) throws UiObjectNotFoundException;
+    public boolean launch(String appName, String packageName);
 }

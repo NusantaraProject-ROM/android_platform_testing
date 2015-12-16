@@ -20,7 +20,6 @@ import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
-import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.Until;
 import android.widget.Button;
 import android.widget.TextView;
@@ -43,7 +42,7 @@ public class AospLauncherStrategy implements ILauncherStrategy {
      * {@inheritDoc}
      */
     @Override
-    public void open() throws UiObjectNotFoundException {
+    public void open() {
         // if we see hotseat, assume at home screen already
         if (!mDevice.hasObject(HOTSEAT)) {
             mDevice.pressHome();
@@ -62,7 +61,7 @@ public class AospLauncherStrategy implements ILauncherStrategy {
      * {@inheritDoc}
      */
     @Override
-    public UiObject2 openAllApps(boolean reset) throws UiObjectNotFoundException {
+    public UiObject2 openAllApps(boolean reset) {
         // if we see apps container, skip the opening step, only ensure that the "Apps" tab is
         // selected
         if (!mDevice.hasObject(APPS_CONTAINER)) {
@@ -100,7 +99,7 @@ public class AospLauncherStrategy implements ILauncherStrategy {
      * {@inheritDoc}
      */
     @Override
-    public UiObject2 openAllWidgets(boolean reset) throws UiObjectNotFoundException {
+    public UiObject2 openAllWidgets(boolean reset) {
         boolean needReset = true;
         // if we see apps container, skip the opening step, only ensure that the "Widgets" tab is
         // selected
@@ -147,7 +146,7 @@ public class AospLauncherStrategy implements ILauncherStrategy {
      * {@inheritDoc}
      */
     @Override
-    public boolean launch(String appName, String packageName) throws UiObjectNotFoundException {
+    public boolean launch(String appName, String packageName) {
         return CommonLauncherHelper.getInstance(mDevice).launchApp(this,
                 By.res("").clazz(TextView.class).desc(appName), packageName);
     }
