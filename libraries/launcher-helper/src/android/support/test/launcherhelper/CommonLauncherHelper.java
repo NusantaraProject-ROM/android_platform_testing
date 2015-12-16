@@ -21,7 +21,6 @@ import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
-import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.Until;
 import android.util.Log;
 
@@ -59,10 +58,8 @@ public class CommonLauncherHelper {
      * Scrolls a container back to the beginning
      * @param container
      * @param backDirection
-     * @throws UiObjectNotFoundException
      */
-    public void scrollBackToBeginning(UiObject2 container, Direction backDirection)
-            throws UiObjectNotFoundException {
+    public void scrollBackToBeginning(UiObject2 container, Direction backDirection) {
         scrollBackToBeginning(container, backDirection, MAX_SCROLL_ATTEMPTS);
     }
 
@@ -71,10 +68,8 @@ public class CommonLauncherHelper {
      * @param container
      * @param backDirection
      * @param maxAttempts
-     * @throws UiObjectNotFoundException
      */
-    public void scrollBackToBeginning(UiObject2 container, Direction backDirection, int maxAttempts)
-            throws UiObjectNotFoundException {
+    public void scrollBackToBeginning(UiObject2 container, Direction backDirection, int maxAttempts) {
         int attempts = 0;
         while (container.fling(backDirection)) {
             attempts++;
@@ -91,10 +86,8 @@ public class CommonLauncherHelper {
      * @param app
      * @param container
      * @param dir
-     * @throws UiObjectNotFoundException
      */
-    private void ensureIconVisible(BySelector app, UiObject2 container, Direction dir)
-            throws UiObjectNotFoundException {
+    private void ensureIconVisible(BySelector app, UiObject2 container, Direction dir) {
         UiObject2 appIcon = mDevice.findObject(app);
         Rect appR = appIcon.getVisibleBounds();
         Rect containerR = container.getVisibleBounds();
@@ -125,10 +118,9 @@ public class CommonLauncherHelper {
      * @param app
      * @param packageName
      * @return
-     * @throws UiObjectNotFoundException
      */
     public boolean launchApp(ILauncherStrategy launcherStrategy, BySelector app,
-            String packageName) throws UiObjectNotFoundException {
+            String packageName) {
         return launchApp(launcherStrategy, app, packageName, MAX_SCROLL_ATTEMPTS);
     }
 
@@ -140,11 +132,9 @@ public class CommonLauncherHelper {
      * @param packageName
      * @param maxScrollAttempts
      * @return
-     * @throws UiObjectNotFoundException
      */
     public boolean launchApp(ILauncherStrategy launcherStrategy, BySelector app,
-            String packageName, int maxScrollAttempts)
-                    throws UiObjectNotFoundException {
+            String packageName, int maxScrollAttempts) {
         Direction dir = launcherStrategy.getAllAppsScrollDirection();
         // attempt to find the app icon if it's not already on the screen
         if (!mDevice.hasObject(app)) {
