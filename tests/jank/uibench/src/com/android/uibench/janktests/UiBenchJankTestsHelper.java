@@ -37,6 +37,7 @@ public class UiBenchJankTestsHelper {
 
     public static final String RES_PACKAGE_NAME = "android";
     public static final String PACKAGE_NAME = "com.android.test.uibench";
+    private static final String LEANBACK_LAUNCHER = "com.google.android.leanbacklauncher";
 
     private static UiBenchJankTestsHelper mInstance;
     private UiDevice mDevice;
@@ -76,11 +77,24 @@ public class UiBenchJankTestsHelper {
 
     // Helper method to go back to home screen
     public void goBackHome() throws UiObjectNotFoundException {
-        String launcherPackage = mDevice.getLauncherPackageName();
-        UiObject2 homeScreen = mDevice.findObject(By.res(launcherPackage,"workspace"));
+        UiObject2 homeScreen = getHomeScreen();
         while (homeScreen == null) {
             mDevice.pressBack();
-            homeScreen = mDevice.findObject(By.res(launcherPackage,"workspace"));
+            homeScreen = getHomeScreen();
+        }
+    }
+
+    // This method distinguishes between home screen for handheld devices
+    // and home screen for Android TV, both of whom have different Home elements.
+    public UiObject2 getHomeScreen() throws UiObjectNotFoundException {
+        if (mDevice.getProductName().equals("fugu")) {
+            return mDevice.wait(Until.findObject(By.res(LEANBACK_LAUNCHER, "main_list_view")),
+                    LONG_TIMEOUT);
+        }
+        else {
+            String launcherPackage = mDevice.getLauncherPackageName();
+            return mDevice.wait(Until.findObject(By.res(launcherPackage,"workspace")),
+                    LONG_TIMEOUT);
         }
     }
 }
