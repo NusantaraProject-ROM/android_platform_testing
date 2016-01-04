@@ -41,7 +41,8 @@ public class SettingsJankTests extends JankTestBase {
 
     private static final int TIMEOUT = 5000;
     private static final String SETTINGS_PACKAGE = "com.android.settings";
-    private static final BySelector SETTINGS_DASHBOARD = By.res(SETTINGS_PACKAGE, "dashboard");
+    private static final BySelector SETTINGS_DASHBOARD = By.res(SETTINGS_PACKAGE,
+            "dashboard_container");
     // short transitions should be repeated within the test function, otherwise frame stats
     // captured are not really meaningful in a statistical sense
     private static final int INNER_LOOP = 2;
@@ -70,7 +71,6 @@ public class SettingsJankTests extends JankTestBase {
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK); // Clear out any previous instances
         context.startActivity(intent);
         mDevice.wait(Until.hasObject(By.pkg(SETTINGS_PACKAGE).depth(0)), TIMEOUT);
-
         SystemClock.sleep(1000);
     }
 
@@ -82,6 +82,12 @@ public class SettingsJankTests extends JankTestBase {
 
     public void flingSettingsToStart() throws IOException {
         UiObject2 list = mDevice.wait(Until.findObject(SETTINGS_DASHBOARD), TIMEOUT);
+        int count = 0;
+        while (list.isScrollable() == false && count <= 5) {
+            mDevice.wait(Until.findObject(By.text("SEE ALL")), TIMEOUT).click();
+            list = mDevice.wait(Until.findObject(SETTINGS_DASHBOARD), TIMEOUT);
+            count++;
+        }
         while (list.fling(Direction.UP));
         mDevice.waitForIdle();
         TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
