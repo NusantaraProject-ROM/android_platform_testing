@@ -83,7 +83,7 @@ public class SettingsJankTests extends JankTestBase {
     public void flingSettingsToStart() throws IOException {
         UiObject2 list = mDevice.wait(Until.findObject(SETTINGS_DASHBOARD), TIMEOUT);
         int count = 0;
-        while (list.isScrollable() == false && count <= 5) {
+        while (!list.isScrollable() && count <= 5) {
             mDevice.wait(Until.findObject(By.text("SEE ALL")), TIMEOUT).click();
             list = mDevice.wait(Until.findObject(SETTINGS_DASHBOARD), TIMEOUT);
             count++;
