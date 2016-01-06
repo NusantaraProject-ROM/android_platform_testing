@@ -37,6 +37,8 @@ import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.Until;
 import android.view.View;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import junit.framework.Assert;
 import android.support.test.timeresulthelper.TimeResultLogger;
 
@@ -137,8 +139,10 @@ public class CalendarJankTests extends JankTestBase {
             rightArrow.click();
             --counter;
         }
+
+        Pattern pattern = Pattern.compile("GOT IT", Pattern.CASE_INSENSITIVE);
         UiObject2 gotIt = mDevice.wait(Until.findObject(
-              By.res(PACKAGE_NAME, "done_button").text("Got it")), LONG_TIMEOUT);
+              By.res(PACKAGE_NAME, "done_button").text(pattern)), LONG_TIMEOUT);
         if (gotIt != null) {
             gotIt.click();
         }
