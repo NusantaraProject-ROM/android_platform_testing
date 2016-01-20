@@ -109,7 +109,7 @@ public class UiBenchJankTests extends JankTestBase {
         UiObject2 fullscreenOverdrawScreen = mDevice.wait(Until.findObject(
                 By.res("android", "content")), mHelper.TIMEOUT);
         Assert.assertNotNull("Fullscreen Overdraw isn't found", fullscreenOverdrawScreen);
-        SystemClock.sleep(mHelper.LONG_TIMEOUT*2);
+        SystemClock.sleep(mHelper.LONG_TIMEOUT * 2);
     }
 
     // Open GL TextureView from General
