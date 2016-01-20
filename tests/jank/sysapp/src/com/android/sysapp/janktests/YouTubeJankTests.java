@@ -136,6 +136,11 @@ public class YouTubeJankTests extends JankTestBase {
                     Until.findObject(By.res(PACKAGE_NAME, "ok").text("OK")), LONG_TIMEOUT);
             Assert.assertNotNull("No 'ok' button to bypass music", ok);
             ok.click();
-      }
+        }
+        UiObject2 laterButton = mDevice.wait(
+            Until.findObject(By.res(PACKAGE_NAME, "later_button")), LONG_TIMEOUT);
+        if (laterButton != null) {
+            laterButton.click();
+         }
     }
 }
