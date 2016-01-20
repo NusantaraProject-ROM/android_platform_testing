@@ -35,6 +35,9 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -49,6 +52,7 @@ import android.test.InstrumentationTestCase;
 import android.test.InstrumentationTestRunner;
 import android.util.Log;
 
+import junit.framework.Assert;
 
 /**
  * Base class for AuptTests.
@@ -549,5 +553,22 @@ public class AuptTestCase extends InstrumentationTestCase {
         }
 
         return version;
+    }
+
+    /**
+     * Get registered accounts
+     * Ensures there is at least one account registered
+     * returns the google account name
+     */
+    public String getRegisteredEmailAccount() {
+        Account[] accounts = AccountManager.get(getInstrumentation().getContext()).getAccounts();
+        Assert.assertTrue("Device have one or more account registered", accounts.length >= 1);
+        for(int i =0; i < accounts.length; ++i) {
+            if(accounts[i].type.equals("com.google")) {
+                return accounts[i].name;
+            }
+        }
+
+        throw new RuntimeException("The device is not registered with a google account");
     }
 }
