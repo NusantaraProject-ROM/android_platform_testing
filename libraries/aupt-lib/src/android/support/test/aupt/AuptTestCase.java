@@ -562,7 +562,7 @@ public class AuptTestCase extends InstrumentationTestCase {
      */
     public String getRegisteredEmailAccount() {
         Account[] accounts = AccountManager.get(getInstrumentation().getContext()).getAccounts();
-        Assert.assertTrue("Device have one or more account registered", accounts.length >= 1);
+        Assert.assertTrue("Device doesn't have any account registered", accounts.length >= 1);
         for(int i =0; i < accounts.length; ++i) {
             if(accounts[i].type.equals("com.google")) {
                 return accounts[i].name;
