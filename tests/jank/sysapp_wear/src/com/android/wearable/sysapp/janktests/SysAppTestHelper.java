@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,19 +24,23 @@ import android.os.SystemClock;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiSelector;
+import android.util.Log;
 
 import junit.framework.Assert;
 
 /**
- * Helper for all they system apps tests
+ * Helper for all the system apps jank tests
  */
 public class SysAppTestHelper {
 
+    private static final String LOG_TAG = SysAppTestHelper.class.getSimpleName();
     public static final int MIN_FRAMES = 20;
     public static final int LONG_TIMEOUT = 5000;
     public static final int SHORT_TIMEOUT = 500;
-    private static final long NEW_CARD_TIMEOUT_MS = 10 * 1000; // 10s
+    private static final long NEW_CARD_TIMEOUT_MS = 5 * 1000; // 5s
     private static final int CARD_SWIPE_STEPS = 20;
+    private static final String RELOAD_DEMO_CARD_CMD = "com.google.android.clockwork.home."
+            + "retail.action.STARTED_RETAIL_DREAM";
 
     // Demo card selectors
     private static final UiSelector CARD_SELECTOR = new UiSelector()
@@ -47,7 +51,7 @@ public class SysAppTestHelper {
             .resourceId("com.google.android.wearable.app:id/clock_bar");
 
     private UiDevice mDevice = null;
-    private Context mContext = null; // Currently not used but for further tests may be useful.
+    private Context mContext = null;
     private UiObject mCard = null;
     private UiObject mTitle = null;
     private UiObject mClock = null;
@@ -63,6 +67,9 @@ public class SysAppTestHelper {
         this.mDevice = mDevice;
         this.mContext = mContext;
         mIntent = new Intent();
+        mCard = mDevice.findObject(CARD_SELECTOR);
+        mTitle = mDevice.findObject(TITLE_SELECTOR);
+        mClock = mDevice.findObject(CLOCK_SELECTOR);
     }
 
     public static SysAppTestHelper getInstance(UiDevice device, Context context) {
@@ -100,6 +107,7 @@ public class SysAppTestHelper {
     public void flingUp() {
         mDevice.swipe(mDevice.getDisplayWidth() / 2, mDevice.getDisplayHeight() / 2 + 50,
                 mDevice.getDisplayWidth() / 2, 0, 5); // fast speed
+        SystemClock.sleep(SHORT_TIMEOUT);
     }
 
     public void flingDown() {
@@ -114,7 +122,7 @@ public class SysAppTestHelper {
         mClock = null;
         while (mClock == null && count++ < 5) {
             mDevice.sleep();
-            SystemClock.sleep(LONG_TIMEOUT);
+            SystemClock.sleep(SHORT_TIMEOUT + SHORT_TIMEOUT);
             mDevice.wakeUp();
             SystemClock.sleep(SHORT_TIMEOUT + SHORT_TIMEOUT);
             mClock = mDevice.findObject(CLOCK_SELECTOR); // Ensure device is really on Home screen
@@ -127,22 +135,36 @@ public class SysAppTestHelper {
     // more than one card.
     public void hasDemoCards() throws Exception {
         // Device should be pre-loaded with demo cards.
-        // Start the intent to go to home screen
-        mCard = mDevice.findObject(CARD_SELECTOR);
-        mTitle = mDevice.findObject(TITLE_SELECTOR);
-        mClock = mDevice.findObject(CLOCK_SELECTOR);
+
+        goBackHome(); // Start by going to Home.
 
         if (mClock.waitForExists(NEW_CARD_TIMEOUT_MS)) {
             mClock.swipeUp(CARD_SWIPE_STEPS);
+            // For few devices, demo card preview is hidden by default. So swipe once to bring up the card.
         }
 
         // First card from the pre-loaded demo cards could be either in peek view
         // or in full view(e.g Dory) or no peek view(Sturgeon). Ensure to check for demo cards
-        // existence in
-        // both cases.
+        // existence in both cases.
+        if (!(mCard.waitForExists(NEW_CARD_TIMEOUT_MS)
+                || mTitle.waitForExists(NEW_CARD_TIMEOUT_MS))) {
+            Log.d(LOG_TAG, "Demo cards not found, going to reload the cards");
+            // If there are no Demo cards, reload them.
+            reloadDemoCards();
+            if (mClock.waitForExists(NEW_CARD_TIMEOUT_MS)) {
+                mClock.swipeUp(CARD_SWIPE_STEPS); // For few devices, demo card preview is hidden by
+                // default. So swipe once to bring up the card.
+            }
+        }
         Assert.assertTrue("no cards available for testing",
-                (mCard.waitForExists(NEW_CARD_TIMEOUT_MS)
-                        || mTitle.waitForExists(NEW_CARD_TIMEOUT_MS)));
+                (mTitle.waitForExists(NEW_CARD_TIMEOUT_MS)));
+    }
+
+    // This will ensure to reload retail cards when there are insufficient cards
+    private void reloadDemoCards() {
+        mIntent.setAction(RELOAD_DEMO_CARD_CMD);
+        mContext.sendBroadcast(mIntent);
+        SystemClock.sleep(LONG_TIMEOUT);
     }
 
     public void launchActivity(String appPackage, String activityToLaunch) {
