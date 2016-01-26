@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,14 +18,13 @@ package com.android.wearable.sysapp.janktests;
 
 import android.os.Bundle;
 import android.os.RemoteException;
-import android.os.SystemClock;
 import android.support.test.jank.GfxMonitor;
 import android.support.test.jank.JankTest;
 import android.support.test.jank.JankTestBase;
 import android.support.test.uiautomator.UiDevice;
 
 /**
- * Janks tests for scrolling & swiping off notification cards on wear
+ * Jank tests for scrolling & swiping off notification cards on wear
  */
 public class CardsJankTest extends JankTestBase {
 
@@ -42,21 +41,19 @@ public class CardsJankTest extends JankTestBase {
         mDevice = UiDevice.getInstance(getInstrumentation());
         mHelper = SysAppTestHelper.getInstance(mDevice, this.getInstrumentation().getContext());
         mDevice.wakeUp();
-        SystemClock.sleep(SysAppTestHelper.SHORT_TIMEOUT);
     }
 
     // Prepare device to start scrolling by tapping on the screen
     // As this is done using demo cards a tap on screen will stop animation and show
     // home screen
     public void openScrollCard() throws Exception {
-        mHelper.goBackHome();
         mHelper.hasDemoCards();
-        SystemClock.sleep(SysAppTestHelper.SHORT_TIMEOUT);
+        mHelper.swipeUp();
     }
 
     // Measure card scroll jank
 
-    @JankTest(beforeTest = "openScrollCard", afterTest = "goBackHome",
+    @JankTest(beforeLoop = "openScrollCard", afterTest = "goBackHome",
             expectedFrames = SysAppTestHelper.MIN_FRAMES)
     @GfxMonitor(processName = "com.google.android.wearable.app")
     public void testScrollCard() {
@@ -69,12 +66,11 @@ public class CardsJankTest extends JankTestBase {
         mHelper.hasDemoCards();
         mHelper.swipeUp();
         mHelper.swipeUp();
-        SystemClock.sleep(SysAppTestHelper.SHORT_TIMEOUT);
     }
 
     // Measure jank when dismissing a card
 
-    @JankTest(beforeTest = "openSwipeCard", afterTest = "goBackHome",
+    @JankTest(beforeLoop = "openSwipeCard", afterTest = "goBackHome",
             expectedFrames = SysAppTestHelper.MIN_FRAMES)
     @GfxMonitor(processName = "com.google.android.wearable.app")
     public void testSwipeCard() {
@@ -85,7 +81,6 @@ public class CardsJankTest extends JankTestBase {
     public void goBackHome(Bundle metrics) throws RemoteException {
         mHelper.goBackHome();
         super.afterTest(metrics);
-        SystemClock.sleep(SysAppTestHelper.LONG_TIMEOUT);
     }
 
     /*
