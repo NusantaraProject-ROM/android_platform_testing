@@ -49,12 +49,30 @@ public class SysAppTestHelper {
             .resourceId("com.google.android.wearable.app:id/title");
     private static final UiSelector CLOCK_SELECTOR = new UiSelector()
             .resourceId("com.google.android.wearable.app:id/clock_bar");
+    private static final UiSelector ICON_SELECTOR = new UiSelector()
+            .resourceId("com.google.android.wearable.app:id/icon");
+    private static final UiSelector TEXT_SELECTOR = new UiSelector()
+            .resourceId("com.google.android.wearable.app:id/text");
+    private static final UiSelector NOW_WEATHER_ICON_SELECTOR = new UiSelector()
+            .resourceId("com.google.android.wearable.app:id/now_weather_icon");
+    private static final UiSelector NOW_TITLE_SELECTOR = new UiSelector()
+            .resourceId("com.google.android.wearable.app:id/now_title");
+    private static final UiSelector NOW_ICON_SELECTOR = new UiSelector()
+            .resourceId("com.google.android.wearable.app:id/now_icon");
+    private static final UiSelector STEPS_SELECTOR = new UiSelector()
+            .resourceId("com.google.android.wearable.app:id/steps");
 
     private UiDevice mDevice = null;
     private Context mContext = null;
     private UiObject mCard = null;
     private UiObject mTitle = null;
     private UiObject mClock = null;
+    private UiObject mIcon = null;
+    private UiObject mText = null;
+    private UiObject mNowWeatherIcon = null;
+    private UiObject mNowTitle = null;
+    private UiObject mNowIcon = null;
+    private UiObject mSteps = null;
     private Intent mIntent = null;
     private static SysAppTestHelper sysAppTestHelperInstance;
 
@@ -70,6 +88,12 @@ public class SysAppTestHelper {
         mCard = mDevice.findObject(CARD_SELECTOR);
         mTitle = mDevice.findObject(TITLE_SELECTOR);
         mClock = mDevice.findObject(CLOCK_SELECTOR);
+        mIcon = mDevice.findObject(ICON_SELECTOR);
+        mText = mDevice.findObject(TEXT_SELECTOR);
+        mNowWeatherIcon = mDevice.findObject(NOW_WEATHER_ICON_SELECTOR);
+        mNowTitle = mDevice.findObject(NOW_TITLE_SELECTOR);
+        mNowIcon = mDevice.findObject(NOW_ICON_SELECTOR);
+        mSteps = mDevice.findObject(STEPS_SELECTOR);
     }
 
     public static SysAppTestHelper getInstance(UiDevice device, Context context) {
@@ -147,7 +171,13 @@ public class SysAppTestHelper {
         // or in full view(e.g Dory) or no peek view(Sturgeon). Ensure to check for demo cards
         // existence in both cases.
         if (!(mCard.waitForExists(NEW_CARD_TIMEOUT_MS)
-                || mTitle.waitForExists(NEW_CARD_TIMEOUT_MS))) {
+                || mTitle.waitForExists(NEW_CARD_TIMEOUT_MS)
+                || mIcon.waitForExists(NEW_CARD_TIMEOUT_MS)
+                || mText.waitForExists(NEW_CARD_TIMEOUT_MS)
+                || mNowWeatherIcon.waitForExists(NEW_CARD_TIMEOUT_MS)
+                || mNowTitle.waitForExists(NEW_CARD_TIMEOUT_MS)
+                || mNowIcon.waitForExists(NEW_CARD_TIMEOUT_MS)
+                || mSteps.waitForExists(NEW_CARD_TIMEOUT_MS))) {
             Log.d(LOG_TAG, "Demo cards not found, going to reload the cards");
             // If there are no Demo cards, reload them.
             reloadDemoCards();
@@ -157,9 +187,14 @@ public class SysAppTestHelper {
             }
         }
         Assert.assertTrue("no cards available for testing",
-                (mTitle.waitForExists(NEW_CARD_TIMEOUT_MS)));
+                (mTitle.waitForExists(NEW_CARD_TIMEOUT_MS)
+                || mIcon.waitForExists(NEW_CARD_TIMEOUT_MS)
+                || mText.waitForExists(NEW_CARD_TIMEOUT_MS)
+                || mNowWeatherIcon.waitForExists(NEW_CARD_TIMEOUT_MS)
+                || mNowTitle.waitForExists(NEW_CARD_TIMEOUT_MS)
+                || mNowIcon.waitForExists(NEW_CARD_TIMEOUT_MS))
+                || mSteps.waitForExists(NEW_CARD_TIMEOUT_MS));
     }
-
     // This will ensure to reload retail cards when there are insufficient cards
     private void reloadDemoCards() {
         mIntent.setAction(RELOAD_DEMO_CARD_CMD);
