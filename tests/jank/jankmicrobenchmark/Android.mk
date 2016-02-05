@@ -24,3 +24,4 @@ LOCAL_STATIC_JAVA_LIBRARIES := ub-uiautomator ub-janktesthelper
 LOCAL_SDK_VERSION := current
 
 include $(BUILD_PACKAGE)
+
