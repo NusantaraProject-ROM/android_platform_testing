@@ -36,8 +36,8 @@ public class GoogleExperienceLauncherStrategy implements ILauncherStrategy {
 
     private static final String LOG_TAG = GoogleExperienceLauncherStrategy.class.getSimpleName();
     private static final String LAUNCHER_PKG = "com.google.android.googlequicksearchbox";
-    private static final BySelector APPS_CONTAINER = By.res(LAUNCHER_PKG, "all_apps_container");
-    private static final BySelector WIDGETS_CONTAINER = By.res(LAUNCHER_PKG, "widgets_list_view");
+    private static final BySelector APPS_CONTAINER = By.res(LAUNCHER_PKG, "apps_view");
+    private static final BySelector WIDGETS_CONTAINER = By.res(LAUNCHER_PKG, "widgets_view");
     private static final BySelector WORKSPACE = By.res(LAUNCHER_PKG, "workspace");
     private static final BySelector HOTSEAT = By.res(LAUNCHER_PKG, "hotseat");
     private UiDevice mDevice;
