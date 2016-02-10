@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ public abstract class AbstractCameraHelper extends AbstractStandardAppHelper {
      *
      * This method will capture a video of length timeInMs and block until the transaction is
      * complete.
-     * @param timeInMS duration of video in milliseconds
+     * @param time duration of video in milliseconds
      */
-    public abstract void captureVideo(long timeInMS);
+    public abstract void captureVideo(long time);
 }
