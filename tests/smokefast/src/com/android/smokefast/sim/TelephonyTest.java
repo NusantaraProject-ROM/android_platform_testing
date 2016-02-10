@@ -35,6 +35,8 @@ import android.telecom.TelecomManager;
 import android.telephony.SmsManager;
 import android.test.InstrumentationTestCase;
 import android.test.suitebuilder.annotation.LargeTest;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Basic tests for phone and SMS functionality.
@@ -120,6 +122,13 @@ public class TelephonyTest extends InstrumentationTestCase {
         PendingIntent pi = PendingIntent.getBroadcast(getInstrumentation().getContext(),
                 100, baseIntent, PendingIntent.FLAG_CANCEL_CURRENT);
         sms.sendTextMessage(TEL_NO, null, "test", pi, null);
+        // Confirm SendSMS appears only for first time message sent
+        UiObject2 confirmSendSMS = mDevice.wait(Until.findObject(
+                By.text(Pattern.compile("SEND", Pattern.CASE_INSENSITIVE))), WAIT_DELAY);
+        if (confirmSendSMS != null) {
+            confirmSendSMS.click();
+        }
+
         synchronized (mSmsBroadcastLock) {
             mSmsBroadcastLock.wait(WAIT_DELAY);
         }
