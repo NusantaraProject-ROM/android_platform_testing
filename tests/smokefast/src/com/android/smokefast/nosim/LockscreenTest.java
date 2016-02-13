@@ -36,6 +36,8 @@ public class LockscreenTest extends InstrumentationTestCase {
 
     @Override
     public void tearDown() throws Exception {
+        mDevice.wakeUp();
+        mDevice.pressMenu();
         mDevice.unfreezeRotation();
         super.tearDown();
     }
@@ -51,6 +53,7 @@ public class LockscreenTest extends InstrumentationTestCase {
 
     private void sleepAndWakeUpDevice() throws Exception {
         mDevice.sleep();
+        mDevice.waitForIdle();
         mDevice.wakeUp();
         SystemClock.sleep(2000);
     }
