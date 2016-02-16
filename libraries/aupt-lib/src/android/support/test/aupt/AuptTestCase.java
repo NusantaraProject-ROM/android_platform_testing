@@ -201,7 +201,7 @@ public class AuptTestCase extends InstrumentationTestCase {
 
         mDevice = UiDevice.getInstance(getInstrumentation());
         mWatchers = new UiWatchers();
-        mWatchers.registerAnrAndCrashWatchers();
+        mWatchers.registerAnrAndCrashWatchers(getInstrumentation());
         mDevice.registerWatcher("LockScreenWatcher", new LockScreenWatcher());
         mRecordMeminfo = "true".equals(getParams().getString(RECORD_MEMINFO_PARAM, "false"));
 
