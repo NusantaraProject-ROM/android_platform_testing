@@ -72,6 +72,12 @@ public class AospLauncherStrategy implements ILauncherStrategy {
             mDevice.wait(Until.gone(HOTSEAT), 2000);
             mDevice.waitForIdle();
         }
+        // check if there's a "cling" on screen
+        UiObject2 cling = mDevice.findObject(By.res(LAUNCHER_PKG, "cling_dismiss")
+                .clazz(Button.class).text("OK"));
+        if (cling != null) {
+            cling.click();
+        }
         // taps on the "apps" page selector near the top of the screen
         UiObject2 appsTab = mDevice.findObject(By.desc("Apps")
                 .clazz(TextView.class).selected(false));
