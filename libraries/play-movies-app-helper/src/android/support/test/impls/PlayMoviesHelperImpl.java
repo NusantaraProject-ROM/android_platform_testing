@@ -61,7 +61,7 @@ public class PlayMoviesHelperImpl extends AbstractPlayMoviesHelper {
      */
     @Override
     public String getLauncherName() {
-        return "Play Movies";
+        return "Play Movies & TV";
     }
 
     /**
