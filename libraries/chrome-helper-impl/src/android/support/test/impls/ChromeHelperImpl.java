@@ -104,25 +104,29 @@ public class ChromeHelperImpl extends AbstractChromeHelper {
             tos.click();
         }
 
-        // Sign in
-        UiObject2 signin = mDevice.wait(Until.findObject(
-                By.res(getPackage(), "positive_button")), 5000);
-        if (signin != null) {
-            signin.clickAndWait(Until.newWindow(), 5000);
-        }
+        if (mDevice.hasObject(By.textStartsWith("Add an account"))) {
+            // Device has no accounts registered that Chrome recognizes
+            // Select "NO THANKS"
+            UiObject2 negative = mDevice.wait(Until.findObject(
+                    By.res(getPackage(), "negative_button")), 5000);
+            if (negative != null) {
+                negative.clickAndWait(Until.newWindow(), 5000);
+            }
+        } else {
+            // Device has an account registered that Chrome recognizes
+            // Select "SIGN IN"
+            UiObject2 signin = mDevice.wait(Until.findObject(
+                    By.res(getPackage(), "positive_button")), 5000);
+            if (signin != null) {
+                signin.clickAndWait(Until.newWindow(), 5000);
+            }
 
-        // Done
-         UiObject2 done = mDevice.wait(Until.findObject(
-                By.res(getPackage(), "positive_button")), 5000);
-        if (done != null) {
-            done.clickAndWait(Until.newWindow(), 5000);
-        }
-
-        // ????
-        UiObject2 negative = mDevice.wait(Until.findObject(
-                By.res(getPackage(), "negative_button")), 5000);
-        if (negative != null) {
-            negative.clickAndWait(Until.newWindow(), 5000);
+            // Select "DONE"
+             UiObject2 done = mDevice.wait(Until.findObject(
+                    By.res(getPackage(), "positive_button")), 5000);
+            if (done != null) {
+                done.clickAndWait(Until.newWindow(), 5000);
+            }
         }
     }
 
