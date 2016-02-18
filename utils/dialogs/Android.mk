@@ -13,14 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-LOCAL_PATH := $(call my-dir)
 
+LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
-LOCAL_MODULE := app-helpers
-LOCAL_STATIC_JAVA_LIBRARIES := launcher-helper-lib app-ui-helpers google-camera-ui-helper \
-                               youtube-ui-helper photos-ui-helper play-music-ui-helper \
-                               chrome-ui-helper play-store-ui-helper play-movies-ui-helper \
-                               gmail-ui-helper maps-ui-helper
+
+LOCAL_MODULE_TAGS := tests
+
+LOCAL_PACKAGE_NAME := DialogDismissalUtil
+LOCAL_STATIC_JAVA_LIBRARIES := app-helpers ub-uiautomator
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
-include $(BUILD_STATIC_JAVA_LIBRARY)
+include $(BUILD_PACKAGE)
