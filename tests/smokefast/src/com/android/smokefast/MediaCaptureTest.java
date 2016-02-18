@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.smokefast.nosim;
+package com.android.smokefast;
 
 import android.content.Intent;
 import android.net.Uri;
