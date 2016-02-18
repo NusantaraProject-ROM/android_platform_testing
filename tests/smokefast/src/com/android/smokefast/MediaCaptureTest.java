@@ -26,14 +26,14 @@ import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
 import android.test.InstrumentationTestCase;
 import android.test.suitebuilder.annotation.LargeTest;
-
 import java.io.File;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Basic tests for the Camera app.
  */
 public class MediaCaptureTest extends InstrumentationTestCase {
-
     private static final int CAPTURE_TIMEOUT = 4000;
     private static final String DESC_BTN_CAPTURE_PHOTO = "Capture photo";
     private static final String DESC_BTN_CAPTURE_VIDEO = "Capture video";
@@ -79,7 +79,8 @@ public class MediaCaptureTest extends InstrumentationTestCase {
                     getInstrumentation().getContext().getPackageManager()) != null) {
             File outputFile = null;
             try {
-                outputFile = new File(Environment.getExternalStorageDirectory(), tmpName);
+                outputFile = new File(Environment
+                        .getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), tmpName);
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(outputFile));
                 getInstrumentation().getContext().startActivity(intent);
                 switchCaptureMode(isVideo);
@@ -88,6 +89,7 @@ public class MediaCaptureTest extends InstrumentationTestCase {
                     Thread.sleep(VIDEO_LENGTH);
                     pressCaptureButton(isVideo);
                 }
+                Thread.sleep(1000);
                 pushButton(DESC_BTN_DONE);
                 Thread.sleep(1000);
                 long fileLength = outputFile.length();
@@ -119,9 +121,10 @@ public class MediaCaptureTest extends InstrumentationTestCase {
     }
 
     private void pushButton(String desc) {
-        UiObject2 doneBtn = mDevice.wait(Until.findObject(By.desc(desc)), CAPTURE_TIMEOUT);
+        Pattern pattern = Pattern.compile(desc, Pattern.CASE_INSENSITIVE);
+        UiObject2 doneBtn = mDevice.wait(Until.findObject(By.desc(pattern)), CAPTURE_TIMEOUT);
         if (null != doneBtn) {
-            doneBtn.click();
+            doneBtn.clickAndWait(Until.newWindow(), 500);
         }
     }
 }

@@ -19,6 +19,8 @@ import android.os.SystemClock;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
+import android.support.test.uiautomator.UiObject2;
+import android.support.test.uiautomator.Until;
 import android.test.InstrumentationTestCase;
 import android.test.suitebuilder.annotation.LargeTest;
 
@@ -45,16 +47,22 @@ public class LockscreenTest extends InstrumentationTestCase {
     @LargeTest
     public void testSlideUnlock() throws Exception {
         sleepAndWakeUpDevice();
-        mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "notification_stack_scroller"))
-                .swipe(Direction.UP, 0.5f);
-        SystemClock.sleep(2000);
-        assertTrue(mDevice.hasObject(By.res(LAUNCHER_PACKAGE, "workspace")));
+        mDevice.wait(Until.findObject(
+                By.res(SYSTEMUI_PACKAGE, "notification_stack_scroller")), 2000)
+                .swipe(Direction.UP, 1.0f);
+        int counter = 6;
+        UiObject2 workspace =  mDevice.findObject(By.res(LAUNCHER_PACKAGE, "workspace"));
+        while (counter-- > 0 && workspace == null) {
+            workspace =  mDevice.findObject(By.res(LAUNCHER_PACKAGE, "workspace"));
+            SystemClock.sleep(500);
+        }
+        assertNotNull("Workspace wasn't found", workspace);
     }
 
     private void sleepAndWakeUpDevice() throws Exception {
         mDevice.sleep();
-        mDevice.waitForIdle();
+        SystemClock.sleep(1000);
         mDevice.wakeUp();
-        SystemClock.sleep(2000);
+        SystemClock.sleep(1000);
     }
 }
