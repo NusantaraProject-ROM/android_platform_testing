@@ -144,7 +144,11 @@ public class PlayStoreHelperImpl extends AbstractPlayStoreHelper {
     }
 
     private UiObject2 getScrollContainer() {
-        return mDevice.findObject(By.res(UI_PACKAGE, "recycler_view"));
+        UiObject2 scroller = mDevice.findObject(By.res(UI_PACKAGE, "recycler_view"));
+        if (scroller == null) {
+            scroller = mDevice.findObject(By.res(UI_PACKAGE, "viewpager"));
+        }
+        return scroller;
     }
 }
 

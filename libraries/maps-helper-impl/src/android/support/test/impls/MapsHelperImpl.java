@@ -125,7 +125,7 @@ public class MapsHelperImpl extends AbstractMapsHelper {
         // Do search
         mDevice.pressEnter();
         // Wait for directions option
-        mDevice.wait(Until.findObject(By.descContains("Directions")), 7500);
+        mDevice.wait(Until.findObject(By.res(UI_PACKAGE, "title_textbox").text(query)), 7500);
     }
 
     private void goToQueryScreen() {
@@ -139,9 +139,9 @@ public class MapsHelperImpl extends AbstractMapsHelper {
     }
 
     private UiObject2 getSearchBar() {
-        UiObject2 search = mDevice.findObject(By.descContains("Search"));
+        UiObject2 search = mDevice.findObject(By.res(UI_PACKAGE, "search_omnibox_text_box"));
         if (search == null) {
-            search = mDevice.findObject(By.res(UI_PACKAGE, "search_omnibox_text_box"));
+            search = mDevice.findObject(By.descContains("Search"));
         }
         return search;
     }

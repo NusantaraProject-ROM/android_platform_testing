@@ -20,18 +20,23 @@ import android.app.Instrumentation;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
+import android.support.test.uiautomator.Configurator;
 import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.Until;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.util.Log;
 
+import java.util.regex.Pattern;
+
 import junit.framework.Assert;
 
 public class PhotosHelperImpl extends AbstractPhotosHelper {
-    private static final String UI_PACKAGE_NAME = "com.google.android.apps.photos";
-
     private static final String LOG_TAG = PhotosHelperImpl.class.getSimpleName();
+
+    private static final long TRANSITION_TIMEOUT = 5000;
+
+    private static final String UI_PACKAGE_NAME = "com.google.android.apps.photos";
 
     public PhotosHelperImpl(Instrumentation instr) {
         super(instr);
@@ -59,7 +64,34 @@ public class PhotosHelperImpl extends AbstractPhotosHelper {
      */
     @Override
     public void dismissInitialDialogs() {
-        // TODO: Implement dialog dismissed (mrosenfeld)
+        long original = Configurator.getInstance().getWaitForIdleTimeout();
+        Configurator.getInstance().setWaitForIdleTimeout(1000);
+        // Target Photos version 1.4.0.102264174
+        // Press 'GET STARTED'
+        Pattern getStartedWords = Pattern.compile("GET STARTED", Pattern.CASE_INSENSITIVE);
+        UiObject2 getStartedButton = mDevice.findObject(By.text(getStartedWords));
+        if (getStartedButton != null) {
+            getStartedButton.click();
+        }
+        // Press 'CONTINUE' twice
+        for (int repeat = 0; repeat < 2; repeat++) {
+            Pattern continueWords = Pattern.compile("CONTINUE", Pattern.CASE_INSENSITIVE);
+            UiObject2 continueButton = mDevice.wait(Until.findObject(By.text(continueWords)),
+                    TRANSITION_TIMEOUT);
+            if (continueButton != null) {
+                continueButton.click();
+                mDevice.waitForIdle();
+            }
+        }
+        for (int repeat = 0; repeat < 4; repeat++) {
+            UiObject2 nextButton = mDevice.wait(Until.findObject(By.desc("Next")),
+                    TRANSITION_TIMEOUT);
+            if (nextButton != null) {
+                nextButton.click();
+                mDevice.waitForIdle();
+            }
+        }
+        Configurator.getInstance().setWaitForIdleTimeout(original);
     }
 
     /**
