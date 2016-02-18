@@ -21,6 +21,7 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.SystemClock;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
+import android.support.test.uiautomator.Configurator;
 import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.Until;
 import android.support.test.uiautomator.UiDevice;
@@ -88,11 +89,14 @@ public class PlayMoviesHelperImpl extends AbstractPlayMoviesHelper {
                 count += 1;
             }
         } else {
-           Pattern words = Pattern.compile("GET STARTED", Pattern.CASE_INSENSITIVE);
-           UiObject2 startedButton = mDevice.findObject(By.text(words));
-           if (startedButton != null) {
-               startedButton.click();
-           }
+            long original = Configurator.getInstance().getWaitForIdleTimeout();
+            Configurator.getInstance().setWaitForIdleTimeout(1000);
+            Pattern words = Pattern.compile("GET STARTED", Pattern.CASE_INSENSITIVE);
+            UiObject2 startedButton = mDevice.findObject(By.text(words));
+            if (startedButton != null) {
+                startedButton.click();
+            }
+            Configurator.getInstance().setWaitForIdleTimeout(original);
         }
     }
 
@@ -120,7 +124,7 @@ public class PlayMoviesHelperImpl extends AbstractPlayMoviesHelper {
      */
     @Override
     public void playMovie(String name) {
-        UiObject2 title = mDevice.findObject(By.text(name));
+        UiObject2 title = mDevice.findObject(By.textContains(name));
         Assert.assertNotNull(String.format("Failed to find movie by name %s", name), title);
         title.click();
         UiObject2 play = mDevice.wait(Until.findObject(By.res(UI_PACKAGE, "play")), 5000);
