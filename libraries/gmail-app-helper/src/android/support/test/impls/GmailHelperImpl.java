@@ -1,4 +1,4 @@
-/*
+    /*
  * Copyright (C) 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,11 +30,18 @@ import android.webkit.WebView;
 import android.widget.ListView;
 
 import java.io.IOException;
+import java.util.List;
 
 import junit.framework.Assert;
 
 public class GmailHelperImpl extends AbstractGmailHelper {
     private static final String LOG_TAG = GmailHelperImpl.class.getSimpleName();
+
+    private static final long DIALOG_TIMEOUT = 2500;
+    private static final long POPUP_TIMEOUT = 5000;
+    private static final long COMPOSE_TIMEOUT = 5000;
+    private static final long SEND_TIMEOUT = 5000;
+    private static final long LOADING_TIMEOUT = 20000;
 
     private static final String UI_PACKAGE_NAME = "com.google.android.gm";
     private static final String UI_PROMO_ACTION_NEG_RES = "promo_action_negative_single_line";
@@ -43,6 +50,7 @@ public class GmailHelperImpl extends AbstractGmailHelper {
     private static final BySelector PRIMARY_SELECTOR =
             By.res(UI_PACKAGE_NAME, "name").text("Primary");
     private static final BySelector INBOX_SELECTOR = By.res(UI_PACKAGE_NAME, "name").text("Inbox");
+    private static final BySelector NAV_DRAWER_SELECTOR = By.res("android", "list").focused(true);
 
     public GmailHelperImpl(Instrumentation instr) {
         super(instr);
@@ -74,20 +82,19 @@ public class GmailHelperImpl extends AbstractGmailHelper {
         UiObject2 welcomeScreenGotIt = mDevice.findObject(
                 By.res(UI_PACKAGE_NAME, "welcome_tour_got_it"));
         if (welcomeScreenGotIt != null) {
-            welcomeScreenGotIt.clickAndWait(Until.newWindow(), 2500);
+            welcomeScreenGotIt.clickAndWait(Until.newWindow(), DIALOG_TIMEOUT);
             mDevice.waitForIdle();
         }
         UiObject2 tutorialDone = mDevice.findObject(
                 By.res(UI_PACKAGE_NAME, "action_done"));
         if (tutorialDone != null) {
-            tutorialDone.clickAndWait(Until.newWindow(), 2500);
-            mDevice.wait(Until.findObject(By.text("CONFIDENTIAL")), 5000);
+            tutorialDone.clickAndWait(Until.newWindow(), DIALOG_TIMEOUT);
+            mDevice.wait(Until.findObject(By.text("CONFIDENTIAL")), POPUP_TIMEOUT);
         }
         UiObject2 splash = mDevice.findObject(By.text("Ok, got it"));
         if (splash != null) {
-            splash.clickAndWait(Until.newWindow(), 2500);
+            splash.clickAndWait(Until.newWindow(), DIALOG_TIMEOUT);
         }
-
 
         // Dismiss Navigation-to-Inbox tips
         goToInbox();
@@ -98,7 +105,7 @@ public class GmailHelperImpl extends AbstractGmailHelper {
         }
         UiObject2 dismiss = mDevice.findObject(By.text("Dismiss tip"));
         if (dismiss != null) {
-            dismiss.clickAndWait(Until.newWindow(), 2500);
+            dismiss.clickAndWait(Until.newWindow(), DIALOG_TIMEOUT);
         }
     }
 
@@ -111,6 +118,11 @@ public class GmailHelperImpl extends AbstractGmailHelper {
         if (isInEmail()) {
             mDevice.pressBack();
             waitForConversationsList();
+        }
+
+        // Check if already in Inbox or Primary
+        if (isInPrimaryOrInbox()) {
+            return;
         }
 
         // Search with the navigation drawer
@@ -135,7 +147,73 @@ public class GmailHelperImpl extends AbstractGmailHelper {
     public void goToComposeEmail() {
         UiObject2 compose = mDevice.findObject(By.desc("Compose"));
         Assert.assertNotNull("No compose button found", compose);
-        compose.clickAndWait(Until.newWindow(), 5000);
+        compose.clickAndWait(Until.newWindow(), COMPOSE_TIMEOUT);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void openEmailByIndex(int index) {
+        if (!isInPrimaryOrInbox()) {
+            throw new IllegalStateException(
+                    "Must be in Primary or Inbox to open an e-mail by index.");
+        }
+
+        if (index >= getVisibleEmailCount()) {
+            throw new IllegalArgumentException(String.format("Cannot select %s'th message of %s",
+                    (index + 1), getVisibleEmailCount()));
+        }
+
+        // Select an e-mail by index
+        UiObject2 conversationList = getConversationList();
+        List<UiObject2> emails = conversationList.findObjects(
+                By.clazz(android.widget.FrameLayout.class));
+        Assert.assertNotNull("No e-mails found.", emails);
+        emails.get(index).click();
+
+        // Wait until the e-mail is open
+        UiObject2 loadMsg = mDevice.findObject(By.res(UI_PACKAGE_NAME, "loading_progress"));
+        if (loadMsg != null) {
+            if (!mDevice.wait(Until.gone(
+                    By.res(UI_PACKAGE_NAME, "loading_progress")), LOADING_TIMEOUT)) {
+                throw new RuntimeException("Loading message timed out after 20s");
+            }
+        }
+    }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getVisibleEmailCount() {
+        if (!isInPrimaryOrInbox()) {
+            throw new IllegalStateException(
+                    "Must be in Primary or Inbox to open an e-mail by index.");
+        }
+
+        return getConversationList().getChildCount();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void sendReplyEmail(String address, String body) {
+        if (!isInEmail()) {
+            Assert.fail("Must have an e-mail open to send a reply.");
+        }
+
+        // Scroll to the e-mail bottom and press reply.
+        UiObject2 convScroll = getConversationScrollContainer();
+        convScroll.scroll(Direction.DOWN, 100.0f);
+        mDevice.findObject(By.text("Reply")).click();
+
+        // Set the necessary fields (address and body)
+        setEmailToAddress(address);
+        setEmailBody(body);
+
+        // Send the reply e-mail and wait for a new window.
+        mDevice.findObject(By.desc("Send")).clickAndWait(Until.newWindow(), SEND_TIMEOUT);
     }
 
     /**
@@ -182,6 +260,10 @@ public class GmailHelperImpl extends AbstractGmailHelper {
      */
     @Override
     public void scrollNavigationDrawer(Direction dir) {
+        if (dir == Direction.RIGHT || dir == Direction.LEFT) {
+            throw new IllegalArgumentException("Can only scroll navigation drawer up and down.");
+        }
+
         UiObject2 scroll = getNavDrawerContainer();
         Assert.assertNotNull("No navigation drawer found to scroll", scroll);
         scroll.scroll(dir, 1.0f);
@@ -225,16 +307,29 @@ public class GmailHelperImpl extends AbstractGmailHelper {
         return mDevice.findObject(By.res(UI_PACKAGE_NAME, "compose"));
     }
 
+    private UiObject2 getConversationScrollContainer() {
+        return mDevice.findObject(By.res(UI_PACKAGE_NAME, "conversation_pager"));
+    }
+
     private UiObject2 getNavDrawerContainer() {
-        return mDevice.findObject(By.res("android", "list").focused(true));
+        return mDevice.findObject(NAV_DRAWER_SELECTOR);
+    }
+
+    private UiObject2 getConversationList() {
+        return mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_CONVERSATIONS_LIST_ID));
     }
 
     private boolean isInEmail() {
         return mDevice.hasObject(By.res(UI_PACKAGE_NAME, UI_CONVERSATION_CONTAINER_ID));
     }
 
+    private boolean isInPrimaryOrInbox() {
+        return getConversationList() != null &&
+                (mDevice.hasObject(By.text("Primary")) || mDevice.hasObject(By.text("Inbox")));
+    }
+
     private boolean isNavDrawerOpen() {
-        return mDevice.hasObject(By.res("android", "list").focused(true));
+        return mDevice.hasObject(NAV_DRAWER_SELECTOR);
     }
 
     /**
