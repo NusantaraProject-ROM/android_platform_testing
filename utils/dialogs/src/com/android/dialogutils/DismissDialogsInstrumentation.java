@@ -19,6 +19,7 @@ package com.android.test.util.dismissdialogs;
 import android.app.Activity;
 import android.app.Instrumentation;
 import android.os.Bundle;
+import android.util.Log;
 
 import com.android.support.test.helpers.IStandardAppHelper;
 import com.android.support.test.helpers.ChromeHelperImpl;
@@ -31,29 +32,41 @@ import com.android.support.test.helpers.PlayMusicHelperImpl;
 import com.android.support.test.helpers.PlayStoreHelperImpl;
 import com.android.support.test.helpers.YouTubeHelperImpl;
 
+import java.lang.NoSuchMethodException;
+import java.lang.InstantiationException;
+import java.lang.IllegalAccessException;
+import java.lang.ReflectiveOperationException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * A utility to dismiss all predictable, relevant one-time dialogs
  */
 public class DismissDialogsInstrumentation extends Instrumentation {
-    private static final String CHROME_KEY = "Chrome";
-    private static final String GOOGLE_CAMERA_KEY = "GoogleCamera";
-    private static final String GMAIL_KEY = "Gmail";
-    private static final String MAPS_KEY = "Maps";
-    private static final String PHOTOS_KEY = "Photos";
-    private static final String PLAY_MOVIES_KEY = "PlayMovies";
-    private static final String PLAY_MUSIC_KEY = "PlayMusic";
-    private static final String PLAY_STORE_KEY = "PlayStore";
-    private static final String SETTINGS_KEY = "Settings";
-    private static final String YOUTUBE_KEY = "YouTube";
+    private static final String LOG_TAG = DismissDialogsInstrumentation.class.getSimpleName();
 
     // Comma-separated value indicating for which apps to dismiss dialogs
     private static final String PARAM_APP = "apps";
 
+    private Map<String, Class<? extends IStandardAppHelper>> mKeyHelperMap;
     private String[] mApps;
 
     @Override
     public void onCreate(Bundle arguments) {
         super.onCreate(arguments);
+
+        mKeyHelperMap = new HashMap<String, Class<? extends IStandardAppHelper>>();
+        mKeyHelperMap.put("Chrome", ChromeHelperImpl.class);
+        mKeyHelperMap.put("GoogleCamera", CameraHelperImpl.class);
+        mKeyHelperMap.put("Gmail", GmailHelperImpl.class);
+        mKeyHelperMap.put("Maps", MapsHelperImpl.class);
+        mKeyHelperMap.put("Photos", PhotosHelperImpl.class);
+        mKeyHelperMap.put("PlayMovies", PlayMoviesHelperImpl.class);
+        mKeyHelperMap.put("PlayMusic", PlayMusicHelperImpl.class);
+        mKeyHelperMap.put("PlayStore", PlayStoreHelperImpl.class);
+        //mKeyHelperMap.put("Settings", SettingsHelperImpl.class);
+        mKeyHelperMap.put("YouTube", YouTubeHelperImpl.class);
 
         String appsString = arguments.getString(PARAM_APP);
         if (appsString == null) {
@@ -69,61 +82,30 @@ public class DismissDialogsInstrumentation extends Instrumentation {
         super.onStart();
 
         for (String app : mApps) {
-            if (!dismissDialogs(app)) {
-                throw new IllegalArgumentException(
-                        String.format("Unrecognized app \"%s\"", mApps));
+            Log.e(LOG_TAG, String.format("Dismissing dialogs for app, %s", app));
+
+            try {
+                if (!dismissDialogs(app)) {
+                    throw new IllegalArgumentException(
+                            String.format("Unrecognized app \"%s\"", mApps));
+                }
+            } catch (ReflectiveOperationException e) {
+                Log.e(LOG_TAG, e.toString());
+                throw new RuntimeException("Reflection exception. Please investigate!");
             }
+
+            sendStatus(Activity.RESULT_OK, new Bundle());
         }
 
         finish(Activity.RESULT_OK, new Bundle());
     }
 
-    private boolean dismissDialogs(String app) {
-        IStandardAppHelper helper = null;
-
-        switch (app) {
-            case CHROME_KEY:
-                helper = new ChromeHelperImpl(this);
-                break;
-
-            case GOOGLE_CAMERA_KEY:
-                helper = new CameraHelperImpl(this);
-                break;
-
-            case GMAIL_KEY:
-                helper = new GmailHelperImpl(this);
-                break;
-
-            case MAPS_KEY:
-                helper = new MapsHelperImpl(this);
-                break;
-
-            case PHOTOS_KEY:
-                helper = new PhotosHelperImpl(this);
-                break;
-
-            case PLAY_MOVIES_KEY:
-                helper = new PlayMoviesHelperImpl(this);
-                break;
-
-            case PLAY_MUSIC_KEY:
-                helper = new PlayMusicHelperImpl(this);
-                break;
-
-            case PLAY_STORE_KEY:
-                helper = new PlayStoreHelperImpl(this);
-                break;
-
-            case SETTINGS_KEY:
-                // TODO: Implement (@ashitas)
-                break;
-
-            case YOUTUBE_KEY:
-                helper = new YouTubeHelperImpl(this);
-                break;
-        }
-
-        if (helper != null) {
+    private boolean dismissDialogs(String app) throws NoSuchMethodException, InstantiationException,
+            IllegalAccessException, InvocationTargetException {
+        if (mKeyHelperMap.containsKey(app)) {
+            Class<? extends IStandardAppHelper> appHelperClass = mKeyHelperMap.get(app);
+            IStandardAppHelper helper =
+                    appHelperClass.getDeclaredConstructor(Instrumentation.class).newInstance(this);
             helper.open();
             helper.dismissInitialDialogs();
             helper.exit();
