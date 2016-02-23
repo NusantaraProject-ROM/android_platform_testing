@@ -164,6 +164,15 @@ public class GmailHelperImpl extends AbstractGmailHelper {
      * {@inheritDoc}
      */
     @Override
+    public String getComposeEmailBody(){
+        UiObject2 bodyField = getBodyField();
+        return bodyField.getText();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void openNavigationDrawer() {
         for (int retries = 3; retries > 0; retries--) {
             if (isNavDrawerOpen()) {

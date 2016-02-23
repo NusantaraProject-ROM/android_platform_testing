@@ -62,6 +62,15 @@ public abstract class AbstractGmailHelper extends AbstractStandardAppHelper {
     public abstract void setEmailBody(String body);
 
     /**
+     * Setup expectations: Gmail is open and composing an e-mail.
+     *
+     * This method will get the e-mail's composition's body and block until complete.
+     *
+     * @return {String} the text contained in the email composition's body.
+     */
+    public abstract String getComposeEmailBody();
+
+    /**
      * Setup expectations: Gmail is open and the navigation drawer is visible.
      *
      * This method will open the navigation drawer and block until complete.
