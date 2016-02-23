@@ -26,8 +26,8 @@ import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
 import android.test.InstrumentationTestCase;
 import android.test.suitebuilder.annotation.LargeTest;
+
 import java.io.File;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -40,6 +40,7 @@ public class MediaCaptureTest extends InstrumentationTestCase {
     private static final String DESC_BTN_DONE = "Done";
     private static final String DESC_BTN_PHOTO_MODE = "Open photo mode";
     private static final String DESC_BTN_VIDEO_MODE = "Open video mode";
+    private static final int FILE_CHECK_ATTEMPTS = 5;
     private static final int VIDEO_LENGTH = 2000;
 
     private UiDevice mDevice;
@@ -91,8 +92,13 @@ public class MediaCaptureTest extends InstrumentationTestCase {
                 }
                 Thread.sleep(1000);
                 pushButton(DESC_BTN_DONE);
-                Thread.sleep(1000);
                 long fileLength = outputFile.length();
+                for (int i=0; i<FILE_CHECK_ATTEMPTS; i++) {
+                    if ((fileLength = outputFile.length()) > 0) {
+                        break;
+                    }
+                    Thread.sleep(1000);
+                }
                 assertTrue(fileLength > 0);
             } catch (InterruptedException e) {
                 fail(e.getLocalizedMessage());
