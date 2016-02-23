@@ -63,6 +63,5 @@ public class LockscreenTest extends InstrumentationTestCase {
         mDevice.sleep();
         SystemClock.sleep(1000);
         mDevice.wakeUp();
-        SystemClock.sleep(1000);
     }
 }
