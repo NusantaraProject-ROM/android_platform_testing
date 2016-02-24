@@ -205,45 +205,56 @@ public class GraphicsStatsMonitor {
             while ((line = stream.readLine()) != null) {
                 String proc = JankStat.StatPattern.PACKAGE.parse(line);
                 if (proc != null) {
-                    // Line 1 = "Package: a.b.c"
+                    // "Package: a.b.c"
                     Log.v(TAG, String.format("Found process, %s. Gathering jank info.", proc));
-                    // Line 2 = "Stats since: ###ns"
+                    // "Stats since: ###ns"
                     line = stream.readLine();
                     Long since = Long.parseLong(JankStat.StatPattern.STATS_SINCE.parse(line));
-                    // Line 3 = "Total frames rendered: ###"
+                    // "Total frames rendered: ###"
                     line = stream.readLine();
                     int total = Integer.valueOf(JankStat.StatPattern.TOTAL_FRAMES.parse(line));
-                    // Line 4 = "Janky frames: ## (#.#%)"
-                    //       OR "Janky frames: ## (nan%)"
+                    // "Janky frames: ## (#.#%)" OR
+                    // "Janky frames: ## (nan%)"
                     line = stream.readLine();
                     int janky = Integer.valueOf(JankStat.StatPattern.NUM_JANKY.parse(line));
-                    // Line 5 = "90th percentile: ##ms"
+                    // (optional, N+) "50th percentile: ##ms"
+                    line = stream.readLine();
+                    int perc50;
+                    String parsed50 = JankStat.StatPattern.FRAME_TIME_50TH.parse(line);
+                    if (parsed50 != null || !parsed50.isEmpty()) {
+                        perc50 = Integer.valueOf(parsed50);
+                    } else {
+                        perc50 = -1;
+                    }
+                    // "90th percentile: ##ms"
                     line = stream.readLine();
                     int perc90 = Integer.valueOf(JankStat.StatPattern.FRAME_TIME_90TH.parse(line));
-                    // Line 6 = "95th percentile: ##ms"
+                    // "95th percentile: ##ms"
                     line = stream.readLine();
                     int perc95 = Integer.valueOf(JankStat.StatPattern.FRAME_TIME_95TH.parse(line));
-                    // Line 7 = "99th percentile: ##ms"
+                    // "99th percentile: ##ms"
                     line = stream.readLine();
                     int perc99 = Integer.valueOf(JankStat.StatPattern.FRAME_TIME_99TH.parse(line));
-                    // Line 8 = "Number Missed Vsync: #"
+                    // "Number Missed Vsync: #"
                     line = stream.readLine();
                     int vsync = Integer.valueOf(JankStat.StatPattern.NUM_MISSED_VSYNC.parse(line));
-                    // Line 9 = "Number High input latency: #"
+                    // "Number High input latency: #"
                     line = stream.readLine();
-                    int latency = Integer.valueOf(JankStat.StatPattern.NUM_HIGH_INPUT_LATENCY.parse(line));
-                    // Line 10 = "Number slow UI thread: #"
+                    int latency = Integer.valueOf(
+                            JankStat.StatPattern.NUM_HIGH_INPUT_LATENCY.parse(line));
+                    // "Number slow UI thread: #"
                     line = stream.readLine();
                     int ui = Integer.valueOf(JankStat.StatPattern.NUM_SLOW_UI_THREAD.parse(line));
-                    // Line 11 = "Number Slow bitmap uploads: #"
+                    // "Number Slow bitmap uploads: #"
                     line = stream.readLine();
-                    int bmp = Integer.valueOf(JankStat.StatPattern.NUM_SLOW_BITMAP_UPLOADS.parse(line));
-                    // Line 12 = "Number slow issue draw commands: #"
+                    int bmp = Integer.valueOf(
+                            JankStat.StatPattern.NUM_SLOW_BITMAP_UPLOADS.parse(line));
+                    // "Number slow issue draw commands: #"
                     line = stream.readLine();
                     int draw = Integer.valueOf(JankStat.StatPattern.NUM_SLOW_DRAW.parse(line));
 
-                    JankStat stat = new JankStat(proc, since, total, janky, perc90, perc95, perc99,
-                            vsync, latency, ui, bmp, draw, 1);
+                    JankStat stat = new JankStat(proc, since, total, janky, perc50, perc90, perc95,
+                            perc99, vsync, latency, ui, bmp, draw, 1);
                     result.add(stat);
                 }
             }

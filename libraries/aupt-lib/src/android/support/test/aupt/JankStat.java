@@ -38,6 +38,7 @@ public class JankStat {
         STATS_SINCE(Pattern.compile("\\s*Stats since: (\\d+)ns"), 1),
         TOTAL_FRAMES(Pattern.compile("\\s*Total frames rendered: (\\d+)"), 1),
         NUM_JANKY(Pattern.compile("\\s*Janky frames: (\\d+) (.*)"), 1),
+        FRAME_TIME_50TH(Pattern.compile("\\s*50th percentile: (\\d+)ms"), 1),
         FRAME_TIME_90TH(Pattern.compile("\\s*90th percentile: (\\d+)ms"), 1),
         FRAME_TIME_95TH(Pattern.compile("\\s*95th percentile: (\\d+)ms"), 1),
         FRAME_TIME_99TH(Pattern.compile("\\s*99th percentile: (\\d+)ms"), 1),
@@ -69,6 +70,7 @@ public class JankStat {
     public long statsSince;
     public int totalFrames;
     public int jankyFrames;
+    public int frameTime50th;
     public int frameTime90th;
     public int frameTime95th;
     public int frameTime99th;
@@ -80,13 +82,14 @@ public class JankStat {
 
     public int aggregateCount;
 
-    public JankStat (String pkg, long since, int total, int janky, int ft90, int ft95,
+    public JankStat (String pkg, long since, int total, int janky, int ft50, int ft90, int ft95,
             int ft99, int vsync, int latency, int slowUi, int slowBmp, int slowDraw,
             int aggCount) {
         packageName = pkg;
         statsSince = since;
         totalFrames = total;
         jankyFrames = janky;
+        frameTime50th = ft50;
         frameTime90th = ft90;
         frameTime95th = ft95;
         frameTime99th = ft99;
@@ -125,6 +128,7 @@ public class JankStat {
                 "\nStats since: " + statsSince +
                 "\nTotal frames: " + totalFrames +
                 "\nJanky frames: " + jankyFrames +
+                "\n50th percentile: " + frameTime50th +
                 "\n90th percentile: " + frameTime90th +
                 "\n95th percentile: " + frameTime95th +
                 "\n99th percentile: " + frameTime99th +
@@ -168,23 +172,26 @@ public class JankStat {
             totalNumSlowDraw += stat.numSlowDraw;
         }
 
+        float wgtAvgPercentile50 = 0f;
         float wgtAvgPercentile90 = 0f;
         float wgtAvgPercentile95 = 0f;
         float wgtAvgPercentile99 = 0f;
         for (JankStat stat : statHistory) {
             float weight = ((float)stat.totalFrames / totalTotalFrames);
             Log.v(TAG, String.format("Calculated weight is %f", weight));
+            wgtAvgPercentile90 += stat.frameTime50th * weight;
             wgtAvgPercentile90 += stat.frameTime90th * weight;
             wgtAvgPercentile95 += stat.frameTime95th * weight;
             wgtAvgPercentile99 += stat.frameTime99th * weight;
         }
 
+        int perc50 = (int)Math.ceil(wgtAvgPercentile50);
         int perc90 = (int)Math.ceil(wgtAvgPercentile90);
         int perc95 = (int)Math.ceil(wgtAvgPercentile95);
         int perc99 = (int)Math.ceil(wgtAvgPercentile99);
 
         return new JankStat(pkg, totalStatsSince, totalTotalFrames,
-                totalJankyFrames, perc90, perc95, perc99, totalNumMissedVsync,
+                totalJankyFrames, perc50, perc90, perc95, perc99, totalNumMissedVsync,
                 totalNumHighLatency, totalNumSlowUiThread, totalNumSlowBitmap,
                 totalNumSlowDraw, statHistory.size());
     }
