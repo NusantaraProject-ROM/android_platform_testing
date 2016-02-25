@@ -35,6 +35,8 @@ import junit.framework.Assert;
 public class PlayMusicHelperImpl extends AbstractPlayMusicHelper {
     private static final String UI_PACKAGE = "com.google.android.music";
 
+    private static final long APP_LOAD_WAIT = 10000;
+    private static final long APP_INIT_WAIT = 10000;
     private static final long EXPAND_WAIT = 5000;
     private static final long NAV_BAR_WAIT = 5000;
     private static final long TOGGLE_PLAY_WAIT = 2500;
@@ -65,7 +67,9 @@ public class PlayMusicHelperImpl extends AbstractPlayMusicHelper {
      */
     @Override
     public void dismissInitialDialogs() {
-        // TODO: Make this cover all dialogs
+        // Dismiss "LISTEN NOW" Dialog
+        UiObject2 listenNow = mDevice.wait(Until.findObject(By.text("LISTEN NOW")), APP_LOAD_WAIT);
+        listenNow.clickAndWait(Until.newWindow(), APP_INIT_WAIT);
     }
 
     /**
