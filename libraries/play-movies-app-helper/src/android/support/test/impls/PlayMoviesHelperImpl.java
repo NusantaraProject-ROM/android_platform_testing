@@ -21,7 +21,6 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.SystemClock;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
-import android.support.test.uiautomator.Configurator;
 import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.Until;
 import android.support.test.uiautomator.UiDevice;
@@ -89,14 +88,11 @@ public class PlayMoviesHelperImpl extends AbstractPlayMoviesHelper {
                 count += 1;
             }
         } else {
-            long original = Configurator.getInstance().getWaitForIdleTimeout();
-            Configurator.getInstance().setWaitForIdleTimeout(1000);
             Pattern words = Pattern.compile("GET STARTED", Pattern.CASE_INSENSITIVE);
             UiObject2 startedButton = mDevice.findObject(By.text(words));
             if (startedButton != null) {
                 startedButton.click();
             }
-            Configurator.getInstance().setWaitForIdleTimeout(original);
         }
     }
 

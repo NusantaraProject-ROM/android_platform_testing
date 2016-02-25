@@ -48,6 +48,8 @@ public class DismissDialogsInstrumentation extends Instrumentation {
 
     // Comma-separated value indicating for which apps to dismiss dialogs
     private static final String PARAM_APP = "apps";
+    // Key for status bundles provided when running the preparer
+    private static final String BUNDLE_DISMISSED_APP_KEY = "dismissed-app";
 
     private Map<String, Class<? extends IStandardAppHelper>> mKeyHelperMap;
     private String[] mApps;
@@ -83,7 +85,6 @@ public class DismissDialogsInstrumentation extends Instrumentation {
 
         for (String app : mApps) {
             Log.e(LOG_TAG, String.format("Dismissing dialogs for app, %s", app));
-
             try {
                 if (!dismissDialogs(app)) {
                     throw new IllegalArgumentException(
@@ -94,6 +95,9 @@ public class DismissDialogsInstrumentation extends Instrumentation {
                 throw new RuntimeException("Reflection exception. Please investigate!");
             }
 
+            // Periodically send status reports to not timeout
+            Bundle result = new Bundle();
+            result.putString(BUNDLE_DISMISSED_APP_KEY, app);
             sendStatus(Activity.RESULT_OK, new Bundle());
         }
 
