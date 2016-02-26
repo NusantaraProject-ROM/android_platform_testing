@@ -36,7 +36,7 @@ import java.util.Locale;
 public class DataCollector {
     private static final String TAG = "AuptDataCollector";
     private long mBugreportInterval, mMeminfoInterval, mCpuinfoInterval, mFragmentationInterval,
-            mIonHeapInterval, mPageTypeInfoInterval;
+            mIonHeapInterval, mPageTypeInfoInterval, mTraceInterval;
     private File mResultsDirectory;
 
     private Thread mLoggerThread;
@@ -45,7 +45,7 @@ public class DataCollector {
 
     public DataCollector(long bugreportInterval, long meminfoInterval, long cpuinfoInterval,
             long fragmentationInterval, long ionHeapInterval, long pagetypeinfoInterval,
-            File outputLocation, Instrumentation intrumentation) {
+            long traceInterval, File outputLocation, Instrumentation intrumentation) {
         mBugreportInterval = bugreportInterval;
         mMeminfoInterval = meminfoInterval;
         mCpuinfoInterval = cpuinfoInterval;
@@ -53,6 +53,7 @@ public class DataCollector {
         mIonHeapInterval = ionHeapInterval;
         mPageTypeInfoInterval = pagetypeinfoInterval;
         mResultsDirectory = outputLocation;
+        mTraceInterval = traceInterval;
         mInstrumentation = intrumentation;
     }
 
@@ -74,11 +75,12 @@ public class DataCollector {
     private class Logger implements Runnable {
         private final long mIntervals[] = {
                 mBugreportInterval, mMeminfoInterval, mCpuinfoInterval, mFragmentationInterval,
-                mIonHeapInterval, mPageTypeInfoInterval
+                mIonHeapInterval, mPageTypeInfoInterval, mTraceInterval
         };
         private final LogGenerator mLoggers[] = {
                 new BugreportGenerator(), new CompactMemInfoGenerator(), new CpuInfoGenerator(),
-                new FragmentationGenerator(), new IonHeapGenerator(), new PageTypeInfoGenerator()
+                new FragmentationGenerator(), new IonHeapGenerator(), new PageTypeInfoGenerator(),
+                new TraceGenerator()
         };
 
         private final long mLastUpdate[] = new long[mLoggers.length];
@@ -226,6 +228,17 @@ public class DataCollector {
         }
     }
 
+    private class TraceGenerator implements LogGenerator {
+        @Override
+        public void createLog() throws InterruptedException {
+            try {
+                saveTrace(mResultsDirectory + "/trace-%s.txt");
+            } catch (IOException e) {
+                Log.w(TAG, String.format("Failed to save trace: %s", e.getMessage()));
+            }
+        }
+    }
+
     public void saveCompactMeminfo(String filename)
             throws FileNotFoundException, IOException, InterruptedException {
         saveProcessOutput("dumpsys meminfo -c -S", filename);
@@ -249,6 +262,11 @@ public class DataCollector {
     public void savePageTypeInfo(String filename)
             throws FileNotFoundException, IOException, InterruptedException {
         saveProcessOutput("cat /proc/pagetypeinfo", filename);
+    }
+
+    public void saveTrace(String filename)
+            throws FileNotFoundException, IOException, InterruptedException {
+        saveProcessOutput("cat /sys/kernel/debug/tracing/trace", filename);
     }
 
     public void saveBugreport(String filename)

@@ -136,6 +136,7 @@ public class AuptTestRunner extends InstrumentationTestRunner {
                 TimeUnit.MINUTES.toMillis(parseLongParam("fragmentationInterval", 0)),
                 TimeUnit.MINUTES.toMillis(parseLongParam("ionInterval", 0)),
                 TimeUnit.MINUTES.toMillis(parseLongParam("pagetypeinfoInterval", 0)),
+                TimeUnit.MINUTES.toMillis(parseLongParam("traceInterval", 0)),
                 mResultsDirectory, this);
         String jars = params.getString(PARAM_JARS);
         if (jars != null) {
