@@ -36,6 +36,8 @@ public class PlayMoviesHelperImpl extends AbstractPlayMoviesHelper {
     private static final String LOG_TAG = PlayMoviesHelperImpl.class.getSimpleName();
     private static final String UI_PACKAGE = "com.google.android.videos";
 
+    private static final long APP_INIT_WAIT = 10000;
+
     private boolean mIsVersion3p8 = false;
 
     public PlayMoviesHelperImpl(Instrumentation instr) {
@@ -89,7 +91,7 @@ public class PlayMoviesHelperImpl extends AbstractPlayMoviesHelper {
             }
         } else {
             Pattern words = Pattern.compile("GET STARTED", Pattern.CASE_INSENSITIVE);
-            UiObject2 startedButton = mDevice.findObject(By.text(words));
+            UiObject2 startedButton = mDevice.wait(Until.findObject(By.text(words)), APP_INIT_WAIT);
             if (startedButton != null) {
                 startedButton.click();
             }
