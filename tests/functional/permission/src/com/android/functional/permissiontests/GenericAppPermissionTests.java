@@ -22,6 +22,7 @@ import android.support.test.uiautomator.UiDevice;
 import android.test.InstrumentationTestCase;
 import android.test.suitebuilder.annotation.MediumTest;
 import android.test.suitebuilder.annotation.SmallTest;
+import android.test.suitebuilder.annotation.Suppress;
 
 import com.android.functional.permissiontests.PermissionHelper.PermissionStatus;
 
@@ -29,7 +30,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class GenericAppPermissionTests extends InstrumentationTestCase {
-    protected final String TARGET_APP_PKG = "com.android.cts.usepermission";
+    protected final String TARGET_APP_PKG = "com.android.functional.permissiontests";
     private UiDevice mDevice = null;
     private Context mContext = null;
     private UiAutomation mUiAutomation = null;
@@ -71,12 +72,14 @@ public class GenericAppPermissionTests extends InstrumentationTestCase {
         pHelper.verifyNormalPermissionsAutoGranted(TARGET_APP_PKG);
     }
 
+    @Suppress
     @MediumTest
     public void testToggleAppPermisssionOFF() {
         pHelper.togglePermissionSetting(TARGET_APP_PKG, "Contacts", Boolean.FALSE);
         pHelper.verifyPermissionSettingStatus(TARGET_APP_PKG, "Contacts", PermissionStatus.OFF);
     }
 
+    @Suppress
     @MediumTest
     public void testToggleAppPermisssionON() {
         pHelper.togglePermissionSetting(TARGET_APP_PKG, "Contacts", Boolean.TRUE);
