@@ -139,6 +139,7 @@ public class ProcessStatusTracker implements IProcessStatusTracker {
             mPidExclusions.remove(processName);
             Log.v(TAG, "Started tracking pid changes: " + processName);
         }
+        verifyRunningProcess();
     }
 
     @Override
@@ -186,7 +187,7 @@ public class ProcessStatusTracker implements IProcessStatusTracker {
         // Enumerate status for all currently tracked processes
         for (String proc : procSet) {
             // Execute shell command and parse results
-            BufferedReader stream = executeShellCommand(String.format("ps %s", proc));
+            BufferedReader stream = executeShellCommand("ps");
             try {
                 String line;
                 while ((line = stream.readLine()) != null) {
