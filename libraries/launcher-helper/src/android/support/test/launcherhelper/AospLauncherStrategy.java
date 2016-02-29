@@ -44,7 +44,7 @@ public class AospLauncherStrategy implements ILauncherStrategy {
     @Override
     public void open() {
         // if we see hotseat, assume at home screen already
-        if (!mDevice.hasObject(HOTSEAT)) {
+        if (!mDevice.hasObject(getHotSeatSelector())) {
             mDevice.pressHome();
             Assert.assertTrue("Failed to open launcher",
                     mDevice.wait(Until.hasObject(By.pkg(LAUNCHER_PKG)), 5000));
@@ -69,7 +69,7 @@ public class AospLauncherStrategy implements ILauncherStrategy {
             // taps on the "apps" button at the bottom of the screen
             mDevice.findObject(By.desc("Apps")).click();
             // wait until hotseat disappears, so that we know that we are no longer on home screen
-            mDevice.wait(Until.gone(HOTSEAT), 2000);
+            mDevice.wait(Until.gone(getHotSeatSelector()), 2000);
             mDevice.waitForIdle();
         }
         // check if there's a "cling" on screen
@@ -114,7 +114,7 @@ public class AospLauncherStrategy implements ILauncherStrategy {
             // taps on the "apps" button at the bottom of the screen
             mDevice.findObject(By.desc("Apps")).click();
             // wait until hotseat disappears, so that we know that we are no longer on home screen
-            mDevice.wait(Until.gone(HOTSEAT), 2000);
+            mDevice.wait(Until.gone(getHotSeatSelector()), 2000);
             mDevice.waitForIdle();
         }
         // taps on the "Widgets" page selector near the top of the screen
@@ -195,6 +195,14 @@ public class AospLauncherStrategy implements ILauncherStrategy {
     @Override
     public BySelector getWorkspaceSelector() {
         return WORKSPACE;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public BySelector getHotSeatSelector() {
+        return HOTSEAT;
     }
 
     /**

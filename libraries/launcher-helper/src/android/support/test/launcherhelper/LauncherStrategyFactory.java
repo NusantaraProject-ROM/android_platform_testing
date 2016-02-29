@@ -41,6 +41,7 @@ public class LauncherStrategyFactory {
         mKnownLauncherStrategies = new HashSet<>();
         registerLauncherStrategy(AospLauncherStrategy.class);
         registerLauncherStrategy(GoogleExperienceLauncherStrategy.class);
+        registerLauncherStrategy(Launcher3Strategy.class);
     }
 
     /**
