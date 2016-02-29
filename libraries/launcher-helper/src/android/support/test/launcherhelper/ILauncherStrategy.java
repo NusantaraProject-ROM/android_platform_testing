@@ -90,6 +90,12 @@ public interface ILauncherStrategy {
     public BySelector getWorkspaceSelector();
 
     /**
+     * Returns a {@link BySelector} describing the home screen hot seat (app icons at the bottom)
+     * @return
+     */
+    public BySelector getHotSeatSelector();
+
+    /**
      * Retrieves the home screen workspace forward scroll direction as implemented by the launcher
      * @return
      */

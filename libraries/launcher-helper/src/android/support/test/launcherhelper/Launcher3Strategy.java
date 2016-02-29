@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,9 @@
  */
 package android.support.test.launcherhelper;
 
-/**
- * Implementation of {@link ILauncherStrategy} to support Google experience launcher
- */
-public class GoogleExperienceLauncherStrategy extends BaseLauncher3Strategy {
+public class Launcher3Strategy extends BaseLauncher3Strategy {
 
-    private static final String LAUNCHER_PKG = "com.google.android.googlequicksearchbox";
+    private static final String LAUNCHER_PKG = "com.android.launcher3";
 
     @Override
     public String getSupportedLauncherPackage() {
