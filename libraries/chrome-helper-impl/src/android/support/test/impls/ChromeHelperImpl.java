@@ -41,6 +41,8 @@ public class ChromeHelperImpl extends AbstractChromeHelper {
     private static final String UI_URL_BAR_ID = "url_bar";
     private static final String UI_VIEW_HOLDER_ID = "compositor_view_holder";
 
+    private static final long APP_INIT_WAIT = 10000;
+    private static final long MAX_DIALOG_TRANSITION = 5000;
     private static final long PAGE_LOAD_TIMEOUT = 30 * 1000;
 
     private String mPackageName;
@@ -99,33 +101,34 @@ public class ChromeHelperImpl extends AbstractChromeHelper {
     @Override
     public void dismissInitialDialogs() {
         // Terms of Service
-        UiObject2 tos = mDevice.findObject(By.res(getPackage(), "terms_accept"));
+        UiObject2 tos = mDevice.wait(Until.findObject(By.res(getPackage(), "terms_accept")),
+                APP_INIT_WAIT);
         if (tos != null) {
             tos.click();
         }
 
-        if (mDevice.hasObject(By.textStartsWith("Add an account"))) {
+        if (mDevice.wait(Until.hasObject(By.textStartsWith("Add an account")),
+                MAX_DIALOG_TRANSITION)) {
             // Device has no accounts registered that Chrome recognizes
-            // Select "NO THANKS"
+            // Select negative button to skip setup wizard sign in
             UiObject2 negative = mDevice.wait(Until.findObject(
-                    By.res(getPackage(), "negative_button")), 5000);
+                    By.res(getPackage(), "negative_button")), MAX_DIALOG_TRANSITION);
             if (negative != null) {
-                negative.clickAndWait(Until.newWindow(), 5000);
+                negative.click();
             }
         } else {
             // Device has an account registered that Chrome recognizes
-            // Select "SIGN IN"
-            UiObject2 signin = mDevice.wait(Until.findObject(
-                    By.res(getPackage(), "positive_button")), 5000);
-            if (signin != null) {
-                signin.clickAndWait(Until.newWindow(), 5000);
-            }
+            // Press positive buttons until through setup wizard
+            for (int i = 0; i < 4; i++) {
+                if (!isInSetupWizard()) {
+                    break;
+                }
 
-            // Select "DONE"
-             UiObject2 done = mDevice.wait(Until.findObject(
-                    By.res(getPackage(), "positive_button")), 5000);
-            if (done != null) {
-                done.clickAndWait(Until.newWindow(), 5000);
+                UiObject2 positive = mDevice.wait(Until.findObject(
+                        By.res(getPackage(), "positive_button")), MAX_DIALOG_TRANSITION);
+                if (positive != null) {
+                    positive.click();
+                }
             }
         }
     }
@@ -271,5 +274,9 @@ public class ChromeHelperImpl extends AbstractChromeHelper {
         } else if (mDevice.hasObject(By.res(getPackage(), "progress"))) {
             mDevice.wait(Until.gone(By.res(getPackage(), "progress")), PAGE_LOAD_TIMEOUT);
         }
+    }
+
+    private boolean isInSetupWizard() {
+        return mDevice.hasObject(By.res(getPackage(), "fre_pager"));
     }
 }

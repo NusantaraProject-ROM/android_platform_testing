@@ -36,7 +36,6 @@ public class PhotosHelperImpl extends AbstractPhotosHelper {
 
     private static final long APP_LOAD_WAIT = 7500;
     private static final long HACKY_WAIT = 2500;
-    private static final long TRANSITION_TIMEOUT = 5000;
 
     private static final String UI_PACKAGE_NAME = "com.google.android.apps.photos";
 
@@ -79,41 +78,51 @@ public class PhotosHelperImpl extends AbstractPhotosHelper {
             }
             if (getStartedButton != null) {
                 getStartedButton.click();
+                mDevice.waitForIdle();
                 break;
             }
         }
         if (getStartedButton == null) {
             Log.e(LOG_TAG, "Unable to find GET STARTED button.");
         }
-        // Press 'CONTINUE' twice
-        for (int repeat = 0; repeat < 2; repeat++) {
-            Pattern continueWords = Pattern.compile("Continue", Pattern.CASE_INSENSITIVE);
-            UiObject2 continueButton = mDevice.wait(Until.findObject(By.text(continueWords)),
-                    TRANSITION_TIMEOUT);
-            if (continueButton != null) {
-                continueButton.click();
+        // Address dialogs with an account vs. without an account
+        Pattern signInWords = Pattern.compile("Sign in", Pattern.CASE_INSENSITIVE);
+        boolean hasAccount = !mDevice.hasObject(By.text(signInWords));
+        if (!hasAccount) {
+            // Select 'NO THANKS' if no account exists
+            Pattern noThanksWords = Pattern.compile("No thanks", Pattern.CASE_INSENSITIVE);
+            UiObject2 noThanksButton = mDevice.findObject(By.text(noThanksWords));
+            if (noThanksButton != null) {
+                noThanksButton.click();
                 mDevice.waitForIdle();
             } else {
-                Log.e(LOG_TAG, "Unable to find CONTINUE button.");
+                Log.e(LOG_TAG, "Unable to find NO THANKS button.");
             }
-        }
-        // Press '->' three times, and then '√' once
-        for (int repeat = 0; repeat < 4; repeat++) {
-            UiObject2 nextButton = mDevice.wait(Until.findObject(By.desc("Next")),
-                    TRANSITION_TIMEOUT);
-            if (nextButton != null) {
-                nextButton.click();
-                mDevice.waitForIdle();
-            } else {
-                Log.e(LOG_TAG, "Unable to find arrow or check buttons.");
+        } else {
+            // Press 'CONTINUE' twice
+            for (int repeat = 0; repeat < 2; repeat++) {
+                Pattern continueWords = Pattern.compile("Continue", Pattern.CASE_INSENSITIVE);
+                UiObject2 continueButton = mDevice.findObject(By.text(continueWords));
+                if (continueButton != null) {
+                    continueButton.click();
+                    mDevice.waitForIdle();
+                } else {
+                    Log.e(LOG_TAG, "Unable to find CONTINUE button.");
+                }
             }
-        }
-        // Dismiss the fullscreen dialog
-        openFirstClip();
-        UiObject2 pager = mDevice.findObject(By.res(UI_PACKAGE_NAME, "photo_view_pager"));
-        if (pager != null) {
-            pager.setGestureMargin(pager.getVisibleBounds().height() / 4);
-            pager.scroll(Direction.UP, 1.0f);
+            // Press the next button (arrow and check mark) four consecutive times
+            for (int repeat = 0; repeat < 4; repeat++) {
+                UiObject2 nextButton = mDevice.findObject(By.desc("Next"));
+                if (nextButton != null) {
+                    nextButton.click();
+                    mDevice.waitForIdle();
+                } else {
+                    Log.e(LOG_TAG, "Unable to find arrow or check mark buttons.");
+                }
+            }
+            // Dismiss the fullscreen dialog
+            openFirstClip();
+            mDevice.pressBack();
         }
     }
 

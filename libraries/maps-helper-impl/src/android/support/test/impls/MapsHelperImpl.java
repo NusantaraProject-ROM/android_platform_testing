@@ -60,10 +60,9 @@ public class MapsHelperImpl extends AbstractMapsHelper {
      */
     @Override
     public void dismissInitialDialogs() {
+        // Accept terms
         String text = "ACCEPT & CONTINUE";
         Pattern pattern = Pattern.compile(text, Pattern.CASE_INSENSITIVE);
-
-        // Accept terms
         UiObject2 terms = mDevice.wait(Until.findObject(By.text(pattern)), 5000);
         if (terms != null) {
             terms.click();
@@ -71,7 +70,9 @@ public class MapsHelperImpl extends AbstractMapsHelper {
         }
 
         // Enable location services
-        UiObject2 location = mDevice.wait(Until.findObject(By.text("Yes, I'm in")), 5000);
+        text = "YES, I'M IN";
+        pattern = Pattern.compile(text, Pattern.CASE_INSENSITIVE);
+        UiObject2 location = mDevice.wait(Until.findObject(By.text(pattern)), 5000);
         if (location != null) {
             location.click();
             mDevice.waitForIdle();
@@ -93,21 +94,13 @@ public class MapsHelperImpl extends AbstractMapsHelper {
         }
 
         // Dismiss side menu dialog
+        text = "GOT IT";
+        pattern = Pattern.compile(text, Pattern.CASE_INSENSITIVE);
         BySelector gotIt = By.text(Pattern.compile("GOT IT", Pattern.CASE_INSENSITIVE));
         UiObject2 sideMenuTut = mDevice.findObject(gotIt);
         if (sideMenuTut != null) {
             sideMenuTut.click();
         }
-
-        doSearch("Golden Gate Bridge");
-        UiObject2 pullUpTut = mDevice.findObject(gotIt);
-        if (pullUpTut != null) {
-            pullUpTut.click();
-        }
-
-        mDevice.pressBack();
-
-        // Dismiss pull up info dialog
     }
 
     /**
