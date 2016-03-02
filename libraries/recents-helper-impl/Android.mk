@@ -16,11 +16,8 @@
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE := app-helpers
-LOCAL_STATIC_JAVA_LIBRARIES := launcher-helper-lib app-ui-helpers google-camera-ui-helper \
-                               youtube-ui-helper photos-ui-helper play-music-ui-helper \
-                               chrome-ui-helper play-store-ui-helper play-movies-ui-helper \
-                               gmail-ui-helper maps-ui-helper recents-ui-helper
+LOCAL_MODULE := recents-ui-helper
+LOCAL_JAVA_LIBRARIES := ub-uiautomator app-ui-helpers
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
 include $(BUILD_STATIC_JAVA_LIBRARY)
