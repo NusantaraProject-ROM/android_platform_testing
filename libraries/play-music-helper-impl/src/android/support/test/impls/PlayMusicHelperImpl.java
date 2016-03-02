@@ -69,7 +69,9 @@ public class PlayMusicHelperImpl extends AbstractPlayMusicHelper {
     public void dismissInitialDialogs() {
         // Dismiss "LISTEN NOW" Dialog
         UiObject2 listenNow = mDevice.wait(Until.findObject(By.text("LISTEN NOW")), APP_LOAD_WAIT);
-        listenNow.clickAndWait(Until.newWindow(), APP_INIT_WAIT);
+        if (listenNow != null) {
+            listenNow.clickAndWait(Until.newWindow(), APP_INIT_WAIT);
+        }
     }
 
     /**
