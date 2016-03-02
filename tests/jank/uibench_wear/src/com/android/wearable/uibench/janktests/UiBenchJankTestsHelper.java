@@ -42,7 +42,8 @@ public class UiBenchJankTestsHelper {
 
     public static final String RES_PACKAGE_NAME = "android";
     public static final String PACKAGE_NAME = "com.android.test.uibench";
-    public static final String CLOCK_BAR_NAME = "clock_bar";
+    public static final String ROOT_NAME = "root";
+    public static final String LAUNCHER_VIEW_NAME = "launcher_view";
     public static final String TEXT_OBJECT_NAME = "text1";
     public static final String UIBENCH_OBJECT_NAME = "UiBench";
 
@@ -77,21 +78,25 @@ public class UiBenchJankTestsHelper {
         UiObject2 initScreen = mDevice.wait(Until.findObject(By.text(UIBENCH_OBJECT_NAME)), 2000);
         int counter = 3;
         while (initScreen == null && --counter > 0) {
-            swipeRight();
+            mDevice.pressBack();
             initScreen = mDevice.wait(Until.findObject(By.text(UIBENCH_OBJECT_NAME)), 2000);
         }
     }
 
     // Helper method to go back to home screen
     public void goBackHome() throws UiObjectNotFoundException {
-
         String launcherPackage = mDevice.getLauncherPackageName();
         UiObject2 homeScreen = null;
         int count = 0;
         while (homeScreen == null && count < 5) {
-            swipeRight();
-            homeScreen = mDevice.findObject(By.res(launcherPackage,CLOCK_BAR_NAME));
+            mDevice.pressBack();
+            homeScreen = mDevice.findObject(By.res(launcherPackage, ROOT_NAME));
             count ++;
+        }
+        // Make sure we're not in the launcher
+        homeScreen = mDevice.findObject(By.res(launcherPackage, LAUNCHER_VIEW_NAME));
+        if (homeScreen != null) {
+            mDevice.pressBack();
         }
     }
 
