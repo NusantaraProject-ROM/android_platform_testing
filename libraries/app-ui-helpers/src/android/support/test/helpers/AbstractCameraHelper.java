@@ -39,6 +39,20 @@ public abstract class AbstractCameraHelper extends AbstractStandardAppHelper {
     public abstract void goToVideoMode();
 
     /**
+     * Setup expectations: GoogleCamera is open and idle in either camera/video mode.
+     *
+     * This method will change to back camera and block until the transition is complete.
+     */
+    public abstract void goToBackCamera();
+
+    /**
+     * Setup expectations: GoogleCamera is open and idle in either camera/video mode.
+     *
+     * This method will change to front camera and block until the transition is complete.
+     */
+    public abstract void goToFrontCamera();
+
+    /**
      * Setup expectation: in Camera mode with the capture button present.
      *
      * This method will capture a photo and block until the transaction is complete.
