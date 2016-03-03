@@ -16,19 +16,13 @@
 
 package android.settings.functional;
 
-import java.io.IOException;
 import android.content.Context;
-import android.content.Intent;
 import android.net.wifi.WifiManager;
 import android.os.RemoteException;
-import android.os.SystemClock;
 import android.provider.Settings;
-import android.provider.Settings.SettingNotFoundException;
 import android.support.test.uiautomator.By;
-import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
-import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.Until;
 import android.test.InstrumentationTestCase;
 import android.test.suitebuilder.annotation.MediumTest;
@@ -70,19 +64,13 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
 
     @MediumTest
     public void testWifiMenuLoadConfigure() throws Exception {
-        launchWiFiSettings(Settings.ACTION_WIFI_SETTINGS);
+        SettingsHelper.launchSettingsPage(getInstrumentation().getContext(),
+                Settings.ACTION_WIFI_SETTINGS);
         mDevice.wait(Until.findObject(By.desc("Configure")), TIMEOUT).click();
         Thread.sleep(TIMEOUT);
         UiObject2 configureWiFiHeading = mDevice.wait(Until.findObject(By.text("Configure Wi‑Fi")),
                 TIMEOUT);
         assertNotNull("Configure WiFi menu has not loaded correctly", configureWiFiHeading);
-    }
-
-    public void launchWiFiSettings(String wifiSetting) throws Exception {
-        Intent wifiIntent = new Intent(wifiSetting);
-        wifiIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        getInstrumentation().getContext().startActivity(wifiIntent);
-        Thread.sleep(TIMEOUT * 2);
     }
 
     @MediumTest
@@ -163,7 +151,8 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
          WifiManager wifiManager = (WifiManager)getInstrumentation().getContext()
                  .getSystemService(Context.WIFI_SERVICE);
          wifiManager.setWifiEnabled(!verifyOn);
-         launchWiFiSettings(Settings.ACTION_WIFI_SETTINGS);
+         SettingsHelper.launchSettingsPage(getInstrumentation().getContext(),
+                 Settings.ACTION_WIFI_SETTINGS);
          mDevice.wait(Until
                  .findObject(By.res(SETTINGS_PACKAGE, "switch_bar").text(switchText)), TIMEOUT)
                  .click();
@@ -183,7 +172,8 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
         WifiManager wifiManager = (WifiManager)getInstrumentation().getContext()
                 .getSystemService(Context.WIFI_SERVICE);
         wifiManager.setWifiEnabled(true);
-        launchWiFiSettings(Settings.ACTION_WIFI_SETTINGS);
+        SettingsHelper.launchSettingsPage(getInstrumentation().getContext(),
+                Settings.ACTION_WIFI_SETTINGS);
         mDevice.wait(Until.findObject(By.desc("Configure")), TIMEOUT).click();
     }
 }
