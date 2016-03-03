@@ -39,6 +39,11 @@ public class CameraHelperImpl extends AbstractCameraHelper {
     private static final String UI_SHUTTER_DESC_VID_3X = "Capture video";
     private static final String UI_SHUTTER_DESC_VID_2X = "Shutter";
     private static final String UI_TOGGLE_BUTTON_ID = "photo_video_paginator";
+    private static final String UI_BACK_FRONT_TOGGLE_BUTTON_ID = "camera_toggle_button";
+    private static final String UI_MODE_OPTION_TOGGLE_BUTTON_ID = "mode_options_toggle";
+    private static final String UI_SHUTTER_BUTTON_ID = "shutter_button";
+    private static final String UI_SETTINGS_BUTTON_ID = "settings_button";
+    private static final String UI_MENU_BUTTON_ID = "menuButton";
 
     private static final String LOG_TAG = CameraHelperImpl.class.getSimpleName();
 
@@ -188,6 +193,56 @@ public class CameraHelperImpl extends AbstractCameraHelper {
         waitForVideoShutter();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void goToBackCamera() {
+        if (isBackCamera()) {
+            return;
+        }
+
+        // Close menu if open
+        closeMenu();
+
+        if (mIsVersion3X) {
+            backFrontSwitch();
+        } else {
+            // Open mode options if not open. Note: the mode option button only appear if mode option menu not open
+            UiObject2 modeoptions = getModeOptionToggleButton();
+            if (modeoptions != null) {
+                modeoptions.click();
+            }
+            // Press back camera button
+            backFrontSwitch();
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void goToFrontCamera() {
+        if (isFrontCamera()) {
+            return;
+        }
+
+        // Close menu if open
+        closeMenu();
+
+        if (mIsVersion3X) {
+            backFrontSwitch();
+        } else {
+            // Open mode options if not open. Note: the mode option button only appear if mode option menu not open
+            UiObject2 modeoptions = getModeOptionToggleButton();
+            if (modeoptions != null) {
+                modeoptions.click();
+            }
+            // Press front camera button
+            backFrontSwitch();
+        }
+    }
+
     private void openMenu() {
         if (mIsVersion3X) {
             UiObject2 menu = mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_MENU_ID));
@@ -214,12 +269,95 @@ public class CameraHelperImpl extends AbstractCameraHelper {
         return (mDevice.hasObject(By.res(UI_PACKAGE_NAME, "recording_time_rect")));
     }
 
+    private boolean isBackCamera() {
+        // Close menu if open
+        closeMenu();
+
+        if (mIsVersion3X) {
+            return (mDevice.hasObject(By.desc("Back camera")));
+        } else {
+            // Open mode options if not open
+            UiObject2 modeoptions = getModeOptionToggleButton();
+            if (modeoptions != null) {
+                modeoptions.click();
+            }
+            return (mDevice.hasObject(By.desc("Back camera")));
+        }
+    }
+
+    private boolean isFrontCamera() {
+        // Close menu if open
+        closeMenu();
+
+        if (mIsVersion3X) {
+            return (mDevice.hasObject(By.desc("Front camera")));
+        } else {
+            // Open mode options if not open
+            UiObject2 modeoptions = getModeOptionToggleButton();
+            if (modeoptions != null) {
+                modeoptions.click();
+            }
+            return (mDevice.hasObject(By.desc("Front camera")));
+        }
+    }
+
+    private void closeMenu() {
+        // Should only call this function when menu is open, do nothing if menu is not open
+        if (!isMenuOpen()) {
+            return;
+        }
+
+        if (mIsVersion3X) {
+            // Click menu button to close menu (this is NOT for taking pictures)
+            UiObject2 backButton = mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_MENU_BUTTON_ID));
+            if (backButton != null) {
+                backButton.click();
+            }
+        } else {
+            // Click shutter button to close menu (this is NOT for taking pictures)
+            UiObject2 shutter = mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_SHUTTER_BUTTON_ID));
+            if (shutter != null) {
+                shutter.click();
+            }
+        }
+    }
+
+    private boolean isMenuOpen() {
+        if (mIsVersion3X) {
+            if (mDevice.hasObject(By.desc("Open settings"))) {
+                return true;
+            }
+        } else {
+            if (mDevice.hasObject(By.res(UI_PACKAGE_NAME, UI_SETTINGS_BUTTON_ID))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private boolean isRecording() {
         return mDevice.hasObject(By.res(UI_PACKAGE_NAME, UI_RECORDING_TIME_ID));
     }
 
     private UiObject2 getToggleButton() {
         return mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_TOGGLE_BUTTON_ID));
+    }
+
+    private void backFrontSwitch() {
+        UiObject2 toggle = getBackFrontToggleButton();
+        if (toggle != null) {
+            toggle.click();
+        } else {
+            Assert.assertNotNull("Failed to detect a toggle bar", toggle);
+        }
+    }
+
+    private UiObject2 getBackFrontToggleButton() {
+        return mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_BACK_FRONT_TOGGLE_BUTTON_ID));
+    }
+
+    private UiObject2 getModeOptionToggleButton() {
+        return mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_MODE_OPTION_TOGGLE_BUTTON_ID));
     }
 
     private UiObject2 getCameraShutter() {
