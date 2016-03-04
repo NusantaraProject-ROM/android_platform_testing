@@ -103,7 +103,7 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
     public void testAccelRotation() throws Exception {
         SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         mHelper.scrollVert(false);
-        Thread.sleep(1000);
+        Thread.sleep(2000);
         String[] buttons = {
                 "Rotate the contents of the screen",
                 "Stay in portrait view"
@@ -131,6 +131,7 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
         assertTrue(mHelper.verifyRadioSetting(SettingsType.SECURE, PAGE,
                 "Daydream", "Photos", Settings.Secure.SCREENSAVER_COMPONENTS,
                 "com.google.android.apps.photos/com.google.android.apps.photos.daydream.PhotosDreamService"));
+        mDevice.pressBack();
     }
 
     @MediumTest

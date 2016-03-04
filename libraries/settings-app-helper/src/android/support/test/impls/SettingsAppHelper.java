@@ -160,6 +160,10 @@ public class SettingsAppHelper extends AbstractSettingsHelper {
 
     public boolean verifyToggleSetting(SettingsType type, String settingAction,
             Pattern settingName, String internalName, boolean doLaunch) throws Exception {
+        String onSettingBaseVal = getStringSetting(type, internalName);
+        if (onSettingBaseVal == null) {
+            onSettingBaseVal = "0";
+        }
         int onSetting = Integer.parseInt(getStringSetting(type, internalName));
         if (doLaunch) {
             launchSettingsPage(mInstrumentation.getContext(), settingAction);
