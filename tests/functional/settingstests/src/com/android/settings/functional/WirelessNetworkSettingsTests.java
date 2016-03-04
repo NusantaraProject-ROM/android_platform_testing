@@ -20,6 +20,7 @@ import android.content.Context;
 import android.net.wifi.WifiManager;
 import android.os.RemoteException;
 import android.provider.Settings;
+import android.support.test.impls.SettingsAppHelper;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
@@ -64,7 +65,7 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
 
     @MediumTest
     public void testWifiMenuLoadConfigure() throws Exception {
-        SettingsHelper.launchSettingsPage(getInstrumentation().getContext(),
+        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(),
                 Settings.ACTION_WIFI_SETTINGS);
         mDevice.wait(Until.findObject(By.desc("Configure")), TIMEOUT).click();
         Thread.sleep(TIMEOUT);
@@ -151,7 +152,7 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
          WifiManager wifiManager = (WifiManager)getInstrumentation().getContext()
                  .getSystemService(Context.WIFI_SERVICE);
          wifiManager.setWifiEnabled(!verifyOn);
-         SettingsHelper.launchSettingsPage(getInstrumentation().getContext(),
+         SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(),
                  Settings.ACTION_WIFI_SETTINGS);
          mDevice.wait(Until
                  .findObject(By.res(SETTINGS_PACKAGE, "switch_bar").text(switchText)), TIMEOUT)
@@ -172,7 +173,7 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
         WifiManager wifiManager = (WifiManager)getInstrumentation().getContext()
                 .getSystemService(Context.WIFI_SERVICE);
         wifiManager.setWifiEnabled(true);
-        SettingsHelper.launchSettingsPage(getInstrumentation().getContext(),
+        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(),
                 Settings.ACTION_WIFI_SETTINGS);
         mDevice.wait(Until.findObject(By.desc("Configure")), TIMEOUT).click();
     }
