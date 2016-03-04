@@ -18,7 +18,8 @@ package android.settings.functional;
 
 import android.content.ContentResolver;
 import android.provider.Settings;
-import android.settings.functional.SettingsHelper.SettingsType;
+import android.support.test.impls.SettingsAppHelper;
+import android.support.test.impls.SettingsAppHelper.SettingsType;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.Until;
@@ -38,7 +39,7 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
 
     private UiDevice mDevice;
     private ContentResolver mResolver;
-    private SettingsHelper mHelper;
+    private SettingsAppHelper mHelper;
 
     @Override
     public void setUp() throws Exception {
@@ -46,7 +47,7 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
         mDevice = UiDevice.getInstance(getInstrumentation());
         mDevice.setOrientationNatural();
         mResolver = getInstrumentation().getContext().getContentResolver();
-        mHelper = new SettingsHelper(mDevice, getInstrumentation());
+        mHelper = new SettingsAppHelper(getInstrumentation());
     }
 
     @Override
@@ -59,7 +60,7 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
 
     @MediumTest
     public void testAdaptiveBrightness() throws Exception {
-        SettingsHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
+        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         mHelper.scrollVert(true);
         Thread.sleep(1000);
         assertTrue(mHelper.verifyToggleSetting(SettingsType.SYSTEM, PAGE, "Adaptive brightness",
@@ -88,7 +89,7 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
 
     @MediumTest
     public void testDaydreamToggle() throws Exception {
-        SettingsHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
+        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         Pattern p = Pattern.compile("On|Off");
         mHelper.clickSetting("Daydream");
         Thread.sleep(1000);
@@ -100,7 +101,7 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
 
     @MediumTest
     public void testAccelRotation() throws Exception {
-        SettingsHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
+        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         mHelper.scrollVert(false);
         Thread.sleep(1000);
         String[] buttons = {
@@ -120,7 +121,7 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
     @MediumTest
     public void testDaydream() throws Exception {
         Settings.Secure.putInt(mResolver, Settings.Secure.SCREENSAVER_ENABLED, 1);
-        SettingsHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
+        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         assertTrue(mHelper.verifyRadioSetting(SettingsType.SECURE, PAGE,
                 "Daydream", "Clock", Settings.Secure.SCREENSAVER_COMPONENTS,
                 "com.google.android.deskclock/com.android.deskclock.Screensaver"));
@@ -205,7 +206,7 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
     private void verifyFontSizeSetting(float resetValue, FontSetting setting)
             throws Exception {
         Settings.System.putFloat(mResolver, Settings.System.FONT_SCALE, resetValue);
-        SettingsHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
+        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         mHelper.clickSetting("Font size");
         mDevice.wait(Until.findObject(By.desc(setting.getName())), TIMEOUT).click();
         Thread.sleep(1000);

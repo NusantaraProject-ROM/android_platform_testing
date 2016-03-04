@@ -14,19 +14,25 @@
  * limitations under the License.
  */
 
-package com.android.support.test.helpers;
+package android.support.test.impls;
 
 import android.app.Instrumentation;
-import android.os.SystemClock;
+import android.content.ContentResolver;
+import android.content.Context;
+import android.content.Intent;
+import android.provider.Settings;
+import android.provider.Settings.SettingNotFoundException;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.Direction;
-import android.support.test.uiautomator.Until;
-import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
-import android.util.Log;
+import android.support.test.uiautomator.Until;
+
+import com.android.support.test.helpers.AbstractSettingsHelper;
 
 import junit.framework.Assert;
+
+import java.util.regex.Pattern;
 
 public class SettingsAppHelper extends AbstractSettingsHelper {
 
@@ -34,10 +40,20 @@ public class SettingsAppHelper extends AbstractSettingsHelper {
     private static final String UI_PACKAGE_NAME = "com.android.settings";
     private static final BySelector SETTINGS_DASHBOARD = By.res(UI_PACKAGE_NAME,
             "dashboard_container");
+    private static final int TIMEOUT = 2000;
     private static final String LOG_TAG = SettingsAppHelper.class.getSimpleName();
+
+    private ContentResolver mResolver;
+
+    public static enum SettingsType {
+        SYSTEM,
+        SECURE,
+        GLOBAL
+    }
 
     public SettingsAppHelper(Instrumentation instr) {
         super(instr);
+        mResolver = instr.getContext().getContentResolver();
     }
 
     /**
@@ -84,6 +100,19 @@ public class SettingsAppHelper extends AbstractSettingsHelper {
         while (settingsList.fling(Direction.UP));
     }
 
+    public static void launchSettingsPage(Context ctx, String pageName) throws Exception {
+        Intent intent = new Intent(pageName);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        ctx.startActivity(intent);
+        Thread.sleep(TIMEOUT * 2);
+    }
+
+    public void scrollVert(boolean isUp) {
+        int w = mDevice.getDisplayWidth();
+        int h = mDevice.getDisplayHeight();
+        mDevice.swipe(w / 2, h / 2, w / 2, isUp ? h : 0, 2);
+    }
+
     /**
      * On N, the settingsDashboard is initially collapsed, and the user can see the "See all"
      * element. On hitting "See all", the same settings dashboard element is now scrollable. For
@@ -102,5 +131,75 @@ public class SettingsAppHelper extends AbstractSettingsHelper {
             count++;
         }
         return settingsDashboard;
+    }
+
+    public void clickSetting(String settingName) {
+        mDevice.wait(Until.findObject(By.text(settingName)), TIMEOUT).click();
+    }
+
+    public void clickSetting(Pattern settingName) {
+        mDevice.wait(Until.findObject(By.text(settingName)), TIMEOUT).click();
+    }
+
+    public boolean verifyToggleSetting(SettingsType type, String settingAction,
+            String settingName, String internalName) throws Exception {
+        return verifyToggleSetting(
+                type, settingAction, Pattern.compile(settingName), internalName, true);
+    }
+
+    public boolean verifyToggleSetting(SettingsType type, String settingAction,
+            Pattern settingName, String internalName) throws Exception {
+        return verifyToggleSetting(type, settingAction, settingName, internalName, true);
+    }
+
+    public boolean verifyToggleSetting(SettingsType type, String settingAction,
+            String settingName, String internalName, boolean doLaunch) throws Exception {
+        return verifyToggleSetting(
+                type, settingAction, Pattern.compile(settingName), internalName, doLaunch);
+    }
+
+    public boolean verifyToggleSetting(SettingsType type, String settingAction,
+            Pattern settingName, String internalName, boolean doLaunch) throws Exception {
+        int onSetting = Integer.parseInt(getStringSetting(type, internalName));
+        if (doLaunch) {
+            launchSettingsPage(mInstrumentation.getContext(), settingAction);
+        }
+        clickSetting(settingName);
+        Thread.sleep(1000);
+        String changedSetting = getStringSetting(type, internalName);
+        return (1 - onSetting) == Integer.parseInt(changedSetting);
+    }
+
+    public boolean verifyRadioSetting(SettingsType type, String settingAction,
+            String baseName, String settingName,
+            String internalName, String testVal) throws Exception {
+        clickSetting(baseName);
+        clickSetting(settingName);
+        Thread.sleep(500);
+        return getStringSetting(type, internalName).equals(testVal);
+    }
+
+    private String getStringSetting(SettingsType type, String sName) {
+        switch (type) {
+            case SYSTEM:
+                return Settings.System.getString(mResolver, sName);
+            case GLOBAL:
+                return Settings.Global.getString(mResolver, sName);
+            case SECURE:
+                return Settings.Secure.getString(mResolver, sName);
+        }
+        return "";
+    }
+
+    private int getIntSetting(SettingsType type, String sName) throws SettingNotFoundException {
+        switch (type) {
+            case SYSTEM:
+                return Settings.System.getInt(mResolver, sName);
+            case GLOBAL:
+                return Settings.Global.getInt(mResolver, sName);
+            case SECURE:
+                return Settings.Secure.getInt(mResolver, sName);
+        }
+        return Integer.MIN_VALUE;
     }
 }
