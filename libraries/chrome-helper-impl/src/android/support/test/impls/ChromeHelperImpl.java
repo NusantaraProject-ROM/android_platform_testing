@@ -152,11 +152,14 @@ public class ChromeHelperImpl extends AbstractChromeHelper {
     @Override
     public void flingPage(Direction dir) {
         UiObject2 page = getWebPage();
-        // TODO: Change this to be non-constant
-        page.setGestureMargin(500);
-        page.fling(dir);
-        // Block until the fling is complete
-        mDevice.waitForIdle();
+        if (page != null) {
+            int minDim = Math.min(
+                    page.getVisibleBounds().width(), page.getVisibleBounds().height());
+            page.setGestureMargin((int)Math.floor(minDim * 0.25));
+            page.fling(dir);
+        } else {
+            Log.e(LOG_TAG, String.format("Failed to fling page %s", dir.toString()));
+        }
     }
 
     /**
@@ -235,12 +238,7 @@ public class ChromeHelperImpl extends AbstractChromeHelper {
 
         UiObject2 viewHolder = mDevice.findObject(
                 By.res(getPackage(), UI_VIEW_HOLDER_ID));
-        if (viewHolder != null) {
-            return viewHolder;
-        }
-
-        Assert.fail("Unable to select web page.");
-        return null;
+        return viewHolder;
     }
 
     private UiObject2 getUrlBar() {
@@ -249,7 +247,8 @@ public class ChromeHelperImpl extends AbstractChromeHelper {
         if (urlLoc != null) {
             urlLoc.click();
         }
-        // Afterwards, URL bar has id URL_BAR_ID
+
+        // Afterwards, URL bar has id URL_BAR_ID; must re-select
         for (int retries = 2; retries > 0; retries--) {
             urlLoc = mDevice.findObject(By.res(getPackage(), UI_URL_BAR_ID));
             if (urlLoc == null) {
@@ -259,7 +258,12 @@ public class ChromeHelperImpl extends AbstractChromeHelper {
             }
         }
 
-        urlLoc.click();
+        if (urlLoc != null) {
+            urlLoc.click();
+        } else {
+            Assert.fail("Failed to find a URL bar");
+        }
+
         return urlLoc;
     }
 
