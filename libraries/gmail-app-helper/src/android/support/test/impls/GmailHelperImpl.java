@@ -28,9 +28,11 @@ import android.support.test.uiautomator.UiObject2;
 import android.util.Log;
 import android.webkit.WebView;
 import android.widget.ListView;
+import android.widget.ImageButton;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import junit.framework.Assert;
 
@@ -91,9 +93,18 @@ public class GmailHelperImpl extends AbstractGmailHelper {
             tutorialDone.clickAndWait(Until.newWindow(), DIALOG_TIMEOUT);
             mDevice.wait(Until.findObject(By.text("CONFIDENTIAL")), POPUP_TIMEOUT);
         }
-        UiObject2 splash = mDevice.findObject(By.text("Ok, got it"));
+        Pattern gotItWord = Pattern.compile("OK, GOT IT", Pattern.CASE_INSENSITIVE);
+        UiObject2 splash = mDevice.findObject(By.text(gotItWord));
         if (splash != null) {
             splash.clickAndWait(Until.newWindow(), DIALOG_TIMEOUT);
+        }
+
+        if (mDevice.findObject(By.text("Waiting for sync")) != null) {
+            mDevice.wait(Until.hasObject(By.text("Waiting for sync")), 2000);
+            Assert.assertTrue("'Waiting for sync' timed out",
+                    mDevice.wait(Until.gone(By.text("Waiting for sync")), 30000));
+            Assert.assertTrue("'Loading' timed out",
+                    mDevice.wait(Until.gone(By.text("Loading")), 30000));
         }
 
         // Dismiss Navigation-to-Inbox tips
@@ -276,6 +287,19 @@ public class GmailHelperImpl extends AbstractGmailHelper {
         UiObject2 scroll = getNavDrawerContainer();
         Assert.assertNotNull("No navigation drawer found to scroll", scroll);
         scroll.scroll(dir, 1.0f);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean closeNavigationDrawer() {
+        UiObject2 navDrawer = mDevice.wait(Until.findObject(
+                By.clazz(ImageButton.class).desc("Close navigation drawer")), 1000);
+        if (navDrawer != null) {
+            navDrawer.click();
+            return true;
+        }
+        return false;
     }
 
     private UiObject2 getToField() {

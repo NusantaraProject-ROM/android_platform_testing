@@ -36,6 +36,7 @@ import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.Until;
 import junit.framework.Assert;
+import com.android.support.test.helpers.ChromeHelperImpl;
 import android.support.test.timeresulthelper.TimeResultLogger;
 
 /**
@@ -50,6 +51,7 @@ public class ChromeJankTests extends JankTestBase {
     private static final int EXPECTED_FRAMES = 100;
     private static final String PACKAGE_NAME = "com.android.chrome";
     private UiDevice mDevice;
+    private ChromeHelperImpl chromeHelper;
     private static final File TIMESTAMP_FILE = new File(Environment.getExternalStorageDirectory()
             .getAbsolutePath(), "autotester.log");
     private static final File RESULTS_FILE = new File(Environment.getExternalStorageDirectory()
@@ -82,6 +84,8 @@ public class ChromeJankTests extends JankTestBase {
 
     public void launchChrome() throws UiObjectNotFoundException, IOException{
         launchApp(PACKAGE_NAME);
+        chromeHelper = new ChromeHelperImpl(getInstrumentation());
+        chromeHelper.dismissInitialDialogs();
         getOverflowMenu();
         TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
                 getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
