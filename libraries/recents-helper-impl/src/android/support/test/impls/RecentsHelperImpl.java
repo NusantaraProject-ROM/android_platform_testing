@@ -22,6 +22,7 @@ import android.os.SystemClock;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiObject2;
+import android.support.test.uiautomator.Until;
 import android.util.Log;
 import android.widget.EditText;
 
@@ -30,6 +31,8 @@ import junit.framework.Assert;
 public class RecentsHelperImpl extends AbstractRecentsHelper {
     private static final String LOG_TAG = RecentsHelperImpl.class.getSimpleName();
     private static final String UI_PACKAGE = "com.android.systemui";
+
+    private static final long RECENTS_SELECTION_TIMEOUT = 5000;
 
     public RecentsHelperImpl(Instrumentation instr) {
         super(instr);
@@ -93,6 +96,7 @@ public class RecentsHelperImpl extends AbstractRecentsHelper {
     }
 
     private UiObject2 getRecentsScroller() {
-        return mDevice.findObject(By.res(UI_PACKAGE, "recents_view"));
+        return mDevice.wait(Until.findObject(By.res(UI_PACKAGE, "recents_view")),
+                RECENTS_SELECTION_TIMEOUT);
     }
 }
