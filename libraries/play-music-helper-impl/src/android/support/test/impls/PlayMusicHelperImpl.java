@@ -30,9 +30,12 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import java.util.regex.Pattern;
+
 import junit.framework.Assert;
 
 public class PlayMusicHelperImpl extends AbstractPlayMusicHelper {
+    private static final String LOG_TAG = PlayMusicHelperImpl.class.getSimpleName();
     private static final String UI_PACKAGE = "com.google.android.music";
 
     private static final long APP_LOAD_WAIT = 10000;
@@ -41,8 +44,16 @@ public class PlayMusicHelperImpl extends AbstractPlayMusicHelper {
     private static final long NAV_BAR_WAIT = 5000;
     private static final long TOGGLE_PLAY_WAIT = 2500;
 
+    private boolean mIsVersion6p4 = false;
+
     public PlayMusicHelperImpl(Instrumentation instr) {
         super(instr);
+
+        try {
+            mIsVersion6p4 = getVersion().startsWith("6.4");
+        } catch (NameNotFoundException e) {
+            Log.e(LOG_TAG, String.format("Unable to find package by name, %s", getPackage()));
+        }
     }
 
     /**
@@ -79,7 +90,7 @@ public class PlayMusicHelperImpl extends AbstractPlayMusicHelper {
      */
     @Override
     public void goToTab(String tabTitle) {
-        // Go to the "My Library" page
+        // Go to the "Library" page
         goToMyLibrary();
         // Select the correct Tab
         String capsTitle = tabTitle.toUpperCase();
@@ -200,14 +211,14 @@ public class PlayMusicHelperImpl extends AbstractPlayMusicHelper {
     }
 
     private void goToMyLibrary() {
-        // Select for the title: "My Library"
-        if (mDevice.findObject(By.text("My Library").clickable(false)) != null) {
+        // Select for the title: "Library"
+        if (mDevice.findObject(getLibraryTextSelector().clickable(false)) != null) {
             return;
         }
 
         openNavigationBar();
-        // Select for the button: "My Library"
-        mDevice.findObject(By.text("My Library").clickable(true)).click();
+        // Select for the button: "Library"
+        mDevice.findObject(getLibraryTextSelector().clickable(true)).click();
         mDevice.wait(Until.gone(By.res(UI_PACKAGE, "play_drawer_root")), NAV_BAR_WAIT);
     }
 
@@ -218,7 +229,13 @@ public class PlayMusicHelperImpl extends AbstractPlayMusicHelper {
         mDevice.wait(Until.findObject(By.res(UI_PACKAGE, "play_drawer_root")), NAV_BAR_WAIT);
     }
 
-    private UiObject2 getNavigationBarButton () {
+    private UiObject2 getNavigationBarButton() {
         return mDevice.findObject(By.desc("Show navigation drawer"));
+    }
+
+    private BySelector getLibraryTextSelector() {
+        String libraryText = mIsVersion6p4 ? "Music library" : "My Library";
+        Pattern libraryTextPattern = Pattern.compile(libraryText, Pattern.CASE_INSENSITIVE);
+        return By.text(libraryTextPattern);
     }
 }
