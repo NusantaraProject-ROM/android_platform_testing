@@ -15,12 +15,32 @@
  */
 package android.support.test.launcherhelper;
 
+import android.support.test.uiautomator.By;
+import android.support.test.uiautomator.UiObject2;
+
 public class Launcher3Strategy extends BaseLauncher3Strategy {
 
     private static final String LAUNCHER_PKG = "com.android.launcher3";
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getSupportedLauncherPackage() {
         return LAUNCHER_PKG;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void dismissHomeScreenCling() {
+        super.dismissHomeScreenCling();
+        // dismiss first run cling
+        UiObject2 gotItButton = mDevice.findObject(
+                By.res(getSupportedLauncherPackage(), "cling_dismiss_longpress_info"));
+        if (gotItButton != null) {
+            gotItButton.click();
+        }
     }
 }
