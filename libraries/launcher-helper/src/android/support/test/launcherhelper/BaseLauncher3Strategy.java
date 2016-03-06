@@ -30,7 +30,7 @@ import junit.framework.Assert;
 
 public abstract class BaseLauncher3Strategy implements ILauncherStrategy {
     private static final String LOG_TAG = BaseLauncher3Strategy.class.getSimpleName();
-    private UiDevice mDevice;
+    protected UiDevice mDevice;
 
     /**
      * {@inheritDoc}
@@ -67,6 +67,14 @@ public abstract class BaseLauncher3Strategy implements ILauncherStrategy {
             }
             mDevice.waitForIdle();
         }
+        dismissHomeScreenCling();
+    }
+
+    /**
+     * Checks and dismisses home screen cling
+     */
+    protected void dismissHomeScreenCling() {
+        // empty default implementation
     }
 
     /**
