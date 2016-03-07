@@ -164,13 +164,16 @@ public class SettingsAppHelper extends AbstractSettingsHelper {
         if (onSettingBaseVal == null) {
             onSettingBaseVal = "0";
         }
-        int onSetting = Integer.parseInt(getStringSetting(type, internalName));
+        int onSetting = Integer.parseInt(onSettingBaseVal);
         if (doLaunch) {
             launchSettingsPage(mInstrumentation.getContext(), settingAction);
         }
         clickSetting(settingName);
         Thread.sleep(1000);
         String changedSetting = getStringSetting(type, internalName);
+        if (changedSetting == null) {
+            changedSetting = "0";
+        }
         return (1 - onSetting) == Integer.parseInt(changedSetting);
     }
 
