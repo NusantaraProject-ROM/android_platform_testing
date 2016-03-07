@@ -25,6 +25,7 @@ import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.Until;
 import android.test.InstrumentationTestCase;
 import android.test.suitebuilder.annotation.MediumTest;
+import android.test.suitebuilder.annotation.Suppress;
 
 import java.util.regex.Pattern;
 
@@ -33,9 +34,9 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
     private static final String PAGE = Settings.ACTION_DISPLAY_SETTINGS;
     private static final int TIMEOUT = 2000;
     private static final FontSetting FONT_SMALL = new FontSetting("Small", 0.85f);
-    private static final FontSetting FONT_NORMAL = new FontSetting("Normal", 1.00f);
+    private static final FontSetting FONT_NORMAL = new FontSetting("Default", 1.00f);
     private static final FontSetting FONT_LARGE = new FontSetting("Large", 1.15f);
-    private static final FontSetting FONT_HUGE = new FontSetting("Huge", 1.30f);
+    private static final FontSetting FONT_HUGE = new FontSetting("Largest", 1.30f);
 
     private UiDevice mDevice;
     private ContentResolver mResolver;
@@ -87,7 +88,9 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
                 Settings.Secure.DOZE_ENABLED));
     }
 
+    // blocked on b/27487224
     @MediumTest
+    @Suppress
     public void testDaydreamToggle() throws Exception {
         SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         Pattern p = Pattern.compile("On|Off");
@@ -126,12 +129,12 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
                 "Daydream", "Clock", Settings.Secure.SCREENSAVER_COMPONENTS,
                 "com.google.android.deskclock/com.android.deskclock.Screensaver"));
         assertTrue(mHelper.verifyRadioSetting(SettingsType.SECURE, PAGE,
-                "Daydream", "Colors", Settings.Secure.SCREENSAVER_COMPONENTS,
+                null, "Colors", Settings.Secure.SCREENSAVER_COMPONENTS,
                 "com.android.dreams.basic/com.android.dreams.basic.Colors"));
         assertTrue(mHelper.verifyRadioSetting(SettingsType.SECURE, PAGE,
-                "Daydream", "Photos", Settings.Secure.SCREENSAVER_COMPONENTS,
+                null, "Photos", Settings.Secure.SCREENSAVER_COMPONENTS,
                 "com.google.android.apps.photos/com.google.android.apps.photos.daydream.PhotosDreamService"));
-        mDevice.pressHome();
+        mDevice.wait(Until.findObject(By.desc("Navigate up")), TIMEOUT).click();
     }
 
     @MediumTest
@@ -186,12 +189,12 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
     }
 
     @MediumTest
-    public void testFontSizeNormal() throws Exception {
+    public void testFontSizeDefault() throws Exception {
         verifyFontSizeSetting(1.15f, FONT_NORMAL);
     }
 
     @MediumTest
-    public void testFontSizeHuge() throws Exception {
+    public void testFontSizeLargest() throws Exception {
         verifyFontSizeSetting(1.00f, FONT_HUGE);
         // Leaving the font size at huge can make later tests fail, so reset it
         Settings.System.putFloat(mResolver, Settings.System.FONT_SCALE, 1.00f);
