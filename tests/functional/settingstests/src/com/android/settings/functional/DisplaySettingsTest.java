@@ -131,7 +131,7 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
         assertTrue(mHelper.verifyRadioSetting(SettingsType.SECURE, PAGE,
                 "Daydream", "Photos", Settings.Secure.SCREENSAVER_COMPONENTS,
                 "com.google.android.apps.photos/com.google.android.apps.photos.daydream.PhotosDreamService"));
-        mDevice.pressBack();
+        mDevice.pressHome();
     }
 
     @MediumTest
