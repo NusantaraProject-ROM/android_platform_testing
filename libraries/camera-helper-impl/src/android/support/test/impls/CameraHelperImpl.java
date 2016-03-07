@@ -45,10 +45,18 @@ public class CameraHelperImpl extends AbstractCameraHelper {
     private static final String UI_SETTINGS_BUTTON_ID = "settings_button";
     private static final String UI_MENU_BUTTON_ID = "menuButton";
 
+    private static final String DESC_HDR_AUTO = "HDR Plus auto";
+    private static final String DESC_HDR_OFF = "HDR Plus off";
+    private static final String DESC_HDR_ON = "HDR Plus on";
+
+    public static final int HDR_MODE_AUTO = -1;
+    public static final int HDR_MODE_OFF = 0;
+    public static final int HDR_MODE_ON = 1;
+
     private static final String LOG_TAG = CameraHelperImpl.class.getSimpleName();
 
-    private static final long APP_INIT_WAIT = 10000;
-    private static final long SHUTTER_WAIT_TIME = 10000;
+    private static final long APP_INIT_WAIT = 20000;
+    private static final long SHUTTER_WAIT_TIME = 20000;
     private static final long MENU_WAIT_TIME = 5000;
 
     private boolean mIsVersion3X = false;
@@ -61,6 +69,15 @@ public class CameraHelperImpl extends AbstractCameraHelper {
         } catch (NameNotFoundException e) {
             Log.e(LOG_TAG, String.format("Unable to find package by name, %s", getPackage()));
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void open() {
+        super.open();
+        waitForAppInit();
     }
 
     /**
@@ -136,7 +153,7 @@ public class CameraHelperImpl extends AbstractCameraHelper {
         }
 
         getCameraShutter().click();
-        waitForCameraShutter();
+        waitForCameraShutterEnabled();
     }
 
     /**
@@ -155,7 +172,7 @@ public class CameraHelperImpl extends AbstractCameraHelper {
         getVideoShutter().click();
         SystemClock.sleep(timeInMS);
         getVideoShutter().click();
-        waitForVideoShutter();
+        waitForVideoShutterEnabled();
     }
 
     /**
@@ -177,7 +194,7 @@ public class CameraHelperImpl extends AbstractCameraHelper {
             selectMenuItem("Camera");
         }
 
-        waitForCameraShutter();
+        waitForCameraShutterEnabled();
     }
 
     /**
@@ -199,7 +216,7 @@ public class CameraHelperImpl extends AbstractCameraHelper {
             selectMenuItem("Video");
         }
 
-        waitForVideoShutter();
+        waitForVideoShutterEnabled();
     }
 
     /**
@@ -250,6 +267,66 @@ public class CameraHelperImpl extends AbstractCameraHelper {
             // Press front camera button
             backFrontSwitch();
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void setHdrMode(int mode) {
+        if (!isCameraMode()) {
+            throw new IllegalStateException("Cannot set HDR unless in camera mode.");
+        }
+
+        if (mIsVersion3X) {
+            if (getHdrToggleButton() == null) {
+                if (mode == HDR_MODE_OFF) {
+                    return;
+                } else {
+                    throw new UnsupportedOperationException(
+                            "Cannot set HDR on this device as requested.");
+                }
+            }
+
+            for (int retries = 0; retries < 3; retries++) {
+                if (getHdrMode() != mode) {
+                    getHdrToggleButton().click();
+                    mDevice.waitForIdle();
+                } else {
+                    Log.e(LOG_TAG, "Successfully set HDR mode!");
+                    return;
+                }
+            }
+        } else {
+            // Temporary no-op. TODO: implement.
+        }
+    }
+
+    private UiObject2 getHdrToggleButton() {
+        if (mIsVersion3X) {
+            return mDevice.findObject(By.res(UI_PACKAGE_NAME, "hdr_plus_toggle_button"));
+        } else {
+            // Temporary no-op. TODO: implement.
+            return null;
+        }
+    }
+
+    private int getHdrMode() {
+        if (mIsVersion3X) {
+            String modeDesc = getHdrToggleButton().getContentDescription();
+            if (DESC_HDR_AUTO.equals(modeDesc)) {
+                return HDR_MODE_AUTO;
+            } else if (DESC_HDR_OFF.equals(modeDesc)) {
+                return HDR_MODE_OFF;
+            } else if (DESC_HDR_ON.equals(modeDesc)) {
+                return HDR_MODE_ON;
+            } else {
+                Assert.fail("Unexpected failure.");
+            }
+        } else {
+            // Temporary no-op. TODO: implement.
+        }
+
+        return HDR_MODE_OFF;
     }
 
     private void openMenu() {
@@ -385,7 +462,10 @@ public class CameraHelperImpl extends AbstractCameraHelper {
         }
     }
 
-    private void waitForCameraShutter() {
+    /**
+     * {@inheritDoc}
+     */
+    public void waitForCameraShutterEnabled() {
         if (mIsVersion3X) {
             mDevice.wait(Until.hasObject(By.desc(UI_SHUTTER_DESC_CAM_3X).enabled(true)),
                     SHUTTER_WAIT_TIME);
@@ -395,14 +475,32 @@ public class CameraHelperImpl extends AbstractCameraHelper {
         }
     }
 
-
-    private void waitForVideoShutter() {
+    /**
+     * {@inheritDoc}
+     */
+    public void waitForVideoShutterEnabled() {
         if (mIsVersion3X) {
             mDevice.wait(Until.hasObject(By.desc(UI_SHUTTER_DESC_VID_3X).enabled(true)),
                     SHUTTER_WAIT_TIME);
         } else {
             mDevice.wait(Until.hasObject(By.desc(UI_SHUTTER_DESC_VID_2X).enabled(true)),
                     SHUTTER_WAIT_TIME);
+        }
+    }
+
+    private void waitForAppInit() {
+        boolean initalized = false;
+        if (mIsVersion3X) {
+            initalized = mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, UI_MENU_BUTTON_ID)),
+                    APP_INIT_WAIT);
+        } else {
+            // Temporary no-op. TODO: implement.
+        }
+
+        if (initalized) {
+            Log.e(LOG_TAG, "Successfully initialized.");
+        } else {
+            Log.e(LOG_TAG, "Failed to find initialization indicator.");
         }
     }
 }
