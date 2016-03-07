@@ -93,6 +93,9 @@ public class DismissDialogsInstrumentation extends Instrumentation {
             } catch (ReflectiveOperationException e) {
                 Log.e(LOG_TAG, e.toString());
                 throw new RuntimeException("Reflection exception. Please investigate!");
+            } catch (RuntimeException e) {
+                Log.e(LOG_TAG, e.toString());
+                Log.e(LOG_TAG, "Proceeding with dialog dismissal.");
             }
 
             // Periodically send status reports to not timeout
