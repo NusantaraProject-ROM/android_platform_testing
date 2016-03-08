@@ -55,7 +55,7 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
     public void tearDown() throws Exception {
         // reset settings we touched that may impact others
         Settings.System.putFloat(mResolver, Settings.System.FONT_SCALE, 1.00f);
-        Thread.sleep(500);
+        Settings.System.putInt(mResolver, Settings.System.SCREEN_OFF_TIMEOUT, -1);
         super.tearDown();
     }
 
@@ -96,10 +96,14 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
         Pattern p = Pattern.compile("On|Off");
         mHelper.clickSetting("Daydream");
         Thread.sleep(1000);
-        assertTrue(mHelper.verifyToggleSetting(SettingsType.SECURE, PAGE, p,
-                Settings.Secure.SCREENSAVER_ENABLED, false));
-        assertTrue(mHelper.verifyToggleSetting(SettingsType.SECURE, PAGE, p,
-                Settings.Secure.SCREENSAVER_ENABLED, false));
+        try {
+            assertTrue(mHelper.verifyToggleSetting(SettingsType.SECURE, PAGE, p,
+                    Settings.Secure.SCREENSAVER_ENABLED, false));
+            assertTrue(mHelper.verifyToggleSetting(SettingsType.SECURE, PAGE, p,
+                    Settings.Secure.SCREENSAVER_ENABLED, false));
+        } finally {
+            mDevice.pressBack();
+        }
     }
 
     @MediumTest
@@ -125,16 +129,19 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
     public void testDaydream() throws Exception {
         Settings.Secure.putInt(mResolver, Settings.Secure.SCREENSAVER_ENABLED, 1);
         SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
-        assertTrue(mHelper.verifyRadioSetting(SettingsType.SECURE, PAGE,
-                "Daydream", "Clock", Settings.Secure.SCREENSAVER_COMPONENTS,
-                "com.google.android.deskclock/com.android.deskclock.Screensaver"));
-        assertTrue(mHelper.verifyRadioSetting(SettingsType.SECURE, PAGE,
-                null, "Colors", Settings.Secure.SCREENSAVER_COMPONENTS,
-                "com.android.dreams.basic/com.android.dreams.basic.Colors"));
-        assertTrue(mHelper.verifyRadioSetting(SettingsType.SECURE, PAGE,
-                null, "Photos", Settings.Secure.SCREENSAVER_COMPONENTS,
-                "com.google.android.apps.photos/com.google.android.apps.photos.daydream.PhotosDreamService"));
-        mDevice.wait(Until.findObject(By.desc("Navigate up")), TIMEOUT).click();
+        try {
+            assertTrue(mHelper.verifyRadioSetting(SettingsType.SECURE, PAGE,
+                    "Daydream", "Clock", Settings.Secure.SCREENSAVER_COMPONENTS,
+                    "com.google.android.deskclock/com.android.deskclock.Screensaver"));
+            assertTrue(mHelper.verifyRadioSetting(SettingsType.SECURE, PAGE,
+                    null, "Colors", Settings.Secure.SCREENSAVER_COMPONENTS,
+                    "com.android.dreams.basic/com.android.dreams.basic.Colors"));
+            assertTrue(mHelper.verifyRadioSetting(SettingsType.SECURE, PAGE,
+                    null, "Photos", Settings.Secure.SCREENSAVER_COMPONENTS,
+                    "com.google.android.apps.photos/com.google.android.apps.photos.daydream.PhotosDreamService"));
+        } finally {
+            mDevice.pressHome();
+        }
     }
 
     @MediumTest
@@ -212,13 +219,16 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
         Settings.System.putFloat(mResolver, Settings.System.FONT_SCALE, resetValue);
         SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         mHelper.clickSetting("Font size");
-        mDevice.wait(Until.findObject(By.desc(setting.getName())), TIMEOUT).click();
-        Thread.sleep(1000);
-        float changedValue = Settings.System.getFloat(
-                mResolver, Settings.System.FONT_SCALE);
-        assertEquals(setting.getSize(), changedValue, 0.0001);
-        // Make sure to back out of the font menu
-        mDevice.pressBack();
+        try {
+            mDevice.wait(Until.findObject(By.desc(setting.getName())), TIMEOUT).click();
+            Thread.sleep(1000);
+            float changedValue = Settings.System.getFloat(
+                    mResolver, Settings.System.FONT_SCALE);
+            assertEquals(setting.getSize(), changedValue, 0.0001);
+        } finally {
+            // Make sure to back out of the font menu
+            mDevice.pressBack();
+        }
     }
 
     private static class FontSetting {
