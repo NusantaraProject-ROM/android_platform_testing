@@ -49,6 +49,7 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
     @Override
     protected void tearDown() throws Exception {
         // Need to finish settings activity
+        mDevice.pressBack();
         mDevice.pressHome();
         super.tearDown();
     }
