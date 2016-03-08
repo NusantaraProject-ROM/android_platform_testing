@@ -133,12 +133,14 @@ public class SettingsAppHelper extends AbstractSettingsHelper {
         return settingsDashboard;
     }
 
-    public void clickSetting(String settingName) {
+    public void clickSetting(String settingName) throws InterruptedException {
         mDevice.wait(Until.findObject(By.text(settingName)), TIMEOUT).click();
+        Thread.sleep(400);
     }
 
-    public void clickSetting(Pattern settingName) {
+    public void clickSetting(Pattern settingName) throws InterruptedException {
         mDevice.wait(Until.findObject(By.text(settingName)), TIMEOUT).click();
+        Thread.sleep(400);
     }
 
     public boolean verifyToggleSetting(SettingsType type, String settingAction,
@@ -180,7 +182,7 @@ public class SettingsAppHelper extends AbstractSettingsHelper {
     public boolean verifyRadioSetting(SettingsType type, String settingAction,
             String baseName, String settingName,
             String internalName, String testVal) throws Exception {
-        clickSetting(baseName);
+        if (baseName != null) clickSetting(baseName);
         clickSetting(settingName);
         Thread.sleep(500);
         return getStringSetting(type, internalName).equals(testVal);
