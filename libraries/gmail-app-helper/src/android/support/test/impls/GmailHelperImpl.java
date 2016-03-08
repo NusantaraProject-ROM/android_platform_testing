@@ -50,9 +50,11 @@ public class GmailHelperImpl extends AbstractGmailHelper {
     private static final String UI_PROMO_ACTION_NEG_RES = "promo_action_negative_single_line";
     private static final String UI_CONVERSATIONS_LIST_ID = "conversation_list_view";
     private static final String UI_CONVERSATION_CONTAINER_ID = "conversation_container";
+    private static final String UI_MULTI_PANE_CONTAINER_ID = "two_pane_activity";
     private static final BySelector PRIMARY_SELECTOR =
             By.res(UI_PACKAGE_NAME, "name").text("Primary");
-    private static final BySelector INBOX_SELECTOR = By.res(UI_PACKAGE_NAME, "name").text("Inbox");
+    private static final BySelector INBOX_SELECTOR =
+            By.res(UI_PACKAGE_NAME, "name").text("Inbox");
     private static final BySelector NAV_DRAWER_SELECTOR = By.res("android", "list").focused(true);
 
     public GmailHelperImpl(Instrumentation instr) {
@@ -126,29 +128,72 @@ public class GmailHelperImpl extends AbstractGmailHelper {
      */
     @Override
     public void goToInbox() {
-        // Simply press back if in a conversation
-        if (isInEmail()) {
-            mDevice.pressBack();
-            waitForConversationsList();
-        }
-
         // Check if already in Inbox or Primary
         if (isInPrimaryOrInbox()) {
             return;
         }
 
-        // Search with the navigation drawer
-        UiObject2 backBtn = mDevice.findObject(By.desc("Open navigation drawer"));
-        if (backBtn != null) {
-            backBtn.click();
-            // Select for "Primary" and for "Inbox"
-            UiObject2 primaryInboxSelector = mDevice.findObject(PRIMARY_SELECTOR);
-            if (primaryInboxSelector == null) {
-                primaryInboxSelector = mDevice.findObject(INBOX_SELECTOR);
+        if (isMultiPaneActivity()) {
+            // Select for the closed Primary icon
+            UiObject2 primaryClosed = mDevice.findObject(
+                    By.res(UI_PACKAGE_NAME, "image_view").text("Primary"));
+            if (primaryClosed != null) {
+                primaryClosed.click();
+                mDevice.waitForIdle();
+                return;
             }
 
-            primaryInboxSelector.click();
-            waitForConversationsList();
+            // Select for the closed Inbox icon
+            UiObject2 inboxClosed = mDevice.findObject(
+                    By.res(UI_PACKAGE_NAME, "image_view").text("Inbox"));
+            if (inboxClosed != null) {
+                inboxClosed.click();
+                mDevice.waitForIdle();
+                return;
+            }
+
+            scrollNavigationDrawer(Direction.UP);
+
+            // Select for the open Primary icon
+            UiObject2 primaryOpen = mDevice.findObject(
+                    By.res(UI_PACKAGE_NAME, "name").text("Primary"));
+            if (primaryOpen != null) {
+                primaryOpen.click();
+                mDevice.waitForIdle();
+                return;
+            }
+
+            // Select for the open Inbox icon
+            UiObject2 inboxOpen = mDevice.findObject(
+                    By.res(UI_PACKAGE_NAME, "name").text("Inbox"));
+            if (inboxOpen != null) {
+                inboxOpen.click();
+                mDevice.waitForIdle();
+                return;
+            }
+
+            // Currently unhandled case; throw Exception.
+            throw new RuntimeException("Unable to find method to get to Primary/Inbox");
+        } else {
+            // Simply press back if in a conversation
+            if (isInEmail()) {
+                mDevice.pressBack();
+                waitForConversationsList();
+            }
+
+            // Search with the navigation drawer
+            UiObject2 backBtn = mDevice.findObject(By.desc("Open navigation drawer"));
+            if (backBtn != null) {
+                backBtn.click();
+                // Select for "Primary" and for "Inbox"
+                UiObject2 primaryInboxSelector = mDevice.findObject(PRIMARY_SELECTOR);
+                if (primaryInboxSelector == null) {
+                    primaryInboxSelector = mDevice.findObject(INBOX_SELECTOR);
+                }
+
+                primaryInboxSelector.click();
+                waitForConversationsList();
+            }
         }
     }
 
@@ -167,9 +212,11 @@ public class GmailHelperImpl extends AbstractGmailHelper {
      */
     @Override
     public void openEmailByIndex(int index) {
-        if (!isInPrimaryOrInbox()) {
-            throw new IllegalStateException(
-                    "Must be in Primary or Inbox to open an e-mail by index.");
+        if (!isMultiPaneActivity()) {
+            if (!isInPrimaryOrInbox()) {
+                throw new IllegalStateException(
+                        "Must be in Primary or Inbox to open an e-mail by index.");
+            }
         }
 
         if (index >= getVisibleEmailCount()) {
@@ -198,9 +245,11 @@ public class GmailHelperImpl extends AbstractGmailHelper {
      */
     @Override
     public int getVisibleEmailCount() {
-        if (!isInPrimaryOrInbox()) {
-            throw new IllegalStateException(
-                    "Must be in Primary or Inbox to open an e-mail by index.");
+        if (!isMultiPaneActivity()) {
+            if (!isInPrimaryOrInbox()) {
+                throw new IllegalStateException(
+                        "Must be in Primary or Inbox to open an e-mail by index.");
+            }
         }
 
         return getConversationList().getChildCount();
@@ -217,8 +266,14 @@ public class GmailHelperImpl extends AbstractGmailHelper {
 
         // Scroll to the e-mail bottom and press reply.
         UiObject2 convScroll = getConversationScrollContainer();
-        convScroll.scroll(Direction.DOWN, 100.0f);
-        mDevice.findObject(By.text("Reply")).click();
+        for (int retries = 10; retries > 0; retries--) {
+            convScroll.scroll(Direction.DOWN, 5.0f);
+            UiObject2 replyButton = mDevice.findObject(By.text("Reply"));
+            if(replyButton != null) {
+                replyButton.click();
+                break;
+            }
+        }
 
         // Set the necessary fields (address and body)
         setEmailToAddress(address);
@@ -358,12 +413,22 @@ public class GmailHelperImpl extends AbstractGmailHelper {
     }
 
     private boolean isInPrimaryOrInbox() {
-        return getConversationList() != null &&
-                (mDevice.hasObject(By.text("Primary")) || mDevice.hasObject(By.text("Inbox")));
+        if (isMultiPaneActivity()) {
+            return (mDevice.hasObject(By.res(UI_PACKAGE_NAME, "actionbar_title").text("Primary")) ||
+                    mDevice.hasObject(By.res(UI_PACKAGE_NAME, "actionbar_title").text("Inbox")));
+        } else {
+            return getConversationList() != null &&
+                    (mDevice.hasObject(By.text("Primary")) ||
+                    mDevice.hasObject(By.text("Inbox")));
+        }
     }
 
     private boolean isNavDrawerOpen() {
-        return mDevice.hasObject(NAV_DRAWER_SELECTOR);
+        if (isMultiPaneActivity()) {
+            return mDevice.hasObject(By.res("android", "list"));
+        } else {
+            return mDevice.hasObject(NAV_DRAWER_SELECTOR);
+        }
     }
 
     /**
@@ -372,5 +437,9 @@ public class GmailHelperImpl extends AbstractGmailHelper {
     private void waitForConversationsList () {
         mDevice.wait(Until.hasObject(
                 By.res(UI_PACKAGE_NAME, UI_CONVERSATIONS_LIST_ID)), 3500);
+    }
+
+    private boolean isMultiPaneActivity() {
+        return mDevice.hasObject(By.res(UI_PACKAGE_NAME, UI_MULTI_PANE_CONTAINER_ID));
     }
 }
