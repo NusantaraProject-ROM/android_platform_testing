@@ -42,23 +42,8 @@ public class UiWatchers {
     public void registerAnrAndCrashWatchers(Instrumentation instr) {
         final UiDevice device = UiDevice.getInstance(instr);
 
-        device.registerWatcher("ANR", new UiWatcher() {
-            @Override
-            public boolean checkForCondition() {
-                UiObject2 window = device.findObject(
-                        By.clazz("com.android.server.am.AppNotRespondingDialog"));
-                if (window != null) {
-                    String errorText = window.getText();
-                    onAnrDetected(errorText);
-                    postHandler(device);
-                    return true; // triggered
-                }
-                return false; // no trigger
-            }
-        });
-
         // class names may have changed
-        device.registerWatcher("ANR2", new UiWatcher() {
+        device.registerWatcher("AnrWatcher", new UiWatcher() {
             @Override
             public boolean checkForCondition() {
                 UiObject2 window = device.findObject(
@@ -73,22 +58,7 @@ public class UiWatchers {
             }
         });
 
-        device.registerWatcher("CRASH", new UiWatcher() {
-            @Override
-            public boolean checkForCondition() {
-                UiObject2 window = device.findObject(
-                        By.clazz("com.android.server.am.AppErrorDialog"));
-                if (window != null) {
-                    String errorText = window.getText();
-                    onCrashDetected(errorText);
-                    postHandler(device);
-                    return true; // triggered
-                }
-                return false; // no trigger
-            }
-        });
-
-        device.registerWatcher("CRASH2", new UiWatcher() {
+        device.registerWatcher("CrashWatcher", new UiWatcher() {
             @Override
             public boolean checkForCondition() {
                 UiObject2 window = device.findObject(
@@ -132,8 +102,18 @@ public class UiWatchers {
                 device.getCurrentPackageName());
         Log.e(LOG_TAG, formatedOutput);
 
+        UiObject2 buttonMute = device.findObject(By.res("android", "aerr_mute"));
+        if (buttonMute != null) {
+            buttonMute.click();
+        }
+
+        UiObject2 closeAppButton = device.findObject(By.res("android", "aerr_close"));
+        if (closeAppButton != null) {
+            closeAppButton.click();
+        }
+
         // sometimes it takes a while for the OK button to become enabled
-        UiObject2 buttonOK = device.wait(Until.findObject(By.text("OK").enabled(true)), 5000);
+        UiObject2 buttonOK = device.findObject(By.text("OK").enabled(true));
         if (buttonOK != null) {
             buttonOK.click();
         }
