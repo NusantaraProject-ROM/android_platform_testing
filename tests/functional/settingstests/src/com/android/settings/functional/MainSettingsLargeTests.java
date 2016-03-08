@@ -43,7 +43,7 @@ public class MainSettingsLargeTests extends InstrumentationTestCase {
     };
     private static final String SYSTEM_CATEGORY = "System";
     private static final String[] sSystemItems = new String[] {
-            "Date & time", "Accessibility", "Printing", "Developer options", "About phone"
+            "Date & time", "Accessibility", "Printing", "About phone"
     };
     private UiDevice mDevice;
     private Context mContext = null;

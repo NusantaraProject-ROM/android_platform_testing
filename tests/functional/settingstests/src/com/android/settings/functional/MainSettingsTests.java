@@ -45,7 +45,7 @@ public class MainSettingsTests extends InstrumentationTestCase {
     };
     private static final String DEVICE_CATEGORY = "Device";
     private static final String[] sDeviceItems = new String[] {
-            "Display", "Bluetooth", "Notifications", "Apps", "Storage", "Battery", "Memory",
+            "Display", "Notifications", "Sound", "Apps", "Storage", "Battery", "Memory",
             "Users", "Tap & pay"
     };
     private UiDevice mDevice;
