@@ -38,6 +38,7 @@ import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.Until;
 import android.widget.ImageButton;
 import junit.framework.Assert;
+import com.android.support.test.helpers.GmailHelperImpl;
 import android.support.test.timeresulthelper.TimeResultLogger;
 
 /**
@@ -53,6 +54,7 @@ public class GMailJankTests extends JankTestBase {
     private static final String PACKAGE_NAME = "com.google.android.gm";
     private static final String RES_PACKAGE_NAME = "android";
     private UiDevice mDevice;
+    private GmailHelperImpl mGmailHelper;
     private static final File TIMESTAMP_FILE = new File(Environment.getExternalStorageDirectory()
             .getAbsolutePath(), "autotester.log");
     private static final File RESULTS_FILE = new File(Environment.getExternalStorageDirectory()
@@ -62,6 +64,7 @@ public class GMailJankTests extends JankTestBase {
     public void setUp() throws Exception {
         super.setUp();
         mDevice = UiDevice.getInstance(getInstrumentation());
+        mGmailHelper = new GmailHelperImpl(getInstrumentation());
         mDevice.setOrientationNatural();
     }
 
@@ -81,9 +84,7 @@ public class GMailJankTests extends JankTestBase {
 
     public void launchGMail () throws UiObjectNotFoundException {
         launchApp(PACKAGE_NAME);
-        dismissClings();
-        // Need any check for account-name??
-        waitForEmailSync();
+        mGmailHelper.dismissInitialDialogs();
     }
 
     public void prepGMailInboxFling() throws UiObjectNotFoundException, IOException {
@@ -163,6 +164,12 @@ public class GMailJankTests extends JankTestBase {
     }
 
     public void afterTestFlingNavDrawer(Bundle metrics) throws IOException {
+        if (!mGmailHelper.closeNavigationDrawer()) {
+            UiObject2 container = getNavigationDrawerContainer();
+            if (container != null) {
+                container.fling(Direction.RIGHT);
+            }
+        }
         TimeResultLogger.writeTimeStampLogEnd(String.format("%s-%s",
                 getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
         TimeResultLogger.writeResultToFile(String.format("%s-%s",
@@ -184,38 +191,6 @@ public class GMailJankTests extends JankTestBase {
         }
     }
 
-    private void dismissClings() {
-        UiObject2 welcomeScreenGotIt = mDevice.wait(
-            Until.findObject(By.res(PACKAGE_NAME, "welcome_tour_got_it")), SHORT_TIMEOUT);
-        if (welcomeScreenGotIt != null) {
-            welcomeScreenGotIt.clickAndWait(Until.newWindow(), SHORT_TIMEOUT);
-        }
-        UiObject2 welcomeScreenSkip = mDevice.wait(
-            Until.findObject(By.res(PACKAGE_NAME, "welcome_tour_skip")), SHORT_TIMEOUT);
-        if (welcomeScreenSkip != null) {
-          welcomeScreenSkip.clickAndWait(Until.newWindow(), SHORT_TIMEOUT);
-        }
-        UiObject2 tutorialDone = mDevice.wait(
-                Until.findObject(By.res(PACKAGE_NAME, "action_done")), 2 * SHORT_TIMEOUT);
-        if (tutorialDone != null) {
-            tutorialDone.clickAndWait(Until.newWindow(), SHORT_TIMEOUT);
-        }
-        mDevice.wait(Until.findObject(By.text("CONFIDENTIAL")), 2 * SHORT_TIMEOUT);
-        UiObject2 splash = mDevice.findObject(By.text("Ok, got it"));
-        if (splash != null) {
-            splash.clickAndWait(Until.newWindow(), SHORT_TIMEOUT);
-        }
-    }
-
-    public void waitForEmailSync() {
-        // Wait up to 2 seconds for a "waiting" message to appear
-        mDevice.wait(Until.hasObject(By.text("Waiting for sync")), 2 * SHORT_TIMEOUT);
-        // Wait until any "waiting" messages are gone
-        Assert.assertTrue("'Waiting for sync' timed out",
-                mDevice.wait(Until.gone(By.text("Waiting for sync")), LONG_TIMEOUT * 6));
-        Assert.assertTrue("'Loading' timed out",
-                mDevice.wait(Until.gone(By.text("Loading")), LONG_TIMEOUT * 6));
-    }
 
     public UiObject2 openNavigationDrawer() {
         UiObject2 navDrawer = null;
