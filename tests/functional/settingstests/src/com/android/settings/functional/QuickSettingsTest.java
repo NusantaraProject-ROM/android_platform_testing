@@ -61,7 +61,6 @@ public class QuickSettingsTest extends InstrumentationTestCase {
         mDevice = UiDevice.getInstance(getInstrumentation());
         getInstrumentation().getContext();
         mResolver = getInstrumentation().getContext().getContentResolver();
-        mDevice.wakeUp();
         mDevice.pressHome();
         try {
             mDevice.setOrientationNatural();
@@ -124,9 +123,7 @@ public class QuickSettingsTest extends InstrumentationTestCase {
 
     @MediumTest
     public void testQuickSettingTiles() throws Exception {
-        mDevice.pressHome();
-        swipeDown();
-        swipeDown();
+        launchQuickSetting();
         Thread.sleep(LONG_TIMEOUT);
         for (QuickSettingTiles tile : QuickSettingTiles.values()) {
             if (tile.getName().equals(QuickSettingTiles.NEARBY.getName())) {
@@ -135,7 +132,8 @@ public class QuickSettingsTest extends InstrumentationTestCase {
             UiObject2 quickSettingTile = mDevice.wait(
                     Until.findObject(By.descContains(tile.getName())),
                     SHORT_TIMEOUT);
-            assertNotNull(quickSettingTile);
+            assertNotNull(String.format("%s has not loaded correctly", tile.getName()),
+                    quickSettingTile);
         }
     }
 
@@ -294,9 +292,10 @@ public class QuickSettingsTest extends InstrumentationTestCase {
         assertTrue(onSetting == !changedSetting);
     }
 
-    private void launchQuickSetting() throws Exception {
+    private void launchQuickSetting() throws InterruptedException {
         mDevice.pressHome();
         swipeDown();
+        Thread.sleep(SHORT_TIMEOUT);
         swipeDown();
     }
 
