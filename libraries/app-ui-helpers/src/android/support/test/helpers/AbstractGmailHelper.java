@@ -105,6 +105,13 @@ public abstract class AbstractGmailHelper extends AbstractStandardAppHelper {
     /**
      * Setup expectations: Gmail is open and the navigation drawer is open.
      *
+     * This method will close the navigation drawer and returns true otherwise false
+     */
+    public abstract boolean closeNavigationDrawer();
+
+    /**
+     * Setup expectations: Gmail is open and the navigation drawer is open.
+     *
      * This method will scroll the navigation drawer and block until idle. Only accepts UP and DOWN.
      */
     public abstract void scrollNavigationDrawer(Direction dir);
