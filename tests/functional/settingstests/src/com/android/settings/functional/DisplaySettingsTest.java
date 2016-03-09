@@ -55,7 +55,6 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
     public void tearDown() throws Exception {
         // reset settings we touched that may impact others
         Settings.System.putFloat(mResolver, Settings.System.FONT_SCALE, 1.00f);
-        Settings.System.putInt(mResolver, Settings.System.SCREEN_OFF_TIMEOUT, -1);
         super.tearDown();
     }
 
