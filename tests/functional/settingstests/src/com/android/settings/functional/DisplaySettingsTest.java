@@ -140,47 +140,55 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
                     "com.google.android.apps.photos/com.google.android.apps.photos.daydream.PhotosDreamService"));
         } finally {
             mDevice.pressHome();
+            Thread.sleep(2000);
         }
     }
 
     @MediumTest
     public void testSleep15Seconds() throws Exception {
+        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         assertTrue(mHelper.verifyRadioSetting(SettingsType.SYSTEM, PAGE,
                 "Sleep", "15 seconds", Settings.System.SCREEN_OFF_TIMEOUT, "15000"));
     }
 
     @MediumTest
     public void testSleep30Seconds() throws Exception {
+        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         assertTrue(mHelper.verifyRadioSetting(SettingsType.SYSTEM, PAGE,
                 "Sleep", "30 seconds", Settings.System.SCREEN_OFF_TIMEOUT, "30000"));
     }
 
     @MediumTest
     public void testSleep1Minute() throws Exception {
+        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         assertTrue(mHelper.verifyRadioSetting(SettingsType.SYSTEM, PAGE,
                 "Sleep", "1 minute", Settings.System.SCREEN_OFF_TIMEOUT, "60000"));
     }
 
     @MediumTest
     public void testSleep2Minutes() throws Exception {
+        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         assertTrue(mHelper.verifyRadioSetting(SettingsType.SYSTEM, PAGE,
                 "Sleep", "2 minutes", Settings.System.SCREEN_OFF_TIMEOUT, "120000"));
     }
 
     @MediumTest
     public void testSleep5Minutes() throws Exception {
+        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         assertTrue(mHelper.verifyRadioSetting(SettingsType.SYSTEM, PAGE,
                 "Sleep", "5 minutes", Settings.System.SCREEN_OFF_TIMEOUT, "300000"));
     }
 
     @MediumTest
     public void testSleep10Minutes() throws Exception {
+        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         assertTrue(mHelper.verifyRadioSetting(SettingsType.SYSTEM, PAGE,
                 "Sleep", "10 minutes", Settings.System.SCREEN_OFF_TIMEOUT, "600000"));
     }
 
     @MediumTest
     public void testSleep30Minutes() throws Exception {
+        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         assertTrue(mHelper.verifyRadioSetting(SettingsType.SYSTEM, PAGE,
                 "Sleep", "30 minutes", Settings.System.SCREEN_OFF_TIMEOUT, "1800000"));
     }
