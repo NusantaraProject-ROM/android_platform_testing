@@ -139,7 +139,7 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
                     null, "Photos", Settings.Secure.SCREENSAVER_COMPONENTS,
                     "com.google.android.apps.photos/com.google.android.apps.photos.daydream.PhotosDreamService"));
         } finally {
-            mDevice.pressHome();
+            mDevice.pressBack();
             Thread.sleep(2000);
         }
     }
