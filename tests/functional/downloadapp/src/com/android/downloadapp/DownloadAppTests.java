@@ -25,6 +25,8 @@ import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
 import android.test.InstrumentationTestCase;
+import android.test.suitebuilder.annotation.MediumTest;
+import android.test.suitebuilder.annotation.SmallTest;
 import android.util.Log;
 
 import com.android.functional.downloadapp.DownloadAppTestHelper.UIViewType;
@@ -51,6 +53,7 @@ public class DownloadAppTests extends InstrumentationTestCase {
         super.tearDown();
     }
 
+    @SmallTest
     public void testAddCompletedDownload() throws Exception {
         Random random = new Random();
         Long dlId = mDLAppHelper.addToDownloadContentDB(
@@ -68,6 +71,7 @@ public class DownloadAppTests extends InstrumentationTestCase {
                 }));
     }
 
+    @MediumTest
     public void testScroll() {
         mDLAppHelper.populateContentInDLApp(20);
         mDLAppHelper.launchApp(DownloadAppTestHelper.PACKAGE_NAME, DownloadAppTestHelper.APP_NAME);
@@ -78,6 +82,7 @@ public class DownloadAppTests extends InstrumentationTestCase {
         container.scroll(Direction.DOWN, 1.0f);
     }
 
+    @MediumTest
     public void testSortByName() throws Exception {
         Log.d(mDLAppHelper.TEST_TAG, String.format("Before sortbyname tests, total count is %d",
                 mDLAppHelper.getTotalNumberDownloads()));
@@ -87,6 +92,7 @@ public class DownloadAppTests extends InstrumentationTestCase {
         assertTrue("DL items can't be sorted by name", mDLAppHelper.verifySortedByName());
     }
 
+    @MediumTest
     public void testSortBySize() {
         mDLAppHelper.populateContentInDLApp(5);
         mDLAppHelper.launchApp(DownloadAppTestHelper.PACKAGE_NAME, DownloadAppTestHelper.APP_NAME);
@@ -94,6 +100,7 @@ public class DownloadAppTests extends InstrumentationTestCase {
         assertTrue("DL items can't be sorted by size", mDLAppHelper.verifySortedBySize());
     }
 
+    @MediumTest
     public void testSortByTime() {
         mDLAppHelper.populateContentInDLApp(5);
         mDLAppHelper.launchApp(DownloadAppTestHelper.PACKAGE_NAME, DownloadAppTestHelper.APP_NAME);
@@ -101,6 +108,7 @@ public class DownloadAppTests extends InstrumentationTestCase {
         assertTrue("DL items can't be sorted by time", mDLAppHelper.verifySortedByTime());
     }
 
+    @MediumTest
     public void testToggleViewTypeForDownloadItems() {
         mDLAppHelper.populateContentInDLApp(10);
         mDLAppHelper.launchApp(DownloadAppTestHelper.PACKAGE_NAME, DownloadAppTestHelper.APP_NAME);
@@ -112,6 +120,7 @@ public class DownloadAppTests extends InstrumentationTestCase {
         mDLAppHelper.verifyDownloadViewType(UIViewType.LIST);
     }
 
+    @MediumTest
     public void testCABMenuShow() {
         mDLAppHelper.populateContentInDLApp(10);
         mDLAppHelper.launchApp(DownloadAppTestHelper.PACKAGE_NAME, DownloadAppTestHelper.APP_NAME);
@@ -139,6 +148,7 @@ public class DownloadAppTests extends InstrumentationTestCase {
         SystemClock.sleep(1000);
     }
 
+    @MediumTest
     public void testCABMenuDelete() {
         mDLAppHelper.populateContentInDLApp(10);
         mDLAppHelper.launchApp(DownloadAppTestHelper.PACKAGE_NAME, DownloadAppTestHelper.APP_NAME);
