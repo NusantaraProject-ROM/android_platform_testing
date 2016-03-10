@@ -292,7 +292,7 @@ public class QuickSettingsTest extends InstrumentationTestCase {
         assertTrue(onSetting == !changedSetting);
     }
 
-    private void launchQuickSetting() throws InterruptedException {
+    private void launchQuickSetting() throws Exception {
         mDevice.pressHome();
         swipeDown();
         Thread.sleep(SHORT_TIMEOUT);
