@@ -21,6 +21,7 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.SystemClock;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
+import android.support.test.uiautomator.Configurator;
 import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.Until;
 import android.support.test.uiautomator.UiDevice;
@@ -36,7 +37,7 @@ public class PlayMoviesHelperImpl extends AbstractPlayMoviesHelper {
     private static final String LOG_TAG = PlayMoviesHelperImpl.class.getSimpleName();
     private static final String UI_PACKAGE = "com.google.android.videos";
 
-    private static final long APP_INIT_WAIT = 10000;
+    private static final long APP_INIT_WAIT = 5000;
 
     private boolean mIsVersion3p8 = false;
 
@@ -48,6 +49,19 @@ public class PlayMoviesHelperImpl extends AbstractPlayMoviesHelper {
         } catch (NameNotFoundException e) {
             Log.e(LOG_TAG, String.format("Unable to find package by name, %s", getPackage()));
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void open() {
+        long original = Configurator.getInstance().getWaitForIdleTimeout();
+        Configurator.getInstance().setWaitForIdleTimeout(1500);
+
+        super.open();
+
+        Configurator.getInstance().setWaitForIdleTimeout(original);
     }
 
     /**
@@ -90,11 +104,18 @@ public class PlayMoviesHelperImpl extends AbstractPlayMoviesHelper {
                 count += 1;
             }
         } else {
-            Pattern words = Pattern.compile("GET STARTED", Pattern.CASE_INSENSITIVE);
-            UiObject2 startedButton = mDevice.wait(Until.findObject(By.text(words)), APP_INIT_WAIT);
-            if (startedButton != null) {
-                startedButton.click();
+            long original = Configurator.getInstance().getWaitForIdleTimeout();
+            Configurator.getInstance().setWaitForIdleTimeout(1500);
+
+            for (int retry = 0; retry < 5; retry++) {
+                Pattern words = Pattern.compile("GET STARTED", Pattern.CASE_INSENSITIVE);
+                UiObject2 startedButton = mDevice.wait(Until.findObject(By.text(words)), 5000);
+                if (startedButton != null) {
+                    startedButton.click();
+                }
             }
+
+            Configurator.getInstance().setWaitForIdleTimeout(original);
         }
     }
 

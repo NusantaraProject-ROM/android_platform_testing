@@ -19,6 +19,8 @@ package com.android.test.util.dismissdialogs;
 import android.app.Activity;
 import android.app.Instrumentation;
 import android.os.Bundle;
+import android.os.RemoteException;
+import android.os.SystemClock;
 import android.support.test.aupt.UiWatchers;
 import android.support.test.uiautomator.UiDevice;
 import android.util.Log;
@@ -34,6 +36,8 @@ import com.android.support.test.helpers.PlayMusicHelperImpl;
 import com.android.support.test.helpers.PlayStoreHelperImpl;
 import com.android.support.test.helpers.YouTubeHelperImpl;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.NoSuchMethodException;
 import java.lang.InstantiationException;
 import java.lang.IllegalAccessException;
@@ -50,11 +54,15 @@ public class DismissDialogsInstrumentation extends Instrumentation {
 
     // Comma-separated value indicating for which apps to dismiss dialogs
     private static final String PARAM_APP = "apps";
+    // Boolean to indicate if this should quit if any failure occurs
+    private static final String PARAM_QUIT_ON_ERROR = "quitOnError";
     // Key for status bundles provided when running the preparer
-    private static final String BUNDLE_DISMISSED_APP_KEY = "dismissed-app";
+    private static final String BUNDLE_DISMISSED_APP_KEY = "dismissedApp";
+    private static final String BUNDLE_APP_ERROR = "appError";
 
     private Map<String, Class<? extends IStandardAppHelper>> mKeyHelperMap;
     private String[] mApps;
+    private boolean mQuitOnError;
     private UiDevice mDevice;
 
     @Override
@@ -75,9 +83,17 @@ public class DismissDialogsInstrumentation extends Instrumentation {
 
         String appsString = arguments.getString(PARAM_APP);
         if (appsString == null) {
-            throw new IllegalArgumentException("Missing 'apps' parameter");
+            throw new IllegalArgumentException("Missing 'apps' parameter.");
         }
         mApps = appsString.split(",");
+
+        String quitString = arguments.getString(PARAM_QUIT_ON_ERROR);
+        if (quitString == null) {
+            Log.e(LOG_TAG, "No 'quitOnError' parameter. Defaulting not to quit on error.");
+            mQuitOnError = false;
+        } else {
+            mQuitOnError = "true".equals(quitString);
+        }
 
         start();
     }
@@ -89,6 +105,12 @@ public class DismissDialogsInstrumentation extends Instrumentation {
         UiWatchers watcherManager = new UiWatchers();
         watcherManager.registerAnrAndCrashWatchers(this);
 
+        try {
+            UiDevice.getInstance(this).setOrientationNatural();
+        } catch (RemoteException e) {
+            Log.e(LOG_TAG, e.toString());
+        }
+
         for (String app : mApps) {
             Log.e(LOG_TAG, String.format("Dismissing dialogs for app, %s", app));
             try {
@@ -99,18 +121,33 @@ public class DismissDialogsInstrumentation extends Instrumentation {
                     sendStatusUpdate(Activity.RESULT_OK, app);
                 }
             } catch (ReflectiveOperationException e) {
-                sendStatusUpdate(Activity.RESULT_CANCELED, app);
-                Log.e(LOG_TAG, e.toString());
-                throw new RuntimeException("Reflection exception. Please investigate!");
+                if (mQuitOnError) {
+                    quitWithError(app, e.toString());
+                } else {
+                    sendStatusUpdate(Activity.RESULT_CANCELED, app);
+                    Log.e(LOG_TAG, e.toString());
+                    throw new RuntimeException("Reflection exception. Please investigate!");
+                }
             } catch (RuntimeException e) {
-                sendStatusUpdate(Activity.RESULT_CANCELED, app);
-                Log.e(LOG_TAG, e.toString());
-                Log.e(LOG_TAG, "Skipping RuntimeException. Proceeding with dialog dismissal.");
+                if (mQuitOnError) {
+                    quitWithError(app, e.toString());
+                } else {
+                    sendStatusUpdate(Activity.RESULT_CANCELED, app);
+                    Log.e(LOG_TAG, e.toString());
+                    Log.e(LOG_TAG, "Skipping RuntimeException. Proceeding with dialog dismissal.");
+                }
             } catch (AssertionError e) {
-                sendStatusUpdate(Activity.RESULT_CANCELED, app);
-                Log.e(LOG_TAG, e.toString());
-                Log.e(LOG_TAG, "Skipping AssertionError. Proceeding with dialog dismissal.");
+                if (mQuitOnError) {
+                    quitWithError(app, e.toString());
+                } else {
+                    sendStatusUpdate(Activity.RESULT_CANCELED, app);
+                    Log.e(LOG_TAG, e.toString());
+                    Log.e(LOG_TAG, "Skipping AssertionError. Proceeding with dialog dismissal.");
+                }
             }
+
+            // Always return to the home page after dismissal
+            UiDevice.getInstance(this).pressHome();
         }
 
         watcherManager.removeAnrAndCrashWatchers(this);
@@ -124,7 +161,7 @@ public class DismissDialogsInstrumentation extends Instrumentation {
             Class<? extends IStandardAppHelper> appHelperClass = mKeyHelperMap.get(app);
             IStandardAppHelper helper =
                     appHelperClass.getDeclaredConstructor(Instrumentation.class).newInstance(this);
-            UiDevice.getInstance(this).pressHome();
+
             helper.open();
             helper.dismissInitialDialogs();
             helper.exit();
@@ -138,5 +175,12 @@ public class DismissDialogsInstrumentation extends Instrumentation {
         Bundle result = new Bundle();
         result.putString(BUNDLE_DISMISSED_APP_KEY, app);
         sendStatus(code, result);
+    }
+
+    private void quitWithError(String app, String error) {
+        Bundle result = new Bundle();
+        result.putString(BUNDLE_DISMISSED_APP_KEY, app);
+        result.putString(BUNDLE_APP_ERROR, error);
+        finish(Activity.RESULT_CANCELED, result);
     }
 }

@@ -39,6 +39,7 @@ public class YouTubeHelperImpl extends AbstractYouTubeHelper {
     private static final long MAX_HOME_LOAD_WAIT = 30 * 1000;
     private static final long MAX_VIDEO_LOAD_WAIT = 30 * 1000;
 
+    private static final long APP_INIT_WAIT = 20000;
     private static final long STANDARD_DIALOG_WAIT = 5000;
 
     public YouTubeHelperImpl(Instrumentation instr) {
@@ -52,7 +53,6 @@ public class YouTubeHelperImpl extends AbstractYouTubeHelper {
     public String getPackage() {
         return "com.google.android.youtube";
     }
-
 
     /**
      * {@inheritDoc}
@@ -69,7 +69,7 @@ public class YouTubeHelperImpl extends AbstractYouTubeHelper {
     public void dismissInitialDialogs() {
         BySelector dialog1 = By.text("OK");
         // Dismiss the splash screen that might appear on first start.
-        UiObject2 splash = mDevice.wait(Until.findObject(dialog1), STANDARD_DIALOG_WAIT);
+        UiObject2 splash = mDevice.wait(Until.findObject(dialog1), APP_INIT_WAIT);
         if (splash != null) {
             splash.click();
         }

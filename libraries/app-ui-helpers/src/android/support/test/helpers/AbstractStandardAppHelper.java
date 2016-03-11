@@ -56,8 +56,14 @@ public abstract class AbstractStandardAppHelper implements IStandardAppHelper {
      */
     @Override
     public void exit() {
-        while (!mDevice.hasObject(mLauncherStrategy.getWorkspaceSelector())) {
+        int maxBacks = 4;
+        while (!mDevice.hasObject(mLauncherStrategy.getWorkspaceSelector()) && maxBacks > 0) {
             mDevice.pressBack();
+            maxBacks--;
+        }
+
+        if (maxBacks == 0) {
+            mDevice.pressHome();
         }
     }
 

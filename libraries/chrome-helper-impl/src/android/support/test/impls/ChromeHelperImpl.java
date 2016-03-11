@@ -34,7 +34,7 @@ import java.io.IOException;
 import junit.framework.Assert;
 
 public class ChromeHelperImpl extends AbstractChromeHelper {
-    private static final String LOG_TAG = AbstractChromeHelper.class.getSimpleName();
+    private static final String LOG_TAG = ChromeHelperImpl.class.getSimpleName();
 
     private static final String UI_MENU_BUTTON_ID = "menu_button";
     private static final String UI_SEARCH_BOX_ID = "search_box_text";
