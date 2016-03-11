@@ -48,7 +48,7 @@ public class DownloadAppTestHelper {
     };
 
     public static final String PACKAGE_NAME = "com.android.documentsui";
-    public static final String APP_NAME = "Downloads";
+    public static final String APP_NAME = "Files";
     public static final String TEST_TAG = "DownloadAppTest";
     public final int TIMEOUT = 500;
     public final int MIN_FILENAME_LEN = 4;
