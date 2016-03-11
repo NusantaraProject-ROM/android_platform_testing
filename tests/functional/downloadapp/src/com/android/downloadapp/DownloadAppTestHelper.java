@@ -50,12 +50,13 @@ public class DownloadAppTestHelper {
     public static final String PACKAGE_NAME = "com.android.documentsui";
     public static final String APP_NAME = "Downloads";
     public static final String TEST_TAG = "DownloadAppTest";
-    public final int TIMEOUT_FOR_UIOBJECT = 500;
+    public final int TIMEOUT = 500;
     public final int MIN_FILENAME_LEN = 4;
     private Context mContext = null;
     private UiDevice mDevice = null;
     private DownloadManager mDownloadMgr;
-    private Hashtable<String, DlObjSizeTimePair> mDownloadedItems = new Hashtable<String, DlObjSizeTimePair>();
+    private Hashtable<String, DlObjSizeTimePair> mDownloadedItems =
+            new Hashtable<String, DlObjSizeTimePair>();
     public ILauncherStrategy mLauncherStrategy;
 
     private DownloadAppTestHelper(UiDevice device, Context context) {
@@ -97,7 +98,7 @@ public class DownloadAppTestHelper {
     /** returns text list of items in Download app */
     public List<String> getDownloadItemNames() {
         List<UiObject2> itmesList = mDevice.wait(Until.findObjects(By.res("android:id/title")),
-                TIMEOUT_FOR_UIOBJECT);
+                TIMEOUT);
         List<String> nameList = new ArrayList<String>();
         for (UiObject2 item : itmesList) {
             nameList.add(item.getText());
@@ -188,9 +189,9 @@ public class DownloadAppTestHelper {
                     fileName,
                     String.format("%s Desc",
                             DownloadAppTestHelper.randomWord(random.nextInt(8) + MIN_FILENAME_LEN)),
-                    Boolean.FALSE, DownloadAppTestHelper.FILE_TYPES[random.nextInt(FILE_TYPES.length)],
-                    Environment
-                            .getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                    Boolean.FALSE,
+                    DownloadAppTestHelper.FILE_TYPES[random.nextInt(FILE_TYPES.length)],
+                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
                             .getAbsolutePath(),
                     size, Boolean.FALSE);
             Assert.assertFalse("Add to DonwloadDB has failed!", dlId == -1);

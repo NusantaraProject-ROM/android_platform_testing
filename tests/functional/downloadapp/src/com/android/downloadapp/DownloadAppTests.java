@@ -64,7 +64,7 @@ public class DownloadAppTests extends InstrumentationTestCase {
                         DownloadAppTestHelper.FILE_TYPES.length)],
                 Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
                         .getAbsolutePath(),
-                random.nextInt(1000), Boolean.FALSE);
+                random.nextInt(2 * mDLAppHelper.TIMEOUT), Boolean.FALSE);
         assertTrue("Download item <> 1",
                 1 == mDLAppHelper.getDownloadItemCountById(new long[] {
                         dlId
@@ -75,8 +75,8 @@ public class DownloadAppTests extends InstrumentationTestCase {
     public void testScroll() {
         mDLAppHelper.populateContentInDLApp(20);
         mDLAppHelper.launchApp(DownloadAppTestHelper.PACKAGE_NAME, DownloadAppTestHelper.APP_NAME);
-        UiObject2 container = mDevice.wait(
-                Until.findObject(By.res("com.android.documentsui:id/container_directory")), 200);
+        UiObject2 container = mDevice.wait(Until.findObject(
+                By.res("com.android.documentsui:id/container_directory")), mDLAppHelper.TIMEOUT);
         container.scroll(Direction.UP, 1.0f);
         mDevice.waitForIdle();
         container.scroll(Direction.DOWN, 1.0f);
@@ -112,11 +112,13 @@ public class DownloadAppTests extends InstrumentationTestCase {
     public void testToggleViewTypeForDownloadItems() {
         mDLAppHelper.populateContentInDLApp(10);
         mDLAppHelper.launchApp(DownloadAppTestHelper.PACKAGE_NAME, DownloadAppTestHelper.APP_NAME);
-        mDevice.wait(Until.findObject(By.res(String.format(
-                "%s:id/%s", DownloadAppTestHelper.PACKAGE_NAME, UIViewType.LIST))), 1000).click();
+        mDevice.wait(Until.findObject(By.res(
+                String.format("%s:id/%s", DownloadAppTestHelper.PACKAGE_NAME, UIViewType.LIST))),
+                2 * mDLAppHelper.TIMEOUT).click();
         mDLAppHelper.verifyDownloadViewType(UIViewType.GRID);
-        mDevice.wait(Until.findObject(By.res(String.format(
-                "%s:id/%s", DownloadAppTestHelper.PACKAGE_NAME, UIViewType.GRID))), 1000).click();
+        mDevice.wait(Until.findObject(By.res(
+                String.format("%s:id/%s", DownloadAppTestHelper.PACKAGE_NAME, UIViewType.GRID))),
+                2 * mDLAppHelper.TIMEOUT).click();
         mDLAppHelper.verifyDownloadViewType(UIViewType.LIST);
     }
 
@@ -125,27 +127,29 @@ public class DownloadAppTests extends InstrumentationTestCase {
         mDLAppHelper.populateContentInDLApp(10);
         mDLAppHelper.launchApp(DownloadAppTestHelper.PACKAGE_NAME, DownloadAppTestHelper.APP_NAME);
         mDevice.wait(Until.findObject(By.res("com.android.documentsui:id/dir_list")),
-                mDLAppHelper.TIMEOUT_FOR_UIOBJECT).getChildren().get(1).click(1 * 1000);
+                mDLAppHelper.TIMEOUT).getChildren().get(1).click(1 * 2 * mDLAppHelper.TIMEOUT);
         UiObject2 cabMenuObj = null;
         int counter = 5;
         while ((cabMenuObj = mDevice.wait(Until.findObject(By.res(String.format("%s:id/menu_share",
-                DownloadAppTestHelper.PACKAGE_NAME))), 200)) == null && counter-- > 0);
+                DownloadAppTestHelper.PACKAGE_NAME))), mDLAppHelper.TIMEOUT)) == null
+                && counter-- > 0);
         Assert.assertNotNull(cabMenuObj);
         counter = 5;
         while ((cabMenuObj = mDevice.wait(Until.findObject(By.res(String.format("%s:id/menu_delete",
-                DownloadAppTestHelper.PACKAGE_NAME))), 200)) == null && counter-- > 0);
+                DownloadAppTestHelper.PACKAGE_NAME))), mDLAppHelper.TIMEOUT)) == null
+                && counter-- > 0);
         Assert.assertNotNull(cabMenuObj);
         counter = 5;
         while ((cabMenuObj = mDevice.wait(Until.findObject(
-                By.desc("More options")), 200)) == null && counter-- > 0)
+                By.desc("More options")), mDLAppHelper.TIMEOUT)) == null && counter-- > 0)
             ;
         Assert.assertNotNull(cabMenuObj);
         while ((cabMenuObj = mDevice.wait(Until.findObject(
-                By.desc("Done")), 200)) == null && counter-- > 0)
+                By.desc("Done")), mDLAppHelper.TIMEOUT)) == null && counter-- > 0)
             ;
         Assert.assertNotNull(cabMenuObj);
         cabMenuObj.click();
-        SystemClock.sleep(1000);
+        SystemClock.sleep(2 * mDLAppHelper.TIMEOUT);
     }
 
     @MediumTest
@@ -153,17 +157,21 @@ public class DownloadAppTests extends InstrumentationTestCase {
         mDLAppHelper.populateContentInDLApp(10);
         mDLAppHelper.launchApp(DownloadAppTestHelper.PACKAGE_NAME, DownloadAppTestHelper.APP_NAME);
         UiObject2 deleteObj = mDevice.wait(Until.findObject(
-                By.res("com.android.documentsui:id/dir_list")), mDLAppHelper.TIMEOUT_FOR_UIOBJECT)
+                By.res("com.android.documentsui:id/dir_list")), mDLAppHelper.TIMEOUT)
                 .getChildren().get(1);
         String deleteObjText = deleteObj.getText();
-        deleteObj.click(1 * 1000);
+        deleteObj.click(1 * 2 * mDLAppHelper.TIMEOUT);
         int counter = 5;
         UiObject2 cabMenuObj = null;
         while ((cabMenuObj = mDevice.wait(Until.findObject(By.res(String.format("%s:id/menu_delete",
-                DownloadAppTestHelper.PACKAGE_NAME))), 200)) == null && counter-- > 0)
-            ;
-        cabMenuObj.clickAndWait(Until.newWindow(), 5 * mDLAppHelper.TIMEOUT_FOR_UIOBJECT);
-
+                DownloadAppTestHelper.PACKAGE_NAME))), 2 * mDLAppHelper.TIMEOUT)) == null
+                && counter-- > 0);
+        cabMenuObj.click();
+        UiObject2 deleteBtn = mDevice.wait(Until.findObject(
+                By.textContains("Delete")), mDLAppHelper.TIMEOUT);
+        if(deleteBtn != null) {
+            mDevice.wait(Until.findObject(By.text("OK")), 2 * mDLAppHelper.TIMEOUT).click();
+        }
         Assert.assertFalse("", mDLAppHelper.getDownloadItemNames().contains(deleteObjText));
     }
 }
