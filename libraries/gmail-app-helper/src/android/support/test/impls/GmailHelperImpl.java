@@ -39,11 +39,12 @@ import junit.framework.Assert;
 public class GmailHelperImpl extends AbstractGmailHelper {
     private static final String LOG_TAG = GmailHelperImpl.class.getSimpleName();
 
+    private static final long APP_INIT_WAIT = 10000;
     private static final long DIALOG_TIMEOUT = 2500;
-    private static final long POPUP_TIMEOUT = 5000;
-    private static final long COMPOSE_TIMEOUT = 5000;
-    private static final long SEND_TIMEOUT = 5000;
-    private static final long LOADING_TIMEOUT = 20000;
+    private static final long POPUP_TIMEOUT = 7500;
+    private static final long COMPOSE_TIMEOUT = 10000;
+    private static final long SEND_TIMEOUT = 10000;
+    private static final long LOADING_TIMEOUT = 25000;
 
     private static final String UI_PACKAGE_NAME = "com.google.android.gm";
     private static final String UI_PROMO_ACTION_NEG_RES = "promo_action_negative_single_line";
@@ -81,8 +82,8 @@ public class GmailHelperImpl extends AbstractGmailHelper {
     @Override
     public void dismissInitialDialogs() {
         // Dismiss initial splash pages
-        UiObject2 welcomeScreenGotIt = mDevice.findObject(
-                By.res(UI_PACKAGE_NAME, "welcome_tour_got_it"));
+        UiObject2 welcomeScreenGotIt = mDevice.wait(Until.findObject(
+                By.res(UI_PACKAGE_NAME, "welcome_tour_got_it")), APP_INIT_WAIT);
         if (welcomeScreenGotIt != null) {
             welcomeScreenGotIt.clickAndWait(Until.newWindow(), DIALOG_TIMEOUT);
             mDevice.waitForIdle();
