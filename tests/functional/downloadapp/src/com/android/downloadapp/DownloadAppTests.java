@@ -27,6 +27,7 @@ import android.support.test.uiautomator.Until;
 import android.test.InstrumentationTestCase;
 import android.test.suitebuilder.annotation.MediumTest;
 import android.test.suitebuilder.annotation.SmallTest;
+import android.test.suitebuilder.annotation.Suppress;
 import android.util.Log;
 
 import com.android.functional.downloadapp.DownloadAppTestHelper.UIViewType;
@@ -92,6 +93,7 @@ public class DownloadAppTests extends InstrumentationTestCase {
         assertTrue("DL items can't be sorted by name", mDLAppHelper.verifySortedByName());
     }
 
+    @Suppress
     @MediumTest
     public void testSortBySize() {
         mDLAppHelper.populateContentInDLApp(5);
