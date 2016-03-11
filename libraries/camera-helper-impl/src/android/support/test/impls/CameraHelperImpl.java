@@ -47,7 +47,8 @@ public class CameraHelperImpl extends AbstractCameraHelper {
 
     private static final String LOG_TAG = CameraHelperImpl.class.getSimpleName();
 
-    private static final long SHUTTER_WAIT_TIME = 5000;
+    private static final long APP_INIT_WAIT = 10000;
+    private static final long SHUTTER_WAIT_TIME = 10000;
     private static final long MENU_WAIT_TIME = 5000;
 
     private boolean mIsVersion3X = false;
@@ -85,10 +86,18 @@ public class CameraHelperImpl extends AbstractCameraHelper {
     @Override
     public void dismissInitialDialogs() {
         if (mIsVersion3X) {
-            // Swipe left to dismiss 'how to open video message'
-            UiObject2 activityView = mDevice.wait(Until.findObject(
-                    By.res(UI_PACKAGE_NAME, "activity_root_view")), 5000);
-            activityView.swipe(Direction.LEFT, 1.0f);
+            boolean firstMessage = mDevice.wait(Until.hasObject(
+                By.text("Swipe right to left for video")), APP_INIT_WAIT);
+            if (firstMessage) {
+                // Swipe left to dismiss 'how to open video message'
+                UiObject2 activityView = mDevice.findObject(
+                        By.res(UI_PACKAGE_NAME, "activity_root_view"));
+                if (activityView != null) {
+                    activityView.swipe(Direction.LEFT, 1.0f);
+                }
+            } else {
+                Log.e(LOG_TAG, "Timed out waiting for the first message. Continuing anyway.");
+            }
 
             // Confirm 'GOT IT' for action above
             UiObject2 thanks = mDevice.wait(Until.findObject(By.text("GOT IT")), 5000);
