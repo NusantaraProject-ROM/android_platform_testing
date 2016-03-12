@@ -41,7 +41,8 @@ public class CameraHelperImpl extends AbstractCameraHelper {
     private static final String UI_TOGGLE_BUTTON_ID = "photo_video_paginator";
     private static final String UI_BACK_FRONT_TOGGLE_BUTTON_ID = "camera_toggle_button";
     private static final String UI_MODE_OPTION_TOGGLE_BUTTON_ID = "mode_options_toggle";
-    private static final String UI_SHUTTER_BUTTON_ID = "shutter_button";
+    private static final String UI_SHUTTER_BUTTON_ID_3X = "photo_video_button";
+    private static final String UI_SHUTTER_BUTTON_ID_2X = "shutter_button";
     private static final String UI_SETTINGS_BUTTON_ID = "settings_button";
     private static final String UI_MENU_BUTTON_ID = "menuButton";
 
@@ -57,6 +58,7 @@ public class CameraHelperImpl extends AbstractCameraHelper {
 
     private static final long APP_INIT_WAIT = 20000;
     private static final long SHUTTER_WAIT_TIME = 20000;
+    private static final long SWITCH_WAIT_TIME = 5000;
     private static final long MENU_WAIT_TIME = 5000;
 
     private boolean mIsVersion3X = false;
@@ -242,6 +244,12 @@ public class CameraHelperImpl extends AbstractCameraHelper {
             // Press back camera button
             backFrontSwitch();
         }
+
+        // Wait for ensuring back camera button enabled
+        waitForBackEnabled();
+
+        // Wait for ensuring shutter button enabled
+        waitForCurrentShutterEnabled();
     }
 
     /**
@@ -267,6 +275,12 @@ public class CameraHelperImpl extends AbstractCameraHelper {
             // Press front camera button
             backFrontSwitch();
         }
+
+        // Wait for ensuring front camera button enabled
+        waitForFrontEnabled();
+
+        // Wait for ensuring shutter button enabled
+        waitForCurrentShutterEnabled();
     }
 
     /**
@@ -348,7 +362,12 @@ public class CameraHelperImpl extends AbstractCameraHelper {
     }
 
     private boolean isCameraMode() {
-        return (mDevice.hasObject(By.res(UI_PACKAGE_NAME, "progress_overlay")));
+        if (mIsVersion3X) {
+            return (mDevice.hasObject(By.res(UI_PACKAGE_NAME, "progress_overlay")));
+        } else {
+            // TODO: change this when Haleakala updated some new ui object name unique to camera mode
+            return !isVideoMode();
+        }
     }
 
     private boolean isVideoMode() {
@@ -401,7 +420,7 @@ public class CameraHelperImpl extends AbstractCameraHelper {
             }
         } else {
             // Click shutter button to close menu (this is NOT for taking pictures)
-            UiObject2 shutter = mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_SHUTTER_BUTTON_ID));
+            UiObject2 shutter = mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_SHUTTER_BUTTON_ID_2X));
             if (shutter != null) {
                 shutter.click();
             }
@@ -475,6 +494,17 @@ public class CameraHelperImpl extends AbstractCameraHelper {
         }
     }
 
+    private void waitForCurrentShutterEnabled() {
+        // This function is called to wait for shutter button enabled in either camera or video mode
+        if (mIsVersion3X) {
+            mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, UI_SHUTTER_BUTTON_ID_3X).enabled(true)),
+                    SHUTTER_WAIT_TIME);
+        } else {
+            mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, UI_SHUTTER_BUTTON_ID_2X).enabled(true)),
+                    SHUTTER_WAIT_TIME);
+        }
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -503,4 +533,15 @@ public class CameraHelperImpl extends AbstractCameraHelper {
             Log.e(LOG_TAG, "Failed to find initialization indicator.");
         }
     }
+
+    private void waitForBackEnabled() {
+        mDevice.wait(Until.hasObject(By.desc("Back camera").enabled(true)),
+                SWITCH_WAIT_TIME);
+    }
+
+    private void waitForFrontEnabled() {
+        mDevice.wait(Until.hasObject(By.desc("Front camera").enabled(true)),
+                SWITCH_WAIT_TIME);
+    }
+
 }
