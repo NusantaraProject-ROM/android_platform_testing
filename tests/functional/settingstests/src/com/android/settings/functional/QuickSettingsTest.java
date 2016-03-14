@@ -135,7 +135,8 @@ public class QuickSettingsTest extends InstrumentationTestCase {
             UiObject2 quickSettingTile = mDevice.wait(
                     Until.findObject(By.descContains(tile.getName())),
                     SHORT_TIMEOUT);
-            assertNotNull(quickSettingTile);
+            assertNotNull(String.format("%s did not load correctly", tile.getName()),
+                    quickSettingTile);
         }
     }
 
@@ -260,14 +261,19 @@ public class QuickSettingsTest extends InstrumentationTestCase {
         int onSetting = Integer.parseInt(Settings.Global.getString(
                 mResolver,
                 Settings.Global.AIRPLANE_MODE_ON));
-        launchQuickSetting();
-        mDevice.wait(Until.findObject(By.descContains(QuickSettingTiles.AIRPLANE.getName())),
-                LONG_TIMEOUT).click();
-        Thread.sleep(LONG_TIMEOUT);
-        int changedSetting = Integer.parseInt(Settings.Global.getString(
-                mResolver,
-                Settings.Global.AIRPLANE_MODE_ON));
-        assertTrue((1 - onSetting) == changedSetting);
+        try {
+            launchQuickSetting();
+            mDevice.wait(Until.findObject(By.descContains(QuickSettingTiles.AIRPLANE.getName())),
+                    LONG_TIMEOUT).click();
+            Thread.sleep(LONG_TIMEOUT);
+            int changedSetting = Integer.parseInt(Settings.Global.getString(
+                    mResolver,
+                    Settings.Global.AIRPLANE_MODE_ON));
+            assertTrue((1 - onSetting) == changedSetting);
+        } finally {
+            Settings.Global.putString(getInstrumentation().getContext().getContentResolver(),
+                    Settings.Global.AIRPLANE_MODE_ON, Integer.toString(onSetting));
+        }
     }
 
     @MediumTest
@@ -286,17 +292,23 @@ public class QuickSettingsTest extends InstrumentationTestCase {
         LocationManager service = (LocationManager) getInstrumentation().getContext()
                 .getSystemService(Context.LOCATION_SERVICE);
         boolean onSetting = service.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        launchQuickSetting();
-        mDevice.wait(Until.findObject(By.descContains(QuickSettingTiles.LOCATION.getName())),
-                LONG_TIMEOUT).click();
-        Thread.sleep(LONG_TIMEOUT);
-        boolean changedSetting = service.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        assertTrue(onSetting == !changedSetting);
+        try {
+            launchQuickSetting();
+            mDevice.wait(Until.findObject(By.descContains(QuickSettingTiles.LOCATION.getName())),
+                    LONG_TIMEOUT).click();
+            Thread.sleep(LONG_TIMEOUT);
+            boolean changedSetting = service.isProviderEnabled(LocationManager.GPS_PROVIDER);
+            assertTrue(onSetting == !changedSetting);
+        } finally {
+            mDevice.wait(Until.findObject(By.descContains(QuickSettingTiles.LOCATION.getName())),
+                    LONG_TIMEOUT).click();
+        }
     }
 
     private void launchQuickSetting() throws Exception {
         mDevice.pressHome();
         swipeDown();
+        Thread.sleep(LONG_TIMEOUT);
         swipeDown();
     }
 
