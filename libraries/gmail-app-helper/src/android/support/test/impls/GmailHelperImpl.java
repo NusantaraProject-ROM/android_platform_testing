@@ -45,6 +45,7 @@ public class GmailHelperImpl extends AbstractGmailHelper {
     private static final long COMPOSE_TIMEOUT = 10000;
     private static final long SEND_TIMEOUT = 10000;
     private static final long LOADING_TIMEOUT = 25000;
+    private static final long LOAD_EMAIL_TIMEOUT = 20000;
 
     private static final String UI_PACKAGE_NAME = "com.google.android.gm";
     private static final String UI_PROMO_ACTION_NEG_RES = "promo_action_negative_single_line";
@@ -239,6 +240,8 @@ public class GmailHelperImpl extends AbstractGmailHelper {
                 throw new RuntimeException("Loading message timed out after 20s");
             }
         }
+
+        waitForConversation();
     }
     /**
      * {@inheritDoc}
@@ -266,7 +269,7 @@ public class GmailHelperImpl extends AbstractGmailHelper {
 
         // Scroll to the e-mail bottom and press reply.
         UiObject2 convScroll = getConversationScrollContainer();
-        for (int retries = 10; retries > 0; retries--) {
+        for (int retries = 20; retries > 0; retries--) {
             convScroll.scroll(Direction.DOWN, 5.0f);
             UiObject2 replyButton = mDevice.findObject(By.text("Reply"));
             if(replyButton != null) {
@@ -429,6 +432,14 @@ public class GmailHelperImpl extends AbstractGmailHelper {
         } else {
             return mDevice.hasObject(NAV_DRAWER_SELECTOR);
         }
+    }
+
+    /**
+     * Wait for the conversation (e-mail) to be visible.
+     */
+    private void waitForConversation() {
+        mDevice.wait(Until.hasObject(
+                By.res(UI_PACKAGE_NAME, UI_CONVERSATION_CONTAINER_ID)), LOAD_EMAIL_TIMEOUT);
     }
 
     /**
