@@ -47,6 +47,7 @@ public class ApiDemoJankTests extends JankTestBase {
     private static final String RES_PACKAGE_NAME = "android";
     private static final String LEANBACK_LAUNCHER = "com.google.android.leanbacklauncher";
     private UiDevice mDevice;
+    private UiObject2 mListView;
 
     @Override
     public void setUp() throws Exception {
@@ -305,6 +306,9 @@ public class ApiDemoJankTests extends JankTestBase {
                 By.res(RES_PACKAGE_NAME, "text1").text("01. Array")), LONG_TIMEOUT);
         Assert.assertNotNull("Array listview can't be found", array);
         array.click();
+        mListView = mDevice.wait(Until.findObject(By.res(
+                   RES_PACKAGE_NAME, "content")), LONG_TIMEOUT);
+        Assert.assertNotNull("Content pane isn't found to move up", mListView);
     }
 
     // Measures jank for simple listview fling
@@ -313,12 +317,9 @@ public class ApiDemoJankTests extends JankTestBase {
     @GfxMonitor(processName=PACKAGE_NAME)
     public void testListViewJank() {
         for (int i = 0; i < INNER_LOOP; i++) {
-            UiObject2 listView = mDevice.wait(Until.findObject(By.res(
-                    RES_PACKAGE_NAME, "content")), LONG_TIMEOUT);
-            Assert.assertNotNull("Content pane isn't found to move up", listView);
-            listView.fling(Direction.DOWN);
+            mListView.fling(Direction.DOWN);
             SystemClock.sleep(SHORT_TIMEOUT);
-            listView.fling(Direction.UP);
+            mListView.fling(Direction.UP);
             SystemClock.sleep(SHORT_TIMEOUT);
         }
     }
