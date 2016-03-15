@@ -20,7 +20,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE_TAGS := tests
 
 LOCAL_PACKAGE_NAME := DialogDismissalUtil
-LOCAL_STATIC_JAVA_LIBRARIES := app-helpers ub-uiautomator
+LOCAL_STATIC_JAVA_LIBRARIES := app-helpers ub-uiautomator AuptLib
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
 include $(BUILD_PACKAGE)
