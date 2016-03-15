@@ -19,6 +19,8 @@ package com.android.test.util.dismissdialogs;
 import android.app.Activity;
 import android.app.Instrumentation;
 import android.os.Bundle;
+import android.support.test.aupt.UiWatchers;
+import android.support.test.uiautomator.UiDevice;
 import android.util.Log;
 
 import com.android.support.test.helpers.IStandardAppHelper;
@@ -53,6 +55,7 @@ public class DismissDialogsInstrumentation extends Instrumentation {
 
     private Map<String, Class<? extends IStandardAppHelper>> mKeyHelperMap;
     private String[] mApps;
+    private UiDevice mDevice;
 
     @Override
     public void onCreate(Bundle arguments) {
@@ -83,26 +86,34 @@ public class DismissDialogsInstrumentation extends Instrumentation {
     public void onStart() {
         super.onStart();
 
+        UiWatchers watcherManager = new UiWatchers();
+        watcherManager.registerAnrAndCrashWatchers(this);
+
         for (String app : mApps) {
             Log.e(LOG_TAG, String.format("Dismissing dialogs for app, %s", app));
             try {
                 if (!dismissDialogs(app)) {
                     throw new IllegalArgumentException(
                             String.format("Unrecognized app \"%s\"", mApps));
+                } else {
+                    sendStatusUpdate(Activity.RESULT_OK, app);
                 }
             } catch (ReflectiveOperationException e) {
+                sendStatusUpdate(Activity.RESULT_CANCELED, app);
                 Log.e(LOG_TAG, e.toString());
                 throw new RuntimeException("Reflection exception. Please investigate!");
             } catch (RuntimeException e) {
+                sendStatusUpdate(Activity.RESULT_CANCELED, app);
                 Log.e(LOG_TAG, e.toString());
-                Log.e(LOG_TAG, "Proceeding with dialog dismissal.");
+                Log.e(LOG_TAG, "Skipping RuntimeException. Proceeding with dialog dismissal.");
+            } catch (AssertionError e) {
+                sendStatusUpdate(Activity.RESULT_CANCELED, app);
+                Log.e(LOG_TAG, e.toString());
+                Log.e(LOG_TAG, "Skipping AssertionError. Proceeding with dialog dismissal.");
             }
-
-            // Periodically send status reports to not timeout
-            Bundle result = new Bundle();
-            result.putString(BUNDLE_DISMISSED_APP_KEY, app);
-            sendStatus(Activity.RESULT_OK, new Bundle());
         }
+
+        watcherManager.removeAnrAndCrashWatchers(this);
 
         finish(Activity.RESULT_OK, new Bundle());
     }
@@ -113,6 +124,7 @@ public class DismissDialogsInstrumentation extends Instrumentation {
             Class<? extends IStandardAppHelper> appHelperClass = mKeyHelperMap.get(app);
             IStandardAppHelper helper =
                     appHelperClass.getDeclaredConstructor(Instrumentation.class).newInstance(this);
+            UiDevice.getInstance(this).pressHome();
             helper.open();
             helper.dismissInitialDialogs();
             helper.exit();
@@ -120,5 +132,11 @@ public class DismissDialogsInstrumentation extends Instrumentation {
         } else {
             return false;
         }
+    }
+
+    private void sendStatusUpdate(int code, String app) {
+        Bundle result = new Bundle();
+        result.putString(BUNDLE_DISMISSED_APP_KEY, app);
+        sendStatus(code, result);
     }
 }

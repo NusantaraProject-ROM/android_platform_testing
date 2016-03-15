@@ -76,6 +76,12 @@ public class UiWatchers {
         Log.i(LOG_TAG, "Registed GUI Exception watchers");
     }
 
+    public void removeAnrAndCrashWatchers(Instrumentation instr) {
+        final UiDevice device = UiDevice.getInstance(instr);
+        device.removeWatcher("AnrWatcher");
+        device.removeWatcher("CrashWatcher");
+    }
+
     public void onAnrDetected(String errorText) {
         mErrors.add(errorText);
     }
