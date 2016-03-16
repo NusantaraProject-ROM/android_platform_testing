@@ -41,12 +41,12 @@ public class MainSettingsTests extends InstrumentationTestCase {
     private static final int TIMEOUT = 2000;
     private static final String WIFI_CATEGORY = "Wireless & networks";
     private static final String[] sWifiItems = new String[] {
-            "Wi‑Fi", "Bluetooth", "Data usage", "More"
+            "Wi‑Fi", "Bluetooth", "Data usage", "Other networks"
     };
     private static final String DEVICE_CATEGORY = "Device";
     private static final String[] sDeviceItems = new String[] {
             "Display", "Notifications", "Sound", "Apps", "Storage", "Battery", "Memory",
-            "Users", "Tap & pay"
+            "Users"
     };
     private UiDevice mDevice;
     private Context mContext = null;

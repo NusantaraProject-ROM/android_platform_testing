@@ -39,7 +39,7 @@ public class MainSettingsLargeTests extends InstrumentationTestCase {
     private static final int TIMEOUT = 2000;
     private static final String PERSONAL_CATEGORY = "Personal";
     private static final String[] sPersonalItems = new String[] {
-            "Location", "Security", "Accounts", "Google", "Language & input", "Backup & reset"
+            "Location", "Security", "Accounts", "Google", "Languages & input", "Backup & reset"
     };
     private static final String SYSTEM_CATEGORY = "System";
     private static final String[] sSystemItems = new String[] {

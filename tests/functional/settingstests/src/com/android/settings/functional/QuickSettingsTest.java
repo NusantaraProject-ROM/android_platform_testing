@@ -39,7 +39,7 @@ public class QuickSettingsTest extends InstrumentationTestCase {
     private enum QuickSettingTiles {
         WIFI("Wifi"), SIM("SIM"), DND("Do not disturb"), FLASHLIGHT("Flashlight"), SCREEN(
                 "Screen"), BLUETOOTH("Bluetooth"), AIRPLANE("Airplane mode"), LOCATION(
-                        "Location"), NEARBY("Nearby");
+                        "Location");
 
         private final String name;
 
@@ -129,9 +129,6 @@ public class QuickSettingsTest extends InstrumentationTestCase {
         swipeDown();
         Thread.sleep(LONG_TIMEOUT);
         for (QuickSettingTiles tile : QuickSettingTiles.values()) {
-            if (tile.getName().equals(QuickSettingTiles.NEARBY.getName())) {
-                swipeLeft();
-            }
             UiObject2 quickSettingTile = mDevice.wait(
                     Until.findObject(By.descContains(tile.getName())),
                     SHORT_TIMEOUT);
@@ -171,7 +168,7 @@ public class QuickSettingsTest extends InstrumentationTestCase {
             if (airPlaneMode.equals("1")) {
                 assertEquals("2", wifiValue);
             } else {
-                assertEquals("1", wifiValue);
+                assertFalse(wifiValue.equals("0"));
             }
         } else {
             assertEquals("0", wifiValue);
