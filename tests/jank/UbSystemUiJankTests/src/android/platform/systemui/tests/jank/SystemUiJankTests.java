@@ -116,8 +116,8 @@ public class SystemUiJankTests extends JankTestBase {
         }
 
         // Close any crash dialogs
-        while (mDevice.hasObject(By.textContains("has stopped."))) {
-            mDevice.findObject(By.text("OK")).clickAndWait(Until.newWindow(), 2000);
+        while (mDevice.hasObject(By.textContains("has stopped"))) {
+            mDevice.findObject(By.text("Close")).clickAndWait(Until.newWindow(), 2000);
         }
         TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
                 getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
