@@ -45,6 +45,7 @@ import android.widget.TextView;
 import com.android.notification.functional.R;
 
 import java.lang.InterruptedException;
+import java.util.List;
 import java.util.Map;
 
 public class NotificationHelper {
@@ -152,12 +153,6 @@ public class NotificationHelper {
         mDevice.wait(Until.findObject(By.text(text)), LONG_TIMEOUT).click();
     }
 
-    public void swipeUp() throws Exception {
-        mDevice.swipe(mDevice.getDisplayWidth() / 2, mDevice.getDisplayHeight(),
-                mDevice.getDisplayWidth() / 2, 0, 30);
-        Thread.sleep(SHORT_TIMEOUT);
-    }
-
     public void sendNotification(int id, int visibility, String title) throws Exception {
         Log.v(LOG_TAG, "Sending out notification...");
         Intent intent = new Intent(Intent.ACTION_VIEW);
@@ -189,6 +184,32 @@ public class NotificationHelper {
         Thread.sleep(LONG_TIMEOUT);
     }
 
+    public void sendBundlingNotifications(List<Integer> lists, String groupKey) throws Exception {
+        Notification childNotification = new Notification.Builder(mContext)
+                .setContentTitle(lists.get(1).toString())
+                .setSmallIcon(R.drawable.stat_notify_email)
+                .setGroup(groupKey)
+                .build();
+        mNotificationManager.notify(lists.get(1),
+                childNotification);
+        childNotification = new Notification.Builder(mContext)
+                .setContentText(lists.get(2).toString())
+                .setSmallIcon(R.drawable.stat_notify_email)
+                .setGroup(groupKey)
+                .build();
+        mNotificationManager.notify(lists.get(2),
+                childNotification);
+        Notification notification = new Notification.Builder(mContext)
+                .setContentTitle(lists.get(0).toString())
+                .setSubText(groupKey)
+                .setSmallIcon(R.drawable.stat_notify_email)
+                .setGroup(groupKey)
+                .setGroupSummary(true)
+                .build();
+        mNotificationManager.notify(lists.get(0),
+                notification);
+    }
+
     static SpannableStringBuilder BOLD(CharSequence str) {
         final SpannableStringBuilder ssb = new SpannableStringBuilder(str);
         ssb.setSpan(new StyleSpan(Typeface.BOLD), 0, ssb.length(), 0);
@@ -206,13 +227,25 @@ public class NotificationHelper {
                     break;
                 }
             }
-            if (isFound == exists){
+            if (isFound == exists) {
                 break;
             }
             Thread.sleep(SHORT_TIMEOUT);
         }
         Log.i(LOG_TAG, "checkNotificationExistence..." + isFound);
         return isFound == exists;
+    }
+
+    public void swipeUp() throws Exception {
+        mDevice.swipe(mDevice.getDisplayWidth() / 2, mDevice.getDisplayHeight(),
+                mDevice.getDisplayWidth() / 2, 0, 30);
+        Thread.sleep(SHORT_TIMEOUT);
+    }
+
+    public void swipeDown() throws Exception {
+        mDevice.swipe(mDevice.getDisplayWidth() / 2, 0, mDevice.getDisplayWidth() / 2,
+                mDevice.getDisplayHeight() / 2 + 50, 20);
+        Thread.sleep(SHORT_TIMEOUT);
     }
 
     /**
