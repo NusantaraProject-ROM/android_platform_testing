@@ -7,8 +7,8 @@ import android.os.Handler;
 import android.os.SystemClock;
 import android.provider.Settings;
 import android.service.notification.ZenModeConfig;
-import android.support.test.impls.SettingsAppHelper;
-import android.support.test.impls.SettingsAppHelper.SettingsType;
+import android.platform.test.helpers.SettingsHelperImpl;
+import android.platform.test.helpers.SettingsHelperImpl.SettingsType;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.Until;
@@ -26,7 +26,7 @@ public class SoundSettingsTest extends InstrumentationTestCase {
 
     private UiDevice mDevice;
     private ContentResolver mResolver;
-    private SettingsAppHelper mHelper;
+    private SettingsHelperImpl mHelper;
     private ZenModeHelper mZenHelper;
 
     @Override
@@ -34,7 +34,7 @@ public class SoundSettingsTest extends InstrumentationTestCase {
         super.setUp();
         mDevice = UiDevice.getInstance(getInstrumentation());
         mResolver = getInstrumentation().getContext().getContentResolver();
-        mHelper = new SettingsAppHelper(getInstrumentation());
+        mHelper = new SettingsHelperImpl(getInstrumentation());
         ConditionProviders cps = new ConditionProviders(
                 getInstrumentation().getContext(), new Handler(), new UserProfiles());
         mZenHelper = new ZenModeHelper(getInstrumentation().getContext(),
@@ -52,7 +52,7 @@ public class SoundSettingsTest extends InstrumentationTestCase {
 
     @MediumTest
     public void testOtherSounds() throws Exception {
-        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
+        SettingsHelperImpl.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         mHelper.scrollVert(false);
         Thread.sleep(1000);
         mHelper.clickSetting("Other sounds");
@@ -75,7 +75,7 @@ public class SoundSettingsTest extends InstrumentationTestCase {
     @MediumTest
     @Suppress
     public void testDndPriorityAllows() throws Exception {
-        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
+        SettingsHelperImpl.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         Context ctx = getInstrumentation().getContext();
         try {
             mHelper.clickSetting("Do not disturb");

@@ -22,7 +22,7 @@ import android.nfc.NfcAdapter;
 import android.nfc.NfcManager;
 import android.os.RemoteException;
 import android.provider.Settings;
-import android.support.test.impls.SettingsAppHelper;
+import android.platform.test.helpers.SettingsHelperImpl;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
@@ -74,7 +74,7 @@ public class MoreWirelessSettingsTests extends InstrumentationTestCase {
                .getSystemService(Context.NFC_SERVICE);
         NfcAdapter nfcAdapter = manager.getDefaultAdapter();
         boolean nfcInitiallyEnabled = nfcAdapter.isEnabled();
-        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(),
+        SettingsHelperImpl.launchSettingsPage(getInstrumentation().getContext(),
                 Settings.ACTION_WIRELESS_SETTINGS);
         UiObject2 nfcSetting = mDevice.wait(Until.findObject(By.text("NFC")), TIMEOUT);
         nfcSetting.click();
@@ -95,7 +95,7 @@ public class MoreWirelessSettingsTests extends InstrumentationTestCase {
 
     @MediumTest
     public void testTetheringMenuLoad() throws Exception {
-        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(),
+        SettingsHelperImpl.launchSettingsPage(getInstrumentation().getContext(),
                 Settings.ACTION_WIRELESS_SETTINGS);
         mDevice.wait(Until
                  .findObject(By.text("Tethering & portable hotspot")), TIMEOUT)
@@ -108,7 +108,7 @@ public class MoreWirelessSettingsTests extends InstrumentationTestCase {
 
     @MediumTest
     public void testVPNMenuLoad() throws Exception {
-        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(),
+        SettingsHelperImpl.launchSettingsPage(getInstrumentation().getContext(),
                 Settings.ACTION_WIRELESS_SETTINGS);
         mDevice.wait(Until
                  .findObject(By.text("VPN")), TIMEOUT)
@@ -128,7 +128,7 @@ public class MoreWirelessSettingsTests extends InstrumentationTestCase {
             Settings.Global.putString(getInstrumentation().getContext().getContentResolver(),
                     Settings.Global.AIRPLANE_MODE_ON, "1");
         }
-        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(),
+        SettingsHelperImpl.launchSettingsPage(getInstrumentation().getContext(),
                 Settings.ACTION_WIRELESS_SETTINGS);
         mDevice.wait(Until
                 .findObject(By.text("Airplane mode")), TIMEOUT)

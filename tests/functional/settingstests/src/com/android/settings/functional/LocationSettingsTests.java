@@ -22,7 +22,7 @@ import android.nfc.NfcAdapter;
 import android.nfc.NfcManager;
 import android.os.RemoteException;
 import android.provider.Settings;
-import android.support.test.impls.SettingsAppHelper;
+import android.platform.test.helpers.SettingsHelperImpl;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
@@ -59,7 +59,7 @@ public class LocationSettingsTests extends InstrumentationTestCase {
     @MediumTest
     public void testLoadingLocationSettings () throws Exception {
         // Load settings
-        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(),
+        SettingsHelperImpl.launchSettingsPage(getInstrumentation().getContext(),
                 Settings.ACTION_SETTINGS);
         // Tap on location
         UiObject2 settingsPanel = mDevice.wait(Until.findObject
@@ -119,7 +119,7 @@ public class LocationSettingsTests extends InstrumentationTestCase {
     public void testLocationSettingsElements() throws Exception {
         String[] textElements = {"Location", "On", "Mode", "Recent location requests",
                 "Location services"};
-        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(),
+        SettingsHelperImpl.launchSettingsPage(getInstrumentation().getContext(),
                 Settings.ACTION_LOCATION_SOURCE_SETTINGS);
         Thread.sleep(TIMEOUT);
         for (String element : textElements) {
@@ -130,7 +130,7 @@ public class LocationSettingsTests extends InstrumentationTestCase {
 
     @MediumTest
     public void testLocationSettingsOverflowMenuElements() throws Exception {
-        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(),
+        SettingsHelperImpl.launchSettingsPage(getInstrumentation().getContext(),
                             Settings.ACTION_LOCATION_SOURCE_SETTINGS);
         // Tap on overflow menu
         mDevice.wait(Until.findObject(By.desc("More options")), TIMEOUT).click();
@@ -154,7 +154,7 @@ public class LocationSettingsTests extends InstrumentationTestCase {
             textMode = "Battery saving";
         }
         // Load location settings
-        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(),
+        SettingsHelperImpl.launchSettingsPage(getInstrumentation().getContext(),
                 Settings.ACTION_LOCATION_SOURCE_SETTINGS);
         // Tap on mode
         mDevice.wait(Until.findObject(By.text("Mode")), TIMEOUT).click();
@@ -198,7 +198,7 @@ public class LocationSettingsTests extends InstrumentationTestCase {
                     Settings.Secure.LOCATION_MODE, Settings.Secure.LOCATION_MODE_SENSORS_ONLY);
         }
         // Load location settings
-        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(),
+        SettingsHelperImpl.launchSettingsPage(getInstrumentation().getContext(),
                 Settings.ACTION_LOCATION_SOURCE_SETTINGS);
         // Toggle UI
         mDevice.wait(Until.findObject(By.res(SETTINGS_PACKAGE, "switch_widget")), TIMEOUT).click();

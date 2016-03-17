@@ -36,7 +36,7 @@ import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.Until;
 import junit.framework.Assert;
-import com.android.support.test.helpers.ChromeHelperImpl;
+import android.platform.test.helpers.ChromeHelperImpl;
 import android.support.test.timeresulthelper.TimeResultLogger;
 
 /**

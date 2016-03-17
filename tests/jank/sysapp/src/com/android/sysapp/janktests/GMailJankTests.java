@@ -38,7 +38,7 @@ import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.Until;
 import android.widget.ImageButton;
 import junit.framework.Assert;
-import com.android.support.test.helpers.GmailHelperImpl;
+import android.platform.test.helpers.GmailHelperImpl;
 import android.support.test.timeresulthelper.TimeResultLogger;
 
 /**
