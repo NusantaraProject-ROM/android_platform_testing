@@ -34,7 +34,7 @@ import java.util.regex.Pattern;
  * Basic tests for the Camera app.
  */
 public class MediaCaptureTest extends InstrumentationTestCase {
-    private static final int CAPTURE_TIMEOUT = 4000;
+    private static final int CAPTURE_TIMEOUT = 6000;
     private static final String DESC_BTN_CAPTURE_PHOTO = "Capture photo";
     private static final String DESC_BTN_CAPTURE_VIDEO = "Capture video";
     private static final String DESC_BTN_DONE = "Done";
