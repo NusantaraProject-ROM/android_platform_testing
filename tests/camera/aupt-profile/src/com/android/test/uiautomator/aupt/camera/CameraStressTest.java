@@ -17,13 +17,13 @@
 package com.android.test.uiautomator.aupt.camera;
 
 import android.support.test.aupt.AuptTestCase;
-import com.android.support.test.helpers.CameraHelperImpl;
+import android.platform.test.helpers.GoogleCameraHelperImpl;
 
 /**
  * Tests for the camera
  */
 public class CameraStressTest extends AuptTestCase {
-    private CameraHelperImpl mHelper;
+    private GoogleCameraHelperImpl mHelper;
     private int videoTimeMS = 5 * 1000;
 
     /**
@@ -32,7 +32,7 @@ public class CameraStressTest extends AuptTestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        mHelper = new CameraHelperImpl(getInstrumentation());
+        mHelper = new GoogleCameraHelperImpl(getInstrumentation());
         if (getParams().containsKey("video-duration")) {
             videoTimeMS = Integer.parseInt(getParams().getString("video-duration"));
         }

@@ -25,16 +25,16 @@ import android.support.test.aupt.UiWatchers;
 import android.support.test.uiautomator.UiDevice;
 import android.util.Log;
 
-import com.android.support.test.helpers.IStandardAppHelper;
-import com.android.support.test.helpers.ChromeHelperImpl;
-import com.android.support.test.helpers.CameraHelperImpl;
-import com.android.support.test.helpers.GmailHelperImpl;
-import com.android.support.test.helpers.MapsHelperImpl;
-import com.android.support.test.helpers.PhotosHelperImpl;
-import com.android.support.test.helpers.PlayMoviesHelperImpl;
-import com.android.support.test.helpers.PlayMusicHelperImpl;
-import com.android.support.test.helpers.PlayStoreHelperImpl;
-import com.android.support.test.helpers.YouTubeHelperImpl;
+import android.platform.test.helpers.IStandardAppHelper;
+import android.platform.test.helpers.ChromeHelperImpl;
+import android.platform.test.helpers.GoogleCameraHelperImpl;
+import android.platform.test.helpers.GmailHelperImpl;
+import android.platform.test.helpers.MapsHelperImpl;
+import android.platform.test.helpers.PhotosHelperImpl;
+import android.platform.test.helpers.PlayMoviesHelperImpl;
+import android.platform.test.helpers.PlayMusicHelperImpl;
+import android.platform.test.helpers.PlayStoreHelperImpl;
+import android.platform.test.helpers.YouTubeHelperImpl;
 
 import java.io.File;
 import java.io.IOException;
@@ -71,7 +71,7 @@ public class DismissDialogsInstrumentation extends Instrumentation {
 
         mKeyHelperMap = new HashMap<String, Class<? extends IStandardAppHelper>>();
         mKeyHelperMap.put("Chrome", ChromeHelperImpl.class);
-        mKeyHelperMap.put("GoogleCamera", CameraHelperImpl.class);
+        mKeyHelperMap.put("GoogleCamera", GoogleCameraHelperImpl.class);
         mKeyHelperMap.put("Gmail", GmailHelperImpl.class);
         mKeyHelperMap.put("Maps", MapsHelperImpl.class);
         mKeyHelperMap.put("Photos", PhotosHelperImpl.class);

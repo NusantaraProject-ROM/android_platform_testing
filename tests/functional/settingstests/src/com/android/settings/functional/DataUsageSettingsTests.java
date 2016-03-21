@@ -20,7 +20,7 @@ import android.content.Context;
 import android.net.wifi.WifiManager;
 import android.os.RemoteException;
 import android.provider.Settings;
-import android.support.test.impls.SettingsAppHelper;
+import android.platform.test.helpers.SettingsHelperImpl;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
@@ -74,7 +74,7 @@ public class DataUsageSettingsTests extends InstrumentationTestCase {
     }
 
     public void launchDataUsageSettings() throws Exception {
-        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(),
+        SettingsHelperImpl.launchSettingsPage(getInstrumentation().getContext(),
                 Settings.ACTION_SETTINGS);
         mDevice.wait(Until
                 .findObject(By.text("Data usage")), TIMEOUT)

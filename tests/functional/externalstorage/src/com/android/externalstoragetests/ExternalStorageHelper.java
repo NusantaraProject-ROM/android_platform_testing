@@ -33,7 +33,7 @@ import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
 import android.util.Log;
 
-import com.android.support.test.helpers.PlayStoreHelperImpl;
+import android.platform.test.helpers.PlayStoreHelperImpl;
 
 import junit.framework.Assert;
 

@@ -18,8 +18,8 @@ package android.settings.functional;
 
 import android.content.ContentResolver;
 import android.provider.Settings;
-import android.support.test.impls.SettingsAppHelper;
-import android.support.test.impls.SettingsAppHelper.SettingsType;
+import android.platform.test.helpers.SettingsHelperImpl;
+import android.platform.test.helpers.SettingsHelperImpl.SettingsType;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.Until;
@@ -40,7 +40,7 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
 
     private UiDevice mDevice;
     private ContentResolver mResolver;
-    private SettingsAppHelper mHelper;
+    private SettingsHelperImpl mHelper;
 
     @Override
     public void setUp() throws Exception {
@@ -48,7 +48,7 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
         mDevice = UiDevice.getInstance(getInstrumentation());
         mDevice.setOrientationNatural();
         mResolver = getInstrumentation().getContext().getContentResolver();
-        mHelper = new SettingsAppHelper(getInstrumentation());
+        mHelper = new SettingsHelperImpl(getInstrumentation());
     }
 
     @Override
@@ -60,7 +60,7 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
 
     @MediumTest
     public void testAdaptiveBrightness() throws Exception {
-        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
+        SettingsHelperImpl.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         mHelper.scrollVert(true);
         Thread.sleep(1000);
         assertTrue(mHelper.verifyToggleSetting(SettingsType.SYSTEM, PAGE, "Adaptive brightness",
@@ -91,7 +91,7 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
     @MediumTest
     @Suppress
     public void testDaydreamToggle() throws Exception {
-        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
+        SettingsHelperImpl.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         Pattern p = Pattern.compile("On|Off");
         mHelper.clickSetting("Daydream");
         Thread.sleep(1000);
@@ -107,7 +107,7 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
 
     @MediumTest
     public void testAccelRotation() throws Exception {
-        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
+        SettingsHelperImpl.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         mHelper.scrollVert(false);
         Thread.sleep(2000);
         String[] buttons = {
@@ -127,7 +127,7 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
     @MediumTest
     public void testDaydream() throws Exception {
         Settings.Secure.putInt(mResolver, Settings.Secure.SCREENSAVER_ENABLED, 1);
-        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
+        SettingsHelperImpl.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         try {
             assertTrue(mHelper.verifyRadioSetting(SettingsType.SECURE, PAGE,
                     "Daydream", "Clock", Settings.Secure.SCREENSAVER_COMPONENTS,
@@ -146,49 +146,49 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
 
     @MediumTest
     public void testSleep15Seconds() throws Exception {
-        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
+        SettingsHelperImpl.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         assertTrue(mHelper.verifyRadioSetting(SettingsType.SYSTEM, PAGE,
                 "Sleep", "15 seconds", Settings.System.SCREEN_OFF_TIMEOUT, "15000"));
     }
 
     @MediumTest
     public void testSleep30Seconds() throws Exception {
-        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
+        SettingsHelperImpl.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         assertTrue(mHelper.verifyRadioSetting(SettingsType.SYSTEM, PAGE,
                 "Sleep", "30 seconds", Settings.System.SCREEN_OFF_TIMEOUT, "30000"));
     }
 
     @MediumTest
     public void testSleep1Minute() throws Exception {
-        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
+        SettingsHelperImpl.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         assertTrue(mHelper.verifyRadioSetting(SettingsType.SYSTEM, PAGE,
                 "Sleep", "1 minute", Settings.System.SCREEN_OFF_TIMEOUT, "60000"));
     }
 
     @MediumTest
     public void testSleep2Minutes() throws Exception {
-        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
+        SettingsHelperImpl.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         assertTrue(mHelper.verifyRadioSetting(SettingsType.SYSTEM, PAGE,
                 "Sleep", "2 minutes", Settings.System.SCREEN_OFF_TIMEOUT, "120000"));
     }
 
     @MediumTest
     public void testSleep5Minutes() throws Exception {
-        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
+        SettingsHelperImpl.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         assertTrue(mHelper.verifyRadioSetting(SettingsType.SYSTEM, PAGE,
                 "Sleep", "5 minutes", Settings.System.SCREEN_OFF_TIMEOUT, "300000"));
     }
 
     @MediumTest
     public void testSleep10Minutes() throws Exception {
-        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
+        SettingsHelperImpl.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         assertTrue(mHelper.verifyRadioSetting(SettingsType.SYSTEM, PAGE,
                 "Sleep", "10 minutes", Settings.System.SCREEN_OFF_TIMEOUT, "600000"));
     }
 
     @MediumTest
     public void testSleep30Minutes() throws Exception {
-        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
+        SettingsHelperImpl.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         assertTrue(mHelper.verifyRadioSetting(SettingsType.SYSTEM, PAGE,
                 "Sleep", "30 minutes", Settings.System.SCREEN_OFF_TIMEOUT, "1800000"));
     }
@@ -224,7 +224,7 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
     private void verifyFontSizeSetting(float resetValue, FontSetting setting)
             throws Exception {
         Settings.System.putFloat(mResolver, Settings.System.FONT_SCALE, resetValue);
-        SettingsAppHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
+        SettingsHelperImpl.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         mHelper.clickSetting("Font size");
         try {
             mDevice.wait(Until.findObject(By.desc(setting.getName())), TIMEOUT).click();
