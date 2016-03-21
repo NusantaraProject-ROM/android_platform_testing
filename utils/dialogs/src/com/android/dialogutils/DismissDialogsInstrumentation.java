@@ -162,9 +162,17 @@ public class DismissDialogsInstrumentation extends Instrumentation {
             IStandardAppHelper helper =
                     appHelperClass.getDeclaredConstructor(Instrumentation.class).newInstance(this);
 
+            SystemClock.sleep(5000);
+            takeScreenDump(app, "-dialog-img1");
             helper.open();
+            SystemClock.sleep(5000);
+            takeScreenDump(app, "-dialog-img2");
             helper.dismissInitialDialogs();
+            SystemClock.sleep(5000);
+            takeScreenDump(app, "-dialog-img3");
             helper.exit();
+            SystemClock.sleep(5000);
+            takeScreenDump(app, "-dialog-img4");
             return true;
         } else {
             return false;
@@ -182,5 +190,16 @@ public class DismissDialogsInstrumentation extends Instrumentation {
         result.putString(BUNDLE_DISMISSED_APP_KEY, app);
         result.putString(BUNDLE_APP_ERROR, error);
         finish(Activity.RESULT_CANCELED, result);
+    }
+
+    private void takeScreenDump(String app, String suffix) {
+        try {
+            File scr = new File("/sdcard/" + app + suffix + ".png");
+            File uix = new File("/sdcard/" + app + suffix + ".uix");
+            UiDevice.getInstance(this).takeScreenshot(scr);
+            UiDevice.getInstance(this).dumpWindowHierarchy(uix);
+        } catch (IOException e) {
+            Log.e(LOG_TAG, e.toString());
+        }
     }
 }
