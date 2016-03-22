@@ -19,6 +19,7 @@ package android.platform.test.helpers;
 import android.app.Instrumentation;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.SystemClock;
+import android.support.test.launcherhelper.ILauncherStrategy;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.Direction;
@@ -26,6 +27,10 @@ import android.support.test.uiautomator.Until;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.util.Log;
+
+import java.text.SimpleDateFormat;
+import java.text.DateFormat;
+import java.util.Date;
 
 import junit.framework.Assert;
 
@@ -544,4 +549,36 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
                 SWITCH_WAIT_TIME);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public String openWithShutterTimeString() {
+        String pkg = getPackage();
+        String id = getLauncherName();
+
+        long launchStart = ILauncherStrategy.LAUNCH_FAILED_TIMESTAMP;
+        if (!mDevice.hasObject(By.pkg(pkg).depth(0))) {
+            launchStart = mLauncherStrategy.launch(id, pkg);
+        }
+
+        if (launchStart == ILauncherStrategy.LAUNCH_FAILED_TIMESTAMP) {
+            Assert.fail("Failed to launch GoogleCamera.");
+        }
+
+        waitForAppInit();
+        waitForCurrentShutterEnabled();
+        long launchDuration = SystemClock.uptimeMillis() - launchStart;
+
+        Date dateNow = new Date();
+        DateFormat dateFormat = new SimpleDateFormat("MM-dd HH:mm:ss.SSS");
+        String dateString = dateFormat.format(dateNow);
+
+        if (isCameraMode()) {
+            return String.format("%s %s %d\n", dateString, "camera", launchDuration);
+        } else if (isVideoMode()) {
+            return String.format("%s %s %d\n", dateString, "video", launchDuration);
+        } else {
+            return String.format("%s %s %d\n", dateString, "wtf", launchDuration);
+        }
+    }
 }

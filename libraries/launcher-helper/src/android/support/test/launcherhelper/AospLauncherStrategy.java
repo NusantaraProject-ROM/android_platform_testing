@@ -152,7 +152,7 @@ public class AospLauncherStrategy implements ILauncherStrategy {
      * {@inheritDoc}
      */
     @Override
-    public boolean launch(String appName, String packageName) {
+    public long launch(String appName, String packageName) {
         return CommonLauncherHelper.getInstance(mDevice).launchApp(this,
                 By.res("").clazz(TextView.class).desc(appName), packageName);
     }

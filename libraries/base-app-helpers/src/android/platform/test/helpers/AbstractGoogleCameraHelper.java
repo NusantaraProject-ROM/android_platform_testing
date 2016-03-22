@@ -89,4 +89,9 @@ public abstract class AbstractGoogleCameraHelper extends AbstractStandardAppHelp
      * This method will block until the capture button is enabled for pressing.
      */
     public abstract void waitForVideoShutterEnabled();
+
+    /**
+     * Temporary function.
+     */
+    public abstract String openWithShutterTimeString();
 }
