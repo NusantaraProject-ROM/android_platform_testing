@@ -17,13 +17,16 @@
 package com.android.notification.functional;
 
 import android.app.Instrumentation;
+import android.app.IntentService;
 import android.app.Notification;
 import android.app.Notification.Builder;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.RemoteInput;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Typeface;
+import android.os.Handler;
 import android.os.RemoteException;
 import android.provider.Settings;
 import android.service.notification.StatusBarNotification;
@@ -41,6 +44,7 @@ import android.util.Log;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.notification.functional.R;
 
@@ -53,6 +57,7 @@ public class NotificationHelper {
     private static final String LOG_TAG = NotificationHelper.class.getSimpleName();
     private static final int LONG_TIMEOUT = 2000;
     private static final int SHORT_TIMEOUT = 200;
+    private static final String KEY_QUICK_REPLY_TEXT = "quick_reply";
     private static final UiSelector LIST_VIEW = new UiSelector().className(ListView.class);
     private static final UiSelector LIST_ITEM_VALUE = new UiSelector().className(TextView.class);
 
@@ -270,6 +275,70 @@ public class NotificationHelper {
             } catch (UiObjectNotFoundException e) {
                 return false;
             }
+        }
+    }
+
+    public void sendNotificationsWithInLineReply(int notificationId, boolean isHeadsUp) {
+        Notification.Action action = new Notification.Action.Builder(
+                R.drawable.stat_notify_email, "Reply", ToastService.getPendingIntent(mContext,
+                        "inline reply test"))
+                                .addRemoteInput(new RemoteInput.Builder(KEY_QUICK_REPLY_TEXT)
+                                        .setLabel("Quick reply").build())
+                                .build();
+        Notification.Builder n = new Notification.Builder(mContext)
+                .setContentTitle(Integer.toString(notificationId))
+                .setContentText("INLINE REPLY TEST")
+                .setWhen(System.currentTimeMillis())
+                .setSmallIcon(R.drawable.stat_notify_email)
+                .addAction(action);
+        if (isHeadsUp) {
+            n.setPriority(Notification.PRIORITY_HIGH)
+                    .setDefaults(Notification.DEFAULT_VIBRATE);
+        }
+        mNotificationManager.notify(notificationId, n.build());
+    }
+
+    public static class ToastService extends IntentService {
+        private static final String TAG = "ToastService";
+        private static final String ACTION_TOAST = "toast";
+        private Handler handler;
+
+        public ToastService() {
+            super(TAG);
+        }
+
+        public ToastService(String name) {
+            super(name);
+        }
+
+        @Override
+        public int onStartCommand(Intent intent, int flags, int startId) {
+            handler = new Handler();
+            return super.onStartCommand(intent, flags, startId);
+        }
+
+        @Override
+        protected void onHandleIntent(Intent intent) {
+            if (intent.hasExtra("text")) {
+                final String text = intent.getStringExtra("text");
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(ToastService.this, text, Toast.LENGTH_LONG).show();
+                        Log.v(TAG, "toast " + text);
+                    }
+                });
+            }
+        }
+
+        public static PendingIntent getPendingIntent(Context context, String text) {
+            Intent toastIntent = new Intent(context, ToastService.class);
+            toastIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            toastIntent.setAction(ACTION_TOAST + ":" + text); // one per toast message
+            toastIntent.putExtra("text", text);
+            PendingIntent pi = PendingIntent.getService(
+                    context, 58, toastIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            return pi;
         }
     }
 }
