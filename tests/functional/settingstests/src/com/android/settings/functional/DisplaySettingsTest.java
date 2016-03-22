@@ -81,6 +81,12 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
 
     @MediumTest
     public void testAmbientDisplay() throws Exception {
+        // unique to the ambient display setting, null is equivalent to "on",
+        // so we need to populate the setting if it hasn't been yet
+        String initialSetting = Settings.Secure.getString(mResolver, Settings.Secure.DOZE_ENABLED);
+        if (initialSetting == null) {
+            Settings.Secure.putString(mResolver, Settings.Secure.DOZE_ENABLED, "1");
+        }
         assertTrue(mHelper.verifyToggleSetting(SettingsType.SECURE, PAGE, "Ambient display",
                 Settings.Secure.DOZE_ENABLED));
         assertTrue(mHelper.verifyToggleSetting(SettingsType.SECURE, PAGE, "Ambient display",
@@ -109,7 +115,7 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
     public void testAccelRotation() throws Exception {
         SettingsHelperImpl.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         mHelper.scrollVert(false);
-        Thread.sleep(2000);
+        Thread.sleep(4000);
         String[] buttons = {
                 "Rotate the contents of the screen",
                 "Stay in portrait view"
