@@ -18,19 +18,26 @@ package com.android.functional.permissiontests;
 
 import android.app.UiAutomation;
 import android.content.Context;
+import android.support.test.uiautomator.By;
+import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.UiDevice;
+import android.support.test.uiautomator.UiObject2;
+import android.support.test.uiautomator.Until;
 import android.test.InstrumentationTestCase;
 import android.test.suitebuilder.annotation.MediumTest;
 import android.test.suitebuilder.annotation.SmallTest;
-import android.test.suitebuilder.annotation.Suppress;
 
+import com.android.functional.permissiontests.PermissionHelper.PermissionOp;
 import com.android.functional.permissiontests.PermissionHelper.PermissionStatus;
 
 import java.util.Arrays;
 import java.util.List;
 
 public class GenericAppPermissionTests extends InstrumentationTestCase {
+    protected final String PACKAGE_INSTALLER = "com.android.packageinstaller";
     protected final String TARGET_APP_PKG = "com.android.functional.permissiontests";
+    private final String PERMISSION_TEST_APP_PKG = "com.android.permissiontestappmv1";
+    private final String PERMISSION_TEST_APP = "PermissionTestAppMV1";
     private UiDevice mDevice = null;
     private Context mContext = null;
     private UiAutomation mUiAutomation = null;
@@ -72,18 +79,15 @@ public class GenericAppPermissionTests extends InstrumentationTestCase {
         pHelper.verifyNormalPermissionsAutoGranted(TARGET_APP_PKG);
     }
 
-    @Suppress
-    @MediumTest
     public void testToggleAppPermisssionOFF() {
-        pHelper.togglePermissionSetting(TARGET_APP_PKG, "Contacts", Boolean.FALSE);
-        pHelper.verifyPermissionSettingStatus(TARGET_APP_PKG, "Contacts", PermissionStatus.OFF);
+        pHelper.togglePermissionSetting(PERMISSION_TEST_APP, "Contacts", Boolean.FALSE);
+        pHelper.verifyPermissionSettingStatus(
+                PERMISSION_TEST_APP, "Contacts", PermissionStatus.OFF);
     }
 
-    @Suppress
-    @MediumTest
     public void testToggleAppPermisssionON() {
-        pHelper.togglePermissionSetting(TARGET_APP_PKG, "Contacts", Boolean.TRUE);
-        pHelper.verifyPermissionSettingStatus(TARGET_APP_PKG, "Contacts", PermissionStatus.ON);
+        pHelper.togglePermissionSetting(PERMISSION_TEST_APP, "Contacts", Boolean.TRUE);
+        pHelper.verifyPermissionSettingStatus(PERMISSION_TEST_APP, "Contacts", PermissionStatus.ON);
     }
 
     @MediumTest
@@ -92,6 +96,37 @@ public class GenericAppPermissionTests extends InstrumentationTestCase {
                 .getPermissionDescGroupNames(TARGET_APP_PKG);
         permissionDescGrpNamesList.removeAll(Arrays.asList(mDefaultPermittedGroups));
         assertTrue("Still there are more", permissionDescGrpNamesList.isEmpty());
+    }
+
+    public void testPermissionDialogAllow() {
+        pHelper.cleanPackage(PERMISSION_TEST_APP_PKG);
+        pHelper.launchApp(PERMISSION_TEST_APP_PKG, PERMISSION_TEST_APP);
+        mDevice.wait(Until.findObject(By.text("GET CONTACT PERMISSION")), pHelper.TIMEOUT).click();
+        mDevice.wait(Until.findObject(
+                By.res(PACKAGE_INSTALLER, "permission_allow_button")), pHelper.TIMEOUT).click();
+        assertTrue("Permission hasn't been granted",
+                pHelper.getAllDangerousPermissionsByPermGrpNames(
+                        new String[] {"Contacts"} ).size() > 0);
+    }
+
+    public void testPermissionDialogDenyFlow() {
+        pHelper.cleanPackage(PERMISSION_TEST_APP_PKG);
+        pHelper.launchApp(PERMISSION_TEST_APP_PKG, PERMISSION_TEST_APP);
+        pHelper.grantOrRevokePermissionViaAdb(
+                PERMISSION_TEST_APP_PKG, "android.permission.READ_CONTACTS", PermissionOp.REVOKE);
+        BySelector getContactSelector = By.text("GET CONTACT PERMISSION");
+        BySelector dontAskChkSelector = By.res(PACKAGE_INSTALLER, "do_not_ask_checkbox");
+        BySelector denySelctor = By.res(PACKAGE_INSTALLER, "permission_deny_button");
+
+        mDevice.wait(Until.findObject(getContactSelector), pHelper.TIMEOUT).click();
+        UiObject2 dontAskChk = mDevice.wait(Until.findObject(dontAskChkSelector), pHelper.TIMEOUT);
+        assertNull(dontAskChk);
+        mDevice.wait(Until.findObject(denySelctor), pHelper.TIMEOUT).click();
+        mDevice.wait(Until.findObject(getContactSelector), pHelper.TIMEOUT).click();
+        mDevice.wait(Until.findObject(dontAskChkSelector), pHelper.TIMEOUT).click();
+        mDevice.wait(Until.findObject(denySelctor), pHelper.TIMEOUT).click();
+        mDevice.wait(Until.findObject(getContactSelector), pHelper.TIMEOUT).click();;
+        assertNull(mDevice.wait(Until.findObject(denySelctor), pHelper.TIMEOUT));
     }
 
     @Override

@@ -22,6 +22,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.ParcelFileDescriptor;
+import android.os.SystemClock;
 import android.support.test.launcherhelper.ILauncherStrategy;
 import android.support.test.launcherhelper.LauncherStrategyFactory;
 import android.support.test.uiautomator.By;
@@ -45,7 +46,7 @@ import java.util.List;
 public class PermissionHelper {
     public static final String TEST_TAG = "PermissionTest";
     public static final String SETTINGS_PACKAGE = "com.android.settings";
-    public final int TIMEOUT_FOR_UIOBJECT = 200;
+    public final int TIMEOUT = 500;
     public static PermissionHelper mInstance = null;
     private UiDevice mDevice;
     private Context mContext;
@@ -206,7 +207,7 @@ public class PermissionHelper {
         }
         openAppPermissionView(appName);
         UiObject2 permissionView = mDevice
-                .wait(Until.findObject(By.res("android:id/list_container")), TIMEOUT_FOR_UIOBJECT);
+                .wait(Until.findObject(By.res("android:id/list_container")), TIMEOUT);
         List<UiObject2> permissionsList = permissionView.getChildren().get(0).getChildren();
         for (UiObject2 permDesc : permissionsList) {
             if (permDesc.getChildren().get(1).getChildren().get(0).getText().equals(permission)) {
@@ -258,30 +259,30 @@ public class PermissionHelper {
         int maxAttempt = 5;
         while ((maxAttempt-- > 0)
                 && ((app = mDevice.wait(Until.findObject(By.res("android:id/title").text("Apps")),
-                        TIMEOUT_FOR_UIOBJECT)) == null)) {
-            view = mDevice.wait(Until.findObject(By.res("com.android.settings:id/main_content")),
-                    TIMEOUT_FOR_UIOBJECT);
+                        TIMEOUT)) == null)) {
+            view = mDevice.wait(Until.findObject(By.res(SETTINGS_PACKAGE, "main_content")),
+                    TIMEOUT);
             // todo scroll may be different for device and build
             view.scroll(Direction.DOWN, 1.0f);
         }
 
         mDevice.wait(Until.findObject(By.res("android:id/title").text("Apps")),
-                TIMEOUT_FOR_UIOBJECT)
-                .clickAndWait(Until.newWindow(), TIMEOUT_FOR_UIOBJECT);
+                TIMEOUT)
+                .clickAndWait(Until.newWindow(), TIMEOUT);
         app = null;
         view = null;
         maxAttempt = 5;
         while ((maxAttempt-- > 0)
                 && ((app = mDevice.wait(Until.findObject(By.res("android:id/title").text(appName)),
-                        TIMEOUT_FOR_UIOBJECT)) == null)) {
+                        TIMEOUT)) == null)) {
             view = mDevice.wait(Until.findObject(By.res("com.android.settings:id/main_content")),
-                    TIMEOUT_FOR_UIOBJECT);
+                    TIMEOUT);
             // todo scroll may be different for device and build
             view.scroll(Direction.DOWN, 1.0f);
         }
-        app.clickAndWait(Until.newWindow(), TIMEOUT_FOR_UIOBJECT);
+        app.clickAndWait(Until.newWindow(), TIMEOUT);
         mDevice.wait(Until.findObject(By.res("android:id/title").text("Permissions")),
-                TIMEOUT_FOR_UIOBJECT).clickAndWait(Until.newWindow(), TIMEOUT_FOR_UIOBJECT);
+                TIMEOUT).clickAndWait(Until.newWindow(), TIMEOUT);
     }
 
     /**
@@ -293,7 +294,7 @@ public class PermissionHelper {
     public void togglePermissionSetting(String appName, String permission, Boolean toBeSet) {
         openAppPermissionView(appName);
         UiObject2 permissionView = mDevice
-                .wait(Until.findObject(By.res("android:id/list_container")), TIMEOUT_FOR_UIOBJECT);
+                .wait(Until.findObject(By.res("android:id/list_container")), TIMEOUT);
         List<UiObject2> permissionsList = permissionView.getChildren().get(0).getChildren();
         for (UiObject2 obj : permissionsList) {
             if (obj.getChildren().get(1).getChildren().get(0).getText().equals(permission)) {
@@ -314,7 +315,7 @@ public class PermissionHelper {
      * @param permissionName
      * @param permissionOp : Accepted values are 'grant' and 'revoke'
      */
-    public void grant_revokePermissionViaAdb(String packageName, String permissionName,
+    public void grantOrRevokePermissionViaAdb(String packageName, String permissionName,
             PermissionOp permissionOp) {
         if (permissionOp == null) {
             throw new RuntimeException("null operation can't be executed");
@@ -370,11 +371,11 @@ public class PermissionHelper {
         List<String> currentDenied = getPermissionByPackage(packageName, Boolean.FALSE);
         defaultGranted.removeAll(currentGranted);
         for (String permission : defaultGranted) {
-            grant_revokePermissionViaAdb(packageName, permission, PermissionOp.GRANT);
+            grantOrRevokePermissionViaAdb(packageName, permission, PermissionOp.GRANT);
         }
         defaultDenied.removeAll(currentDenied);
         for (String permission : defaultDenied) {
-            grant_revokePermissionViaAdb(packageName, permission, PermissionOp.REVOKE);
+            grantOrRevokePermissionViaAdb(packageName, permission, PermissionOp.REVOKE);
         }
     }
 
@@ -386,10 +387,10 @@ public class PermissionHelper {
     public List<String> getPermissionDescGroupNames(String appName) {
         List<String> groupNames = new ArrayList<String>();
         openAppPermissionView(appName);
-        mDevice.wait(Until.findObject(By.desc("More options")), TIMEOUT_FOR_UIOBJECT).click();
-        mDevice.wait(Until.findObject(By.text("All permissions")), TIMEOUT_FOR_UIOBJECT).click();
+        mDevice.wait(Until.findObject(By.desc("More options")), TIMEOUT).click();
+        mDevice.wait(Until.findObject(By.text("All permissions")), TIMEOUT).click();
         UiObject2 permissionsListView = mDevice
-                .wait(Until.findObject(By.res("android:id/list_container")), TIMEOUT_FOR_UIOBJECT);
+                .wait(Until.findObject(By.res("android:id/list_container")), TIMEOUT);
         List<UiObject2> permissionList = permissionsListView
                 .findObjects(By.clazz("android.widget.TextView"));
         for (UiObject2 obj : permissionList) {
@@ -410,6 +411,11 @@ public class PermissionHelper {
         if (!mDevice.hasObject(By.pkg(packageName).depth(0))) {
             mLauncherStrategy.launch(appName, packageName);
         }
+    }
+
+    public void cleanPackage(String packageName) {
+            mUiAutomation.executeShellCommand(String.format("pm clear %s", packageName));
+            SystemClock.sleep(2 * TIMEOUT);
     }
 
     /** Supported operations on permission */
