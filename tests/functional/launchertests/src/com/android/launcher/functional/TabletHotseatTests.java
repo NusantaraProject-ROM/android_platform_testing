@@ -27,6 +27,7 @@ import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.Until;
 import android.test.InstrumentationTestCase;
 import android.test.suitebuilder.annotation.MediumTest;
+import android.test.suitebuilder.annotation.Suppress;
 
 public class TabletHotseatTests extends InstrumentationTestCase {
 
@@ -57,36 +58,43 @@ public class TabletHotseatTests extends InstrumentationTestCase {
         return mDevice.getLauncherPackageName();
     }
 
+    @Suppress
     @MediumTest
     public void testOpenChromeFromHotseat() {
         hotseatHelper.launchAppFromHotseat("Chrome", "com.android.chrome");
     }
 
+    @Suppress
     @MediumTest
     public void testOpenCameraFromHotseat() {
         hotseatHelper.launchAppFromHotseat("Camera", "com.google.android.GoogleCamera");
     }
 
+    @Suppress
     @MediumTest
     public void testOpenGMailFromHotseat() {
         hotseatHelper.launchAppFromHotseat("Gmail", "com.google.android.gm");
     }
 
+    @Suppress
     @MediumTest
     public void testOpenHangoutsFromHotseat() {
         hotseatHelper.launchAppFromHotseat("Hangouts", "com.google.android.gms");
     }
 
+    @Suppress
     @MediumTest
     public void testOpenPhotosFromHotseat() {
         hotseatHelper.launchAppFromHotseat("Photos", "com.google.android.apps.photos");
     }
 
+    @Suppress
     @MediumTest
     public void testOpenYoutubeFromHotseat() {
         hotseatHelper.launchAppFromHotseat("YouTube", "com.google.android.youtube");
     }
 
+    @Suppress
     @MediumTest
     public void testHomeToAllAppsNavigation() {
         hotseatHelper.launchAppFromHotseat("Apps", getLauncherPackage());
