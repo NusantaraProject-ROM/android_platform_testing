@@ -18,6 +18,7 @@ package com.android.functional.permissiontests;
 
 import android.app.UiAutomation;
 import android.content.Context;
+import android.os.RemoteException;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.UiDevice;
@@ -59,6 +60,7 @@ public class GenericAppPermissionTests extends InstrumentationTestCase {
         mDevice = UiDevice.getInstance(getInstrumentation());
         mContext = getInstrumentation().getContext();
         mUiAutomation = getInstrumentation().getUiAutomation();
+        mDevice.setOrientationNatural();
         pHelper = PermissionHelper.getInstance(mDevice, mContext, mUiAutomation);
         mDefaultGrantedPermissions = pHelper.getPermissionByPackage(TARGET_APP_PKG, Boolean.TRUE);
     }
@@ -131,6 +133,7 @@ public class GenericAppPermissionTests extends InstrumentationTestCase {
 
     @Override
     protected void tearDown() throws Exception {
+        mDevice.unfreezeRotation();
         super.tearDown();
     }
 }
