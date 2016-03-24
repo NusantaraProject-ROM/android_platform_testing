@@ -27,6 +27,7 @@ import android.support.test.uiautomator.UiObject2;
  * method.
  */
 public interface ILauncherStrategy {
+    public static final long LAUNCH_FAILED_TIMESTAMP = -1;
 
     /**
      * Returns the launcher application package that this {@link ILauncherStrategy} can automate
@@ -110,5 +111,5 @@ public interface ILauncherStrategy {
      * @return <code>true</code> if application is verified to be in foreground after launch, or the
      *   verification is skipped; <code>false</code> otherwise.
      */
-    public boolean launch(String appName, String packageName);
+    public long launch(String appName, String packageName);
 }
