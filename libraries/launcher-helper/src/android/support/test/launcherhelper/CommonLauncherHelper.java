@@ -16,6 +16,7 @@
 package android.support.test.launcherhelper;
 
 import android.graphics.Rect;
+import android.os.SystemClock;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.Direction;
@@ -119,7 +120,7 @@ public class CommonLauncherHelper {
      * @param packageName
      * @return
      */
-    public boolean launchApp(ILauncherStrategy launcherStrategy, BySelector app,
+    public long launchApp(ILauncherStrategy launcherStrategy, BySelector app,
             String packageName) {
         return launchApp(launcherStrategy, app, packageName, MAX_SCROLL_ATTEMPTS);
     }
@@ -131,9 +132,9 @@ public class CommonLauncherHelper {
      * @param app
      * @param packageName
      * @param maxScrollAttempts
-     * @return
+     * @return the SystemClock#uptimeMillis timestamp just before launching the application.
      */
-    public boolean launchApp(ILauncherStrategy launcherStrategy, BySelector app,
+    public long launchApp(ILauncherStrategy launcherStrategy, BySelector app,
             String packageName, int maxScrollAttempts) {
         Direction dir = launcherStrategy.getAllAppsScrollDirection();
         // attempt to find the app icon if it's not already on the screen
@@ -156,17 +157,24 @@ public class CommonLauncherHelper {
             ensureIconVisible(app, container, dir);
         }
 
+        long ready = SystemClock.uptimeMillis();
         if (!mDevice.findObject(app).clickAndWait(Until.newWindow(), APP_LAUNCH_TIMEOUT)) {
             Log.w(LOG_TAG, "no new window detected after app launch attempt.");
-            return false;
+            return ILauncherStrategy.LAUNCH_FAILED_TIMESTAMP;
         }
         mDevice.waitForIdle();
         if (packageName != null) {
             Log.w(LOG_TAG, String.format(
                     "No UI element with package name %s detected.", packageName));
-            return mDevice.wait(Until.hasObject(By.pkg(packageName).depth(0)), APP_LAUNCH_TIMEOUT);
+            boolean success = mDevice.wait(Until.hasObject(
+                    By.pkg(packageName).depth(0)), APP_LAUNCH_TIMEOUT);
+            if (success) {
+                return ready;
+            } else {
+                return ILauncherStrategy.LAUNCH_FAILED_TIMESTAMP;
+            }
         } else {
-            return true;
+            return ready;
         }
     }
 }

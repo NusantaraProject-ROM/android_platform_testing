@@ -143,7 +143,7 @@ public abstract class BaseLauncher3Strategy implements ILauncherStrategy {
      * {@inheritDoc}
      */
     @Override
-    public boolean launch(String appName, String packageName) {
+    public long launch(String appName, String packageName) {
         BySelector app = By.res(
                 getSupportedLauncherPackage(), "icon").clazz(TextView.class).desc(appName);
         return CommonLauncherHelper.getInstance(mDevice).launchApp(this, app, packageName);
