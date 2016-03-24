@@ -20,7 +20,8 @@ LOCAL_SRC_FILES := $(call all-java-files-under, src)
 LOCAL_MODULE_TAGS := tests
 LOCAL_STATIC_JAVA_LIBRARIES := \
     launcher-helper-lib \
-    ub-uiautomator
+    ub-uiautomator \
+    services.core
 
 #LOCAL_SDK_VERSION := current
 
