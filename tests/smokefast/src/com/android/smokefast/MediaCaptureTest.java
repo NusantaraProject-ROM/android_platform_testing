@@ -50,6 +50,12 @@ public class MediaCaptureTest extends InstrumentationTestCase {
         super.setUp();
         mDevice = UiDevice.getInstance(getInstrumentation());
         mDevice.freezeRotation();
+        // if there are any dialogues that pop up, dismiss them
+        UiObject2 maybeOkButton = mDevice.wait(Until.findObject(By.res("android:id/ok_button")),
+                CAPTURE_TIMEOUT);
+        if (maybeOkButton != null) {
+            maybeOkButton.click();
+        }
     }
 
     @Override
