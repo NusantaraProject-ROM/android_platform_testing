@@ -21,10 +21,16 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.RemoteException;
 import android.os.SystemClock;
+import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiSelector;
+import android.support.test.uiautomator.UiObject2;
+import android.support.test.uiautomator.Until;
 import android.util.Log;
+import android.view.KeyEvent;
+
+import java.util.concurrent.TimeoutException;
 
 import junit.framework.Assert;
 
@@ -35,8 +41,10 @@ public class SysAppTestHelper {
 
     private static final String LOG_TAG = SysAppTestHelper.class.getSimpleName();
     public static final int MIN_FRAMES = 20;
+    public static final int EXPECTED_FRAMES = 100;
     public static final int LONG_TIMEOUT = 5000;
     public static final int SHORT_TIMEOUT = 500;
+    public static final int FLING_SPEED = 5000;
     private static final long NEW_CARD_TIMEOUT_MS = 5 * 1000; // 5s
     private static final int CARD_SWIPE_STEPS = 20;
     private static final String RELOAD_DEMO_CARD_CMD = "com.google.android.clockwork.home."
@@ -130,7 +138,7 @@ public class SysAppTestHelper {
 
     public void flingUp() {
         mDevice.swipe(mDevice.getDisplayWidth() / 2, mDevice.getDisplayHeight() / 2 + 50,
-                mDevice.getDisplayWidth() / 2, 0, 5); // fast speed
+            mDevice.getDisplayWidth() / 2, 0, 5); // fast speed
         SystemClock.sleep(SHORT_TIMEOUT);
     }
 
@@ -209,4 +217,12 @@ public class SysAppTestHelper {
         mContext.startActivity(mIntent);
     }
 
+    // Helper method to goto app launcher and verifies you are there.
+    public void gotoAppLauncher() throws RemoteException, TimeoutException {
+      goBackHome();
+      mDevice.pressKeyCode(KeyEvent.KEYCODE_BACK);
+      UiObject2 appLauncher = mDevice.wait(Until.findObject(By.text("Agenda")),
+          SysAppTestHelper.LONG_TIMEOUT);
+      Assert.assertNotNull("App launcher not launched", appLauncher);
+  }
 }
