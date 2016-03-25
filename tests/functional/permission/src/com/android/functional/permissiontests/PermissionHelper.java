@@ -271,7 +271,7 @@ public class PermissionHelper {
                 .clickAndWait(Until.newWindow(), TIMEOUT);
         app = null;
         view = null;
-        maxAttempt = 5;
+        maxAttempt = 10;
         while ((maxAttempt-- > 0)
                 && ((app = mDevice.wait(Until.findObject(By.res("android:id/title").text(appName)),
                         TIMEOUT)) == null)) {
