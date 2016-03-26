@@ -25,7 +25,6 @@ import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.Until;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -106,6 +105,7 @@ public class PlayMusicHelperImpl extends AbstractPlayMusicHelper {
                 section = mDevice.findObject(By.res(UI_PACKAGE, "title").text(capsTitle));
                 if (section != null) {
                     section.click();
+                    mDevice.waitForIdle();
                     return;
                 } else {
                     mDevice.findObject(By.res(UI_PACKAGE, "play_header_list_tab_scroll"))
@@ -119,7 +119,11 @@ public class PlayMusicHelperImpl extends AbstractPlayMusicHelper {
      */
     @Override
     public void selectSong(String album, String song) {
-        mDevice.findObject(By.res(UI_PACKAGE, "li_title").textStartsWith(album)).click();
+        UiObject2 albumItem = mDevice.wait(Until.findObject(By.res(UI_PACKAGE, "li_title")
+                .textStartsWith(album)), EXPAND_WAIT);
+        Assert.assertNotNull("Unable to find album item", albumItem);
+        albumItem.click();
+
         mDevice.wait(Until.findObject(By.res(UI_PACKAGE, "title").textStartsWith(album)),
                 EXPAND_WAIT);
 
@@ -130,6 +134,9 @@ public class PlayMusicHelperImpl extends AbstractPlayMusicHelper {
                 songItem.click();
                 mDevice.wait(Until.findObject(
                         By.res(UI_PACKAGE, "trackname").textStartsWith(song)), EXPAND_WAIT);
+
+                // Waits for the animation to complete.
+                mDevice.waitForIdle();
                 return;
             } else {
                 UiObject2 scroller = mDevice.findObject(
@@ -193,10 +200,10 @@ public class PlayMusicHelperImpl extends AbstractPlayMusicHelper {
      */
     @Override
     public void expandMediaControls() {
-        UiObject2 header = mDevice.findObject(By.res(UI_PACKAGE, "header_pager"));
+        UiObject2 header = mDevice.findObject(By.res(UI_PACKAGE, "trackname"));
         Assert.assertNotNull("Unable to find header to expand media controls.", header);
         header.click();
-        mDevice.waitForIdle();
+        mDevice.wait(Until.findObject(By.res(UI_PACKAGE, "lightsUpInterceptor")), EXPAND_WAIT);
     }
 
     /**
