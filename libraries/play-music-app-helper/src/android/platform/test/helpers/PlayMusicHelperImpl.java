@@ -25,6 +25,7 @@ import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.Until;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
