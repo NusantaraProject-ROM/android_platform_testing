@@ -161,6 +161,7 @@ public class SoundSettingsTest extends InstrumentationTestCase {
     }
 
     @MediumTest
+    @Suppress
     public void testPhoneRingtoneHangouts() throws Exception {
         SettingsHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         mHelper.clickSetting("Phone ringtone");
@@ -184,6 +185,7 @@ public class SoundSettingsTest extends InstrumentationTestCase {
     }
 
     @MediumTest
+    @Suppress
     public void testNotificationRingtoneHangouts() throws Exception {
         SettingsHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         mHelper.clickSetting("Default notification ringtone");
