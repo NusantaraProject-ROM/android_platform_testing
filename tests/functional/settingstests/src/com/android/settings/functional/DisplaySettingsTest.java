@@ -114,7 +114,7 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
     @MediumTest
     public void testAccelRotation() throws Exception {
         SettingsHelperImpl.launchSettingsPage(getInstrumentation().getContext(), PAGE);
-        mHelper.scrollVert(false);
+        mHelper.scrollVert(true);
         Thread.sleep(4000);
         String[] buttons = {
                 "Rotate the contents of the screen",
