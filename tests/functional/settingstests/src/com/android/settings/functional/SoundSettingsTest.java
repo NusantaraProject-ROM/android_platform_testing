@@ -56,6 +56,7 @@ public class SoundSettingsTest extends InstrumentationTestCase {
         mHelper.scrollVert(false);
         Thread.sleep(1000);
         mHelper.clickSetting("Other sounds");
+        Thread.sleep(1000);
         try {
             assertTrue(mHelper.verifyToggleSetting(SettingsType.SYSTEM, PAGE,
                     "Dial pad tones", Settings.System.DTMF_TONE_WHEN_DIALING));
