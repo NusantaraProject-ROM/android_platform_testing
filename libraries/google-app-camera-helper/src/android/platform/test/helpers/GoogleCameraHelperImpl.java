@@ -26,6 +26,7 @@ import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.Until;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
+import android.support.test.uiautomator.UiWatcher;
 import android.util.Log;
 
 import java.text.SimpleDateFormat;
@@ -263,7 +264,6 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
         }
 
         mDevice.waitForIdle();
-        checkForDismissButton();
         waitForCameraShutterEnabled();
     }
 
@@ -287,7 +287,6 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
         }
 
         mDevice.waitForIdle();
-        checkForDismissButton();
         waitForVideoShutterEnabled();
     }
 
@@ -795,18 +794,37 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
         }
     }
 
-    private void checkForDismissButton() {
-        Pattern dismissWords =
-                Pattern.compile("DISMISS", Pattern.CASE_INSENSITIVE);
-        UiObject2 buttonDismiss = mDevice.wait(
-                Until.findObject(By.text(dismissWords).enabled(true)), 1000);
-        if (buttonDismiss != null) {
-            buttonDismiss.click();
-            Assert.fail("Camera dialog issued; dismissing and continuing.");
-        }
+    /**
+     * TODO: Temporary. Create long-term solution for registering watchers.
+     */
+    public void registerCrashWatcher() {
+        final UiDevice fDevice = mDevice;
+
+        mDevice.registerWatcher("GoogleCamera-crash-watcher", new UiWatcher() {
+            @Override
+            public boolean checkForCondition() {
+                Pattern dismissWords =
+                        Pattern.compile("DISMISS", Pattern.CASE_INSENSITIVE);
+                UiObject2 buttonDismiss = fDevice.findObject(By.text(dismissWords).enabled(true));
+                if (buttonDismiss != null) {
+                    buttonDismiss.click();
+                    Assert.fail("Camera crash dialog encountered. Failing test.");
+                }
+
+                return false;
+            }
+        });
     }
 
     /**
+     * TODO: Temporary. Create long-term solution for registering watchers.
+     */
+    public void unregisterCrashWatcher() {
+        mDevice.removeWatcher("GoogleCamera-crash-watcher");
+    }
+
+    /**
+     * TODO: Should only be temporary
      * {@inheritDoc}
      */
     public String openWithShutterTimeString() {
