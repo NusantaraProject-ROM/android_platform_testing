@@ -23,6 +23,7 @@ import android.os.RemoteException;
 import android.os.SystemClock;
 import android.support.test.aupt.UiWatchers;
 import android.support.test.uiautomator.UiDevice;
+import android.support.test.uiautomator.Until;
 import android.util.Log;
 
 import android.platform.test.helpers.IStandardAppHelper;
@@ -35,6 +36,8 @@ import android.platform.test.helpers.PlayMoviesHelperImpl;
 import android.platform.test.helpers.PlayMusicHelperImpl;
 import android.platform.test.helpers.PlayStoreHelperImpl;
 import android.platform.test.helpers.YouTubeHelperImpl;
+import android.support.test.launcherhelper.ILauncherStrategy;
+import android.support.test.launcherhelper.LauncherStrategyFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -51,6 +54,9 @@ import java.util.Map;
  */
 public class DismissDialogsInstrumentation extends Instrumentation {
     private static final String LOG_TAG = DismissDialogsInstrumentation.class.getSimpleName();
+
+    private static final long INIT_TIMEOUT = 20000;
+    private static final long MAX_INIT_RETRIES = 5;
 
     // Comma-separated value indicating for which apps to dismiss dialogs
     private static final String PARAM_APP = "apps";
@@ -89,8 +95,8 @@ public class DismissDialogsInstrumentation extends Instrumentation {
 
         String quitString = arguments.getString(PARAM_QUIT_ON_ERROR);
         if (quitString == null) {
-            Log.e(LOG_TAG, "No 'quitOnError' parameter. Defaulting not to quit on error.");
-            mQuitOnError = false;
+            Log.e(LOG_TAG, "No 'quitOnError' parameter. Defaulting to quit on error.");
+            mQuitOnError = true;
         } else {
             mQuitOnError = "true".equals(quitString);
         }
@@ -109,6 +115,25 @@ public class DismissDialogsInstrumentation extends Instrumentation {
             UiDevice.getInstance(this).setOrientationNatural();
         } catch (RemoteException e) {
             Log.e(LOG_TAG, e.toString());
+        }
+
+        for (int retry = 1; retry <= MAX_INIT_RETRIES; retry++) {
+            ILauncherStrategy launcherStrategy = LauncherStrategyFactory.getInstance(
+                    UiDevice.getInstance(this)).getLauncherStrategy();
+            boolean foundHome = UiDevice.getInstance(this).wait(
+                    Until.hasObject(launcherStrategy.getWorkspaceSelector()), INIT_TIMEOUT);
+            if (foundHome) {
+                sendStatusUpdate(Activity.RESULT_OK, "launcher");
+                break;
+            } else {
+                if (retry == MAX_INIT_RETRIES && mQuitOnError) {
+                    throw new RuntimeException("Unable to select launcher workspace. Quitting.");
+                } else {
+                    sendStatusUpdate(Activity.RESULT_CANCELED, "launcher");
+                    Log.e(LOG_TAG, "Failed to find home selector; try #" + retry);
+                    UiDevice.getInstance(this).pressHome();
+                }
+            }
         }
 
         for (String app : mApps) {
