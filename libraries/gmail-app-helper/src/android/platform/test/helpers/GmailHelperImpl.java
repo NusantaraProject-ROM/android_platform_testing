@@ -18,6 +18,7 @@ package android.platform.test.helpers;
 
 import android.app.Instrumentation;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.res.Configuration;
 import android.os.SystemClock;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
@@ -40,12 +41,13 @@ public class GmailHelperImpl extends AbstractGmailHelper {
     private static final String LOG_TAG = GmailHelperImpl.class.getSimpleName();
 
     private static final long APP_INIT_WAIT = 10000;
-    private static final long DIALOG_TIMEOUT = 2500;
+    private static final long DIALOG_TIMEOUT = 5000;
     private static final long POPUP_TIMEOUT = 7500;
     private static final long COMPOSE_TIMEOUT = 10000;
     private static final long SEND_TIMEOUT = 10000;
     private static final long LOADING_TIMEOUT = 25000;
     private static final long LOAD_EMAIL_TIMEOUT = 20000;
+    private static final long WIFI_TIMEOUT = 20000;
 
     private static final String UI_PACKAGE_NAME = "com.google.android.gm";
     private static final String UI_PROMO_ACTION_NEG_RES = "promo_action_negative_single_line";
@@ -84,43 +86,45 @@ public class GmailHelperImpl extends AbstractGmailHelper {
      */
     @Override
     public void dismissInitialDialogs() {
-        // Dismiss initial splash pages
-        UiObject2 welcomeScreenGotIt = mDevice.wait(Until.findObject(
-                By.res(UI_PACKAGE_NAME, "welcome_tour_got_it")), APP_INIT_WAIT);
-        if (welcomeScreenGotIt != null) {
-            welcomeScreenGotIt.clickAndWait(Until.newWindow(), DIALOG_TIMEOUT);
-            mDevice.waitForIdle();
+        // Check for the first, option dialog dismissal screen
+        if (mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, "welcome_tour_pager")),
+                APP_INIT_WAIT)) {
+            // Dismiss "New in Gmail" with GOT IT button or "Wecome to Gmail" with > button
+            BySelector gotItSelector = By.res(UI_PACKAGE_NAME, "welcome_tour_got_it");
+            BySelector skipSelector = By.res(UI_PACKAGE_NAME, "welcome_tour_skip");
+            if (mDevice.hasObject(gotItSelector)) {
+                mDevice.findObject(gotItSelector).clickAndWait(Until.newWindow(), DIALOG_TIMEOUT);
+            } else if (mDevice.hasObject(skipSelector)) {
+                mDevice.findObject(skipSelector).clickAndWait(Until.newWindow(), DIALOG_TIMEOUT);
+            }
+        } else {
+            Log.e(LOG_TAG, "Unable to find initial screen. Continuing anyway.");
         }
-        UiObject2 tutorialDone = mDevice.findObject(
-                By.res(UI_PACKAGE_NAME, "action_done"));
+        // Dismiss "Add another email address" with TAKE ME TO GMAIL button
+        UiObject2 tutorialDone = mDevice.wait(Until.findObject(
+                By.res(UI_PACKAGE_NAME, "action_done")), DIALOG_TIMEOUT);
         if (tutorialDone != null) {
             tutorialDone.clickAndWait(Until.newWindow(), DIALOG_TIMEOUT);
-            mDevice.wait(Until.findObject(By.text("CONFIDENTIAL")), POPUP_TIMEOUT);
         }
+        // Dismiss dogfood confidentiality dialog with OK, GOT IT button
         Pattern gotItWord = Pattern.compile("OK, GOT IT", Pattern.CASE_INSENSITIVE);
-        UiObject2 splash = mDevice.findObject(By.text(gotItWord));
+        UiObject2 splash = mDevice.wait(Until.findObject(By.text(gotItWord)), DIALOG_TIMEOUT);
         if (splash != null) {
             splash.clickAndWait(Until.newWindow(), DIALOG_TIMEOUT);
         }
-
-        if (mDevice.findObject(By.text("Waiting for sync")) != null) {
-            mDevice.wait(Until.hasObject(By.text("Waiting for sync")), 2000);
-            Assert.assertTrue("'Waiting for sync' timed out",
-                    mDevice.wait(Until.gone(By.text("Waiting for sync")), 30000));
-            Assert.assertTrue("'Loading' timed out",
-                    mDevice.wait(Until.gone(By.text("Loading")), 30000));
+        // Wait for "Getting your messages" to disappear
+        if (mDevice.findObject(By.textContains("Getting your messages")) != null) {
+            Assert.assertTrue("Timed out at 'Getting your messages' due to poor WiFi",
+                    mDevice.wait(Until.gone(By.text("Getting your messages")), WIFI_TIMEOUT));
         }
-
-        // Dismiss Navigation-to-Inbox tips
-        goToInbox();
-
-        UiObject2 welcomBox = mDevice.findObject(By.res(UI_PACKAGE_NAME, "welcome_box"));
-        if (welcomBox != null) {
-            welcomBox.swipe(Direction.LEFT, 1.0f);
-        }
-        UiObject2 dismiss = mDevice.findObject(By.text("Dismiss tip"));
-        if (dismiss != null) {
-            dismiss.clickAndWait(Until.newWindow(), DIALOG_TIMEOUT);
+        Assert.assertTrue("Timed out waiting for messages to appear due to poor WiFi",
+                mDevice.wait(Until.hasObject(
+                By.res(UI_PACKAGE_NAME, UI_CONVERSATIONS_LIST_ID)), WIFI_TIMEOUT));
+        // Dismiss "Tap a sender image" dialog
+        UiObject2 senderImageDismissButton =
+                mDevice.findObject(By.res(UI_PACKAGE_NAME, "dismiss_icon"));
+        if (senderImageDismissButton != null) {
+            senderImageDismissButton.click();
         }
     }
 
@@ -267,15 +271,15 @@ public class GmailHelperImpl extends AbstractGmailHelper {
             Assert.fail("Must have an e-mail open to send a reply.");
         }
 
-        // Scroll to the e-mail bottom and press reply.
         UiObject2 convScroll = getConversationScrollContainer();
-        for (int retries = 20; retries > 0; retries--) {
-            convScroll.scroll(Direction.DOWN, 5.0f);
-            UiObject2 replyButton = mDevice.findObject(By.text("Reply"));
-            if(replyButton != null) {
-                replyButton.click();
-                break;
-            }
+        while(convScroll.scroll(Direction.DOWN, 1.0f));
+
+        UiObject2 replyButton = mDevice.findObject(By.text("Reply"));
+        if (replyButton != null) {
+            replyButton.clickAndWait(Until.newWindow(), COMPOSE_TIMEOUT);
+            mDevice.waitForIdle();
+        } else {
+            Assert.fail("Failed to find a 'Reply' button.");
         }
 
         // Set the necessary fields (address and body)
@@ -291,10 +295,22 @@ public class GmailHelperImpl extends AbstractGmailHelper {
      */
     @Override
     public void setEmailToAddress(String address) {
+        UiObject2 convScroll = getComposeScrollContainer();
+        while (convScroll.scroll(Direction.UP, 1.0f));
+
         UiObject2 toField = getToField();
-        toField.setText(address);
-        // Hide suggested e-mail addresses by clicked the "To" field again
-        toField.click();
+        for (int retries = 5; retries > 0 && toField == null; retries--) {
+            convScroll.scroll(Direction.DOWN, 1.0f);
+            toField = getToField();
+        }
+
+        if (toField != null) {
+            toField.setText(address);
+            // Click to dismiss suggested e-mail
+            toField.click();
+        } else {
+            Assert.fail("Failed to find a 'To' field.");
+        }
     }
 
     /**
@@ -302,10 +318,22 @@ public class GmailHelperImpl extends AbstractGmailHelper {
      */
     @Override
     public void setEmailBody(String body) {
+        UiObject2 convScroll = getComposeScrollContainer();
+        while (convScroll.scroll(Direction.UP, 1.0f));
+
         UiObject2 bodyField = getBodyField();
-        bodyField.setText(body);
-        // Make sure to leave focus on the "Body" field
-        bodyField.click();
+        for (int retries = 5; retries > 0 && bodyField == null; retries--) {
+            convScroll.scroll(Direction.DOWN, 1.0f);
+            bodyField = getBodyField();
+        }
+
+        if (bodyField != null) {
+            bodyField.setText(body);
+            // Click to dismiss suggested e-mail
+            bodyField.click();
+        } else {
+            Assert.fail("Failed to find a 'Body' field.");
+        }
     }
 
     /**
@@ -362,37 +390,11 @@ public class GmailHelperImpl extends AbstractGmailHelper {
     }
 
     private UiObject2 getToField() {
-        UiObject2 toField = null;
-        for (int retries = 3; retries > 0; retries--) {
-            toField = mDevice.findObject(By.res(UI_PACKAGE_NAME, "to"));
-            if (toField != null) {
-                break;
-            } else {
-                UiObject2 scroller = getComposeScrollContainer();
-                Assert.assertNotNull("No valid scrolling mechanism found.", scroller);
-                scroller.scroll(Direction.UP, 1.0f);
-            }
-        }
-
-        Assert.assertNotNull("No 'to' field found.", toField);
-        return toField;
+        return mDevice.findObject(By.res(UI_PACKAGE_NAME, "to"));
     }
 
     private UiObject2 getBodyField() {
-        UiObject2 bodyField = null;
-        for (int retries = 3; retries > 0; retries--) {
-            bodyField = mDevice.findObject(By.res(UI_PACKAGE_NAME, "body"));
-            if (bodyField != null) {
-                break;
-            } else {
-                UiObject2 scroller = getComposeScrollContainer();
-                Assert.assertNotNull("No valid scrolling mechanism found.", scroller);
-                scroller.scroll(Direction.DOWN, 1.0f);
-            }
-        }
-
-        Assert.assertNotNull("No 'body' field found.", bodyField);
-        return bodyField;
+        return mDevice.findObject(By.res(UI_PACKAGE_NAME, "body"));
     }
 
     private UiObject2 getComposeScrollContainer() {
@@ -446,11 +448,13 @@ public class GmailHelperImpl extends AbstractGmailHelper {
      * Wait for the conversations list to be visible.
      */
     private void waitForConversationsList () {
-        mDevice.wait(Until.hasObject(
-                By.res(UI_PACKAGE_NAME, UI_CONVERSATIONS_LIST_ID)), 3500);
+        mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, UI_CONVERSATIONS_LIST_ID)), 3500);
     }
 
     private boolean isMultiPaneActivity() {
-        return mDevice.hasObject(By.res(UI_PACKAGE_NAME, UI_MULTI_PANE_CONTAINER_ID));
+        boolean hasMultiPane =
+                mDevice.hasObject(By.res(UI_PACKAGE_NAME, UI_MULTI_PANE_CONTAINER_ID));
+        boolean isLandscape = getOrientation() == Configuration.ORIENTATION_LANDSCAPE;
+        return (hasMultiPane && isLandscape);
     }
 }

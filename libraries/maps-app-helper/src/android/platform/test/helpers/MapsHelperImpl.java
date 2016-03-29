@@ -32,7 +32,11 @@ import java.util.regex.Pattern;
 import junit.framework.Assert;
 
 public class MapsHelperImpl extends AbstractMapsHelper {
+    private static final String LOG_TAG = MapsHelperImpl.class.getSimpleName();
+
     private static final String UI_PACKAGE = "com.google.android.apps.gmm";
+
+    private static final long DIRECTIONS_WAIT = 7500;
 
     public MapsHelperImpl(Instrumentation instr) {
         super(instr);
@@ -110,15 +114,19 @@ public class MapsHelperImpl extends AbstractMapsHelper {
     public void doSearch(String query) {
         // Navigate if necessary
         goToQueryScreen();
-        // Enter search query
-        UiObject2 search = getSearchBar();
-        Assert.assertNotNull("No search bar found.", search);
-        search.click();
-        search.setText(query);
-        // Do search
+        // Select search bar
+        UiObject2 searchSelect = getSelectableSearchBar();
+        Assert.assertNotNull("No selectable search bar found.", searchSelect);
+        searchSelect.click();
+        mDevice.waitForIdle();
+        // Edit search query
+        UiObject2 searchEdit = getEditableSearchBar();
+        Assert.assertNotNull("Not editable search bar found.", searchEdit);
+        searchEdit.setText(query);
+        // Search and wait for the directions option
         mDevice.pressEnter();
-        // Wait for directions option
-        mDevice.wait(Until.findObject(By.res(UI_PACKAGE, "title_textbox").text(query)), 7500);
+        mDevice.wait(Until.findObject(By.res(UI_PACKAGE, "title_textbox").text(query)),
+                DIRECTIONS_WAIT);
     }
 
     private void goToQueryScreen() {
@@ -131,7 +139,7 @@ public class MapsHelperImpl extends AbstractMapsHelper {
         }
     }
 
-    private UiObject2 getSearchBar() {
+    private UiObject2 getSelectableSearchBar() {
         UiObject2 search = mDevice.findObject(By.res(UI_PACKAGE, "search_omnibox_text_box"));
         if (search == null) {
             search = mDevice.findObject(By.descContains("Search"));
@@ -139,7 +147,15 @@ public class MapsHelperImpl extends AbstractMapsHelper {
         return search;
     }
 
+    private UiObject2 getEditableSearchBar() {
+        UiObject2 search = mDevice.findObject(By.res(UI_PACKAGE, "search_omnibox_edit_text"));
+        if (search == null) {
+            search = mDevice.findObject(By.textContains("Search"));
+        }
+        return search;
+    }
+
     private boolean hasSearchBar() {
-        return getSearchBar() != null;
+        return getSelectableSearchBar() != null || getEditableSearchBar() != null;
     }
 }

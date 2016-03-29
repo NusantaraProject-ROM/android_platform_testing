@@ -86,4 +86,8 @@ public abstract class AbstractStandardAppHelper implements IStandardAppHelper {
 
         return version;
     }
+
+    protected int getOrientation() {
+        return mInstrumentation.getContext().getResources().getConfiguration().orientation;
+    }
 }
