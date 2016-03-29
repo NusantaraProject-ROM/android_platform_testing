@@ -92,6 +92,7 @@ public class NotificationInteractionTests extends InstrumentationTestCase {
             }
         }
         if (mDevice.openNotification()) {
+            Thread.sleep(LONG_TIMEOUT);
             mDevice.wait(Until.findObject(By.text("CLEAR ALL")), LONG_TIMEOUT).click();
         }
         Thread.sleep(LONG_TIMEOUT);
