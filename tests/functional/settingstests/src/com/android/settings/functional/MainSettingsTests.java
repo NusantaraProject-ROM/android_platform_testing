@@ -35,7 +35,7 @@ import android.test.suitebuilder.annotation.MediumTest;
 
 import junit.framework.Assert;
 
-/**Component test for verifying basic functionality of Main Setting screen*/
+/** Component test for verifying basic functionality of Main Setting screen */
 public class MainSettingsTests extends InstrumentationTestCase {
     private static final String SETTINGS_PACKAGE = "com.android.settings";
     private static final int TIMEOUT = 2000;
@@ -56,17 +56,14 @@ public class MainSettingsTests extends InstrumentationTestCase {
         super.setUp();
         mDevice = UiDevice.getInstance(getInstrumentation());
         mContext = getInstrumentation().getContext();
-        try {
-            mDevice.setOrientationNatural();
-        } catch (RemoteException e) {
-            throw new RuntimeException("failed to freeze device orientaion", e);
-        }
+        mDevice.setOrientationNatural();
     }
 
     @Override
     public void tearDown() throws Exception {
         // Need to finish settings activity
         mDevice.pressHome();
+        mDevice.unfreezeRotation();
         super.tearDown();
     }
 
@@ -90,6 +87,9 @@ public class MainSettingsTests extends InstrumentationTestCase {
 
     private void launchMainSettingsCategory(String category, String[] items) throws Exception {
         launchMainSettings(Settings.ACTION_SETTINGS);
+        UiObject2 settingHeading = mDevice.wait(Until.findObject(By.text("Settings")),
+                TIMEOUT);
+        assertNotNull("Setting menu has not loaded correctly", settingHeading);
         launchSettingItems(category);
         for (String i : items) {
             launchSettingItems(i);
@@ -128,7 +128,7 @@ public class MainSettingsTests extends InstrumentationTestCase {
         Intent settingIntent = new Intent(mainSetting);
         settingIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         getInstrumentation().getContext().startActivity(settingIntent);
-        Thread.sleep(TIMEOUT * 2);
+        Thread.sleep(TIMEOUT * 3);
     }
 
     private void launchSettingItems(String title) throws Exception {
