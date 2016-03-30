@@ -16,18 +16,23 @@
 
 package com.android.notification.functional;
 
+import android.app.AlarmManager;
 import android.app.Instrumentation;
 import android.app.IntentService;
+import android.app.KeyguardManager;
 import android.app.Notification;
 import android.app.Notification.Builder;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.RemoteInput;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.provider.Settings;
 import android.service.notification.StatusBarNotification;
 import android.support.test.uiautomator.By;
@@ -143,7 +148,7 @@ public class NotificationHelper {
         executeAdbCommand(command);
     }
 
-    private void executeAdbCommand(String command) {
+    public void executeAdbCommand(String command) {
         Log.i(LOG_TAG, String.format("executing - %s", command));
         mInst.getUiAutomation().executeShellCommand(command);
         mDevice.waitForIdle();
@@ -241,6 +246,18 @@ public class NotificationHelper {
         return isFound == exists;
     }
 
+    public StatusBarNotification getStatusBarNotification(int id) {
+        StatusBarNotification[] sbns = mNotificationManager.getActiveNotifications();
+        StatusBarNotification n = null;
+        for (StatusBarNotification sbn : sbns) {
+            if (sbn.getId() == id) {
+                n = sbn;
+                break;
+            }
+        }
+        return n;
+    }
+
     public void swipeUp() throws Exception {
         mDevice.swipe(mDevice.getDisplayWidth() / 2, mDevice.getDisplayHeight(),
                 mDevice.getDisplayWidth() / 2, 0, 30);
@@ -251,6 +268,28 @@ public class NotificationHelper {
         mDevice.swipe(mDevice.getDisplayWidth() / 2, 0, mDevice.getDisplayWidth() / 2,
                 mDevice.getDisplayHeight() / 2 + 50, 20);
         Thread.sleep(SHORT_TIMEOUT);
+    }
+
+    public void unlockScreen() throws Exception {
+        KeyguardManager myKM = (KeyguardManager) mContext
+                .getSystemService(Context.KEYGUARD_SERVICE);
+        if (myKM.inKeyguardRestrictedInputMode()) {
+            // it is locked
+            swipeUp();
+        }
+    }
+
+    public void showInstalledAppDetails(Context context, String packageName) throws Exception {
+        Intent intent = new Intent();
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        Uri uri = Uri.fromParts("package", packageName, null);
+        intent.setData(uri);
+        intent.setClassName("com.android.settings",
+                "com.android.settings.Settings$AppNotificationSettingsActivity");
+        intent.putExtra("app_package", mContext.getPackageName());
+        intent.putExtra("app_uid", mContext.getApplicationInfo().uid);
+        context.startActivity(intent);
+        Thread.sleep(LONG_TIMEOUT * 2);
     }
 
     /**
