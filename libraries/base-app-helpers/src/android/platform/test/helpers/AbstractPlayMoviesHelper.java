@@ -33,7 +33,7 @@ public abstract class AbstractPlayMoviesHelper extends AbstractStandardAppHelper
     public abstract void openMoviesTab();
 
     /**
-     * Setup expectations: PlayMovies is open on the "My Movies" tab.
+     * Setup expectations: PlayMovies is open on any screen.
      *
      * PlayMovies will select the movie card and subsequently press the play button.
      */
