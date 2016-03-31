@@ -47,12 +47,14 @@ public class GmailHelperImpl extends AbstractGmailHelper {
     private static final long SEND_TIMEOUT = 10000;
     private static final long LOADING_TIMEOUT = 25000;
     private static final long LOAD_EMAIL_TIMEOUT = 20000;
-    private static final long WIFI_TIMEOUT = 20000;
+    private static final long WIFI_TIMEOUT = 60 * 1000;
+    private static final long RELOAD_INBOX_TIMEOUT = 10 * 1000;
+    private static final long COMPOSE_EMAIL_TIMEOUT = 10 * 1000;
 
     private static final String UI_PACKAGE_NAME = "com.google.android.gm";
     private static final String UI_PROMO_ACTION_NEG_RES = "promo_action_negative_single_line";
     private static final String UI_CONVERSATIONS_LIST_ID = "conversation_list_view";
-    private static final String UI_CONVERSATION_CONTAINER_ID = "conversation_container";
+    private static final String UI_CONVERSATION_PAGER = "conversation_pager";
     private static final String UI_MULTI_PANE_CONTAINER_ID = "two_pane_activity";
     private static final BySelector PRIMARY_SELECTOR =
             By.res(UI_PACKAGE_NAME, "name").text("Primary");
@@ -181,23 +183,26 @@ public class GmailHelperImpl extends AbstractGmailHelper {
             throw new RuntimeException("Unable to find method to get to Primary/Inbox");
         } else {
             // Simply press back if in a conversation
-            if (isInEmail()) {
+            if (isInConversation()) {
                 mDevice.pressBack();
                 waitForConversationsList();
             }
 
-            // Search with the navigation drawer
-            UiObject2 backBtn = mDevice.findObject(By.desc("Open navigation drawer"));
-            if (backBtn != null) {
-                backBtn.click();
-                // Select for "Primary" and for "Inbox"
-                UiObject2 primaryInboxSelector = mDevice.findObject(PRIMARY_SELECTOR);
-                if (primaryInboxSelector == null) {
-                    primaryInboxSelector = mDevice.findObject(INBOX_SELECTOR);
-                }
+            // If in another e-mail sub-folder, go to Primary or Inbox
+            if (!isInPrimaryOrInbox()) {
+                // Search with the navigation drawer
+                UiObject2 backBtn = mDevice.findObject(By.desc("Open navigation drawer"));
+                if (backBtn != null) {
+                    backBtn.click();
+                    // Select for "Primary" and for "Inbox"
+                    UiObject2 primaryInboxSelector = mDevice.findObject(PRIMARY_SELECTOR);
+                    if (primaryInboxSelector == null) {
+                        primaryInboxSelector = mDevice.findObject(INBOX_SELECTOR);
+                    }
 
-                primaryInboxSelector.click();
-                waitForConversationsList();
+                    primaryInboxSelector.click();
+                    waitForConversationsList();
+                }
             }
         }
     }
@@ -210,6 +215,7 @@ public class GmailHelperImpl extends AbstractGmailHelper {
         UiObject2 compose = mDevice.findObject(By.desc("Compose"));
         Assert.assertNotNull("No compose button found", compose);
         compose.clickAndWait(Until.newWindow(), COMPOSE_TIMEOUT);
+        waitForCompose();
     }
 
     /**
@@ -267,17 +273,17 @@ public class GmailHelperImpl extends AbstractGmailHelper {
      */
     @Override
     public void sendReplyEmail(String address, String body) {
-        if (!isInEmail()) {
+        if (!isInConversation()) {
             Assert.fail("Must have an e-mail open to send a reply.");
         }
 
-        UiObject2 convScroll = getConversationScrollContainer();
+        UiObject2 convScroll = getConversationPager();
         while(convScroll.scroll(Direction.DOWN, 1.0f));
 
         UiObject2 replyButton = mDevice.findObject(By.text("Reply"));
         if (replyButton != null) {
             replyButton.clickAndWait(Until.newWindow(), COMPOSE_TIMEOUT);
-            mDevice.waitForIdle();
+            waitForCompose();
         } else {
             Assert.fail("Failed to find a 'Reply' button.");
         }
@@ -286,8 +292,8 @@ public class GmailHelperImpl extends AbstractGmailHelper {
         setEmailToAddress(address);
         setEmailBody(body);
 
-        // Send the reply e-mail and wait for a new window.
-        mDevice.findObject(By.desc("Send")).clickAndWait(Until.newWindow(), SEND_TIMEOUT);
+        // Send the reply e-mail and wait for original e-mail
+        clickSendButton();
     }
 
     /**
@@ -306,10 +312,30 @@ public class GmailHelperImpl extends AbstractGmailHelper {
 
         if (toField != null) {
             toField.setText(address);
-            // Click to dismiss suggested e-mail
-            toField.click();
         } else {
             Assert.fail("Failed to find a 'To' field.");
+        }
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setEmailSubject(String subject) {
+        UiObject2 convScroll = getComposeScrollContainer();
+        while (convScroll.scroll(Direction.UP, 1.0f));
+
+        UiObject2 subjectField = getSubjectField();
+        for (int retries = 5; retries > 0 && subjectField == null; retries--) {
+            convScroll.scroll(Direction.DOWN, 1.0f);
+            subjectField = getSubjectField();
+        }
+
+        if (subjectField != null) {
+            subjectField.setText(subject);
+        } else {
+            Assert.fail("Failed to find a 'Subject' field.");
         }
     }
 
@@ -329,10 +355,25 @@ public class GmailHelperImpl extends AbstractGmailHelper {
 
         if (bodyField != null) {
             bodyField.setText(body);
-            // Click to dismiss suggested e-mail
-            bodyField.click();
         } else {
             Assert.fail("Failed to find a 'Body' field.");
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void clickSendButton() {
+        UiObject2 convScroll = getComposeScrollContainer();
+        while (convScroll.scroll(Direction.UP, 1.0f));
+
+        UiObject2 sendButton = getSendButton();
+        if (sendButton != null) {
+            sendButton.clickAndWait(Until.newWindow(), SEND_TIMEOUT);
+            waitForConversation();
+        } else {
+            Assert.fail("Failed to find a 'Send' button.");
         }
     }
 
@@ -393,16 +434,20 @@ public class GmailHelperImpl extends AbstractGmailHelper {
         return mDevice.findObject(By.res(UI_PACKAGE_NAME, "to"));
     }
 
+    private UiObject2 getSubjectField() {
+        return mDevice.findObject(By.res(UI_PACKAGE_NAME, "subject"));
+    }
+
     private UiObject2 getBodyField() {
         return mDevice.findObject(By.res(UI_PACKAGE_NAME, "body"));
     }
 
-    private UiObject2 getComposeScrollContainer() {
-        return mDevice.findObject(By.res(UI_PACKAGE_NAME, "compose"));
+    private UiObject2 getSendButton() {
+        return mDevice.findObject(By.desc("Send"));
     }
 
-    private UiObject2 getConversationScrollContainer() {
-        return mDevice.findObject(By.res(UI_PACKAGE_NAME, "conversation_pager"));
+    private UiObject2 getComposeScrollContainer() {
+        return mDevice.findObject(By.res(UI_PACKAGE_NAME, "compose"));
     }
 
     private UiObject2 getNavDrawerContainer() {
@@ -413,8 +458,12 @@ public class GmailHelperImpl extends AbstractGmailHelper {
         return mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_CONVERSATIONS_LIST_ID));
     }
 
-    private boolean isInEmail() {
-        return mDevice.hasObject(By.res(UI_PACKAGE_NAME, UI_CONVERSATION_CONTAINER_ID));
+    private UiObject2 getConversationPager() {
+        return mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_CONVERSATION_PAGER));
+    }
+
+    private boolean isInConversation() {
+        return mDevice.hasObject(By.res(UI_PACKAGE_NAME, UI_CONVERSATION_PAGER));
     }
 
     private boolean isInPrimaryOrInbox() {
@@ -436,19 +485,18 @@ public class GmailHelperImpl extends AbstractGmailHelper {
         }
     }
 
-    /**
-     * Wait for the conversation (e-mail) to be visible.
-     */
-    private void waitForConversation() {
+    private void waitForConversationsList() {
         mDevice.wait(Until.hasObject(
-                By.res(UI_PACKAGE_NAME, UI_CONVERSATION_CONTAINER_ID)), LOAD_EMAIL_TIMEOUT);
+                By.res(UI_PACKAGE_NAME, UI_CONVERSATIONS_LIST_ID)), RELOAD_INBOX_TIMEOUT);
     }
 
-    /**
-     * Wait for the conversations list to be visible.
-     */
-    private void waitForConversationsList () {
-        mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, UI_CONVERSATIONS_LIST_ID)), 3500);
+    private void waitForConversation() {
+        mDevice.wait(Until.hasObject(
+                By.res(UI_PACKAGE_NAME, UI_CONVERSATION_PAGER)), LOAD_EMAIL_TIMEOUT);
+    }
+
+    private void waitForCompose() {
+        mDevice.wait(Until.findObject(By.res(UI_PACKAGE_NAME, "compose")), COMPOSE_EMAIL_TIMEOUT);
     }
 
     private boolean isMultiPaneActivity() {

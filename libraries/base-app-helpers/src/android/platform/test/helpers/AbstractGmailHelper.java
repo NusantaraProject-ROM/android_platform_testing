@@ -81,10 +81,24 @@ public abstract class AbstractGmailHelper extends AbstractStandardAppHelper {
     /**
      * Setup expectations: Gmail is open and composing an e-mail.
      *
+     * This method will set the e-mail's subject and block until complete.
+     */
+    public abstract void setEmailSubject(String subject);
+
+    /**
+     * Setup expectations: Gmail is open and composing an e-mail.
+     *
      * This method will set the e-mail's Body and block until complete. Focus will remain on the
      * e-mail body after completion.
      */
     public abstract void setEmailBody(String body);
+
+    /**
+     * Setup expectations: Gmail is open and composing an e-mail.
+     *
+     * This method will press send and block until the device is idle on the original e-mail.
+     */
+    public abstract void clickSendButton();
 
     /**
      * Setup expectations: Gmail is open and composing an e-mail.
