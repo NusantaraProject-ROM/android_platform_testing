@@ -22,6 +22,7 @@ import android.os.SystemClock;
 import android.support.test.launcherhelper.ILauncherStrategy;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
+import android.support.test.uiautomator.Configurator;
 import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.Until;
 import android.support.test.uiautomator.UiDevice;
@@ -189,10 +190,20 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
             return;
         }
 
-        getVideoShutter().click();
-        SystemClock.sleep(timeInMs);
-        getVideoShutter().click();
-        waitForVideoShutterEnabled();
+        // Temporary hack #1: Make UI code responsive by shortening the UiAutomator idle timeout.
+        // The pulsing record button broadcasts unnecessary events of TYPE_WINDOW_CONTENT_CHANGED,
+        // but we intend to have a fix and remove this hack with Kenai (GC 3.0).
+        long original = Configurator.getInstance().getWaitForIdleTimeout();
+        Configurator.getInstance().setWaitForIdleTimeout(1000);
+
+        try {
+            getVideoShutter().click();
+            SystemClock.sleep(timeInMs);
+            getVideoShutter().click();
+            waitForVideoShutterEnabled();
+        } finally {
+            Configurator.getInstance().setWaitForIdleTimeout(original);
+        }
     }
 
     /**
@@ -202,46 +213,54 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
     public void snapshotVideo(long videoTimeInMs, long snapshotStartTimeInMs) {
         if (!isVideoMode()) {
             Assert.fail("GoogleCamera must be in Video mode to record videos.");
-        }
-
-        if (videoTimeInMs <= snapshotStartTimeInMs) {
+        } else if (videoTimeInMs <= snapshotStartTimeInMs) {
             Assert.fail("video recording time length must be larger than snapshot start time");
         }
+
+        // Temporary hack #2: Make UI code responsive by shortening the UiAutomator idle timeout.
+        // The pulsing record button broadcasts unnecessary events of TYPE_WINDOW_CONTENT_CHANGED,
+        // but we intend to have a fix and remove this hack with Kenai (GC 3.0).
+        long original = Configurator.getInstance().getWaitForIdleTimeout();
+        Configurator.getInstance().setWaitForIdleTimeout(1000);
 
         if (isRecording()) {
             return;
         }
 
-        getVideoShutter().click();
-        SystemClock.sleep(snapshotStartTimeInMs);
+        try {
+            getVideoShutter().click();
+            SystemClock.sleep(snapshotStartTimeInMs);
 
-        boolean snapshot_success = false;
+            boolean snapshot_success = false;
 
-        // Take a snapshot
-        if (mIsVersion3X) {
-            UiObject2 snapshotButton = mDevice.findObject(By.res(UI_PACKAGE_NAME, "snapshot_button"));
-            if (snapshotButton != null) {
-                snapshotButton.click();
-                snapshot_success = true;
+            // Take a snapshot
+            if (mIsVersion3X) {
+                UiObject2 snapshotButton = mDevice.findObject(By.res(UI_PACKAGE_NAME, "snapshot_button"));
+                if (snapshotButton != null) {
+                    snapshotButton.click();
+                    snapshot_success = true;
+                }
+            } else {
+                UiObject2 snapshotButton = mDevice.findObject(By.res(UI_PACKAGE_NAME, "recording_time"));
+                if (snapshotButton != null) {
+                    snapshotButton.click();
+                    snapshot_success = true;
+                }
             }
-        } else {
-            UiObject2 snapshotButton = mDevice.findObject(By.res(UI_PACKAGE_NAME, "recording_time"));
-            if (snapshotButton != null) {
-                snapshotButton.click();
-                snapshot_success = true;
-            }
-        }
 
-        if (!snapshot_success) {
+            if (!snapshot_success) {
+                getVideoShutter().click();
+                waitForVideoShutterEnabled();
+                Assert.fail("snapshot button not found!");
+                return;
+            }
+
+            SystemClock.sleep(videoTimeInMs - snapshotStartTimeInMs);
             getVideoShutter().click();
             waitForVideoShutterEnabled();
-            Assert.fail("snapshot button not found!");
-            return;
+        } finally {
+            Configurator.getInstance().setWaitForIdleTimeout(original);
         }
-
-        SystemClock.sleep(videoTimeInMs - snapshotStartTimeInMs);
-        getVideoShutter().click();
-        waitForVideoShutterEnabled();
     }
 
     /**
