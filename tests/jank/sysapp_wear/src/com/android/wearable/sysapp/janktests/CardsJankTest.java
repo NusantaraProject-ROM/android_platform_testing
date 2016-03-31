@@ -17,7 +17,6 @@
 package com.android.wearable.sysapp.janktests;
 
 import android.os.Bundle;
-import android.os.RemoteException;
 import android.support.test.jank.GfxMonitor;
 import android.support.test.jank.JankTest;
 import android.support.test.jank.JankTestBase;
@@ -39,7 +38,7 @@ public class CardsJankTest extends JankTestBase {
     protected void setUp() throws Exception {
         super.setUp();
         mDevice = UiDevice.getInstance(getInstrumentation());
-        mHelper = SysAppTestHelper.getInstance(mDevice, this.getInstrumentation().getContext());
+        mHelper = SysAppTestHelper.getInstance(mDevice, this.getInstrumentation());
         mDevice.wakeUp();
     }
 
@@ -54,7 +53,7 @@ public class CardsJankTest extends JankTestBase {
     // Measure card scroll jank
 
     @JankTest(beforeLoop = "openScrollCard", afterTest = "goBackHome",
-            expectedFrames = SysAppTestHelper.MIN_FRAMES)
+            expectedFrames = SysAppTestHelper.EXPECTED_FRAMES_CARDS_TEST)
     @GfxMonitor(processName = "com.google.android.wearable.app")
     public void testScrollCard() {
         mHelper.swipeUp();
@@ -71,14 +70,14 @@ public class CardsJankTest extends JankTestBase {
     // Measure jank when dismissing a card
 
     @JankTest(beforeLoop = "openSwipeCard", afterTest = "goBackHome",
-            expectedFrames = SysAppTestHelper.MIN_FRAMES)
+            expectedFrames = SysAppTestHelper.EXPECTED_FRAMES_CARDS_TEST)
     @GfxMonitor(processName = "com.google.android.wearable.app")
     public void testSwipeCard() {
         mHelper.swipeRight();
     }
 
     // Ensuring that we head back to the first screen before launching the app again
-    public void goBackHome(Bundle metrics) throws RemoteException {
+    public void goBackHome(Bundle metrics) {
         mHelper.goBackHome();
         super.afterTest(metrics);
     }

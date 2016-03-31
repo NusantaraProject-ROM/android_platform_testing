@@ -17,7 +17,6 @@ package com.android.wearable.sysapp.janktests;
 
 import android.os.Bundle;
 import android.os.RemoteException;
-import android.os.SystemClock;
 import android.support.test.jank.GfxMonitor;
 import android.support.test.jank.JankTest;
 import android.support.test.jank.JankTestBase;
@@ -26,7 +25,6 @@ import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
-import android.widget.ListView;
 
 import java.util.concurrent.TimeoutException;
 
@@ -45,7 +43,7 @@ public class AppLauncherFlingJankTest extends JankTestBase {
     @Override
     protected void setUp() throws Exception {
         mDevice = UiDevice.getInstance(getInstrumentation());
-        mHelper = SysAppTestHelper.getInstance(mDevice, this.getInstrumentation().getContext());
+        mHelper = SysAppTestHelper.getInstance(mDevice, this.getInstrumentation());
         mDevice.wakeUp();
         super.setUp();
     }
@@ -70,7 +68,7 @@ public class AppLauncherFlingJankTest extends JankTestBase {
     @GfxMonitor(processName = "com.google.android.wearable.app")
     public void testFlingApps() throws TimeoutException {
         UiObject2 recyclerViewContents = mDevice.wait(Until.findObject(
-        By.res("com.google.android.wearable.app","launcher_view")), mHelper.SHORT_TIMEOUT);
+        By.res("com.google.android.wearable.app","launcher_view")), SysAppTestHelper.SHORT_TIMEOUT);
         for (int i = 0; i < 3; i++) {
           recyclerViewContents.fling(Direction.DOWN, SysAppTestHelper.FLING_SPEED);
           recyclerViewContents.fling(Direction.UP, SysAppTestHelper.FLING_SPEED);

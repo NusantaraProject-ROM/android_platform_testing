@@ -16,23 +16,22 @@
 
 package com.android.wearable.sysapp.janktests;
 
+import android.app.Instrumentation;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.os.RemoteException;
 import android.os.SystemClock;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.UiObject2;
+import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.Until;
 import android.util.Log;
 import android.view.KeyEvent;
 
-import java.util.concurrent.TimeoutException;
-
 import junit.framework.Assert;
+
+import java.util.concurrent.TimeoutException;
 
 /**
  * Helper for all the system apps jank tests
@@ -40,15 +39,16 @@ import junit.framework.Assert;
 public class SysAppTestHelper {
 
     private static final String LOG_TAG = SysAppTestHelper.class.getSimpleName();
-    public static final int MIN_FRAMES = 20;
+    public static final int EXPECTED_FRAMES_CARDS_TEST = 20;
     public static final int EXPECTED_FRAMES = 100;
     public static final int LONG_TIMEOUT = 5000;
     public static final int SHORT_TIMEOUT = 500;
     public static final int FLING_SPEED = 5000;
     private static final long NEW_CARD_TIMEOUT_MS = 5 * 1000; // 5s
-    private static final int CARD_SWIPE_STEPS = 20;
-    private static final String RELOAD_DEMO_CARD_CMD = "com.google.android.clockwork.home."
-            + "retail.action.STARTED_RETAIL_DREAM";
+    private static final String RELOAD_NOTIFICATION_CARD_INTENT = "com.google.android.wearable."
+            + "support.wearnotificationgenerator.SHOW_NOTIFICATION";
+    private static final String GO_TO_HOME_CMD = "am start -S -n com.google.android.wearable."
+            + "app/com.google.android.clockwork.home2.activity.HomeActivity2";
 
     // Demo card selectors
     private static final UiSelector CARD_SELECTOR = new UiSelector()
@@ -61,52 +61,40 @@ public class SysAppTestHelper {
             .resourceId("com.google.android.wearable.app:id/icon");
     private static final UiSelector TEXT_SELECTOR = new UiSelector()
             .resourceId("com.google.android.wearable.app:id/text");
-    private static final UiSelector NOW_WEATHER_ICON_SELECTOR = new UiSelector()
-            .resourceId("com.google.android.wearable.app:id/now_weather_icon");
-    private static final UiSelector NOW_TITLE_SELECTOR = new UiSelector()
-            .resourceId("com.google.android.wearable.app:id/now_title");
-    private static final UiSelector NOW_ICON_SELECTOR = new UiSelector()
-            .resourceId("com.google.android.wearable.app:id/now_icon");
-    private static final UiSelector STEPS_SELECTOR = new UiSelector()
-            .resourceId("com.google.android.wearable.app:id/steps");
+    private static final UiSelector STATUS_BAR_SELECTOR = new UiSelector()
+            .resourceId("com.google.android.wearable.app:id/status_bar_icons");
 
     private UiDevice mDevice = null;
-    private Context mContext = null;
+    private Instrumentation instrumentation = null;
     private UiObject mCard = null;
     private UiObject mTitle = null;
     private UiObject mClock = null;
     private UiObject mIcon = null;
     private UiObject mText = null;
-    private UiObject mNowWeatherIcon = null;
-    private UiObject mNowTitle = null;
-    private UiObject mNowIcon = null;
-    private UiObject mSteps = null;
+    private UiObject mStatus = null;
     private Intent mIntent = null;
     private static SysAppTestHelper sysAppTestHelperInstance;
 
     /**
      * @param mDevice
-     * @param mContext
+     * @param instrumentation
      */
-    private SysAppTestHelper(UiDevice mDevice, Context mContext) {
+    private SysAppTestHelper(UiDevice mDevice, Instrumentation instrumentation) {
         super();
         this.mDevice = mDevice;
-        this.mContext = mContext;
+        this.instrumentation = instrumentation;
         mIntent = new Intent();
         mCard = mDevice.findObject(CARD_SELECTOR);
         mTitle = mDevice.findObject(TITLE_SELECTOR);
         mClock = mDevice.findObject(CLOCK_SELECTOR);
         mIcon = mDevice.findObject(ICON_SELECTOR);
         mText = mDevice.findObject(TEXT_SELECTOR);
-        mNowWeatherIcon = mDevice.findObject(NOW_WEATHER_ICON_SELECTOR);
-        mNowTitle = mDevice.findObject(NOW_TITLE_SELECTOR);
-        mNowIcon = mDevice.findObject(NOW_ICON_SELECTOR);
-        mSteps = mDevice.findObject(STEPS_SELECTOR);
+        mStatus = mDevice.findObject(STATUS_BAR_SELECTOR);
     }
 
-    public static SysAppTestHelper getInstance(UiDevice device, Context context) {
+    public static SysAppTestHelper getInstance(UiDevice device, Instrumentation instrumentation) {
         if (sysAppTestHelperInstance == null) {
-            sysAppTestHelperInstance = new SysAppTestHelper(device, context);
+            sysAppTestHelperInstance = new SysAppTestHelper(device, instrumentation);
         }
         return sysAppTestHelperInstance;
     }
@@ -138,7 +126,7 @@ public class SysAppTestHelper {
 
     public void flingUp() {
         mDevice.swipe(mDevice.getDisplayWidth() / 2, mDevice.getDisplayHeight() / 2 + 50,
-            mDevice.getDisplayWidth() / 2, 0, 5); // fast speed
+                mDevice.getDisplayWidth() / 2, 0, 5); // fast speed
         SystemClock.sleep(SHORT_TIMEOUT);
     }
 
@@ -149,15 +137,13 @@ public class SysAppTestHelper {
     }
 
     // Helper method to go back to home screen
-    public void goBackHome() throws RemoteException {
+    public void goBackHome() {
         int count = 0;
-        mClock = null;
-        while (mClock == null && count++ < 5) {
-            mDevice.sleep();
-            SystemClock.sleep(SHORT_TIMEOUT + SHORT_TIMEOUT);
-            mDevice.wakeUp();
-            SystemClock.sleep(SHORT_TIMEOUT + SHORT_TIMEOUT);
-            mClock = mDevice.findObject(CLOCK_SELECTOR); // Ensure device is really on Home screen
+        mStatus = null;
+        while (mStatus == null && count++ < 5) {
+            instrumentation.getUiAutomation().executeShellCommand(GO_TO_HOME_CMD);
+            SystemClock.sleep(LONG_TIMEOUT);
+            mStatus = mDevice.findObject(STATUS_BAR_SELECTOR); // Ensure device is really on Home screen
         }
     }
 
@@ -170,9 +156,11 @@ public class SysAppTestHelper {
 
         goBackHome(); // Start by going to Home.
 
-        if (mClock.waitForExists(NEW_CARD_TIMEOUT_MS)) {
-            mClock.swipeUp(CARD_SWIPE_STEPS);
-            // For few devices, demo card preview is hidden by default. So swipe once to bring up the card.
+        if (!mTitle.waitForExists(NEW_CARD_TIMEOUT_MS)) {
+            Log.d(LOG_TAG,"Card previews not available, swiping up");
+            swipeUp();
+            // For few devices, demo card preview is hidden by default. So swipe once to bring up
+            // the card.
         }
 
         // First card from the pre-loaded demo cards could be either in peek view
@@ -181,32 +169,26 @@ public class SysAppTestHelper {
         if (!(mCard.waitForExists(NEW_CARD_TIMEOUT_MS)
                 || mTitle.waitForExists(NEW_CARD_TIMEOUT_MS)
                 || mIcon.waitForExists(NEW_CARD_TIMEOUT_MS)
-                || mText.waitForExists(NEW_CARD_TIMEOUT_MS)
-                || mNowWeatherIcon.waitForExists(NEW_CARD_TIMEOUT_MS)
-                || mNowTitle.waitForExists(NEW_CARD_TIMEOUT_MS)
-                || mNowIcon.waitForExists(NEW_CARD_TIMEOUT_MS)
-                || mSteps.waitForExists(NEW_CARD_TIMEOUT_MS))) {
+                || mText.waitForExists(NEW_CARD_TIMEOUT_MS))) {
             Log.d(LOG_TAG, "Demo cards not found, going to reload the cards");
             // If there are no Demo cards, reload them.
             reloadDemoCards();
-            if (mClock.waitForExists(NEW_CARD_TIMEOUT_MS)) {
-                mClock.swipeUp(CARD_SWIPE_STEPS); // For few devices, demo card preview is hidden by
+            if (mTitle.waitForExists(NEW_CARD_TIMEOUT_MS)) {
+                swipeUp(); // For few devices, demo card preview is hidden by
                 // default. So swipe once to bring up the card.
             }
         }
         Assert.assertTrue("no cards available for testing",
                 (mTitle.waitForExists(NEW_CARD_TIMEOUT_MS)
-                || mIcon.waitForExists(NEW_CARD_TIMEOUT_MS)
-                || mText.waitForExists(NEW_CARD_TIMEOUT_MS)
-                || mNowWeatherIcon.waitForExists(NEW_CARD_TIMEOUT_MS)
-                || mNowTitle.waitForExists(NEW_CARD_TIMEOUT_MS)
-                || mNowIcon.waitForExists(NEW_CARD_TIMEOUT_MS))
-                || mSteps.waitForExists(NEW_CARD_TIMEOUT_MS));
+                        || mIcon.waitForExists(NEW_CARD_TIMEOUT_MS)
+                        || mText.waitForExists(NEW_CARD_TIMEOUT_MS)));
     }
-    // This will ensure to reload retail cards when there are insufficient cards
+
+    // This will ensure to reload notification cards by launching NotificationsGeneratorWear app
+    // when there are insufficient cards.
     private void reloadDemoCards() {
-        mIntent.setAction(RELOAD_DEMO_CARD_CMD);
-        mContext.sendBroadcast(mIntent);
+        mIntent.setAction(RELOAD_NOTIFICATION_CARD_INTENT);
+        instrumentation.getContext().sendBroadcast(mIntent);
         SystemClock.sleep(LONG_TIMEOUT);
     }
 
@@ -214,15 +196,15 @@ public class SysAppTestHelper {
         mIntent.setAction("android.intent.action.MAIN");
         mIntent.setComponent(new ComponentName(appPackage, activityToLaunch));
         mIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        mContext.startActivity(mIntent);
+        instrumentation.getContext().startActivity(mIntent);
     }
 
     // Helper method to goto app launcher and verifies you are there.
-    public void gotoAppLauncher() throws RemoteException, TimeoutException {
-      goBackHome();
-      mDevice.pressKeyCode(KeyEvent.KEYCODE_BACK);
-      UiObject2 appLauncher = mDevice.wait(Until.findObject(By.text("Agenda")),
-          SysAppTestHelper.LONG_TIMEOUT);
-      Assert.assertNotNull("App launcher not launched", appLauncher);
-  }
+    public void gotoAppLauncher() throws TimeoutException {
+        goBackHome();
+        mDevice.pressKeyCode(KeyEvent.KEYCODE_BACK);
+        UiObject2 appLauncher = mDevice.wait(Until.findObject(By.text("Agenda")),
+                SysAppTestHelper.LONG_TIMEOUT);
+        Assert.assertNotNull("App launcher not launched", appLauncher);
+    }
 }
