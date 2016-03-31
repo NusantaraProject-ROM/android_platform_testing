@@ -86,7 +86,7 @@ public class UiBenchJankTestsHelper {
     // Helper method to go back to home screen
     public void goBackHome() throws UiObjectNotFoundException {
         String launcherPackage = mDevice.getLauncherPackageName();
-        UiObject2 homeScreen = null;
+        UiObject2 homeScreen = mDevice.findObject(By.res(launcherPackage, ROOT_NAME));
         int count = 0;
         while (homeScreen == null && count < 5) {
             mDevice.pressBack();
@@ -119,7 +119,6 @@ public class UiBenchJankTestsHelper {
         Assert.assertNotNull(itemName + ": isn't found", component);
         component.clickAndWait(Until.newWindow(), LONG_TIMEOUT);
         SystemClock.sleep(TIMEOUT);
-
     }
 
     public void swipeRight() {

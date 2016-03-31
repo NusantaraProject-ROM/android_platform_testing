@@ -193,18 +193,8 @@ public class UiBenchJankTests extends JankTestBase {
     // Open Inflation Listview contents
     public void openInflatingListView() {
         mHelper.launchUiBench();
-        UiObject2 inflation = mDevice.wait(Until.findObject(
-               By.res(mHelper.RES_PACKAGE_NAME, "text1").text("Inflation")), mHelper.TIMEOUT);
-        Assert.assertNotNull("Inflation isn't found in UiBench", inflation);
-        inflation.click();
-        SystemClock.sleep(mHelper.TIMEOUT);
-        UiObject2 inflatingListView = mDevice.wait(Until.findObject(
-                By.res(mHelper.RES_PACKAGE_NAME, "text1").text("Inflating ListView")),
-                    mHelper.TIMEOUT);
-        Assert.assertNotNull("Inflating ListView Contents isn't found in Inflation",
-                inflatingListView);
-        inflatingListView.click();
-        SystemClock.sleep(mHelper.TIMEOUT);
+        mHelper.openTextInList("Inflation");
+        mHelper.openTextInList("Inflating ListView");
     }
 
     // Test Inflating List View fling
