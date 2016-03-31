@@ -37,7 +37,6 @@ import junit.framework.Assert;
 
 public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
     private static final String LOG_TAG = GoogleCameraHelperImpl.class.getSimpleName();
-
     private static final String UI_ACTIVITY_VIEW_ID = "activity_root_view";
     private static final String UI_MENU_ID = "menuButton";
     private static final String UI_PACKAGE_NAME = "com.android.camera2";
@@ -55,12 +54,23 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
     private static final String UI_MENU_BUTTON_ID = "menuButton";
 
     private static final String DESC_HDR_AUTO = "HDR Plus auto";
-    private static final String DESC_HDR_OFF = "HDR Plus off";
-    private static final String DESC_HDR_ON = "HDR Plus on";
+    private static final String DESC_HDR_OFF_3X = "HDR Plus off";
+    private static final String DESC_HDR_ON_3X = "HDR Plus on";
+
+    private static final String DESC_HDR_OFF_2X = "HDR off";
+    private static final String DESC_HDR_ON_2X = "HDR on";
+
+    private static final String TEXT_4K_ON = "UHD 4K";
+    private static final String TEXT_HD_1080 = "HD 1080p";
+    private static final String TEXT_HD_720 = "HD 720p";
 
     public static final int HDR_MODE_AUTO = -1;
     public static final int HDR_MODE_OFF = 0;
     public static final int HDR_MODE_ON = 1;
+
+    public static final int VIDEO_4K_MODE_ON = 1;
+    public static final int VIDEO_HD_1080 = 0;
+    public static final int VIDEO_HD_720 = -1;
 
     private static final long APP_INIT_WAIT = 20000;
     private static final long DIALOG_TRANSITION_WAIT = 5000;
@@ -169,9 +179,9 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
      * {@inheritDoc}
      */
     @Override
-    public void captureVideo(long timeInMS) {
+    public void captureVideo(long timeInMs) {
         if (!isVideoMode()) {
-            Assert.fail("GoogleCamera must be in Video mode to capture photos.");
+            Assert.fail("GoogleCamera must be in Video mode to record videos.");
         }
 
         if (isRecording()) {
@@ -179,7 +189,56 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
         }
 
         getVideoShutter().click();
-        SystemClock.sleep(timeInMS);
+        SystemClock.sleep(timeInMs);
+        getVideoShutter().click();
+        waitForVideoShutterEnabled();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void snapshotVideo(long videoTimeInMs, long snapshotStartTimeInMs) {
+        if (!isVideoMode()) {
+            Assert.fail("GoogleCamera must be in Video mode to record videos.");
+        }
+
+        if (videoTimeInMs <= snapshotStartTimeInMs) {
+            Assert.fail("video recording time length must be larger than snapshot start time");
+        }
+
+        if (isRecording()) {
+            return;
+        }
+
+        getVideoShutter().click();
+        SystemClock.sleep(snapshotStartTimeInMs);
+
+        boolean snapshot_success = false;
+
+        // Take a snapshot
+        if (mIsVersion3X) {
+            UiObject2 snapshotButton = mDevice.findObject(By.res(UI_PACKAGE_NAME, "snapshot_button"));
+            if (snapshotButton != null) {
+                snapshotButton.click();
+                snapshot_success = true;
+            }
+        } else {
+            UiObject2 snapshotButton = mDevice.findObject(By.res(UI_PACKAGE_NAME, "recording_time"));
+            if (snapshotButton != null) {
+                snapshotButton.click();
+                snapshot_success = true;
+            }
+        }
+
+        if (!snapshot_success) {
+            getVideoShutter().click();
+            waitForVideoShutterEnabled();
+            Assert.fail("snapshot button not found!");
+            return;
+        }
+
+        SystemClock.sleep(videoTimeInMs - snapshotStartTimeInMs);
         getVideoShutter().click();
         waitForVideoShutterEnabled();
     }
@@ -318,11 +377,32 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
                     mDevice.waitForIdle();
                 } else {
                     Log.e(LOG_TAG, "Successfully set HDR mode!");
+                    mDevice.waitForIdle();
                     return;
                 }
             }
         } else {
-            // Temporary no-op. TODO: implement.
+            // Open mode options before checking Hdr status
+            openModeOptions2X();
+            if (getHdrToggleButton() == null) {
+                if (mode == HDR_MODE_OFF) {
+                    return;
+                } else {
+                    throw new UnsupportedOperationException(
+                            "Cannot set HDR on this device as requested.");
+                }
+            }
+
+            for (int retries = 0; retries < 3; retries++) {
+                if (!isHdrMode(mode)) {
+                    getHdrToggleButton().click();
+                    mDevice.waitForIdle();
+                } else {
+                    Log.e(LOG_TAG, "Successfully set HDR mode!");
+                    mDevice.waitForIdle();
+                    return;
+                }
+            }
         }
     }
 
@@ -331,18 +411,72 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
             String modeDesc = getHdrToggleButton().getContentDescription();
             if (DESC_HDR_AUTO.equals(modeDesc)) {
                 return HDR_MODE_AUTO == mode;
-            } else if (DESC_HDR_OFF.equals(modeDesc)) {
+            } else if (DESC_HDR_OFF_3X.equals(modeDesc)) {
                 return HDR_MODE_OFF == mode;
-            } else if (DESC_HDR_ON.equals(modeDesc)) {
+            } else if (DESC_HDR_ON_3X.equals(modeDesc)) {
                 return HDR_MODE_ON == mode;
             } else {
                 Assert.fail("Unexpected failure.");
             }
         } else {
-            // Temporary no-op. TODO: implement.
+            // Open mode options before checking Hdr status
+            openModeOptions2X();
+            // Check the HDR mode
+            String modeDesc = getHdrToggleButton().getContentDescription();
+            if (DESC_HDR_OFF_2X.equals(modeDesc)) {
+                return HDR_MODE_OFF == mode;
+            } else if (DESC_HDR_ON_2X.equals(modeDesc)) {
+                return HDR_MODE_ON == mode;
+            } else {
+                Assert.fail("Unexpected failure.");
+            }
         }
 
         return HDR_MODE_OFF == mode;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void set4KMode(int mode) {
+        // If the menu is not open, open it
+        if (!isMenuOpen()) {
+            openMenu();
+        }
+
+        if (mIsVersion3X) {
+            // Select Menu Item "Settings"
+            selectMenuItem("Settings");
+        } else {
+            // Select Menu Item "Settings"
+            selectSetting2X();
+        }
+
+        // Select Item "Resolution & Quality"
+        selectSettingItem("Resolution & quality");
+        // Select Item "Back camera video", which is the only mode supports 4k
+        selectVideoResolution(mode);
+        // Quit Menu "Resolution & Quality"
+        closeSettingItem();
+        // Close Main Menu
+        closeMenuItem();
+    }
+
+    private void openModeOptions2X() {
+        // If the mode option is already open, return as it is
+        if (mDevice.hasObject(By.res(UI_PACKAGE_NAME, "mode_options_buttons"))) {
+            return;
+        }
+        // Before openning the mode option, close the menu if the menu is open
+        closeMenu();
+        waitForVideoShutterEnabled();
+        // Open the mode options to check HDR mode
+        UiObject2 modeoptions = getModeOptionsMenuButton();
+        if (modeoptions != null) {
+            modeoptions.click();
+        } else {
+            Assert.fail("Fail to find modeoption button when trying to check HDR mode");
+        }
     }
 
     private void openMenu() {
@@ -356,11 +490,99 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
         }
 
         mDevice.wait(Until.hasObject(By.text("Photo Sphere")), MENU_WAIT_TIME);
+
+        mDevice.waitForIdle();
     }
 
     private void selectMenuItem(String mode) {
-        mDevice.wait(Until.findObject(By.text(mode)), 5000).click();
+        UiObject2 menuItem = mDevice.findObject(By.text(mode));
+        if (menuItem != null) {
+            menuItem.click();
+        } else {
+            Assert.fail(String.format("Menu item button was not enabled with %d seconds",
+                    (int)Math.floor(MENU_WAIT_TIME / 1000)));
+        }
         mDevice.wait(Until.gone(By.text("Photo Sphere")), MENU_WAIT_TIME);
+
+        mDevice.waitForIdle();
+    }
+
+    private void closeMenuItem() {
+        UiObject2 navUp = mDevice.findObject(By.desc("Navigate up"));
+        if (navUp != null) {
+            navUp.click();
+        } else {
+            Assert.fail(String.format("Navigation up button was not enabled with %d seconds",
+                    (int)Math.floor(MENU_WAIT_TIME / 1000)));
+        }
+        mDevice.wait(Until.gone(By.text("Help & feedback")), MENU_WAIT_TIME);
+
+        mDevice.waitForIdle();
+    }
+
+    private void selectSettingItem(String mode) {
+        UiObject2 settingItem = mDevice.findObject(By.text(mode));
+        if (settingItem != null) {
+            settingItem.click();
+        } else {
+            Assert.fail(String.format("Setting item button was not enabled with %d seconds",
+                    (int)Math.floor(MENU_WAIT_TIME / 1000)));
+        }
+        mDevice.wait(Until.gone(By.text("Help & feedback")), MENU_WAIT_TIME);
+
+        mDevice.waitForIdle();
+    }
+
+    private void selectSetting2X() {
+        UiObject2 settingItem = mDevice.findObject(By.desc("Settings"));
+        if (settingItem != null) {
+            settingItem.click();
+        } else {
+            Assert.fail(String.format("Setting item button was not enabled with %d seconds",
+                    (int)Math.floor(MENU_WAIT_TIME / 1000)));
+        }
+        mDevice.wait(Until.gone(By.text("Help & feedback")), MENU_WAIT_TIME);
+
+        mDevice.waitForIdle();
+    }
+
+    private void closeSettingItem() {
+        UiObject2 navUp = mDevice.findObject(By.desc("Navigate up"));
+        if (navUp != null) {
+            navUp.click();
+        } else {
+            Assert.fail(String.format("Navigatio up button was not enabled with %d seconds",
+                    (int)Math.floor(MENU_WAIT_TIME / 1000)));
+        }
+        mDevice.wait(Until.findObject(By.text("Help & feedback")), MENU_WAIT_TIME);
+
+        mDevice.waitForIdle();
+    }
+
+    private void selectVideoResolution(int mode) {
+        UiObject2 backCamera = mDevice.findObject(By.text("Back camera video"));
+        if (backCamera != null) {
+            backCamera.click();
+        } else {
+            Assert.fail(String.format("Back camera button was not enabled with %d seconds",
+                    (int)Math.floor(MENU_WAIT_TIME / 1000)));
+        }
+        mDevice.wait(Until.findObject(By.text("CANCEL")), MENU_WAIT_TIME);
+        mDevice.waitForIdle();
+
+        if (mode == VIDEO_4K_MODE_ON) {
+            mDevice.wait(Until.findObject(By.text(TEXT_4K_ON)), MENU_WAIT_TIME).click();
+        } else if (mode == VIDEO_HD_1080) {
+            mDevice.wait(Until.findObject(By.text(TEXT_HD_1080)), MENU_WAIT_TIME).click();
+        } else if (mode == VIDEO_HD_720){
+            mDevice.wait(Until.findObject(By.text(TEXT_HD_720)), MENU_WAIT_TIME).click();
+        } else {
+            Assert.fail("Failed to set video resolution");
+        }
+
+        mDevice.wait(Until.gone(By.text("CANCEL")), MENU_WAIT_TIME);
+
+        mDevice.waitForIdle();
     }
 
     private void closeMenu() {
@@ -386,7 +608,7 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
 
     private boolean isCameraMode() {
         if (mIsVersion3X) {
-            return (mDevice.hasObject(By.res(UI_PACKAGE_NAME, "progress_overlay")));
+            return (mDevice.hasObject(By.desc(UI_SHUTTER_DESC_CAM_3X)));
         } else {
             // TODO: identify a Haleakala UiObject2 unique Camera mode
             return !isVideoMode();
@@ -394,7 +616,11 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
     }
 
     private boolean isVideoMode() {
-        return (mDevice.hasObject(By.res(UI_PACKAGE_NAME, "recording_time_rect")));
+        if (mIsVersion3X) {
+            return (mDevice.hasObject(By.desc(UI_SHUTTER_DESC_VID_3X)));
+        } else {
+            return (mDevice.hasObject(By.res(UI_PACKAGE_NAME, "recording_time_rect")));
+        }
     }
 
     private boolean isRecording() {
@@ -406,14 +632,14 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
         closeMenu();
 
         if (mIsVersion3X) {
-            return (mDevice.hasObject(By.desc("Front camera")));
+            return (mDevice.hasObject(By.desc("Switch to back camera")));
         } else {
             // Open mode options if not open
             UiObject2 modeoptions = getModeOptionsMenuButton();
             if (modeoptions != null) {
                 modeoptions.click();
             }
-            return (mDevice.hasObject(By.desc("Front camera")));
+            return (mDevice.hasObject(By.desc("Switch to back camera")));
         }
     }
 
@@ -422,14 +648,14 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
         closeMenu();
 
         if (mIsVersion3X) {
-            return (mDevice.hasObject(By.desc("Back camera")));
+            return (mDevice.hasObject(By.desc("Switch to front camera")));
         } else {
             // Open mode options if not open
             UiObject2 modeoptions = getModeOptionsMenuButton();
             if (modeoptions != null) {
                 modeoptions.click();
             }
-            return (mDevice.hasObject(By.desc("Back camera")));
+            return (mDevice.hasObject(By.desc("Switch to front camera")));
         }
     }
 
@@ -464,12 +690,7 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
     }
 
     private UiObject2 getHdrToggleButton() {
-        if (mIsVersion3X) {
-            return mDevice.findObject(By.res(UI_PACKAGE_NAME, "hdr_plus_toggle_button"));
-        } else {
-            // Temporary no-op. TODO: implement.
-            return null;
-        }
+        return mDevice.findObject(By.res(UI_PACKAGE_NAME, "hdr_plus_toggle_button"));
     }
 
     private UiObject2 getModeOptionsMenuButton() {
@@ -544,12 +765,12 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
     }
 
     private void waitForBackEnabled() {
-        mDevice.wait(Until.hasObject(By.desc("Back camera").enabled(true)),
+        mDevice.wait(Until.hasObject(By.desc("Switch to front camera").enabled(true)),
                 SWITCH_WAIT_TIME);
     }
 
     private void waitForFrontEnabled() {
-        mDevice.wait(Until.hasObject(By.desc("Front camera").enabled(true)),
+        mDevice.wait(Until.hasObject(By.desc("Switch to back camera").enabled(true)),
                 SWITCH_WAIT_TIME);
     }
 
@@ -559,8 +780,13 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
             initalized = mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, UI_MENU_BUTTON_ID)),
                     APP_INIT_WAIT);
         } else {
-            // Temporary no-op. TODO: implement.
+            initalized = mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, UI_MODE_OPTION_TOGGLE_BUTTON_ID)),
+                    APP_INIT_WAIT);
         }
+
+        waitForCurrentShutterEnabled();
+
+        mDevice.waitForIdle();
 
         if (initalized) {
             Log.e(LOG_TAG, "Successfully initialized.");
