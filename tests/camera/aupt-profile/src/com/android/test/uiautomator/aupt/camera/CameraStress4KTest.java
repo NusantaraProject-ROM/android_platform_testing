@@ -22,9 +22,13 @@ import android.platform.test.helpers.GoogleCameraHelperImpl;
 /**
  * Tests for the camera
  */
-public class CameraStressTest extends AuptTestCase {
+public class CameraStress4KTest extends AuptTestCase {
     private GoogleCameraHelperImpl mHelper;
     private int videoTimeMS = 5 * 1000;
+
+    public static final int VIDEO_4K_MODE_ON = 1;
+    public static final int VIDEO_HD_1080 = 0;
+    public static final int VIDEO_HD_720 = -1;
 
     /**
      * {@inheritDoc}
@@ -39,31 +43,10 @@ public class CameraStressTest extends AuptTestCase {
         mHelper.open();
     }
 
-    public void testCameraStressStillCaptureBack() {
-        mHelper.goToBackCamera();
-        mHelper.goToCameraMode();
-        mHelper.setHdrMode(GoogleCameraHelperImpl.HDR_MODE_OFF);
-        mHelper.capturePhoto();
-    }
-
-    public void testCameraStressStillCaptureFront() {
-        mHelper.goToFrontCamera();
-        mHelper.goToCameraMode();
-        mHelper.setHdrMode(GoogleCameraHelperImpl.HDR_MODE_OFF);
-        mHelper.capturePhoto();
-    }
-
-    public void testCameraStressVideoBasicBack() {
+    public void testCameraStressVideoBack4K() {
         mHelper.goToBackCamera();
         mHelper.goToVideoMode();
-        mHelper.set4KMode(GoogleCameraHelperImpl.VIDEO_HD_1080);
-        mHelper.captureVideo(videoTimeMS);
-    }
-
-    public void testCameraStressVideoBasicFront() {
-        mHelper.goToFrontCamera();
-        mHelper.goToVideoMode();
-        mHelper.set4KMode(GoogleCameraHelperImpl.VIDEO_HD_1080);
+        mHelper.set4KMode(GoogleCameraHelperImpl.VIDEO_4K_MODE_ON);
         mHelper.captureVideo(videoTimeMS);
     }
 

@@ -22,9 +22,10 @@ import android.platform.test.helpers.GoogleCameraHelperImpl;
 /**
  * Tests for the camera
  */
-public class CameraStressTest extends AuptTestCase {
+public class CameraStressSnapshotTest extends AuptTestCase {
     private GoogleCameraHelperImpl mHelper;
-    private int videoTimeMS = 5 * 1000;
+    private int videoTimeMs = 5 * 1000;
+    private int snapshotStartTimeMs = 1 * 1000;
 
     /**
      * {@inheritDoc}
@@ -34,37 +35,21 @@ public class CameraStressTest extends AuptTestCase {
         super.setUp();
         mHelper = new GoogleCameraHelperImpl(getInstrumentation());
         if (getParams().containsKey("video-duration")) {
-            videoTimeMS = Integer.parseInt(getParams().getString("video-duration"));
+            videoTimeMs = Integer.parseInt(getParams().getString("video-duration"));
         }
         mHelper.open();
     }
 
-    public void testCameraStressStillCaptureBack() {
-        mHelper.goToBackCamera();
-        mHelper.goToCameraMode();
-        mHelper.setHdrMode(GoogleCameraHelperImpl.HDR_MODE_OFF);
-        mHelper.capturePhoto();
-    }
-
-    public void testCameraStressStillCaptureFront() {
-        mHelper.goToFrontCamera();
-        mHelper.goToCameraMode();
-        mHelper.setHdrMode(GoogleCameraHelperImpl.HDR_MODE_OFF);
-        mHelper.capturePhoto();
-    }
-
-    public void testCameraStressVideoBasicBack() {
+    public void testCameraStressVideoBackSnapshot() {
         mHelper.goToBackCamera();
         mHelper.goToVideoMode();
-        mHelper.set4KMode(GoogleCameraHelperImpl.VIDEO_HD_1080);
-        mHelper.captureVideo(videoTimeMS);
+        mHelper.snapshotVideo(videoTimeMs, snapshotStartTimeMs);
     }
 
-    public void testCameraStressVideoBasicFront() {
+    public void testCameraStressVideoFrontSnapshot() {
         mHelper.goToFrontCamera();
         mHelper.goToVideoMode();
-        mHelper.set4KMode(GoogleCameraHelperImpl.VIDEO_HD_1080);
-        mHelper.captureVideo(videoTimeMS);
+        mHelper.snapshotVideo(videoTimeMs, snapshotStartTimeMs);
     }
 
     /**

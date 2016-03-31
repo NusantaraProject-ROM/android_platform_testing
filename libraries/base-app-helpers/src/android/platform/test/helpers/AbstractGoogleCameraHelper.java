@@ -69,12 +69,31 @@ public abstract class AbstractGoogleCameraHelper extends AbstractStandardAppHelp
     public abstract void captureVideo(long time);
 
     /**
+     * Setup expectation:
+     *   1. in Video mode with the capture button present.
+     *   2. videoTime > snapshotStartTime
+     *
+     * This method will capture a video of length videoTime, and take a picture at snapshotStartTime.
+     * It will block until the the video is captured and the device is again idle in video mode.
+     * @param time duration of video in milliseconds
+     */
+    public abstract void snapshotVideo(long videoTime, long snapshotStartTime);
+
+    /**
      * Setup expectation: GoogleCamera is open and idle in camera mode.
      *
      * This method will set HDR to on(1), auto(-1), or off(0).
      * @param mode the integer value of the mode denoted above.
      */
     public abstract void setHdrMode(int mode);
+
+    /**
+     * Setup expectation: GoogleCamera is open and idle in camera mode.
+     *
+     * This method will set 4K mode to on(1), or off(0).
+     * @param mode the integer value of the mode denoted above.
+     */
+    public abstract void set4KMode(int mode);
 
     /**
      * Setup expectation: in Camera mode with the capture button present.
