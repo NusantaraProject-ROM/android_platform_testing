@@ -63,17 +63,14 @@ public class QuickSettingsTest extends InstrumentationTestCase {
         mResolver = getInstrumentation().getContext().getContentResolver();
         mDevice.wakeUp();
         mDevice.pressHome();
-        try {
-            mDevice.setOrientationNatural();
-        } catch (RemoteException e) {
-            throw new RuntimeException("failed to freeze device orientaion", e);
-        }
+        mDevice.setOrientationNatural();
     }
 
     @Override
     protected void tearDown() throws Exception {
         // Need to finish settings activity
         mDevice.pressHome();
+        mDevice.unfreezeRotation();
         super.tearDown();
     }
 
@@ -151,27 +148,32 @@ public class QuickSettingsTest extends InstrumentationTestCase {
         String airPlaneMode = Settings.Global.getString(
                 mResolver,
                 Settings.Global.AIRPLANE_MODE_ON);
-        WifiManager wifiManager = (WifiManager) getInstrumentation().getContext()
-                .getSystemService(Context.WIFI_SERVICE);
-        wifiManager.setWifiEnabled(!verifyOn);
-        launchQuickSetting();
-        mDevice.wait(Until.findObject(By.descContains(QuickSettingTiles.WIFI.getName())),
-                LONG_TIMEOUT).click();
-        if (verifyOn) {
-            mDevice.pressBack();
-        } else {
-            mDevice.wait(Until.findObject(By.res("android:id/toggle")), LONG_TIMEOUT).click();
-        }
-        Thread.sleep(LONG_TIMEOUT);
-        String wifiValue = Settings.Global.getString(mResolver, Settings.Global.WIFI_ON);
-        if (verifyOn) {
-            if (airPlaneMode.equals("1")) {
-                assertEquals("2", wifiValue);
+        try {
+            Settings.Global.putString(mResolver,
+                    Settings.Global.AIRPLANE_MODE_ON, "0");
+            Thread.sleep(LONG_TIMEOUT);
+            WifiManager wifiManager = (WifiManager) getInstrumentation().getContext()
+                    .getSystemService(Context.WIFI_SERVICE);
+            wifiManager.setWifiEnabled(!verifyOn);
+            launchQuickSetting();
+            mDevice.wait(Until.findObject(By.descContains(QuickSettingTiles.WIFI.getName())),
+                    LONG_TIMEOUT).click();
+            if (verifyOn) {
+                mDevice.pressBack();
             } else {
-                assertFalse(wifiValue.equals("0"));
+                mDevice.wait(Until.findObject(By.res("android:id/toggle")), LONG_TIMEOUT).click();
             }
-        } else {
-            assertEquals("0", wifiValue);
+            Thread.sleep(LONG_TIMEOUT);
+            String changedWifiValue = Settings.Global.getString(mResolver, Settings.Global.WIFI_ON);
+            Thread.sleep(LONG_TIMEOUT);
+            if (verifyOn) {
+                assertEquals("1", changedWifiValue);
+            } else {
+                assertEquals("0", changedWifiValue);
+            }
+        } finally {
+            Settings.Global.putString(getInstrumentation().getContext().getContentResolver(),
+                    Settings.Global.AIRPLANE_MODE_ON, airPlaneMode);
         }
     }
 
