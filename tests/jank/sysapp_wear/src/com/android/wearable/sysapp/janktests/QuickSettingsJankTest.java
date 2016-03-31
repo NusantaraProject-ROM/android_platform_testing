@@ -17,7 +17,6 @@
 package com.android.wearable.sysapp.janktests;
 
 import android.os.Bundle;
-import android.os.RemoteException;
 import android.os.SystemClock;
 import android.support.test.jank.GfxMonitor;
 import android.support.test.jank.JankTest;
@@ -28,6 +27,8 @@ import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
 
 import junit.framework.Assert;
+
+import java.util.concurrent.TimeoutException;
 
 /**
  * Jank tests for Quick settings when pulling down, pulling up the shade. And also when swiping in
@@ -48,12 +49,12 @@ public class QuickSettingsJankTest extends JankTestBase {
     @Override
     protected void setUp() throws Exception {
         mDevice = UiDevice.getInstance(getInstrumentation());
-        mHelper = SysAppTestHelper.getInstance(mDevice, this.getInstrumentation().getContext());
+        mHelper = SysAppTestHelper.getInstance(mDevice, this.getInstrumentation());
         mDevice.wakeUp();
         super.setUp();
     }
 
-    private void isQuickSettingShadeLaunched() {
+    private void isQuickSettingShadeLaunched() throws TimeoutException {
         SystemClock.sleep(SysAppTestHelper.SHORT_TIMEOUT + SysAppTestHelper.SHORT_TIMEOUT); //Wait until date & battery info transitions to page indicator
         UiObject2 quickSettingsShade = mDevice.wait(
                 Until.findObject(By.res(WEARABLE_APP_PACKAGE, QUICK_SETTINGS_PAGE_INDICATOR)),
@@ -63,20 +64,20 @@ public class QuickSettingsJankTest extends JankTestBase {
     }
 
     // Prepare device to be on Home before pulling down Quick settings shade
-    public void startFromHome() throws RemoteException {
+    public void startFromHome() {
         mHelper.goBackHome();
     }
 
     // Verify jank while pulling down quick settings
     @JankTest(beforeLoop = "startFromHome", afterTest = "goBackHome",
-            expectedFrames = SysAppTestHelper.MIN_FRAMES)
+            expectedFrames = SysAppTestHelper.EXPECTED_FRAMES_CARDS_TEST)
     @GfxMonitor(processName = WEARABLE_APP_PACKAGE)
     public void testPullDownQuickSettings() {
         mHelper.swipeDown();
     }
 
     // Prepare device by pulling down the quick settings shade.
-    public void openPullUpQuickSettings() throws RemoteException {
+    public void openPullUpQuickSettings() throws TimeoutException {
         mHelper.goBackHome();
         mHelper.swipeDown();
         isQuickSettingShadeLaunched();
@@ -84,7 +85,7 @@ public class QuickSettingsJankTest extends JankTestBase {
 
     // Verify jank while pulling up quick settings
     @JankTest(beforeLoop = "openPullUpQuickSettings", afterTest = "goBackHome",
-            expectedFrames = SysAppTestHelper.MIN_FRAMES)
+            expectedFrames = SysAppTestHelper.EXPECTED_FRAMES_CARDS_TEST)
     @GfxMonitor(processName = WEARABLE_APP_PACKAGE)
     public void testPullUpQuickSettings() {
         mHelper.swipeUp();
@@ -92,14 +93,14 @@ public class QuickSettingsJankTest extends JankTestBase {
 
     // Verify jank while swiping to different options in quick settings
     @JankTest(beforeLoop = "openPullUpQuickSettings", afterTest = "goBackHome",
-            expectedFrames = SysAppTestHelper.MIN_FRAMES)
+            expectedFrames = SysAppTestHelper.EXPECTED_FRAMES_CARDS_TEST)
     @GfxMonitor(processName = WEARABLE_APP_PACKAGE)
     public void testSwipeInQuickSettings() {
         mHelper.swipeLeft();
     }
 
     // Ensuring that we head back to the first screen before launching the app again
-    public void goBackHome(Bundle metrics) throws RemoteException {
+    public void goBackHome(Bundle metrics) {
         mHelper.goBackHome();
         super.afterTest(metrics);
     }

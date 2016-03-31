@@ -17,7 +17,6 @@
 package com.android.wearable.sysapp.janktests;
 
 import android.os.Bundle;
-import android.os.RemoteException;
 import android.os.SystemClock;
 import android.support.test.jank.GfxMonitor;
 import android.support.test.jank.JankTest;
@@ -26,7 +25,6 @@ import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
-import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.Until;
 
 import java.util.concurrent.TimeoutException;
@@ -52,7 +50,7 @@ public class SettingsFlingJankTest extends JankTestBase {
     @Override
     protected void setUp() throws Exception {
         mDevice = UiDevice.getInstance(getInstrumentation());
-        mHelper = SysAppTestHelper.getInstance(mDevice, this.getInstrumentation().getContext());
+        mHelper = SysAppTestHelper.getInstance(mDevice, this.getInstrumentation());
         mDevice.wakeUp();
         super.setUp();
     }
@@ -73,7 +71,7 @@ public class SettingsFlingJankTest extends JankTestBase {
     @GfxMonitor(processName = CLOCK_SETTINGS_PACKAGE)
     public void testSettingsApp() throws TimeoutException {
           UiObject2 recyclerViewContents = mDevice.wait(Until.findObject(
-              By.res(CLOCK_SETTINGS_PACKAGE,"wheel")), mHelper.SHORT_TIMEOUT);
+              By.res(CLOCK_SETTINGS_PACKAGE,"wheel")), SysAppTestHelper.SHORT_TIMEOUT);
           for (int i = 0; i < 3; i++) {
               recyclerViewContents.fling(Direction.DOWN, SysAppTestHelper.FLING_SPEED);
               recyclerViewContents.fling(Direction.UP, SysAppTestHelper.FLING_SPEED);
@@ -81,7 +79,7 @@ public class SettingsFlingJankTest extends JankTestBase {
     }
 
     // Ensuring that we head back to the first screen before launching the app again
-    public void goBackHome(Bundle metrics) throws RemoteException {
+    public void goBackHome(Bundle metrics) {
         mHelper.goBackHome();
         super.afterTest(metrics);
     }
