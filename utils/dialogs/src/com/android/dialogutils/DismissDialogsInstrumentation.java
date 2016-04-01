@@ -54,6 +54,7 @@ import java.util.Map;
  */
 public class DismissDialogsInstrumentation extends Instrumentation {
     private static final String LOG_TAG = DismissDialogsInstrumentation.class.getSimpleName();
+    private static final String IMAGE_SUBFOLDER = "dialog-dismissal";
 
     private static final long INIT_TIMEOUT = 20000;
     private static final long MAX_INIT_RETRIES = 5;
@@ -62,6 +63,7 @@ public class DismissDialogsInstrumentation extends Instrumentation {
     private static final String PARAM_APP = "apps";
     // Boolean to indicate if this should quit if any failure occurs
     private static final String PARAM_QUIT_ON_ERROR = "quitOnError";
+
     // Key for status bundles provided when running the preparer
     private static final String BUNDLE_DISMISSED_APP_KEY = "dismissedApp";
     private static final String BUNDLE_APP_ERROR = "appError";
@@ -219,8 +221,8 @@ public class DismissDialogsInstrumentation extends Instrumentation {
 
     private void takeScreenDump(String app, String suffix) {
         try {
-            File scr = new File("/sdcard/" + app + suffix + ".png");
-            File uix = new File("/sdcard/" + app + suffix + ".uix");
+            File scr = new File("/sdcard/" + IMAGE_SUBFOLDER + "/" + app + suffix + ".png");
+            File uix = new File("/sdcard/" + IMAGE_SUBFOLDER + "/" + app + suffix + ".uix");
             UiDevice.getInstance(this).takeScreenshot(scr);
             UiDevice.getInstance(this).dumpWindowHierarchy(uix);
         } catch (IOException e) {
