@@ -50,25 +50,28 @@ public class NotificationInteractionTests extends InstrumentationTestCase {
         mNotificationManager = (NotificationManager) mContext
                 .getSystemService(Context.NOTIFICATION_SERVICE);
         mHelper = new NotificationHelper(mDevice, getInstrumentation(), mNotificationManager);
-        mDevice.freezeRotation();
+        mDevice.setOrientationNatural();
         mNotificationManager.cancelAll();
     }
 
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
+        mDevice.unfreezeRotation();
         mDevice.pressHome();
         mNotificationManager.cancelAll();
     }
 
     @MediumTest
     public void testNonDismissNotification() throws Exception {
+        String text = "USB debugging connected";
         mDevice.openNotification();
-        UiObject2 obj = mDevice.wait(Until.findObject(By.text("USB debugging connected")),
-                LONG_TIMEOUT);
+        Thread.sleep(LONG_TIMEOUT);
+        UiObject2 obj = findByText(text);
+        assertNotNull(String.format("Couldn't find %s notification", text), obj);
         obj.swipe(Direction.LEFT, 1.0f);
         Thread.sleep(LONG_TIMEOUT);
-        obj = mDevice.wait(Until.findObject(By.text("USB debugging connected")),
+        obj = mDevice.wait(Until.findObject(By.text(text)),
                 LONG_TIMEOUT);
         assertNotNull("USB debugging notification has been dismissed", obj);
     }
@@ -76,6 +79,7 @@ public class NotificationInteractionTests extends InstrumentationTestCase {
     /** send out multiple notifications in order to test CLEAR ALL function */
     @MediumTest
     public void testDismissAll() throws Exception {
+        String text = "CLEAR ALL";
         Map<Integer, String> lists = new HashMap<Integer, String>();
         StatusBarNotification[] sbns = mNotificationManager.getActiveNotifications();
         int currentSbns = sbns.length;
@@ -93,11 +97,27 @@ public class NotificationInteractionTests extends InstrumentationTestCase {
         }
         if (mDevice.openNotification()) {
             Thread.sleep(LONG_TIMEOUT);
-            mDevice.wait(Until.findObject(By.text("CLEAR ALL")), LONG_TIMEOUT).click();
+            UiObject2 clearAll = findByText(text);
+            clearAll.click();
         }
         Thread.sleep(LONG_TIMEOUT);
         sbns = mNotificationManager.getActiveNotifications();
         assertTrue(String.format("%s notifications have not been cleared", sbns.length),
                 sbns.length == currentSbns);
+    }
+
+    private UiObject2 findByText(String text) throws Exception {
+        int maxAttempt = 5;
+        UiObject2 item = null;
+        while (maxAttempt-- > 0) {
+            item = mDevice.wait(Until.findObject(By.text(text)), LONG_TIMEOUT);
+            if (item == null) {
+                mDevice.swipe(mDevice.getDisplayWidth() / 2, mDevice.getDisplayHeight() / 2,
+                        mDevice.getDisplayWidth() / 2, 0, 30);
+            } else {
+                return item;
+            }
+        }
+        return null;
     }
 }
