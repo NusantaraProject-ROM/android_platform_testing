@@ -125,8 +125,9 @@ public class MapsHelperImpl extends AbstractMapsHelper {
         searchEdit.setText(query);
         // Search and wait for the directions option
         mDevice.pressEnter();
-        mDevice.wait(Until.findObject(By.res(UI_PACKAGE, "title_textbox").text(query)),
-                DIRECTIONS_WAIT);
+        boolean directions = mDevice.wait(Until.hasObject(
+                By.res(UI_PACKAGE, "title_textbox").text(query)), DIRECTIONS_WAIT);
+        Assert.assertTrue("Did not detect a directions option.", directions);
     }
 
     private void goToQueryScreen() {
@@ -135,6 +136,7 @@ public class MapsHelperImpl extends AbstractMapsHelper {
                 return;
             } else {
                 mDevice.pressBack();
+                mDevice.waitForIdle();
             }
         }
     }
