@@ -153,6 +153,12 @@ public class PlayMoviesHelperImpl extends AbstractPlayMoviesHelper {
     }
 
     private void openNavigationDrawer() {
+        UiObject2 backButton = mDevice.findObject(By.pkg(getPackage()).desc("Navigate up"));
+        if (backButton != null) {
+            backButton.click();
+            mDevice.wait(Until.findObject(By.desc("Show navigation drawer")), 5000);
+        }
+
         UiObject2 navButton = mDevice.findObject(By.desc("Show navigation drawer"));
         Assert.assertNotNull("Unable to find navigation drawer button", navButton);
         navButton.click();
