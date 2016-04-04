@@ -41,7 +41,7 @@ public class MainSettingsTests extends InstrumentationTestCase {
     private static final int TIMEOUT = 2000;
     private static final String WIFI_CATEGORY = "Wireless & networks";
     private static final String[] sWifiItems = new String[] {
-            "Wi‑Fi", "Bluetooth", "Data usage", "Other networks"
+            "Wi‑Fi", "Bluetooth", "Data usage", "More"
     };
     private static final String DEVICE_CATEGORY = "Device";
     private static final String[] sDeviceItems = new String[] {
@@ -88,7 +88,7 @@ public class MainSettingsTests extends InstrumentationTestCase {
     private void launchMainSettingsCategory(String category, String[] items) throws Exception {
         launchMainSettings(Settings.ACTION_SETTINGS);
         UiObject2 settingHeading = mDevice.wait(Until.findObject(By.text("Settings")),
-                TIMEOUT);
+                TIMEOUT * 2);
         assertNotNull("Setting menu has not loaded correctly", settingHeading);
         launchSettingItems(category);
         for (String i : items) {
