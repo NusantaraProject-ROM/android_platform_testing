@@ -142,8 +142,13 @@ public class SysAppTestHelper {
         mStatus = null;
         while (mStatus == null && count++ < 5) {
             instrumentation.getUiAutomation().executeShellCommand(GO_TO_HOME_CMD);
-            SystemClock.sleep(LONG_TIMEOUT);
-            mStatus = mDevice.findObject(STATUS_BAR_SELECTOR); // Ensure device is really on Home screen
+            SystemClock.sleep(LONG_TIMEOUT + LONG_TIMEOUT); // Extra wait is required as for watches
+                                                            // with no SIM there is a no SIM which
+                                                            // pops in everytime we launch home
+                                                            // activity.
+            mStatus = mDevice.findObject(STATUS_BAR_SELECTOR); // Ensure device is really on Home
+                                                               // screen
+
         }
     }
 
@@ -157,7 +162,8 @@ public class SysAppTestHelper {
         goBackHome(); // Start by going to Home.
 
         if (!mTitle.waitForExists(NEW_CARD_TIMEOUT_MS)) {
-            Log.d(LOG_TAG,"Card previews not available, swiping up");
+            Log.d(LOG_TAG, "Card previews not available, swiping up");
+            swipeUp();
             swipeUp();
             // For few devices, demo card preview is hidden by default. So swipe once to bring up
             // the card.
