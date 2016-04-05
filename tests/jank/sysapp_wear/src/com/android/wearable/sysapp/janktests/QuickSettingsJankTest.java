@@ -40,7 +40,7 @@ public class QuickSettingsJankTest extends JankTestBase {
     private SysAppTestHelper mHelper;
 
     private static final String WEARABLE_APP_PACKAGE = "com.google.android.wearable.app";
-    private static final String QUICK_SETTINGS_PAGE_INDICATOR = "page_indicator";
+    private static final String QUICK_SETTINGS_LAUNCHED_INDICATOR = "quicksettings_body";
 
     /*
      * (non-Javadoc)
@@ -57,7 +57,7 @@ public class QuickSettingsJankTest extends JankTestBase {
     private void isQuickSettingShadeLaunched() throws TimeoutException {
         SystemClock.sleep(SysAppTestHelper.SHORT_TIMEOUT + SysAppTestHelper.SHORT_TIMEOUT); //Wait until date & battery info transitions to page indicator
         UiObject2 quickSettingsShade = mDevice.wait(
-                Until.findObject(By.res(WEARABLE_APP_PACKAGE, QUICK_SETTINGS_PAGE_INDICATOR)),
+                Until.findObject(By.res(WEARABLE_APP_PACKAGE, QUICK_SETTINGS_LAUNCHED_INDICATOR)),
                 SysAppTestHelper.SHORT_TIMEOUT);
         Assert.assertNotNull("Quick settings shade not launched", quickSettingsShade);
 
