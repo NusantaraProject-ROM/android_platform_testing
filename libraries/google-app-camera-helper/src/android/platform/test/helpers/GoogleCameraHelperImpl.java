@@ -40,6 +40,7 @@ import junit.framework.Assert;
 public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
     private static final String LOG_TAG = GoogleCameraHelperImpl.class.getSimpleName();
     private static final String UI_ACTIVITY_VIEW_ID = "activity_root_view";
+    private static final String UI_ALBUM_FILMSTRIP_VIEW_ID = "filmstrip_view";
     private static final String UI_MENU_ID = "menuButton";
     private static final String UI_PACKAGE_NAME = "com.android.camera2";
     private static final String UI_RECORDING_TIME_ID = "recording_time";
@@ -47,6 +48,7 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
     private static final String UI_SHUTTER_DESC_CAM_2X = "Shutter";
     private static final String UI_SHUTTER_DESC_VID_3X = "Capture video";
     private static final String UI_SHUTTER_DESC_VID_2X = "Shutter";
+    private static final String UI_THUMBNAIL_ALBUM_BUTTON_ID = "rounded_thumbnail_view";
     private static final String UI_TOGGLE_BUTTON_ID = "photo_video_paginator";
     private static final String UI_BACK_FRONT_TOGGLE_BUTTON_ID = "camera_toggle_button";
     private static final String UI_MODE_OPTION_TOGGLE_BUTTON_ID = "mode_options_toggle";
@@ -742,6 +744,14 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
         }
     }
 
+    private UiObject2 getThumbnailAlbumButton() {
+        return mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_THUMBNAIL_ALBUM_BUTTON_ID));
+    }
+
+    private UiObject2 getAlbumFilmstripView() {
+        return mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_ALBUM_FILMSTRIP_VIEW_ID));
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -895,5 +905,31 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
         } else {
             return String.format("%s %s %d\n", dateString, "wtf", launchDuration);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void goToAlbum() {
+        UiObject2 thumbnailAlbumButton = getThumbnailAlbumButton();
+        Assert.assertNotNull("Could not find thumbnail album button", thumbnailAlbumButton);
+
+        thumbnailAlbumButton.click();
+        Assert.assertTrue("Could not find album filmstrip", mDevice.wait(Until.hasObject(
+                By.res(UI_PACKAGE_NAME, UI_ALBUM_FILMSTRIP_VIEW_ID)), DIALOG_TRANSITION_WAIT));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void scrollAlbum(Direction direction) {
+        Assert.assertTrue("direction must be LEFT or RIGHT", Direction.LEFT.equals(direction) ||
+                Direction.RIGHT.equals(direction));
+
+        UiObject2 albumFilmstripView = getAlbumFilmstripView();
+        Assert.assertNotNull("Could not find album filmstrip view", albumFilmstripView);
+
+        albumFilmstripView.scroll(direction, 5.0f);
+        mDevice.waitForIdle();
     }
 }
