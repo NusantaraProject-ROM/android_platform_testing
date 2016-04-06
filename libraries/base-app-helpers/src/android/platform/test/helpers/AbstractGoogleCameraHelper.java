@@ -17,6 +17,7 @@
 package android.platform.test.helpers;
 
 import android.app.Instrumentation;
+import android.support.test.uiautomator.Direction;
 
 public abstract class AbstractGoogleCameraHelper extends AbstractStandardAppHelper {
 
@@ -113,4 +114,18 @@ public abstract class AbstractGoogleCameraHelper extends AbstractStandardAppHelp
      * Temporary function.
      */
     public abstract String openWithShutterTimeString();
+
+    /**
+     * Setup expectations: in Camera mode or in Video mode
+     */
+    public abstract void goToAlbum();
+
+    /**
+     * Setup expectations:
+     *   1. in album view
+     *   2. scroll direction is either LEFT or RIGHT
+     *
+     * @param direction scroll direction, either LEFT or RIGHT
+     */
+    public abstract void scrollAlbum(Direction direction);
 }
