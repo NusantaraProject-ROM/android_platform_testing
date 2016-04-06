@@ -43,7 +43,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.concurrent.TimeUnit;
 import java.util.HashMap;
 import java.util.List;
@@ -57,9 +59,9 @@ import java.util.Map;
  * collecting bugreports and procrank data while the test is running.
  */
 public class AuptTestRunner extends InstrumentationTestRunner {
-
-    private static final String TAG = "AuptTestRunner";
     private static final String DEFAULT_JAR_PATH = "/data/local/tmp/";
+
+    private static final String LOG_TAG = "AuptTestRunner";
     private static final String DEX_OPT_PATH = "aupt-opt";
     private static final String PARAM_JARS = "jars";
     private Bundle mParams;
@@ -70,6 +72,9 @@ public class AuptTestRunner extends InstrumentationTestRunner {
     private long mTestCaseTimeout = TimeUnit.MINUTES.toMillis(10);
     private DataCollector mDataCollector;
     private File mResultsDirectory;
+
+    private boolean mDeleteOldFiles;
+    private long mFileRetainCount;
 
     private AuptPrivateTestRunner mRunner = new AuptPrivateTestRunner();
     private ClassLoader mLoader = null;
@@ -122,13 +127,20 @@ public class AuptTestRunner extends InstrumentationTestRunner {
                     GraphicsStatsMonitor.DEFAULT_INTERVAL_RATE);
             mGraphicsStatsMonitor.setIntervalRate(interval);
         }
-
         mRunner.addTestListener(new PidChecker());
         mResultsDirectory = new File(Environment.getExternalStorageDirectory(),
                 parseStringParam("outputLocation", "aupt_results"));
         if (!mResultsDirectory.exists() && !mResultsDirectory.mkdirs()) {
-            Log.w(TAG, "Did not create output directory");
+            Log.w(LOG_TAG, "Did not create output directory");
         }
+
+        mFileRetainCount = parseLongParam("fileRetainCount", -1);
+        if (mFileRetainCount == -1) {
+            mDeleteOldFiles = false;
+        } else {
+            mDeleteOldFiles = true;
+        }
+
         mDataCollector = new DataCollector(
                 TimeUnit.MINUTES.toMillis(parseLongParam("bugreportInterval", 0)),
                 TimeUnit.MINUTES.toMillis(parseLongParam("meminfoInterval", 0)),
@@ -218,7 +230,7 @@ public class AuptTestRunner extends InstrumentationTestRunner {
             fos.flush();
             fos.close();
         } catch (IOException ioe) {
-            Log.e(TAG, "error saving progress file", ioe);
+            Log.e(LOG_TAG, "error saving progress file", ioe);
         }
     }
 
@@ -271,7 +283,7 @@ public class AuptTestRunner extends InstrumentationTestRunner {
             List<JankStat> mergedStats = mGraphicsStatsMonitor.aggregateStatsImages();
             String mergedStatsString = JankStat.statsListToString(mergedStats);
 
-            Log.d(TAG, "Writing jank metrics to the graphics file");
+            Log.d(LOG_TAG, "Writing jank metrics to the graphics file");
             writeGraphicsMessage(mergedStatsString);
         }
     }
@@ -330,14 +342,14 @@ public class AuptTestRunner extends InstrumentationTestRunner {
                     // but trigger a service ANR first
                     if (mGenerateAnr) {
                         Context ctx = getTargetContext();
-                        Log.d(TAG, "About to induce artificial ANR for debugging");
+                        Log.d(LOG_TAG, "About to induce artificial ANR for debugging");
                         ctx.startService(new Intent(ctx, BadService.class));
                         // intentional delay to allow the service ANR to happen then resolve
                         try {
                             Thread.sleep(BadService.DELAY + BadService.DELAY / 4);
                         } catch (InterruptedException e) {
                             // ignore
-                            Log.d(TAG, "interrupted in wait on BadService");
+                            Log.d(LOG_TAG, "interrupted in wait on BadService");
                             return;
                         }
                     } else {
@@ -353,6 +365,10 @@ public class AuptTestRunner extends InstrumentationTestRunner {
                 for (TestCase testCase : mTestCases) {
                     setInstrumentationIfInstrumentationTestCase(testCase, mInstrumentation);
                     setupAuptIfAuptTestCase(testCase);
+
+                    // Remove device storage as necessary
+                    removeOldImagesFromDcimCameraFolder();
+
                     Thread timeBombThread = null;
                     if (mTestCaseTimeout > 0) {
                         timeBombThread = new Thread(timeBomb);
@@ -423,6 +439,32 @@ public class AuptTestRunner extends InstrumentationTestRunner {
             }
         }
 
+        private void removeOldImagesFromDcimCameraFolder() {
+            if (!mDeleteOldFiles) {
+                return;
+            }
+
+            File dcimFolder = new File(Environment.getExternalStorageDirectory(), "DCIM");
+            if (dcimFolder != null) {
+                File cameraFolder = new File(dcimFolder, "Camera");
+                if (cameraFolder != null) {
+                    File[] allMediaFiles = cameraFolder.listFiles();
+                    Arrays.sort(allMediaFiles, new Comparator<File> () {
+                        public int compare(File f1, File f2) {
+                            return Long.valueOf(f1.lastModified()).compareTo(f2.lastModified());
+                        }
+                    });
+                    for (int i = 0; i < allMediaFiles.length - mFileRetainCount; i++) {
+                        allMediaFiles[i].delete();
+                    }
+                } else {
+                    Log.w(LOG_TAG, "No Camera folder found to delete from.");
+                }
+            } else {
+                Log.w(LOG_TAG, "No DCIM folder found to delete from.");
+            }
+        }
+
         @Override
         public void clearTestListeners() {
             mTestListeners.clear();
@@ -459,7 +501,7 @@ public class AuptTestRunner extends InstrumentationTestRunner {
 
         @Override
         public void addError(Test test, Throwable t) {
-            Log.e(TAG, "Caught exception from a test", t);
+            Log.e(LOG_TAG, "Caught exception from a test", t);
             if ((t instanceof AuptTerminator)) {
                 throw (AuptTerminator)t;
             } else {
@@ -469,12 +511,12 @@ public class AuptTestRunner extends InstrumentationTestRunner {
                 }
                 // if previous line did not throw an exception, we are interested to know what
                 // caused the UI exception
-                Log.v(TAG, "Dumping UI hierarchy");
+                Log.v(LOG_TAG, "Dumping UI hierarchy");
                 try {
                     UiDevice.getInstance(AuptTestRunner.this).dumpWindowHierarchy(
                             new File("/data/local/tmp/error_dump.xml"));
                 } catch (IOException e) {
-                    Log.w(TAG, "Failed to create UI hierarchy dump for UI error", e);
+                    Log.w(LOG_TAG, "Failed to create UI hierarchy dump for UI error", e);
                 }
             }
 
@@ -597,9 +639,9 @@ public class AuptTestRunner extends InstrumentationTestRunner {
 
         @Override
         public int onStartCommand(Intent intent, int flags, int id) {
-            Log.i(TAG, "in service start -- about to hang");
-            try { Thread.sleep(DELAY); } catch (InterruptedException e) { Log.wtf(TAG, e); }
-            Log.i(TAG, "service hang finished -- stopping and returning");
+            Log.i(LOG_TAG, "in service start -- about to hang");
+            try { Thread.sleep(DELAY); } catch (InterruptedException e) { Log.wtf(LOG_TAG, e); }
+            Log.i(LOG_TAG, "service hang finished -- stopping and returning");
             stopSelf();
             return START_NOT_STICKY;
         }
