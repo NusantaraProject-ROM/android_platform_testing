@@ -42,6 +42,7 @@ public class JankStat {
         FRAME_TIME_90TH(Pattern.compile("\\s*90th percentile: (\\d+)ms"), 1),
         FRAME_TIME_95TH(Pattern.compile("\\s*95th percentile: (\\d+)ms"), 1),
         FRAME_TIME_99TH(Pattern.compile("\\s*99th percentile: (\\d+)ms"), 1),
+        SLOWEST_FRAMES_24H(Pattern.compile("\\s*Slowest frames over last 24h: (.*)"), 1),
         NUM_MISSED_VSYNC(Pattern.compile("\\s*Number Missed Vsync: (\\d+)"), 1),
         NUM_HIGH_INPUT_LATENCY(Pattern.compile("\\s*Number High input latency: (\\d+)"), 1),
         NUM_SLOW_UI_THREAD(Pattern.compile("\\s*Number Slow UI thread: (\\d+)"), 1),
@@ -74,6 +75,7 @@ public class JankStat {
     public int frameTime90th;
     public int frameTime95th;
     public int frameTime99th;
+    public String slowestFrames24h;
     public int numMissedVsync;
     public int numHighLatency;
     public int numSlowUiThread;
@@ -83,7 +85,7 @@ public class JankStat {
     public int aggregateCount;
 
     public JankStat (String pkg, long since, int total, int janky, int ft50, int ft90, int ft95,
-            int ft99, int vsync, int latency, int slowUi, int slowBmp, int slowDraw,
+            int ft99, String slow24h, int vsync, int latency, int slowUi, int slowBmp, int slowDraw,
             int aggCount) {
         packageName = pkg;
         statsSince = since;
@@ -93,6 +95,7 @@ public class JankStat {
         frameTime90th = ft90;
         frameTime95th = ft95;
         frameTime99th = ft99;
+        slowestFrames24h = slow24h;
         numMissedVsync = vsync;
         numHighLatency = latency;
         numSlowUiThread = slowUi;
@@ -132,6 +135,7 @@ public class JankStat {
                 "\n90th percentile: " + frameTime90th +
                 "\n95th percentile: " + frameTime95th +
                 "\n99th percentile: " + frameTime99th +
+                "\nSlowest frames over last 24h: " + slowestFrames24h +
                 "\nNumber Missed Vsync: " + numMissedVsync +
                 "\nNumber High input latency: " + numHighLatency +
                 "\nNumber Slow UI thread: " + numSlowUiThread +
@@ -149,7 +153,9 @@ public class JankStat {
      *     ## = 90, 95, and 99
      */
     public static JankStat mergeStatHistory (List<JankStat> statHistory) {
-        if (statHistory.size() == 1)
+        if (statHistory.size() == 0)
+            return null;
+        else if (statHistory.size() == 1)
             return statHistory.get(0);
 
         String pkg = statHistory.get(0).packageName;
@@ -161,6 +167,7 @@ public class JankStat {
         int totalNumSlowUiThread = 0;
         int totalNumSlowBitmap = 0;
         int totalNumSlowDraw = 0;
+        String totalSlow24h = "";
 
         for (JankStat stat : statHistory) {
             totalTotalFrames += stat.totalFrames;
@@ -170,6 +177,7 @@ public class JankStat {
             totalNumSlowUiThread += stat.numSlowUiThread;
             totalNumSlowBitmap += stat.numSlowBitmap;
             totalNumSlowDraw += stat.numSlowDraw;
+            totalSlow24h += stat.slowestFrames24h;
         }
 
         float wgtAvgPercentile50 = 0f;
@@ -191,8 +199,8 @@ public class JankStat {
         int perc99 = (int)Math.ceil(wgtAvgPercentile99);
 
         return new JankStat(pkg, totalStatsSince, totalTotalFrames,
-                totalJankyFrames, perc50, perc90, perc95, perc99, totalNumMissedVsync,
-                totalNumHighLatency, totalNumSlowUiThread, totalNumSlowBitmap,
+                totalJankyFrames, perc50, perc90, perc95, perc99, totalSlow24h,
+                totalNumMissedVsync, totalNumHighLatency, totalNumSlowUiThread, totalNumSlowBitmap,
                 totalNumSlowDraw, statHistory.size());
     }
 
