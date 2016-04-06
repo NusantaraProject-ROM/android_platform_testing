@@ -89,12 +89,20 @@ public abstract class AbstractGoogleCameraHelper extends AbstractStandardAppHelp
     public abstract void setHdrMode(int mode);
 
     /**
-     * Setup expectation: GoogleCamera is open and idle in camera mode.
+     * Setup expectation: GoogleCamera is open and idle in video mode.
      *
      * This method will set 4K mode to on(1), or off(0).
      * @param mode the integer value of the mode denoted above.
      */
     public abstract void set4KMode(int mode);
+
+    /**
+     * Setup expectation: GoogleCamera is open and idle in video mode.
+     *
+     * This method will set HFR mode to 240 fps (2), 120 fps (1), or off(0).
+     * @param mode the integer value of the mode denoted above.
+     */
+    public abstract void setHFRMode(int mode);
 
     /**
      * Setup expectation: in Camera mode with the capture button present.
