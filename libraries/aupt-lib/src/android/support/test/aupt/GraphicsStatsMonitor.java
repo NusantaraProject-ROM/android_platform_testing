@@ -67,7 +67,9 @@ public class GraphicsStatsMonitor {
         mIntervalTask = new TimerTask() {
             @Override
             public void run () {
-                grabStatsImage();
+                if (mIsRunning) {
+                    grabStatsImage();
+                }
             }
         };
         mIntervalRate = DEFAULT_INTERVAL_RATE;
@@ -223,11 +225,11 @@ public class GraphicsStatsMonitor {
                     String parsed50 = JankStat.StatPattern.FRAME_TIME_50TH.parse(line);
                     if (parsed50 != null || !parsed50.isEmpty()) {
                         perc50 = Integer.valueOf(parsed50);
+                        line = stream.readLine();
                     } else {
                         perc50 = -1;
                     }
                     // "90th percentile: ##ms"
-                    line = stream.readLine();
                     int perc90 = Integer.valueOf(JankStat.StatPattern.FRAME_TIME_90TH.parse(line));
                     // "95th percentile: ##ms"
                     line = stream.readLine();
@@ -235,8 +237,13 @@ public class GraphicsStatsMonitor {
                     // "99th percentile: ##ms"
                     line = stream.readLine();
                     int perc99 = Integer.valueOf(JankStat.StatPattern.FRAME_TIME_99TH.parse(line));
-                    // "Number Missed Vsync: #"
+                    // "Slowest frames last 24h: ##ms ##ms ..."
                     line = stream.readLine();
+                    String slowest = JankStat.StatPattern.SLOWEST_FRAMES_24H.parse(line);
+                    if (slowest != null && !slowest.isEmpty()) {
+                        line = stream.readLine();
+                    }
+                    // "Number Missed Vsync: #"
                     int vsync = Integer.valueOf(JankStat.StatPattern.NUM_MISSED_VSYNC.parse(line));
                     // "Number High input latency: #"
                     line = stream.readLine();
@@ -254,7 +261,7 @@ public class GraphicsStatsMonitor {
                     int draw = Integer.valueOf(JankStat.StatPattern.NUM_SLOW_DRAW.parse(line));
 
                     JankStat stat = new JankStat(proc, since, total, janky, perc50, perc90, perc95,
-                            perc99, vsync, latency, ui, bmp, draw, 1);
+                            perc99, slowest, vsync, latency, ui, bmp, draw, 1);
                     result.add(stat);
                 }
             }
