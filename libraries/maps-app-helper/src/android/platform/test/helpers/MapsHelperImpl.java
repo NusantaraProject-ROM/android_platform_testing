@@ -36,7 +36,7 @@ public class MapsHelperImpl extends AbstractMapsHelper {
 
     private static final String UI_PACKAGE = "com.google.android.apps.gmm";
 
-    private static final long DIRECTIONS_WAIT = 7500;
+    private static final long DIRECTIONS_WAIT = 25000;
 
     public MapsHelperImpl(Instrumentation instr) {
         super(instr);
@@ -127,7 +127,8 @@ public class MapsHelperImpl extends AbstractMapsHelper {
         mDevice.pressEnter();
         boolean directions = mDevice.wait(Until.hasObject(
                 By.res(UI_PACKAGE, "title_textbox").text(query)), DIRECTIONS_WAIT);
-        Assert.assertTrue("Did not detect a directions option.", directions);
+        Assert.assertTrue(String.format("Did not detect a directions option after %d seconds",
+                Math.floor(DIRECTIONS_WAIT / 1000)), directions);
     }
 
     private void goToQueryScreen() {
