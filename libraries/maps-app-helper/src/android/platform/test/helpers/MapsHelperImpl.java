@@ -128,7 +128,7 @@ public class MapsHelperImpl extends AbstractMapsHelper {
         boolean directions = mDevice.wait(Until.hasObject(
                 By.res(UI_PACKAGE, "title_textbox").text(query)), DIRECTIONS_WAIT);
         Assert.assertTrue(String.format("Did not detect a directions option after %d seconds",
-                Math.floor(DIRECTIONS_WAIT / 1000)), directions);
+                (int)Math.floor(DIRECTIONS_WAIT / 1000)), directions);
     }
 
     private void goToQueryScreen() {
