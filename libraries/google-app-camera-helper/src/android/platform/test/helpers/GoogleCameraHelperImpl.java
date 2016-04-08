@@ -56,6 +56,8 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
     private static final String UI_SHUTTER_BUTTON_ID_2X = "shutter_button";
     private static final String UI_SETTINGS_BUTTON_ID = "settings_button";
     private static final String UI_MENU_BUTTON_ID = "menuButton";
+    private static final String UI_HFR_TOGGLE_ID_J = "hfr_button";
+    private static final String UI_HFR_TOGGLE_ID_I = "hfr_mode_toggle_button";
 
     private static final String DESC_HDR_AUTO = "HDR Plus auto";
     private static final String DESC_HDR_OFF_3X = "HDR Plus off";
@@ -63,6 +65,10 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
 
     private static final String DESC_HDR_OFF_2X = "HDR off";
     private static final String DESC_HDR_ON_2X = "HDR on";
+
+    private static final String DESC_HFR_OFF = "Slow motion is off";
+    private static final String DESC_HFR_120_FPS = "Slow motion is set to 120 fps";
+    private static final String DESC_HFR_240_FPS = "Slow motion is set to 240 fps";
 
     private static final String TEXT_4K_ON = "UHD 4K";
     private static final String TEXT_HD_1080 = "HD 1080p";
@@ -75,6 +81,10 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
     public static final int VIDEO_4K_MODE_ON = 1;
     public static final int VIDEO_HD_1080 = 0;
     public static final int VIDEO_HD_720 = -1;
+
+    public static final int HFR_MODE_OFF = 0;
+    public static final int HFR_MODE_120_FPS = 1;
+    public static final int HFR_MODE_240_FPS = 2;
 
     private static final long APP_INIT_WAIT = 20000;
     private static final long DIALOG_TRANSITION_WAIT = 5000;
@@ -489,6 +499,109 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
         closeMenuItem();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public void setHFRMode(int mode) {
+        if (!isVideoMode()) {
+            Assert.fail("Must be in video mode to set HFR mode.");
+        }
+
+        // Haleakala doesn't support slow motion, so throw exception
+        if (mIsVersionH) {
+            throw new UnsupportedOperationException(
+                    "HFR not supported on this version of Google Camera.");
+        } else if (mIsVersionI) {
+            waitForHFRToggleEnabled();
+            for (int retries = 0; retries < 3; retries++) {
+                if (!isHfrMode(mode)) {
+                    getHfrToggleButton().click();
+                    mDevice.waitForIdle();
+                } else {
+                    Log.e(LOG_TAG, "Successfully set HFR mode!");
+                    mDevice.waitForIdle();
+                    waitForVideoShutterEnabled();
+                    return;
+                }
+            }
+            //If none of the 3 options match expected option, throw an exception
+            if (mode == HFR_MODE_OFF) {
+                Assert.fail("Failed to turn off the HFR mode");
+            } else {
+                Assert.fail(String.format("Failed to select HFR mode to FPS %d",
+                        (int) Math.floor(mode * 120)));
+            }
+        } else if (mIsVersionJ) {
+            if (mode == HFR_MODE_OFF) {
+                // This close button ui only appeared in hfr mode
+                UiObject2 hfrmodeclose = mDevice.findObject(By.res(UI_PACKAGE_NAME, "closeButton"));
+                if (hfrmodeclose != null) {
+                    hfrmodeclose.click();
+                } else {
+                    Assert.fail("Fail to find hfr mode close button when trying to turn off HFR mode");
+                }
+                return;
+            }
+
+            // When not in HFR interface, select menu to open HFR interface
+            if (getHfrToggleButton() == null) {
+                // If the menu is not open, open it
+                if (!isMenuOpen()) {
+                    openMenu();
+                }
+                // Select Item "Slow Motion"
+                selectSettingItem("Slow Motion");
+                // Change Slow Motion mode to 120FPS or 240FPS
+            }
+
+            waitForHFRToggleEnabled();
+            for (int retries = 0; retries < 2; retries++) {
+                if (!isHfrMode(mode)) {
+                    getHfrToggleButton().click();
+                    mDevice.waitForIdle();
+                } else {
+                    Log.e(LOG_TAG, "Successfully set HFR mode!");
+                    mDevice.waitForIdle();
+                    waitForVideoShutterEnabled();
+                    return;
+                }
+            }
+            //If neither of the 2 options match expected option, throw an exception
+            Assert.fail(String.format("Failed to select HFR mode to FPS %d",
+                    (int) Math.floor(mode * 120)));
+        } else {
+            Assert.fail("The Google Camera version is not supported.");
+        }
+    }
+
+    private boolean isHfrMode(int mode) {
+        if (mIsVersionI) {
+            String modeDesc = getHfrToggleButton().getContentDescription();
+            if (DESC_HFR_120_FPS.equals(modeDesc)) {
+                return HFR_MODE_120_FPS == mode;
+            } else if (DESC_HFR_240_FPS.equals(modeDesc)) {
+                return HFR_MODE_240_FPS == mode;
+            } else if (DESC_HFR_OFF.equals(modeDesc)) {
+                return HFR_MODE_OFF == mode;
+            } else {
+                Assert.fail("Fail to identify HFR toggle description.");
+            }
+        } else if (mIsVersionJ) {
+            if (getHfrToggleButton() == null) {
+                return HFR_MODE_OFF == mode;
+            }
+            String modeDesc = getHfrToggleButton().getContentDescription();
+            if (DESC_HFR_120_FPS.equals(modeDesc)) {
+                return HFR_MODE_120_FPS == mode;
+            } else if (DESC_HFR_240_FPS.equals(modeDesc)) {
+                return HFR_MODE_240_FPS == mode;
+            } else {
+                Assert.fail("Fail to identify HFR toggle description.");
+            }
+        }
+        return HFR_MODE_OFF == mode;
+    }
+
     private void openModeOptions2X() {
         // If the mode option is already open, return as it is
         if (mDevice.hasObject(By.res(UI_PACKAGE_NAME, "mode_options_buttons"))) {
@@ -724,12 +837,23 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
         return mDevice.findObject(By.res(UI_PACKAGE_NAME, "hdr_plus_toggle_button"));
     }
 
+    private UiObject2 getHfrToggleButton() {
+        if (mIsVersionI) {
+            return mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_HFR_TOGGLE_ID_I));
+        } else if (mIsVersionJ) {
+            return mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_HFR_TOGGLE_ID_J));
+        } else {
+            throw new UnsupportedOperationException(
+                    "HFR not supported on this version of Google Camera.");
+        }
+    }
+
     private UiObject2 getModeOptionsMenuButton() {
         return mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_MODE_OPTION_TOGGLE_BUTTON_ID));
     }
 
     private UiObject2 getCameraShutter() {
-        if (mIsVersionJ) {
+        if (mIsVersionJ || mIsVersionI) {
             return mDevice.findObject(By.desc(UI_SHUTTER_DESC_CAM_3X).enabled(true));
         } else {
             return mDevice.findObject(By.desc(UI_SHUTTER_DESC_CAM_2X).enabled(true));
@@ -737,7 +861,7 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
     }
 
     private UiObject2 getVideoShutter() {
-        if (mIsVersionJ) {
+        if (mIsVersionJ || mIsVersionI) {
             return mDevice.findObject(By.desc(UI_SHUTTER_DESC_VID_3X).enabled(true));
         } else {
             return mDevice.findObject(By.desc(UI_SHUTTER_DESC_VID_2X).enabled(true));
@@ -820,6 +944,18 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
         } else {
             mDevice.wait(Until.hasObject(By.desc("Front camera").enabled(true)),
                     SWITCH_WAIT_TIME);
+        }
+    }
+
+    private void waitForHFRToggleEnabled() {
+        if (mIsVersionJ) {
+            mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, UI_HFR_TOGGLE_ID_J).enabled(true)),
+                    SWITCH_WAIT_TIME);
+        } else if (mIsVersionI) {
+            mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, UI_HFR_TOGGLE_ID_I).enabled(true)),
+                    SWITCH_WAIT_TIME);
+        } else {
+            Assert.fail("HFR is not supported on this version of Google Camera");
         }
     }
 
