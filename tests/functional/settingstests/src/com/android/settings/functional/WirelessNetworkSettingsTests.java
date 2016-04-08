@@ -31,13 +31,13 @@ import android.support.test.uiautomator.Until;
 import android.test.InstrumentationTestCase;
 import android.test.suitebuilder.annotation.MediumTest;
 
-
 public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
     // These back button presses are performed in tearDown() to exit Wifi
     // Settings sub-menus that a test might finish in. This number should be
     // high enough to account for the deepest sub-menu a test might enter.
     private static final int NUM_BACK_BUTTON_PRESSES = 5;
     private static final int TIMEOUT = 2000;
+    private static final int SLEEP_TIME = 500;
 
     // Note: The values of these variables might affect flakiness in tests that involve
     // scrolling. Adjust where necessary.
@@ -47,25 +47,66 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
     private static final int MAX_ADD_NETWORK_BUTTON_ATTEMPTS = 3;
     private static final int SCROLL_SPEED = 2000;
 
+    private static final String TEST_SSID = "testSsid";
+    private static final String TEST_PW_GE_8_CHAR = "testPasswordGreaterThan8Char";
+    private static final String TEST_PW_LT_8_CHAR = "lt8Char";
+    private static final String TEST_DOMAIN = "testDomain.com";
+
     private static final String SETTINGS_PACKAGE = "com.android.settings";
 
     private static final String CHECKBOX_CLASS = "android.widget.CheckBox";
     private static final String SPINNER_CLASS = "android.widget.Spinner";
     private static final String EDIT_TEXT_CLASS = "android.widget.EditText";
     private static final String SCROLLVIEW_CLASS = "android.widget.ScrollView";
+    private static final String LISTVIEW_CLASS = "android.widget.ListView";
 
     private static final String ADD_NETWORK_MENU_CANCEL_BUTTON_TEXT = "CANCEL";
     private static final String ADD_NETWORK_MENU_SAVE_BUTTON_TEXT = "SAVE";
     private static final String ADD_NETWORK_PREFERENCE_TEXT = "Add network";
+    private static final String CACERT_MENU_PLEASE_SELECT_TEXT = "Please select";
+    private static final String CACERT_MENU_USE_SYSTEM_CERTS_TEXT = "Use system certificates";
+    private static final String CACERT_MENU_DO_NOT_VALIDATE_TEXT = "Do not validate";
+    private static final String USERCERT_MENU_PLEASE_SELECT_TEXT = "Please select";
+    private static final String USERCERT_MENU_DO_NOT_PROVIDE_TEXT = "Do not provide";
+    private static final String SECURITY_OPTION_NONE_TEXT = "None";
+    private static final String SECURITY_OPTION_WEP_TEXT = "WEP";
+    private static final String SECURITY_OPTION_PSK_TEXT = "WPA/WPA2 PSK";
+    private static final String SECURITY_OPTION_EAP_TEXT = "802.1x EAP";
+    private static final String EAP_METHOD_PEAP_TEXT = "PEAP";
+    private static final String EAP_METHOD_TLS_TEXT = "TLS";
+    private static final String EAP_METHOD_TTLS_TEXT = "TTLS";
+    private static final String EAP_METHOD_PWD_TEXT = "PWD";
+    private static final String EAP_METHOD_SIM_TEXT = "SIM";
+    private static final String EAP_METHOD_AKA_TEXT = "AKA";
+    private static final String EAP_METHOD_AKA_PRIME_TEXT = "AKA'";
+    private static final String PHASE2_MENU_NONE_TEXT = "None";
+    private static final String PHASE2_MENU_MSCHAPV2_TEXT = "MSCHAPV2";
+    private static final String PHASE2_MENU_GTC_TEXT = "GTC";
 
     private static final String ADD_NETWORK_MENU_ADV_TOGGLE_RES_ID = "wifi_advanced_togglebox";
     private static final String ADD_NETWORK_MENU_IP_SETTINGS_RES_ID = "ip_settings";
     private static final String ADD_NETWORK_MENU_PROXY_SETTINGS_RES_ID = "proxy_settings";
     private static final String ADD_NETWORK_MENU_SECURITY_OPTION_RES_ID = "security";
+    private static final String ADD_NETWORK_MENU_EAP_METHOD_RES_ID = "method";
     private static final String ADD_NETWORK_MENU_SSID_RES_ID = "ssid";
+    private static final String ADD_NETWORK_MENU_PHASE2_RES_ID = "phase2";
+    private static final String ADD_NETWORK_MENU_CACERT_RES_ID = "ca_cert";
+    private static final String ADD_NETWORK_MENU_USERCERT_RES_ID = "user_cert";
+    private static final String ADD_NETWORK_MENU_NO_DOMAIN_WARNING_RES_ID = "no_domain_warning";
+    private static final String ADD_NETWORK_MENU_NO_CACERT_WARNING_RES_ID = "no_ca_cert_warning";
+    private static final String ADD_NETWORK_MENU_DOMAIN_LAYOUT_RES_ID = "l_domain";
+    private static final String ADD_NETWORK_MENU_DOMAIN_RES_ID = "domain";
+    private static final String ADD_NETWORK_MENU_IDENTITY_LAYOUT_RES_ID = "l_identity";
+    private static final String ADD_NETWORK_MENU_ANONYMOUS_LAYOUT_RES_ID = "l_anonymous";
+    private static final String ADD_NETWORK_MENU_PASSWORD_LAYOUT_RES_ID = "password_layout";
+    private static final String ADD_NETWORK_MENU_SHOW_PASSWORD_LAYOUT_RES_ID =
+            "show_password_layout";
+    private static final String ADD_NETWORK_MENU_PASSWORD_RES_ID = "password";
 
     private static final BySelector ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR =
             By.scrollable(true).clazz(SCROLLVIEW_CLASS);
+    private static final BySelector SPINNER_OPTIONS_SCROLLABLE_BY_SELECTOR =
+            By.scrollable(true).clazz(LISTVIEW_CLASS);
 
     private UiDevice mDevice;
 
@@ -103,7 +144,7 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
     @MediumTest
     public void testWifiMenuLoadConfigure() throws Exception {
         loadWiFiConfigureMenu();
-        Thread.sleep(TIMEOUT);
+        Thread.sleep(SLEEP_TIME);
         UiObject2 configureWiFiHeading = mDevice.wait(Until.findObject(By.text("Configure Wi‑Fi")),
                 TIMEOUT);
         assertNotNull("Configure WiFi menu has not loaded correctly", configureWiFiHeading);
@@ -232,6 +273,282 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
         scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR, By.res(SETTINGS_PACKAGE, "dns2"));
     }
 
+    @MediumTest
+    public void testPhase2Settings() throws Exception {
+        loadAddNetworkMenu();
+        selectSecurityOption(SECURITY_OPTION_EAP_TEXT);
+
+        BySelector phase2SettingsBySelector =
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_PHASE2_RES_ID).clazz(SPINNER_CLASS);
+        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR, phase2SettingsBySelector);
+        assertEquals(PHASE2_MENU_NONE_TEXT, mDevice.wait(Until
+                .findObject(phase2SettingsBySelector), TIMEOUT).getChildren().get(0).getText());
+        mDevice.wait(Until.findObject(phase2SettingsBySelector), TIMEOUT).click();
+        Thread.sleep(SLEEP_TIME);
+
+        // Verify Phase 2 authentication spinner options.
+        assertNotNull(mDevice.wait(Until.findObject(By.text(PHASE2_MENU_NONE_TEXT)), TIMEOUT));
+        assertNotNull(mDevice.wait(Until.findObject(By.text(PHASE2_MENU_MSCHAPV2_TEXT)), TIMEOUT));
+        assertNotNull(mDevice.wait(Until.findObject(By.text(PHASE2_MENU_GTC_TEXT)), TIMEOUT));
+    }
+
+    @MediumTest
+    public void testCaCertSettings() throws Exception {
+        loadAddNetworkMenu();
+        selectSecurityOption(SECURITY_OPTION_EAP_TEXT);
+
+        BySelector caCertSettingsBySelector =
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_CACERT_RES_ID).clazz(SPINNER_CLASS);
+        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR, caCertSettingsBySelector);
+        assertEquals(CACERT_MENU_PLEASE_SELECT_TEXT, mDevice.wait(Until
+                .findObject(caCertSettingsBySelector), TIMEOUT).getChildren().get(0).getText());
+        mDevice.wait(Until.findObject(caCertSettingsBySelector), TIMEOUT).click();
+        Thread.sleep(SLEEP_TIME);
+
+        // Verify CA certificate spinner options.
+        assertNotNull(mDevice.wait(Until.findObject(
+                By.text(CACERT_MENU_PLEASE_SELECT_TEXT)), TIMEOUT));
+        assertNotNull(mDevice.wait(Until.findObject(
+                By.text(CACERT_MENU_USE_SYSTEM_CERTS_TEXT)), TIMEOUT));
+        assertNotNull(mDevice.wait(Until.findObject(
+                By.text(CACERT_MENU_DO_NOT_VALIDATE_TEXT)), TIMEOUT));
+
+        // Verify that a domain field and warning appear when the user selects the
+        // "Use system certificates" option.
+        mDevice.wait(Until.findObject(By.text(CACERT_MENU_USE_SYSTEM_CERTS_TEXT)), TIMEOUT).click();
+        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_DOMAIN_LAYOUT_RES_ID));
+        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_NO_DOMAIN_WARNING_RES_ID));
+
+        // Verify that a warning appears when the user chooses the "Do Not Validate" option.
+        mDevice.wait(Until.findObject(caCertSettingsBySelector), TIMEOUT).click();
+        mDevice.wait(Until.findObject(By.text(CACERT_MENU_DO_NOT_VALIDATE_TEXT)), TIMEOUT).click();
+        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_NO_CACERT_WARNING_RES_ID));
+    }
+
+    @MediumTest
+    public void testAddNetwork_NoSecurity() throws Exception {
+        loadAddNetworkMenu();
+        selectSecurityOption(SECURITY_OPTION_NONE_TEXT);
+
+        // Entering an SSID is enough to enable the submit button. // TODO THIS GUY
+        enterSSID(TEST_SSID);
+        assertTrue(mDevice.wait(Until
+                .findObject(By.text(ADD_NETWORK_MENU_SAVE_BUTTON_TEXT)), TIMEOUT).isEnabled());
+    }
+
+    @MediumTest
+    public void testAddNetwork_WEP() throws Exception {
+        loadAddNetworkMenu();
+        selectSecurityOption(SECURITY_OPTION_WEP_TEXT);
+        assertFalse(mDevice.wait(Until.findObject(
+                By.text(ADD_NETWORK_MENU_SAVE_BUTTON_TEXT)), TIMEOUT).isEnabled());
+
+        // Verify that WEP fields appear.
+        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_PASSWORD_LAYOUT_RES_ID));
+        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_SHOW_PASSWORD_LAYOUT_RES_ID));
+
+        // Entering an SSID alone does not enable the submit button.
+        enterSSID(TEST_SSID);
+        assertFalse(mDevice.wait(Until.findObject(
+                By.text(ADD_NETWORK_MENU_SAVE_BUTTON_TEXT)), TIMEOUT).isEnabled());
+
+        // Submit button is only enabled after a password is entered.
+        enterPassword(TEST_PW_GE_8_CHAR);
+        assertTrue(mDevice.wait(Until
+                .findObject(By.text(ADD_NETWORK_MENU_SAVE_BUTTON_TEXT)), TIMEOUT).isEnabled());
+    }
+
+    @MediumTest
+    public void testAddNetwork_PSK() throws Exception {
+        loadAddNetworkMenu();
+        selectSecurityOption(SECURITY_OPTION_PSK_TEXT);
+        assertFalse(mDevice.wait(Until.findObject(
+                By.text(ADD_NETWORK_MENU_SAVE_BUTTON_TEXT)), TIMEOUT).isEnabled());
+
+        // Verify that PSK fields appear.
+        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_PASSWORD_LAYOUT_RES_ID));
+        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_SHOW_PASSWORD_LAYOUT_RES_ID));
+
+        // Entering an SSID alone does not enable the submit button.
+        enterSSID(TEST_SSID);
+        assertFalse(mDevice.wait(Until.findObject(
+                By.text(ADD_NETWORK_MENU_SAVE_BUTTON_TEXT)), TIMEOUT).isEnabled());
+
+        // Entering an password that is too short does not enable submit button.
+        enterPassword(TEST_PW_LT_8_CHAR);
+        assertFalse(mDevice.wait(Until.findObject(
+                By.text(ADD_NETWORK_MENU_SAVE_BUTTON_TEXT)), TIMEOUT).isEnabled());
+
+        // Submit button is only enabled after a password of valid length is entered.
+        enterPassword(TEST_PW_GE_8_CHAR);
+        assertTrue(mDevice.wait(Until.findObject(
+                By.text(ADD_NETWORK_MENU_SAVE_BUTTON_TEXT)), TIMEOUT).isEnabled());
+    }
+
+    @MediumTest
+    public void testAddNetwork_EAP_PEAP() throws Exception {
+        loadAddNetworkMenu();
+        selectSecurityOption(SECURITY_OPTION_EAP_TEXT);
+        assertFalse(mDevice.wait(Until.findObject(
+                By.text(ADD_NETWORK_MENU_SAVE_BUTTON_TEXT)), TIMEOUT).isEnabled());
+
+        selectEAPMethod(EAP_METHOD_PEAP_TEXT);
+
+        // Verify that EAP-PEAP fields appear.
+        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_PHASE2_RES_ID));
+        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_CACERT_RES_ID));
+        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_IDENTITY_LAYOUT_RES_ID));
+        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_ANONYMOUS_LAYOUT_RES_ID));
+        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_PASSWORD_LAYOUT_RES_ID));
+        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_SHOW_PASSWORD_LAYOUT_RES_ID));
+
+        // Entering an SSID alone does not enable the submit button.
+        enterSSID(TEST_SSID);
+        assertFalse(mDevice.wait(Until.findObject(
+                By.text(ADD_NETWORK_MENU_SAVE_BUTTON_TEXT)), TIMEOUT).isEnabled());
+
+        verifyCaCertificateSubmitConditions();
+    }
+
+    @MediumTest
+    public void testAddNetwork_EAP_TLS() throws Exception {
+        loadAddNetworkMenu();
+        selectSecurityOption(SECURITY_OPTION_EAP_TEXT);
+        assertFalse(mDevice.wait(Until.findObject(
+                By.text(ADD_NETWORK_MENU_SAVE_BUTTON_TEXT)), TIMEOUT).isEnabled());
+
+        selectEAPMethod(EAP_METHOD_TLS_TEXT);
+
+        // Verify that EAP-TLS fields appear.
+        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_CACERT_RES_ID));
+        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_USERCERT_RES_ID));
+        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_IDENTITY_LAYOUT_RES_ID));
+
+        // Entering an SSID alone does not enable the submit button.
+        enterSSID(TEST_SSID);
+        assertFalse(mDevice.wait(Until.findObject(
+                By.text(ADD_NETWORK_MENU_SAVE_BUTTON_TEXT)), TIMEOUT).isEnabled());
+
+        // Selecting the User certificate "Do not provide" option alone does not enable the submit
+        // button.
+        selectUserCertificateOption(USERCERT_MENU_DO_NOT_PROVIDE_TEXT);
+        assertFalse(mDevice.wait(Until.findObject(
+                By.text(ADD_NETWORK_MENU_SAVE_BUTTON_TEXT)), TIMEOUT).isEnabled());
+
+        verifyCaCertificateSubmitConditions();
+    }
+
+    @MediumTest
+    public void testAddNetwork_EAP_TTLS() throws Exception {
+        loadAddNetworkMenu();
+        selectSecurityOption(SECURITY_OPTION_EAP_TEXT);
+        assertFalse(mDevice.wait(Until.findObject(
+                By.text(ADD_NETWORK_MENU_SAVE_BUTTON_TEXT)), TIMEOUT).isEnabled());
+
+        selectEAPMethod(EAP_METHOD_TTLS_TEXT);
+
+        // Verify that EAP-TLS fields appear.
+        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_PHASE2_RES_ID));
+        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_CACERT_RES_ID));
+        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_IDENTITY_LAYOUT_RES_ID));
+        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_ANONYMOUS_LAYOUT_RES_ID));
+        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_PASSWORD_LAYOUT_RES_ID));
+
+        // Entering an SSID alone does not enable the submit button.
+        enterSSID(TEST_SSID);
+        assertFalse(mDevice.wait(Until.findObject(
+                By.text(ADD_NETWORK_MENU_SAVE_BUTTON_TEXT)), TIMEOUT).isEnabled());
+
+        verifyCaCertificateSubmitConditions();
+    }
+
+    @MediumTest
+    public void testAddNetwork_EAP_PWD() throws Exception {
+        loadAddNetworkMenu();
+        selectSecurityOption(SECURITY_OPTION_EAP_TEXT);
+        assertFalse(mDevice.wait(Until.findObject(
+                By.text(ADD_NETWORK_MENU_SAVE_BUTTON_TEXT)), TIMEOUT).isEnabled());
+
+        selectEAPMethod(EAP_METHOD_PWD_TEXT);
+
+        // Verify that EAP-TLS fields appear.
+        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_IDENTITY_LAYOUT_RES_ID));
+        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_PASSWORD_LAYOUT_RES_ID));
+
+        // Entering an SSID alone enables the submit button.
+        enterSSID(TEST_SSID);
+        assertTrue(mDevice.wait(Until.findObject(
+                By.text(ADD_NETWORK_MENU_SAVE_BUTTON_TEXT)), TIMEOUT).isEnabled());
+    }
+
+    @MediumTest
+    public void testAddNetwork_EAP_SIM() throws Exception {
+        loadAddNetworkMenu();
+        selectSecurityOption(SECURITY_OPTION_EAP_TEXT);
+        assertFalse(mDevice.wait(Until.findObject(
+                By.text(ADD_NETWORK_MENU_SAVE_BUTTON_TEXT)), TIMEOUT).isEnabled());
+
+        selectEAPMethod(EAP_METHOD_SIM_TEXT);
+
+        // Entering an SSID alone enables the submit button.
+        enterSSID(TEST_SSID);
+        assertTrue(mDevice.wait(Until.findObject(
+                By.text(ADD_NETWORK_MENU_SAVE_BUTTON_TEXT)), TIMEOUT).isEnabled());
+    }
+
+    @MediumTest
+    public void testAddNetwork_EAP_AKA() throws Exception {
+        loadAddNetworkMenu();
+        selectSecurityOption(SECURITY_OPTION_EAP_TEXT);
+        assertFalse(mDevice.wait(Until.findObject(
+                By.text(ADD_NETWORK_MENU_SAVE_BUTTON_TEXT)), TIMEOUT).isEnabled());
+
+        selectEAPMethod(EAP_METHOD_AKA_TEXT);
+
+        // Entering an SSID alone enables the submit button.
+        enterSSID(TEST_SSID);
+        assertTrue(mDevice.wait(Until.findObject(
+                By.text(ADD_NETWORK_MENU_SAVE_BUTTON_TEXT)), TIMEOUT).isEnabled());
+    }
+
+    @MediumTest
+    public void testAddNetwork_EAP_AKA_PRIME() throws Exception {
+        loadAddNetworkMenu();
+        selectSecurityOption(SECURITY_OPTION_EAP_TEXT);
+        assertFalse(mDevice.wait(Until.findObject(
+                By.text(ADD_NETWORK_MENU_SAVE_BUTTON_TEXT)), TIMEOUT).isEnabled());
+
+        selectEAPMethod(EAP_METHOD_AKA_PRIME_TEXT);
+
+        // Entering an SSID alone enables the submit button.
+        enterSSID(TEST_SSID);
+        assertTrue(mDevice.wait(Until.findObject(
+                By.text(ADD_NETWORK_MENU_SAVE_BUTTON_TEXT)), TIMEOUT).isEnabled());
+    }
+
     private void verifyKeepWiFiOnDuringSleep(String settingToBeVerified, int settingValue)
             throws Exception {
         loadWiFiConfigureMenu();
@@ -239,7 +556,7 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
                 .click();
         mDevice.wait(Until.findObject(By.clazz("android.widget.CheckedTextView")
                 .text(settingToBeVerified)), TIMEOUT).click();
-        Thread.sleep(TIMEOUT);
+        Thread.sleep(SLEEP_TIME);
         int keepWiFiOnSetting =
                 Settings.Global.getInt(getInstrumentation().getContext().getContentResolver(),
                 Settings.Global.WIFI_SLEEP_POLICY);
@@ -261,7 +578,7 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
         loadWiFiConfigureMenu();
         mDevice.wait(Until.findObject(By.res("android:id/switch_widget").text(switchText)), TIMEOUT)
                 .click();
-        Thread.sleep(TIMEOUT);
+        Thread.sleep(SLEEP_TIME);
         String wifiNotificationValue =
                 Settings.Global.getString(getInstrumentation().getContext().getContentResolver(),
                 Settings.Global.WIFI_NETWORKS_AVAILABLE_NOTIFICATION_ON);
@@ -282,7 +599,7 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
          mDevice.wait(Until
                  .findObject(By.res(SETTINGS_PACKAGE, "switch_bar").text(switchText)), TIMEOUT)
                  .click();
-         Thread.sleep(TIMEOUT);
+         Thread.sleep(SLEEP_TIME);
          String wifiValue =
                  Settings.Global.getString(getInstrumentation().getContext().getContentResolver(),
                  Settings.Global.WIFI_ON);
@@ -292,6 +609,24 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
          else {
              assertEquals("0", wifiValue);
          }
+    }
+
+    private void verifyCaCertificateSubmitConditions() throws Exception {
+        // Selecting the CA certificate "Do not validate" option enables the submit button.
+        selectCaCertificateOption(CACERT_MENU_DO_NOT_VALIDATE_TEXT);
+        assertTrue(mDevice.wait(Until.findObject(
+                By.text(ADD_NETWORK_MENU_SAVE_BUTTON_TEXT)), TIMEOUT).isEnabled());
+
+        // However, selecting the CA certificate "Use system certificates option" is not enough to
+        // enable the submit button.
+        selectCaCertificateOption(CACERT_MENU_USE_SYSTEM_CERTS_TEXT);
+        assertFalse(mDevice.wait(Until.findObject(
+                By.text(ADD_NETWORK_MENU_SAVE_BUTTON_TEXT)), TIMEOUT).isEnabled());
+
+        // Submit button is only enabled after a domain is entered as well.
+        enterDomain(TEST_DOMAIN);
+        assertTrue(mDevice.wait(Until.findObject(
+                By.text(ADD_NETWORK_MENU_SAVE_BUTTON_TEXT)), TIMEOUT).isEnabled());
     }
 
     private void loadWiFiSettingsPage(boolean wifiEnabled) throws Exception {
@@ -326,12 +661,72 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
                 + " retries");
     }
 
-    private UiObject2 scrollToObject(BySelector scrollabelSelector, BySelector objectSelector)
+    private void selectSecurityOption(String securityOption) throws Exception {
+        // We might not need to scroll to the security options if not enough add network menu
+        // options are visible.
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_SECURITY_OPTION_RES_ID)
+                .clazz(SPINNER_CLASS)).click();
+        Thread.sleep(SLEEP_TIME);
+        mDevice.wait(Until.findObject(By.text(securityOption)), TIMEOUT).click();
+    }
+
+    private void selectEAPMethod(String eapMethod) throws Exception {
+        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_EAP_METHOD_RES_ID).clazz(SPINNER_CLASS))
+                .click();
+        Thread.sleep(SLEEP_TIME);
+        scrollToObject(SPINNER_OPTIONS_SCROLLABLE_BY_SELECTOR, By.text(eapMethod)).click();
+    }
+
+    private void selectUserCertificateOption(String userCertificateOption) throws Exception {
+        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_USERCERT_RES_ID).clazz(SPINNER_CLASS))
+                .click();
+        mDevice.wait(Until.findObject(By.text(userCertificateOption)), TIMEOUT).click();
+    }
+
+    private void selectCaCertificateOption(String caCertificateOption) throws Exception {
+        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_CACERT_RES_ID).clazz(SPINNER_CLASS))
+                .click();
+        mDevice.wait(Until.findObject(By.text(caCertificateOption)), TIMEOUT).click();
+    }
+
+    private void enterSSID(String ssid) throws Exception {
+        // We might not need to scroll to the SSID option if not enough add network menu options
+        // are visible.
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_SSID_RES_ID).clazz(EDIT_TEXT_CLASS))
+                .setText(ssid);
+    }
+
+    private void enterPassword(String password) throws Exception {
+        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_PASSWORD_RES_ID).clazz(EDIT_TEXT_CLASS))
+                .setText(password);
+    }
+
+    private void enterDomain(String domain) throws Exception {
+        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_DOMAIN_RES_ID)).setText(domain);
+    }
+
+    // Use this if the UI object might or might not need to be scrolled to.
+    private UiObject2 findOrScrollToObject(BySelector scrollableSelector, BySelector objectSelector)
             throws Exception {
-        int attempts = 0;
-        UiObject2 scrollable = mDevice.wait(Until.findObject(scrollabelSelector), TIMEOUT);
+        UiObject2 object = mDevice.wait(Until.findObject(objectSelector), TIMEOUT);
+        if (object == null) {
+            object = scrollToObject(scrollableSelector, objectSelector);
+        }
+        return object;
+    }
+
+    private UiObject2 scrollToObject(BySelector scrollableSelector, BySelector objectSelector)
+            throws Exception {
+        UiObject2 scrollable = mDevice.wait(Until.findObject(scrollableSelector), TIMEOUT);
         if (scrollable == null) {
-            fail("Could not find scrollable UI object identified by " + scrollabelSelector);
+            fail("Could not find scrollable UI object identified by " + scrollableSelector);
         }
         UiObject2 found = null;
         // Scroll all the way up first, then all the way down.
@@ -341,9 +736,10 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
             boolean canScrollAgain = scrollable.scroll(Direction.UP, SCROLL_UP_PERCENT,
                     SCROLL_SPEED);
             found = mDevice.findObject(objectSelector);
-            if (found != null || !canScrollAgain) break;
+            if (found != null) return found;
+            if (!canScrollAgain) break;
         }
-        for (attempts = 0; found == null && attempts < MAX_SCROLL_ATTEMPTS; ++attempts) {
+        for (int attempts = 0; found == null && attempts < MAX_SCROLL_ATTEMPTS; ++attempts) {
             // Return value of UiObject2.scroll() is not reliable, so do not use it in loop
             // condition, in case it causes this loop to terminate prematurely.
             scrollable.scroll(Direction.DOWN, SCROLL_DOWN_PERCENT, SCROLL_SPEED);
