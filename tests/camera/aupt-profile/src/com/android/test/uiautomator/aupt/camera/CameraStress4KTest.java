@@ -26,10 +26,6 @@ public class CameraStress4KTest extends AuptTestCase {
     private GoogleCameraHelperImpl mHelper;
     private int videoTimeMS = 5 * 1000;
 
-    public static final int VIDEO_4K_MODE_ON = 1;
-    public static final int VIDEO_HD_1080 = 0;
-    public static final int VIDEO_HD_720 = -1;
-
     /**
      * {@inheritDoc}
      */
