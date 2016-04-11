@@ -8,8 +8,8 @@ import java.io.InputStreamReader;
 
 public class VersionCheckingTest extends InstrumentationTestCase {
 
-    protected static final String OLD_VERSION = "/cache/version.old";
-    protected static final String NEW_VERSION = "/cache/version.new";
+    protected static final String OLD_VERSION = "/data/version.old";
+    protected static final String NEW_VERSION = "/data/version.new";
     protected static final String KEY_BUILD_ID = "ro.build.version.incremental";
     protected static final String KEY_BOOTLOADER = "ro.bootloader";
     protected static final String KEY_BASEBAND = "ro.build.expect.baseband";
