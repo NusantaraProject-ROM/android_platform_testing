@@ -26,7 +26,8 @@ import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
 import android.test.InstrumentationTestCase;
 import android.test.suitebuilder.annotation.LargeTest;
-
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import junit.framework.Assert;
 
 public class PortableStorageTests extends InstrumentationTestCase {
@@ -43,11 +44,7 @@ public class PortableStorageTests extends InstrumentationTestCase {
         mUiAutomation = getInstrumentation().getUiAutomation();
         storageHelper = ExternalStorageHelper.getInstance(mDevice, mContext, mUiAutomation,
                 getInstrumentation());
-        storageHelper.partitionDisk("public");
-    }
-
-    @LargeTest
-    public void testTest() throws Exception {
+        mDevice.setOrientationNatural();
     }
 
     /**
@@ -56,40 +53,31 @@ public class PortableStorageTests extends InstrumentationTestCase {
     @LargeTest
     public void testAdoptAsPortableViaUI() throws InterruptedException {
         // ensure notification
-        storageHelper.openSdCardSetUpNotification();
-        UiObject2 adoptFlowUi = mDevice.wait(Until.findObject(By.desc("Set up")),
-                storageHelper.TIMEOUT);
-        adoptFlowUi.clickAndWait(Until.newWindow(), storageHelper.TIMEOUT);
-        adoptFlowUi = mDevice.wait(Until.findObject(
-                        By.res("com.android.settings:id/storage_wizard_init_external_title")),
-                storageHelper.TIMEOUT);
-        adoptFlowUi.click();
-        adoptFlowUi = mDevice.wait(Until.findObject(
-                By.res("com.android.settings:id/suw_navbar_next").text("Next")),
-                storageHelper.TIMEOUT);
-        adoptFlowUi.clickAndWait(Until.newWindow(), storageHelper.TIMEOUT);
-        mDevice.wait(Until.findObject(By.text("Done")), storageHelper.TIMEOUT).clickAndWait(
-                Until.newWindow(), storageHelper.TIMEOUT);
-        storageHelper.hasPublicVolume();
+        storageHelper.executeShellCommand(String.format(
+                "sm partition %s %s", storageHelper.getAdoptionDisk(), "public"));
+        Thread.sleep(storageHelper.TIMEOUT);
+        storageHelper.setupAsPortableUiFlow();
+        storageHelper.executeShellCommand(String.format("sm forget all"));
+        Thread.sleep(storageHelper.TIMEOUT);
     }
 
     /**
-     * tests to ensure that resources on portable storage can be copied via UI
+     * tests to ensure copy option is visible for items on portable storage
      */
     @LargeTest
     public void testCopyFromPortable() throws InterruptedException {
+        ensureHasPortable();
         storageHelper.createFiles(2,
                 String.format("/storage/%s", storageHelper.getAdoptionVolumeUuid("public")));
         storageHelper.openSDCard();
         mDevice.wait(Until.findObject(By.res("android:id/title").text("Test_0")),
                 storageHelper.TIMEOUT).click(storageHelper.TIMEOUT);
-        mDevice.wait(Until.findObject(By.desc("More options")), storageHelper.TIMEOUT).click();
+        mDevice.wait(Until.findObject(By.desc(Pattern.compile("More options",
+                Pattern.CASE_INSENSITIVE))), storageHelper.TIMEOUT).click();
         assertNotNull(mDevice.wait(Until.findObject(By.res("android:id/title").text("Copy to…")),
                 2 * storageHelper.TIMEOUT));
         mDevice.wait(Until.findObject(By.res("android:id/title").text("Copy to…")),
                 storageHelper.TIMEOUT).clickAndWait(Until.newWindow(), storageHelper.TIMEOUT);
-        assertNotNull(mDevice.wait(Until.findObject(By.text("Save to")), storageHelper.TIMEOUT));
-        // click and ensure item can be copied to
         mDevice.pressBack();
     }
 
@@ -98,15 +86,16 @@ public class PortableStorageTests extends InstrumentationTestCase {
      */
     @LargeTest
     public void testDeleteFromPortable() throws InterruptedException {
+        ensureHasPortable();
         storageHelper.createFiles(2,
                 String.format("/storage/%s", storageHelper.getAdoptionVolumeUuid("public")));
         storageHelper.openSDCard();
         mDevice.wait(Until.findObject(By.res("android:id/title").text("Test_0")),
                 storageHelper.TIMEOUT).click(storageHelper.TIMEOUT);
         mDevice.wait(Until.findObject(By.res("com.android.documentsui:id/menu_sort")),
-                storageHelper.TIMEOUT).click();
+                storageHelper.TIMEOUT).clickAndWait(Until.newWindow(), storageHelper.TIMEOUT);
         assertNull(mDevice.wait(Until.findObject(By.res("android:id/title").text("Test_0")),
-                        2 * storageHelper.TIMEOUT));
+                2 * storageHelper.TIMEOUT));
     }
 
     /**
@@ -114,6 +103,7 @@ public class PortableStorageTests extends InstrumentationTestCase {
      */
     @LargeTest
     public void testExplorePortable() throws InterruptedException {
+        ensureHasPortable();
         // Create 2 random files on SDCard
         storageHelper.createFiles(2,
                 String.format("/storage/%s", storageHelper.getAdoptionVolumeUuid("public")));
@@ -134,12 +124,13 @@ public class PortableStorageTests extends InstrumentationTestCase {
      */
     @LargeTest
     public void testShareableFromPortable() throws InterruptedException {
+        ensureHasPortable();
         storageHelper.createFiles(2,
                 String.format("/storage/%s", storageHelper.getAdoptionVolumeUuid("public")));
         storageHelper.openSDCard();
         mDevice.wait(Until.findObject(By.res("android:id/title").text("Test_0")),
                 storageHelper.TIMEOUT).click(storageHelper.TIMEOUT);
-        mDevice.wait(Until.findObject(By.res("com.android.documentsui:id/menu_search")),
+        mDevice.wait(Until.findObject(By.res("com.android.documentsui:id/menu_list")),
                 storageHelper.TIMEOUT).click();
         assertNotNull(mDevice.wait(Until.findObject(By.res("android:id/resolver_list")),
                 storageHelper.TIMEOUT));
@@ -152,16 +143,17 @@ public class PortableStorageTests extends InstrumentationTestCase {
      */
     @LargeTest
     public void testPortableOverflowSettings() throws InterruptedException {
+        ensureHasPortable();
         storageHelper.createFiles(2,
                 String.format("/storage/%s", storageHelper.getAdoptionVolumeUuid("public")));
         storageHelper.openSDCard();
         mDevice.wait(Until.findObject(By.res("android:id/title").text("Test_0")),
                 storageHelper.TIMEOUT).click(storageHelper.TIMEOUT);
-        assertTrue(mDevice.wait(Until.hasObject(By.res("com.android.documentsui:id/menu_search")),
+        assertTrue(mDevice.wait(Until.hasObject(By.res(storageHelper.DOCUMENTS_PKG, "menu_search")),
                 storageHelper.TIMEOUT));
-        assertTrue(mDevice.wait(Until.hasObject(By.res("com.android.documentsui:id/menu_sort")),
+        assertTrue(mDevice.wait(Until.hasObject(By.res(storageHelper.DOCUMENTS_PKG, "menu_sort")),
                 storageHelper.TIMEOUT));
-        assertTrue(mDevice.wait(Until.hasObject(By.desc("More options")), storageHelper.TIMEOUT));
+        assertTrue(mDevice.wait(Until.hasObject(By.text("1 selected")), storageHelper.TIMEOUT));
     }
 
     /**
@@ -169,13 +161,20 @@ public class PortableStorageTests extends InstrumentationTestCase {
      */
     @LargeTest
     public void testPortableSettings() throws InterruptedException {
+        ensureHasPortable();
         storageHelper.openSDCard();
-        mDevice.wait(Until.findObject(By.desc("More options")), storageHelper.TIMEOUT).click();
-        mDevice.wait(Until.findObject(By.text("Settings")), storageHelper.TIMEOUT).clickAndWait(
-                Until.newWindow(), storageHelper.TIMEOUT);
-        assertTrue(mDevice.wait(Until.hasObject(By.text("Eject")), storageHelper.TIMEOUT));
-        assertTrue(mDevice.wait(Until.hasObject(By.text("Format")), storageHelper.TIMEOUT));
-        assertTrue(mDevice.wait(Until.hasObject(By.text("Format as internal")),
+        Pattern pattern = Pattern.compile("More options", Pattern.CASE_INSENSITIVE);
+        mDevice.wait(Until.findObject(By.desc(pattern)), storageHelper.TIMEOUT).click();
+        pattern = Pattern.compile("Storage settings", Pattern.CASE_INSENSITIVE);
+        mDevice.wait(Until.findObject(By.text(pattern)), storageHelper.TIMEOUT)
+                .clickAndWait(
+                        Until.newWindow(), storageHelper.TIMEOUT);
+        pattern = Pattern.compile("Eject", Pattern.CASE_INSENSITIVE);
+        assertTrue(mDevice.wait(Until.hasObject(By.text(pattern)), storageHelper.TIMEOUT));
+        pattern = Pattern.compile("Format", Pattern.CASE_INSENSITIVE);
+        assertTrue(mDevice.wait(Until.hasObject(By.text(pattern)), storageHelper.TIMEOUT));
+        pattern = Pattern.compile("Format as internal", Pattern.CASE_INSENSITIVE);
+        assertTrue(mDevice.wait(Until.hasObject(By.text(pattern)),
                 storageHelper.TIMEOUT));
     }
 
@@ -184,17 +183,16 @@ public class PortableStorageTests extends InstrumentationTestCase {
      */
     @LargeTest
     public void testEjectPortable() throws InterruptedException {
-        storageHelper.openSDCard();
-        mDevice.wait(Until.findObject(By.desc("More options")), storageHelper.TIMEOUT).click();
-        mDevice.wait(Until.findObject(By.text("Settings")), storageHelper.TIMEOUT).clickAndWait(
-                Until.newWindow(), storageHelper.TIMEOUT);
-        UiObject2 eject = mDevice.wait(Until.findObject(By.text("Eject")), storageHelper.TIMEOUT);
-        eject.clickAndWait(Until.newWindow(), storageHelper.TIMEOUT);
+        ensureHasPortable();
+        storageHelper.openStorageSettings();
+        mDevice.wait(Until.findObject(By.res(storageHelper.SETTINGS_PKG, "unmount")),
+                storageHelper.TIMEOUT).click();
         assertTrue(mDevice.wait(Until.hasObject(By.res("android:id/summary").text("Ejected")),
-                2 * storageHelper.TIMEOUT));
+                4 * storageHelper.TIMEOUT));
         mDevice.wait(Until.findObject(By.textContains("SD card")), 2 * storageHelper.TIMEOUT)
                 .click();
-        mDevice.wait(Until.findObject(By.res("android:id/button1").text("Mount")),
+        Pattern pattern = Pattern.compile("Mount", Pattern.CASE_INSENSITIVE);
+        mDevice.wait(Until.findObject(By.res("android:id/button1").text(pattern)),
                 2 * storageHelper.TIMEOUT).clickAndWait(Until.newWindow(), storageHelper.TIMEOUT);
         ;
     }
@@ -204,14 +202,20 @@ public class PortableStorageTests extends InstrumentationTestCase {
      */
     @LargeTest
     public void testFormatPortable() throws InterruptedException {
+        ensureHasPortable();
         storageHelper.openSDCard();
-        mDevice.wait(Until.findObject(By.desc("More options")), storageHelper.TIMEOUT).click();
-        mDevice.wait(Until.findObject(By.text("Settings")), storageHelper.TIMEOUT).clickAndWait(
-                Until.newWindow(), storageHelper.TIMEOUT);
+        Pattern pattern = Pattern.compile("More options", Pattern.CASE_INSENSITIVE);
+        mDevice.wait(Until.findObject(By.desc(pattern)), storageHelper.TIMEOUT).click();
+        pattern = Pattern.compile("Storage settings", Pattern.CASE_INSENSITIVE);
+        mDevice.wait(Until.findObject(By.text(pattern)), storageHelper.TIMEOUT)
+                .clickAndWait(
+                        Until.newWindow(), storageHelper.TIMEOUT);
         UiObject2 format = mDevice.wait(Until.findObject(By.text("Format")), storageHelper.TIMEOUT);
         format.clickAndWait(Until.newWindow(), storageHelper.TIMEOUT);
-        mDevice.wait(Until.findObject(By.text("Erase & format")), storageHelper.TIMEOUT).click();
-        mDevice.wait(Until.findObject(By.text("Done")), 20 * storageHelper.TIMEOUT).click();
+        pattern = Pattern.compile("Erase & Format", Pattern.CASE_INSENSITIVE);
+        mDevice.wait(Until.findObject(By.text(pattern)), storageHelper.TIMEOUT).click();
+        pattern = Pattern.compile("Done", Pattern.CASE_INSENSITIVE);
+        mDevice.wait(Until.findObject(By.text(pattern)), 20 * storageHelper.TIMEOUT).click();
     }
 
     /**
@@ -219,18 +223,34 @@ public class PortableStorageTests extends InstrumentationTestCase {
      */
     @LargeTest
     public void testFormatPortableAsAdoptable() throws InterruptedException {
-        storageHelper.openSDCard();
-        mDevice.wait(Until.findObject(By.desc("More options")), storageHelper.TIMEOUT).click();
-        mDevice.wait(Until.findObject(By.text("Settings")), storageHelper.TIMEOUT).clickAndWait(
-                Until.newWindow(), storageHelper.TIMEOUT);
-        assertTrue(mDevice.wait(Until.hasObject(By.text("Format")), storageHelper.TIMEOUT));
-        assertTrue(mDevice.wait(Until.hasObject(By.text("Format as internal")),
-                storageHelper.TIMEOUT));
-        // Next flow is same as adoption, so no need to test
+        try {
+            ensureHasPortable();
+            storageHelper.openSDCard();
+            Pattern pattern = Pattern.compile("More options", Pattern.CASE_INSENSITIVE);
+            mDevice.wait(Until.findObject(By.desc(pattern)), storageHelper.TIMEOUT).click();
+            pattern = Pattern.compile("Storage settings", Pattern.CASE_INSENSITIVE);
+            mDevice.wait(Until.findObject(By.text(pattern)), storageHelper.TIMEOUT)
+                    .clickAndWait(
+                            Until.newWindow(), storageHelper.TIMEOUT);
+            pattern = Pattern.compile("Format", Pattern.CASE_INSENSITIVE);
+            assertTrue(mDevice.wait(Until.hasObject(By.text(pattern)), storageHelper.TIMEOUT));
+            pattern = Pattern.compile("Format as internal", Pattern.CASE_INSENSITIVE);
+            assertTrue(mDevice.wait(Until.hasObject(By.text(pattern)),
+                    storageHelper.TIMEOUT));
+            // Next flow is same as adoption, so no need to test
+        } finally {
+            storageHelper.partitionDisk("public");
+        }
+    }
+
+    private void ensureHasPortable() throws InterruptedException {
+        storageHelper.partitionDisk("public");
+        storageHelper.settingsUiCleanUp();
     }
 
     @Override
     protected void tearDown() throws Exception {
+        mDevice.unfreezeRotation();
         mDevice.pressBack();
         mDevice.pressHome();
         super.tearDown();
