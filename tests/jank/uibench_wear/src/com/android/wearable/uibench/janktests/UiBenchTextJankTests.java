@@ -16,7 +16,10 @@
 
 package com.android.wearable.uibench.janktests;
 
-import android.content.Intent;
+import static com.android.wearable.uibench.janktests.UiBenchJankTestsHelper.EXPECTED_FRAMES;
+import static com.android.wearable.uibench.janktests.UiBenchJankTestsHelper.PACKAGE_NAME;
+
+import android.os.Build.VERSION;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.os.SystemClock;
@@ -24,17 +27,17 @@ import android.support.test.jank.GfxMonitor;
 import android.support.test.jank.JankTest;
 import android.support.test.jank.JankTestBase;
 import android.support.test.uiautomator.By;
-import android.support.test.uiautomator.StaleObjectException;
 import android.support.test.uiautomator.Direction;
+import android.support.test.uiautomator.StaleObjectException;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.Until;
+import android.view.KeyEvent;
 import android.widget.ListView;
 
 import com.android.wearable.uibench.janktests.UiBenchJankTestsHelper;
-import static com.android.wearable.uibench.janktests.UiBenchJankTestsHelper.PACKAGE_NAME;
-import static com.android.wearable.uibench.janktests.UiBenchJankTestsHelper.EXPECTED_FRAMES;
+
 import junit.framework.Assert;
 
 /**
@@ -61,20 +64,39 @@ public class UiBenchTextJankTests extends JankTestBase {
         super.tearDown();
     }
 
+    // TODO(kneas): After b/27897448 is fixed, remove method or TODO
+    public void forceDeviceHome() throws RemoteException {
+        // Put device to sleep to go back home
+        if (VERSION.SDK_INT >= 20) {
+            mDevice.pressKeyCode(KeyEvent.KEYCODE_SLEEP);
+        } else {
+            mDevice.sleep();
+        }
+        SystemClock.sleep(mHelper.LONG_TIMEOUT);
+        mDevice.wakeUp();
+    }
+
     // Open Text Components
-    public void openTextComponents(String componentName) {
+    public void openTextComponents(String componentName) throws RemoteException {
+        // TODO(kneas): Remove if statement after b/27897448 is fixed
+        // Needed in case the EditTextTyping tests fails, leaving it in the test with the keyboard
+        // open
+        if (mDevice.getProductName().equals("nemo")) {
+            forceDeviceHome();
+        }
         mHelper.launchUiBench();
         mHelper.openTextInList("Text");
         mHelper.openTextInList(componentName);
     }
 
     // Open EditText Typing
-    public void openEditTextTyping() {
+    public void openEditTextTyping() throws RemoteException {
         openTextComponents("EditText Typing");
     }
 
     // Measure jank metrics for EditText Typing
-    @JankTest(beforeTest="openEditTextTyping", afterTest="goBackHome",
+    // TODO(kneas): Change afterTest to "goBackHome" after b/27897448 is fixed
+    @JankTest(beforeTest="openEditTextTyping", afterTest="goBackHomeEditText",
         expectedFrames=EXPECTED_FRAMES)
     @GfxMonitor(processName=PACKAGE_NAME)
     public void testEditTextTyping() {
@@ -82,7 +104,7 @@ public class UiBenchTextJankTests extends JankTestBase {
     }
 
     // Open Layout Cache High Hitrate
-    public void openLayoutCacheHighHitrate() {
+    public void openLayoutCacheHighHitrate() throws RemoteException {
         openTextComponents("Layout Cache High Hitrate");
     }
 
@@ -93,7 +115,8 @@ public class UiBenchTextJankTests extends JankTestBase {
     public void testLayoutCacheHighHitrateFling() {
         UiObject2 layoutCacheHighHitrateContents = mDevice.wait(Until.findObject(
                 By.clazz(ListView.class)), mHelper.TIMEOUT);
-        Assert.assertNotNull("LayoutCacheHighHitrateContents isn't found", layoutCacheHighHitrateContents);
+        Assert.assertNotNull("LayoutCacheHighHitrateContents isn't found",
+                layoutCacheHighHitrateContents);
 
         for (int i = 0; i < mHelper.INNER_LOOP; i++) {
             try {
@@ -114,7 +137,7 @@ public class UiBenchTextJankTests extends JankTestBase {
     }
 
     // Open Layout Cache Low Hitrate
-    public void openLayoutCacheLowHitrate() {
+    public void openLayoutCacheLowHitrate() throws RemoteException {
         openTextComponents("Layout Cache Low Hitrate");
     }
 
@@ -125,7 +148,8 @@ public class UiBenchTextJankTests extends JankTestBase {
     public void testLayoutCacheLowHitrateFling() {
         UiObject2 layoutCacheLowHitrateContents = mDevice.wait(Until.findObject(
                 By.clazz(ListView.class)), mHelper.TIMEOUT);
-        Assert.assertNotNull("LayoutCacheLowHitrateContents isn't found", layoutCacheLowHitrateContents);
+        Assert.assertNotNull("LayoutCacheLowHitrateContents isn't found",
+                layoutCacheLowHitrateContents);
 
         for (int i = 0; i < mHelper.INNER_LOOP; i++) {
             try {
@@ -149,5 +173,23 @@ public class UiBenchTextJankTests extends JankTestBase {
     public void goBackHome(Bundle metrics) throws UiObjectNotFoundException {
             mHelper.goBackHome();
            super.afterTest(metrics);
+    }
+
+    // Workaround for b/27897448 until investigation is complete
+    // TODO(kneas): Remove once b/27897448 is fixed
+    public void goBackHomeEditText(Bundle metrics)
+            throws RemoteException, UiObjectNotFoundException {
+        if (mDevice.getProductName() == "nemo") {
+            forceDeviceHome();
+            super.afterTest(metrics);
+            // Relaunch the app. Ideally we're still in EditText, but it's no longer typing
+            // goBackHome will now be able to use the back button, since the keyboard is hidden
+            SystemClock.sleep(mHelper.SHORT_TIMEOUT + mHelper.SHORT_TIMEOUT);
+            mHelper.launchUiBench();
+            mHelper.goBackHome();
+        }
+        else {
+            goBackHome(metrics);
+        }
     }
 }
