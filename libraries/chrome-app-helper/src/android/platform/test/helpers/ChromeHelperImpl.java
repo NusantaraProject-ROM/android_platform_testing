@@ -246,6 +246,8 @@ public class ChromeHelperImpl extends AbstractChromeHelper {
         UiObject2 urlLoc = mDevice.findObject(By.res(getPackage(), UI_SEARCH_BOX_ID));
         if (urlLoc != null) {
             urlLoc.click();
+            // Waits for the animation to complete.
+            mDevice.waitForIdle();
         }
 
         // Afterwards, URL bar has id URL_BAR_ID; must re-select
