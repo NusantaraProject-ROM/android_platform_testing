@@ -354,6 +354,8 @@ public class GmailHelperImpl extends AbstractGmailHelper {
         }
 
         if (bodyField != null) {
+            // Ensure the focus is left in the body field.
+            bodyField.click();
             bodyField.setText(body);
         } else {
             Assert.fail("Failed to find a 'Body' field.");
