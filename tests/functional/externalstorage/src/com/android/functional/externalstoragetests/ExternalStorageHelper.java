@@ -46,9 +46,14 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ExternalStorageHelper {
     public static final String TEST_TAG = "StorageFunctionalTest";
+    public final String SETTINGS_PKG = "com.android.settings";
+    public final String PLAYSTORE_PKG = "com.android.vending";
+    public final String DOCUMENTS_PKG = "com.android.documentsui";
     public static final Map<String, String> APPLIST = new HashMap<String, String>();
     static {
         APPLIST.put("w35location1", "com.test.w35location1");
@@ -84,11 +89,44 @@ public class ExternalStorageHelper {
      */
     public UiObject2 openSdCardSetUpNotification() throws InterruptedException {
         boolean success = mDevice.openNotification();
-        Thread.sleep(2000);
+        Thread.sleep(TIMEOUT);
         UiObject2 sdCardDetected = mDevice
                 .wait(Until.findObject(By.textContains("SD card detected")), TIMEOUT);
         Assert.assertNotNull(sdCardDetected);
         return sdCardDetected;
+    }
+
+    /**
+     * Open Storage settings, then SD Card
+     */
+    public void openStorageSettings() throws InterruptedException {
+        Intent intent = new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        mContext.startActivity(intent);
+        Thread.sleep(TIMEOUT * 2);
+    }
+
+    /**
+     * Open Storage settings, then SD Card
+     */
+    public void openSDCard() throws InterruptedException {
+        openStorageSettings();
+        mDevice.wait(Until.findObject(By.textContains("SD card")), TIMEOUT)
+                .clickAndWait(Until.newWindow(), TIMEOUT);
+    }
+
+    public String executeShellCommand(String command) {
+        ParcelFileDescriptor pfd = mUiAutomation.executeShellCommand(command);
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(new FileInputStream(pfd.getFileDescriptor())))) {
+            String str = reader.readLine();
+            Log.d(TEST_TAG, String.format("Executing command: %s", command));
+            return str;
+        } catch (IOException e) {
+            Log.e(TEST_TAG, e.getMessage());
+        }
+
+        return null;
     }
 
     /**
@@ -102,16 +140,16 @@ public class ExternalStorageHelper {
         }
     }
 
-    /**
-     * Open Storage settings, then SD Card
-     */
-    public void openSDCard() throws InterruptedException {
-        Intent intent = new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        mContext.startActivity(intent);
-        Thread.sleep(TIMEOUT * 2);
-        mDevice.wait(Until.findObject(By.textContains("SD card")), TIMEOUT)
-                .clickAndWait(Until.newWindow(), TIMEOUT);
+    public void fillInStorage(String location, String filename, int sizeInKb) {
+        executeShellCommand(String.format("dd if=/dev/zero of=%s/%s bs=1024 count=%d",
+                location, filename, sizeInKb));
+    }
+
+    public int getFreeSpaceSize(File path) {
+        StatFs stat = new StatFs(path.getPath());
+        long blockSize = stat.getBlockSize();
+        long availableBlocks = stat.getAvailableBlocks();
+        return (int) ((availableBlocks * blockSize) / (1024 * 1024));
     }
 
     public boolean hasAdoptable() {
@@ -119,10 +157,15 @@ public class ExternalStorageHelper {
     }
 
     public String getAdoptionDisk() throws InterruptedException {
-        final String disks = executeShellCommand("sm list-disks adoptable");
-        if (disks == null || disks.length() == 0) {
-            throw new AssertionError("Devices that claim to support adoptable storage must have "
-                    + "adoptable media inserted during CTS to verify correct behavior");
+        int counter = 10;
+        String disks = null;
+        while (((disks == null || disks.length() == 0)) && counter > 0) {
+            disks = executeShellCommand("sm list-disks adoptable");
+            Thread.sleep(TIMEOUT);
+            --counter;
+        }
+        if (counter == 0) {
+            throw new AssertionError("Devices must have adoptable media inserted");
         }
         return disks.split("\n")[0].trim();
     }
@@ -150,44 +193,43 @@ public class ExternalStorageHelper {
                         return info;
                     }
                 }
-                Thread.sleep(1000);
+                Thread.sleep(TIMEOUT);
             }
         }
         return null;
     }
 
     public void partitionDisk(String type) throws InterruptedException {
-        if ((!hasPublicVolume() && type.equals("public"))
-                || (hasPublicVolume() && type.equals("private"))) {
+        if (type.equals("private")) {
             executeShellCommand(String.format("sm partition %s %s", getAdoptionDisk(), type));
+            Thread.sleep(2 * TIMEOUT);
+        } else if (!hasPublicVolume() && type.equals("public")) {
             executeShellCommand("sm forget all");
+            executeShellCommand(String.format("sm partition %s %s", getAdoptionDisk(), type));
+            Thread.sleep(2 * TIMEOUT);
+            setupAsPortableUiFlow();
         }
     }
 
-    public String executeShellCommand(String command) {
-        ParcelFileDescriptor pfd = mUiAutomation.executeShellCommand(command);
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(new FileInputStream(pfd.getFileDescriptor())))) {
-            String str = reader.readLine();
-            Log.d(TEST_TAG, String.format("Executing command: %s", command));
-            return str;
-        } catch (IOException e) {
-            Log.e(TEST_TAG, e.getMessage());
-        }
+    public void setupAsPortableUiFlow() throws InterruptedException {
+        openSdCardSetUpNotification();
+        Thread.sleep(TIMEOUT);
+        Pattern pattern = Pattern.compile("Set up", Pattern.CASE_INSENSITIVE);
+        UiObject2 adoptFlowUi = mDevice.wait(Until.findObject(By.desc(pattern)), TIMEOUT);
+        adoptFlowUi.clickAndWait(Until.newWindow(), TIMEOUT);
+        adoptFlowUi = mDevice.wait(Until.findObject(
+                By.res(SETTINGS_PKG, "storage_wizard_init_external_title")),
+                TIMEOUT);
+        adoptFlowUi.click();
+        pattern = Pattern.compile("Next", Pattern.CASE_INSENSITIVE);
+        adoptFlowUi = mDevice.wait(Until.findObject(By.text(pattern)),
+                TIMEOUT);
+        adoptFlowUi.clickAndWait(Until.newWindow(), TIMEOUT);
+        pattern = Pattern.compile("Done", Pattern.CASE_INSENSITIVE);
+        mDevice.wait(Until.findObject(By.text(pattern)), TIMEOUT).clickAndWait(
+                Until.newWindow(), TIMEOUT);
+        hasPublicVolume();
 
-        return null;
-    }
-
-    public void fillInStorage(String location, String filename, int sizeInKb) {
-        executeShellCommand(String.format("dd if=/dev/zero of=%s/%s bs=1024 count=%d",
-                location, filename, sizeInKb));
-    }
-
-    public int getFreeSpaceSize(File path) {
-        StatFs stat = new StatFs(path.getPath());
-        long blockSize = stat.getBlockSize();
-        long availableBlocks = stat.getAvailableBlocks();
-        return (int) ((availableBlocks * blockSize) / (1024 * 1024));
     }
 
     public void installFromPlayStore(String appName) {
@@ -195,10 +237,10 @@ public class ExternalStorageHelper {
         mHelper.open();
         mHelper.doSearch(appName);
         mHelper.selectFirstResult();
-        mDevice.wait(Until.findObject(By.res("com.android.vending:id/buy_button").text("INSTALL")),
+        mDevice.wait(Until.findObject(By.res(PLAYSTORE_PKG, "buy_button").text("INSTALL")),
                 TIMEOUT).clickAndWait(Until.newWindow(), 2 * TIMEOUT);
         SystemClock.sleep(2 * TIMEOUT);
-        mDevice.wait(Until.findObject(By.res("com.android.vending:id/launch_button").text("OPEN")),
+        mDevice.wait(Until.findObject(By.res(PLAYSTORE_PKG, "launch_button").text("OPEN")),
                 5 * TIMEOUT);
     }
 
@@ -220,6 +262,11 @@ public class ExternalStorageHelper {
         Assert.assertTrue(String.format("%s doesn't exist!", packageName),
                 doesPackageExist(packageName));
         return getPackageInfo(packageName).applicationInfo.dataDir;
+    }
+
+    public void settingsUiCleanUp() {
+        executeShellCommand("pm clear " + SETTINGS_PKG);
+        executeShellCommand("pm clear " + DOCUMENTS_PKG);
     }
 
     private static class LocalVolumeInfo {
