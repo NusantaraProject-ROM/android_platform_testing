@@ -44,6 +44,7 @@ public class ChromeHelperImpl extends AbstractChromeHelper {
     private static final long APP_INIT_WAIT = 10000;
     private static final long MAX_DIALOG_TRANSITION = 5000;
     private static final long PAGE_LOAD_TIMEOUT = 30 * 1000;
+    private static final long ANIMATION_TIMEOUT = 3000;
 
     private String mPackageName;
     private String mLauncherName;
@@ -247,7 +248,7 @@ public class ChromeHelperImpl extends AbstractChromeHelper {
         if (urlLoc != null) {
             urlLoc.click();
             // Waits for the animation to complete.
-            mDevice.waitForIdle();
+            mDevice.wait(Until.findObject(By.res(getPackage(), UI_URL_BAR_ID)), ANIMATION_TIMEOUT);
         }
 
         // Afterwards, URL bar has id URL_BAR_ID; must re-select
