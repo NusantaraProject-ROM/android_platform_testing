@@ -58,6 +58,7 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
     private static final String UI_MENU_BUTTON_ID = "menuButton";
     private static final String UI_HFR_TOGGLE_ID_J = "hfr_button";
     private static final String UI_HFR_TOGGLE_ID_I = "hfr_mode_toggle_button";
+    private static final String UI_SPECIAL_MODE_CLOSE = "closeButton";
 
     private static final String DESC_HDR_AUTO = "HDR Plus auto";
     private static final String DESC_HDR_OFF_3X = "HDR Plus off";
@@ -534,9 +535,12 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
         } else if (mIsVersionJ) {
             if (mode == HFR_MODE_OFF) {
                 // This close button ui only appeared in hfr mode
-                UiObject2 hfrmodeclose = mDevice.findObject(By.res(UI_PACKAGE_NAME, "closeButton"));
+                UiObject2 hfrmodeclose = mDevice.findObject(By.res(UI_PACKAGE_NAME,
+                        UI_SPECIAL_MODE_CLOSE));
                 if (hfrmodeclose != null) {
                     hfrmodeclose.click();
+                    mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, UI_MENU_BUTTON_ID)),
+                            MENU_WAIT_TIME);
                 } else {
                     Assert.fail("Fail to find hfr mode close button when trying to turn off HFR mode");
                 }
@@ -544,7 +548,20 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
             }
 
             // When not in HFR interface, select menu to open HFR interface
-            if (getHfrToggleButton() == null) {
+            if (mDevice.hasObject(By.res(UI_PACKAGE_NAME, UI_SPECIAL_MODE_CLOSE))
+                    && !isVideoMode()) {
+                UiObject2 specialmodeclose = mDevice.findObject(By.res(UI_PACKAGE_NAME,
+                        UI_SPECIAL_MODE_CLOSE));
+                if (specialmodeclose != null) {
+                    specialmodeclose.click();
+                    mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, UI_MENU_BUTTON_ID)),
+                            MENU_WAIT_TIME);
+                } else {
+                    Assert.fail("Fail to close other special mode before setting hfr mode");
+                }
+            }
+
+            if (!mDevice.hasObject(By.res(UI_PACKAGE_NAME, UI_SPECIAL_MODE_CLOSE))) {
                 // If the menu is not open, open it
                 if (!isMenuOpen()) {
                     openMenu();
@@ -554,7 +571,15 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
                 // Change Slow Motion mode to 120FPS or 240FPS
             }
 
-            waitForHFRToggleEnabled();
+            mDevice.waitForIdle();
+            // Detect if hfr toggle exists in the interface
+            if (!mDevice.hasObject(By.res(UI_PACKAGE_NAME, UI_HFR_TOGGLE_ID_J))) {
+                if (mode == HFR_MODE_240_FPS) {
+                    Assert.fail("The 240 fps HFR mode is not supported on the device.");
+                }
+                return;
+            }
+
             for (int retries = 0; retries < 2; retries++) {
                 if (!isHfrMode(mode)) {
                     getHfrToggleButton().click();
