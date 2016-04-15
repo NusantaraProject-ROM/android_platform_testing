@@ -50,6 +50,7 @@ public class NotificationSecurityTests extends InstrumentationTestCase {
     @Override
     public void tearDown() throws Exception {
         mNotificationManager.cancelAll();
+        mHelper.swipeUp();
         super.tearDown();
     }
 
