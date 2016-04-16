@@ -6,6 +6,8 @@
         <uses-library android:name="android.test.runner" />
     </application>
 
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
     <uses-sdk android:minSdkVersion="19"
         android:targetSdkVersion="24" />
     <instrumentation
