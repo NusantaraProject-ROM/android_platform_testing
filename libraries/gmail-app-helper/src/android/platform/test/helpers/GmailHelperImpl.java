@@ -212,8 +212,9 @@ public class GmailHelperImpl extends AbstractGmailHelper {
      */
     @Override
     public void goToComposeEmail() {
+        Assert.assertTrue("Gmail is not on the Inbox or Primary page", isInPrimaryOrInbox());
         UiObject2 compose = mDevice.findObject(By.desc("Compose"));
-        Assert.assertNotNull("No compose button found", compose);
+        Assert.assertNotNull("Compose button not found", compose);
         compose.clickAndWait(Until.newWindow(), COMPOSE_TIMEOUT);
         waitForCompose();
     }
@@ -422,6 +423,7 @@ public class GmailHelperImpl extends AbstractGmailHelper {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean closeNavigationDrawer() {
         UiObject2 navDrawer = mDevice.wait(Until.findObject(
                 By.clazz(ImageButton.class).desc("Close navigation drawer")), 1000);
@@ -430,6 +432,29 @@ public class GmailHelperImpl extends AbstractGmailHelper {
             return true;
         }
         return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isInComposeEmail(){
+        return mDevice.findObject(By.res(UI_PACKAGE_NAME, "compose")) != null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isInPrimaryOrInbox() {
+        if (isMultiPaneActivity()) {
+            return (mDevice.hasObject(By.res(UI_PACKAGE_NAME, "actionbar_title").text("Primary")) ||
+                    mDevice.hasObject(By.res(UI_PACKAGE_NAME, "actionbar_title").text("Inbox")));
+        } else {
+            return getConversationList() != null &&
+                    (mDevice.hasObject(By.text("Primary")) ||
+                            mDevice.hasObject(By.text("Inbox")));
+        }
     }
 
     private UiObject2 getToField() {
@@ -466,17 +491,6 @@ public class GmailHelperImpl extends AbstractGmailHelper {
 
     private boolean isInConversation() {
         return mDevice.hasObject(By.res(UI_PACKAGE_NAME, UI_CONVERSATION_PAGER));
-    }
-
-    private boolean isInPrimaryOrInbox() {
-        if (isMultiPaneActivity()) {
-            return (mDevice.hasObject(By.res(UI_PACKAGE_NAME, "actionbar_title").text("Primary")) ||
-                    mDevice.hasObject(By.res(UI_PACKAGE_NAME, "actionbar_title").text("Inbox")));
-        } else {
-            return getConversationList() != null &&
-                    (mDevice.hasObject(By.text("Primary")) ||
-                    mDevice.hasObject(By.text("Inbox")));
-        }
     }
 
     private boolean isNavDrawerOpen() {
