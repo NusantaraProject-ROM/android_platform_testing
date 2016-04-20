@@ -47,6 +47,20 @@ public abstract class AbstractGmailHelper extends AbstractStandardAppHelper {
     public abstract void goToComposeEmail();
 
     /**
+     * Checks if the current view is the compose email view.
+     *
+     * @return true if the current view is the compose email view, false otherwise.
+     */
+    public abstract boolean isInComposeEmail();
+
+    /**
+     * Checks if the app is open on the Inbox or Primary page.
+     *
+     * @return true if the current view is the Inbox or Primary page, false otherwise.
+     */
+    public abstract boolean isInPrimaryOrInbox();
+
+    /**
      * Setup expectations: Gmail is open and on the Inbox or Primary page.
      *
      * This method will open the (index)'th visible e-mail in the list and block until the e-mail is
