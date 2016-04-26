@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.Set;
 
 public class GoogleKeyboardHelperImpl extends AbstractGoogleKeyboardHelper {
@@ -90,6 +91,14 @@ public class GoogleKeyboardHelperImpl extends AbstractGoogleKeyboardHelper {
      * {@inheritDoc}
      */
     @Override
+    public void open() {
+        Log.w(TAG, "No method defined to open Google Keyboard. (no-op)");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public String getPackage() {
         return UI_PACKAGE_NAME;
     }
@@ -107,6 +116,17 @@ public class GoogleKeyboardHelperImpl extends AbstractGoogleKeyboardHelper {
      */
     @Override
     public void dismissInitialDialogs() {
+        mDevice.pressHome();
+        UiObject2 searchPlate = mDevice.findObject(
+                By.res("com.google.android.googlequicksearchbox", "search_plate"));
+        if (searchPlate != null) {
+            searchPlate.click();
+            BySelector closeSelector = By.text(Pattern.compile("CLOSE", Pattern.CASE_INSENSITIVE));
+            Assert.assertTrue("Could not find close button to dismiss Google Keyboard dialog",
+                    mDevice.wait(Until.hasObject(closeSelector), 5000));
+            mDevice.findObject(closeSelector).click();
+            mDevice.wait(Until.gone(closeSelector), 5000);
+        }
 
     }
 
