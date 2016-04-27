@@ -34,12 +34,25 @@ import junit.framework.Assert;
 public class MapsHelperImpl extends AbstractMapsHelper {
     private static final String LOG_TAG = MapsHelperImpl.class.getSimpleName();
 
-    private static final String UI_PACKAGE = "com.google.android.apps.gmm";
+    private static String UI_PACKAGE;
 
-    private static final long DIRECTIONS_WAIT = 25000;
+    private static final long WIFI_RELATED_WAIT = 25000;
+
+    private boolean mIsVersion9p30;
 
     public MapsHelperImpl(Instrumentation instr) {
         super(instr);
+
+        try {
+            mIsVersion9p30 = getVersion().startsWith("9.30.");
+            if (mIsVersion9p30) {
+                UI_PACKAGE = "com.google.android.apps.maps";
+            } else {
+                UI_PACKAGE = "com.google.android.apps.gmm";
+            }
+        } catch (NameNotFoundException e) {
+            Log.e(LOG_TAG, String.format("Unable to find package by name, %s", getPackage()));
+        }
     }
 
     /**
@@ -64,46 +77,81 @@ public class MapsHelperImpl extends AbstractMapsHelper {
      */
     @Override
     public void dismissInitialDialogs() {
-        // Accept terms
+        // ToS welcome dialog
+        boolean successTosDismiss = false;
+        int tryCounter = 0;
+
         String text = "ACCEPT & CONTINUE";
         Pattern pattern = Pattern.compile(text, Pattern.CASE_INSENSITIVE);
-        UiObject2 terms = mDevice.wait(Until.findObject(By.text(pattern)), 5000);
-        if (terms != null) {
-            terms.click();
-            mDevice.waitForIdle();
+
+        while (!successTosDismiss) {
+            if (++tryCounter > 3) {
+                throw new IllegalStateException("Unable to dismiss Maps dialog due to poor WiFi");
+            }
+
+            UiObject2 tryAgainWifiButton = mDevice.findObject(By.text("TRY AGAIN"));
+            if (tryAgainWifiButton != null) {
+                tryAgainWifiButton.click();
+                mDevice.wait(Until.gone(By.text("TRY AGAIN")), 2500);
+            }
+
+            UiObject2 terms = mDevice.wait(Until.findObject(By.text(pattern)), 10000);
+            if (terms != null) {
+                terms.click();
+                successTosDismiss = mDevice.wait(Until.hasObject(
+                        By.res(UI_PACKAGE, "search_omnibox_text_box")), WIFI_RELATED_WAIT);
+            } else {
+                Log.e(LOG_TAG, "Did not find a ToS dialog.");
+            }
         }
 
-        // Enable location services
+        if (mIsVersion9p30) {
+            exit();
+            open();
+        }
+
+        // Location services dialog
         text = "YES, I'M IN";
         pattern = Pattern.compile(text, Pattern.CASE_INSENSITIVE);
         UiObject2 location = mDevice.wait(Until.findObject(By.text(pattern)), 5000);
         if (location != null) {
             location.click();
             mDevice.waitForIdle();
+        } else {
+            Log.e(LOG_TAG, "Did not find a location services dialog.");
         }
 
-        // Dismiss cling
-        UiObject2 cling = mDevice.wait(
-                Until.findObject(By.res(UI_PACKAGE, "tapherehint_textbox")), 5000);
-        if (cling != null) {
-            cling.click();
-            mDevice.waitForIdle();
+        if (!mIsVersion9p30) {
+            // Tap here dialog
+            UiObject2 cling = mDevice.wait(
+                    Until.findObject(By.res(UI_PACKAGE, "tapherehint_textbox")), 5000);
+            if (cling != null) {
+                cling.click();
+                mDevice.waitForIdle();
+            } else {
+                Log.e(LOG_TAG, "Did not find 'tap here' dialog");
+            }
+
+            // Reset map dialog
+            UiObject2 resetView = mDevice.wait(
+                    Until.findObject(By.res(UI_PACKAGE, "mylocation_button")), 5000);
+            if (resetView != null) {
+                resetView.click();
+                mDevice.waitForIdle();
+            } else {
+                Log.e(LOG_TAG, "Did not find 'reset map' dialog.");
+            }
         }
 
-        // Reset map view
-        UiObject2 resetView = mDevice.findObject(By.res(UI_PACKAGE, "mylocation_button"));
-        if (resetView != null) {
-            resetView.click();
-            mDevice.waitForIdle();
-        }
-
-        // Dismiss side menu dialog
+        // 'Side menu' dialog
         text = "GOT IT";
         pattern = Pattern.compile(text, Pattern.CASE_INSENSITIVE);
         BySelector gotIt = By.text(Pattern.compile("GOT IT", Pattern.CASE_INSENSITIVE));
-        UiObject2 sideMenuTut = mDevice.findObject(gotIt);
+        UiObject2 sideMenuTut = mDevice.wait(Until.findObject(gotIt), 5000);
         if (sideMenuTut != null) {
             sideMenuTut.click();
+        } else {
+            Log.e(LOG_TAG, "Did not find any 'side menu' dialog.");
         }
     }
 
@@ -126,9 +174,9 @@ public class MapsHelperImpl extends AbstractMapsHelper {
         // Search and wait for the directions option
         mDevice.pressEnter();
         boolean directions = mDevice.wait(Until.hasObject(
-                By.res(UI_PACKAGE, "title_textbox").text(query)), DIRECTIONS_WAIT);
+                By.res(UI_PACKAGE, "title_textbox").text(query)), WIFI_RELATED_WAIT);
         Assert.assertTrue(String.format("Did not detect a directions option after %d seconds",
-                (int)Math.floor(DIRECTIONS_WAIT / 1000)), directions);
+                (int)Math.floor(WIFI_RELATED_WAIT / 1000)), directions);
     }
 
     private void goToQueryScreen() {
