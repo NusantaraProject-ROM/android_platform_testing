@@ -29,6 +29,7 @@ import android.util.Log;
 import android.platform.test.helpers.IStandardAppHelper;
 import android.platform.test.helpers.ChromeHelperImpl;
 import android.platform.test.helpers.GoogleCameraHelperImpl;
+import android.platform.test.helpers.GoogleKeyboardHelperImpl;
 import android.platform.test.helpers.GmailHelperImpl;
 import android.platform.test.helpers.MapsHelperImpl;
 import android.platform.test.helpers.PhotosHelperImpl;
@@ -80,6 +81,7 @@ public class DismissDialogsInstrumentation extends Instrumentation {
         mKeyHelperMap = new HashMap<String, Class<? extends IStandardAppHelper>>();
         mKeyHelperMap.put("Chrome", ChromeHelperImpl.class);
         mKeyHelperMap.put("GoogleCamera", GoogleCameraHelperImpl.class);
+        mKeyHelperMap.put("GoogleKeyboard", GoogleKeyboardHelperImpl.class);
         mKeyHelperMap.put("Gmail", GmailHelperImpl.class);
         mKeyHelperMap.put("Maps", MapsHelperImpl.class);
         mKeyHelperMap.put("Photos", PhotosHelperImpl.class);
