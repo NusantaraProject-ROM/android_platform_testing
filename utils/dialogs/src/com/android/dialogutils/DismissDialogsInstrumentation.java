@@ -110,20 +110,22 @@ public class DismissDialogsInstrumentation extends Instrumentation {
     public void onStart() {
         super.onStart();
 
+        mDevice = UiDevice.getInstance(this);
+
         UiWatchers watcherManager = new UiWatchers();
         watcherManager.registerAnrAndCrashWatchers(this);
 
         try {
-            UiDevice.getInstance(this).setOrientationNatural();
+            mDevice.setOrientationNatural();
         } catch (RemoteException e) {
             Log.e(LOG_TAG, e.toString());
         }
 
         for (int retry = 1; retry <= MAX_INIT_RETRIES; retry++) {
-            ILauncherStrategy launcherStrategy = LauncherStrategyFactory.getInstance(
-                    UiDevice.getInstance(this)).getLauncherStrategy();
-            boolean foundHome = UiDevice.getInstance(this).wait(
-                    Until.hasObject(launcherStrategy.getWorkspaceSelector()), INIT_TIMEOUT);
+            ILauncherStrategy launcherStrategy =
+                    LauncherStrategyFactory.getInstance(mDevice).getLauncherStrategy();
+            boolean foundHome = mDevice.wait(Until.hasObject(
+                    launcherStrategy.getWorkspaceSelector()), INIT_TIMEOUT);
             if (foundHome) {
                 sendStatusUpdate(Activity.RESULT_OK, "launcher");
                 break;
@@ -133,7 +135,16 @@ public class DismissDialogsInstrumentation extends Instrumentation {
                 } else {
                     sendStatusUpdate(Activity.RESULT_CANCELED, "launcher");
                     Log.e(LOG_TAG, "Failed to find home selector; try #" + retry);
-                    UiDevice.getInstance(this).pressHome();
+                    // HACK: Try to poke at UI to fix accessibility issue (b/21448825)
+                    try {
+                        mDevice.sleep();
+                        SystemClock.sleep(1000);
+                        mDevice.wakeUp();
+                        mDevice.pressMenu();
+                        UiDevice.getInstance(this).pressHome();
+                    } catch (RemoteException e) {
+                        Log.e(LOG_TAG, e.toString());
+                    }
                 }
             }
         }
