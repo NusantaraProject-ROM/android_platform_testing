@@ -47,8 +47,10 @@ public class SysAppTestHelper {
     private static final long NEW_CARD_TIMEOUT_MS = 5 * 1000; // 5s
     private static final String RELOAD_NOTIFICATION_CARD_INTENT = "com.google.android.wearable."
             + "support.wearnotificationgenerator.SHOW_NOTIFICATION";
-    private static final String GO_TO_HOME_CMD = "am start -S -n com.google.android.wearable."
-            + "app/com.google.android.clockwork.home2.activity.HomeActivity2";
+    private static final String HOME_INDICATOR = "charging_icon";
+    private static final String LAUNCHER_VIEW_NAME = "launcher_view";
+    private static final String CARD_VIEW_NAME = "activity_view";
+    private static final String QUICKSETTING_VIEW_NAME = "quicksettings_body";
 
     // Demo card selectors
     private static final UiSelector CARD_SELECTOR = new UiSelector()
@@ -138,18 +140,32 @@ public class SysAppTestHelper {
 
     // Helper method to go back to home screen
     public void goBackHome() {
+        String launcherPackage = mDevice.getLauncherPackageName();
+        UiObject2 homeScreen = mDevice.findObject(By.res(launcherPackage, HOME_INDICATOR));
         int count = 0;
-        mStatus = null;
-        while (mStatus == null && count++ < 5) {
-            instrumentation.getUiAutomation().executeShellCommand(GO_TO_HOME_CMD);
-            SystemClock.sleep(LONG_TIMEOUT + LONG_TIMEOUT); // Extra wait is required as for watches
-                                                            // with no SIM there is a no SIM which
-                                                            // pops in everytime we launch home
-                                                            // activity.
-            mStatus = mDevice.findObject(STATUS_BAR_SELECTOR); // Ensure device is really on Home
-                                                               // screen
-
+        while (homeScreen == null && count < 5) {
+            mDevice.pressBack();
+            homeScreen = mDevice.findObject(By.res(launcherPackage, HOME_INDICATOR));
+            count ++;
         }
+
+        // TODO (yuanlang@) Delete the following hacky codes after charging icon issue fixed
+        // Make sure we're not in the launcher
+        homeScreen = mDevice.findObject(By.res(launcherPackage, LAUNCHER_VIEW_NAME));
+        if (homeScreen != null) {
+            mDevice.pressBack();
+        }
+        // Make sure we're not in cards view
+        homeScreen = mDevice.findObject(By.res(launcherPackage, CARD_VIEW_NAME));
+        if (homeScreen != null) {
+            mDevice.pressBack();
+        }
+        // Make sure we're not in the quick settings
+        homeScreen = mDevice.findObject(By.res(launcherPackage, QUICKSETTING_VIEW_NAME));
+        if (homeScreen != null) {
+            mDevice.pressBack();
+        }
+        SystemClock.sleep(LONG_TIMEOUT);
     }
 
     // Helper method to verify if there are any Demo cards.
@@ -163,7 +179,6 @@ public class SysAppTestHelper {
 
         if (!mTitle.waitForExists(NEW_CARD_TIMEOUT_MS)) {
             Log.d(LOG_TAG, "Card previews not available, swiping up");
-            swipeUp();
             swipeUp();
             // For few devices, demo card preview is hidden by default. So swipe once to bring up
             // the card.
@@ -179,7 +194,7 @@ public class SysAppTestHelper {
             Log.d(LOG_TAG, "Demo cards not found, going to reload the cards");
             // If there are no Demo cards, reload them.
             reloadDemoCards();
-            if (mTitle.waitForExists(NEW_CARD_TIMEOUT_MS)) {
+            if (!mTitle.waitForExists(NEW_CARD_TIMEOUT_MS)) {
                 swipeUp(); // For few devices, demo card preview is hidden by
                 // default. So swipe once to bring up the card.
             }
