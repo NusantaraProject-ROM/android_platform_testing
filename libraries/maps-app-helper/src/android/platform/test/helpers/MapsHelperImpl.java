@@ -34,8 +34,13 @@ import junit.framework.Assert;
 public class MapsHelperImpl extends AbstractMapsHelper {
     private static final String LOG_TAG = MapsHelperImpl.class.getSimpleName();
 
+    private static final String UI_CLOSE_NAVIGATION_DESC = "Close navigation";
+    private static final String UI_DIRECTIONS_BUTTON_ID = "placepage_directions_button";
     private static String UI_PACKAGE;
+    private static final String UI_START_NAVIGATION_BUTTON_ID = "start_button";
+    private static final String UI_TEXTVIEW_CLASS = "android.widget.TextView";
 
+    private static final long UI_RELATED_WAIT = 5000;
     private static final long WIFI_RELATED_WAIT = 25000;
 
     private boolean mIsVersion9p30;
@@ -166,21 +171,25 @@ public class MapsHelperImpl extends AbstractMapsHelper {
         UiObject2 searchSelect = getSelectableSearchBar();
         Assert.assertNotNull("No selectable search bar found.", searchSelect);
         searchSelect.click();
-        mDevice.waitForIdle();
+        mDevice.wait(Until.findObject(By.res(UI_PACKAGE, "search_omnibox_edit_text")),
+                UI_RELATED_WAIT);
         // Edit search query
         UiObject2 searchEdit = getEditableSearchBar();
         Assert.assertNotNull("Not editable search bar found.", searchEdit);
+        searchEdit.clear();
         searchEdit.setText(query);
         // Search and wait for the directions option
-        mDevice.pressEnter();
-        boolean directions = mDevice.wait(Until.hasObject(
-                By.res(UI_PACKAGE, "title_textbox").text(query)), WIFI_RELATED_WAIT);
-        Assert.assertTrue(String.format("Did not detect a directions option after %d seconds",
-                (int)Math.floor(WIFI_RELATED_WAIT / 1000)), directions);
+        UiObject2 firstAddressResult = mDevice.wait(Until.findObject(By.pkg(UI_PACKAGE).clazz(
+            UI_TEXTVIEW_CLASS)), WIFI_RELATED_WAIT);
+        Assert.assertNotNull(String.format("Did not detect address result after %d seconds",
+                (int)Math.floor(WIFI_RELATED_WAIT / 1000)), firstAddressResult);
+        firstAddressResult.click();
+        Assert.assertTrue("Could not find directions button", mDevice.wait(Until.hasObject(
+                By.res(UI_PACKAGE, UI_DIRECTIONS_BUTTON_ID)), WIFI_RELATED_WAIT));
     }
 
     private void goToQueryScreen() {
-        for (int backup = 2; backup > 0; backup--) {
+        for (int backup = 5; backup > 0; backup--) {
             if (hasSearchBar()) {
                 return;
             } else {
@@ -191,22 +200,44 @@ public class MapsHelperImpl extends AbstractMapsHelper {
     }
 
     private UiObject2 getSelectableSearchBar() {
-        UiObject2 search = mDevice.findObject(By.res(UI_PACKAGE, "search_omnibox_text_box"));
-        if (search == null) {
-            search = mDevice.findObject(By.descContains("Search"));
-        }
-        return search;
+        return mDevice.findObject(By.res(UI_PACKAGE, "search_omnibox_text_box"));
     }
 
     private UiObject2 getEditableSearchBar() {
-        UiObject2 search = mDevice.findObject(By.res(UI_PACKAGE, "search_omnibox_edit_text"));
-        if (search == null) {
-            search = mDevice.findObject(By.textContains("Search"));
-        }
-        return search;
+        return mDevice.findObject(By.res(UI_PACKAGE, "search_omnibox_edit_text"));
+    }
+
+    private UiObject2 getStartNavigationButton() {
+        return mDevice.findObject(By.res(UI_PACKAGE, UI_START_NAVIGATION_BUTTON_ID));
     }
 
     private boolean hasSearchBar() {
         return getSelectableSearchBar() != null || getEditableSearchBar() != null;
+    }
+
+    /*
+     * {@inheritDoc}
+     */
+    @Override
+    public void getDirections() {
+        UiObject2 directionsButton = mDevice.findObject(By.res(UI_PACKAGE, UI_DIRECTIONS_BUTTON_ID));
+        Assert.assertNotNull("Could not find directions button", directionsButton);
+
+        directionsButton.click();
+        Assert.assertTrue("Could not find start navigation button", mDevice.wait(Until.hasObject(
+                By.res(UI_PACKAGE, UI_START_NAVIGATION_BUTTON_ID)), WIFI_RELATED_WAIT));
+    }
+
+    /*
+     * {@inheritDoc}
+     */
+    @Override
+    public void startNavigation() {
+        UiObject2 startNavigationButton = getStartNavigationButton();
+        Assert.assertNotNull("Could not find start navigation button", startNavigationButton);
+
+        startNavigationButton.click();
+        Assert.assertTrue(mDevice.wait(Until.hasObject(
+                By.pkg(UI_PACKAGE).desc(UI_CLOSE_NAVIGATION_DESC)), UI_RELATED_WAIT));
     }
 }
