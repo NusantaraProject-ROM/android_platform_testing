@@ -68,4 +68,12 @@ public abstract class AbstractGoogleMessengerHelper extends AbstractStandardAppH
      *   2. New message textbox is not empty.
      */
     public abstract void clickSendMessageButton();
+
+    /**
+     * Setup expectations: Google Messenger app is on the messages page.
+     *
+     * This method clicks the "attach media" button and attaches the media file with the given
+     * index in the device media gallery view.
+     */
+    public abstract void attachMediaFromDevice(int index);
 }
