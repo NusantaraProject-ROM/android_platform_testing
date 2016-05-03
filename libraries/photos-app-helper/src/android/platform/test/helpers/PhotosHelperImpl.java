@@ -27,6 +27,7 @@ import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.util.Log;
 
+import java.util.List;
 import java.util.regex.Pattern;
 
 import junit.framework.Assert;
@@ -36,8 +37,13 @@ public class PhotosHelperImpl extends AbstractPhotosHelper {
 
     private static final long APP_LOAD_WAIT = 7500;
     private static final long HACKY_WAIT = 2500;
+    private static final long UI_NAVIGATION_WAIT = 5000;
+
+    private static final Pattern UI_PHOTO_DESC = Pattern.compile("^Photo.*");
 
     private static final String UI_PACKAGE_NAME = "com.google.android.apps.photos";
+    private static final String UI_PHOTOS_TEXT = "Photos";
+    private static final String UI_PHOTO_VIEW_PAGER_ID = "photo_view_pager";
 
     public PhotosHelperImpl(Instrumentation instr) {
         super(instr);
@@ -199,5 +205,54 @@ public class PhotosHelperImpl extends AbstractPhotosHelper {
 
     private UiObject2 getFirstClip() {
         return mDevice.findObject(By.descStartsWith("Video"));
+    }
+
+    private boolean isOnMainScreen() {
+        return mDevice.hasObject(By.pkg(UI_PACKAGE_NAME).text(UI_PHOTOS_TEXT));
+    }
+
+    /*
+     * {@inheritDoc}
+     */
+    @Override
+    public void goToMainScreen() {
+        for (int retriesRemaining = 5; retriesRemaining > 0 && !isOnMainScreen();
+                --retriesRemaining) {
+            mDevice.pressBack();
+            mDevice.waitForIdle();
+        }
+    }
+
+    /*
+     * {@inheritDoc}
+     */
+    @Override
+    public void openPicture(int index) {
+        Assert.assertTrue("Not on home page", isOnMainScreen());
+
+        List<UiObject2> photos = mDevice.findObjects(By.pkg(UI_PACKAGE_NAME).desc(UI_PHOTO_DESC));
+        Assert.assertNotNull("Could not find photos", photos);
+        Assert.assertTrue("Photo index out of bounds",
+                index >= 0 && index < photos.size());
+
+        UiObject2 photo = photos.get(index);
+        photo.click();
+        mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, UI_PHOTO_VIEW_PAGER_ID)),
+                UI_NAVIGATION_WAIT);
+    }
+
+    /*
+     * {@inheritDoc}
+     */
+    @Override
+    public void scrollAlbum(Direction direction) {
+        Assert.assertTrue("Scroll direction must be LEFT or RIGHT",
+                Direction.LEFT.equals(direction) || Direction.RIGHT.equals(direction));
+
+        UiObject2 scrollContainer = mDevice.findObject(
+                By.res(UI_PACKAGE_NAME, UI_PHOTO_VIEW_PAGER_ID));
+        Assert.assertNotNull("Could not find scroll container", scrollContainer);
+
+        scrollContainer.scroll(direction, 1.0f);
     }
 }
