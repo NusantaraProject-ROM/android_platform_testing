@@ -31,4 +31,18 @@ public abstract class AbstractMapsHelper extends AbstractStandardAppHelper {
      * Blocks until the result can be set as a destination.
      */
     public abstract void doSearch(String query);
+
+    /**
+     * Setup expectation: Destination is selected.
+     *
+     * Goes to the directions screen for the selected destination.
+     */
+    public abstract void getDirections();
+
+    /**
+     * Setup expectation: On directions screen.
+     *
+     * Goes to the navigation screen for the selected destination.
+     */
+    public abstract void startNavigation();
 }
