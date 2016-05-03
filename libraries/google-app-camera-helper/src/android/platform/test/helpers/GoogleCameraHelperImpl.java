@@ -56,8 +56,7 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
     private static final String UI_SETTINGS_BUTTON_ID = "settings_button";
     private static final String UI_MENU_BUTTON_ID_3X = "menuButton";
     private static final String UI_MENU_BUTTON_ID_4X = "toybox_menu_button";
-    private static final String UI_SPECIAL_MODE_CLOSE_3X = "closeButton";
-    private static final String UI_SPECIAL_MODE_CLOSE_4X = "toybox_menu_button";
+    private static final String UI_SPECIAL_MODE_CLOSE = "closeButton";
     private static final String UI_HFR_TOGGLE_ID_J = "hfr_button";
     private static final String UI_HFR_TOGGLE_ID_I = "hfr_mode_toggle_button";
 
@@ -536,19 +535,14 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
                         (int) Math.floor(mode * 120)));
             }
         } else if (mIsVersionJ || mIsVersionK) {
-            String UI_MENU_BUTTON_ID = UI_MENU_BUTTON_ID_3X;
-            String UI_SPECIAL_MODE_CLOSE = UI_SPECIAL_MODE_CLOSE_3X;
-            if (mIsVersionK) {
-                UI_MENU_BUTTON_ID = UI_MENU_BUTTON_ID_4X;
-                UI_SPECIAL_MODE_CLOSE = UI_SPECIAL_MODE_CLOSE_4X;
-            }
+            String uiMenuButton = (mIsVersionK)? UI_MENU_BUTTON_ID_4X:UI_MENU_BUTTON_ID_3X;
             if (mode == HFR_MODE_OFF) {
                 // This close button ui only appeared in hfr mode
                 UiObject2 hfrmodeclose = mDevice.findObject(By.res(UI_PACKAGE_NAME,
                         UI_SPECIAL_MODE_CLOSE));
                 if (hfrmodeclose != null) {
                     hfrmodeclose.click();
-                    mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, UI_MENU_BUTTON_ID)),
+                    mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, uiMenuButton)),
                             MENU_WAIT_TIME);
                 } else {
                     Assert.fail("Fail to find hfr mode close button when trying to turn off HFR mode");
@@ -563,7 +557,7 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
                         UI_SPECIAL_MODE_CLOSE));
                 if (specialmodeclose != null) {
                     specialmodeclose.click();
-                    mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, UI_MENU_BUTTON_ID)),
+                    mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, uiMenuButton)),
                             MENU_WAIT_TIME);
                 } else {
                     Assert.fail("Fail to close other special mode before setting hfr mode");
@@ -655,11 +649,8 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
 
     private void openMenu() {
         if (mIsVersionI || mIsVersionJ || mIsVersionK) {
-            String UI_MENU_BUTTON_ID = UI_MENU_BUTTON_ID_3X;
-            if (mIsVersionK) {
-                UI_MENU_BUTTON_ID = UI_MENU_BUTTON_ID_4X;
-            }
-            UiObject2 menu = mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_MENU_BUTTON_ID));
+            String uiMenuButton = (mIsVersionK)? UI_MENU_BUTTON_ID_4X:UI_MENU_BUTTON_ID_3X;
+            UiObject2 menu = mDevice.findObject(By.res(UI_PACKAGE_NAME, uiMenuButton));
             menu.click();
         } else {
             UiObject2 activityView = mDevice.wait(Until.findObject(
@@ -771,11 +762,8 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
 
         if (mIsVersionI || mIsVersionJ || mIsVersionK) {
             // Click menu button to close menu (this is NOT for taking pictures)
-            String UI_MENU_BUTTON_ID = UI_MENU_BUTTON_ID_3X;
-            if (mIsVersionK) {
-                UI_MENU_BUTTON_ID = UI_MENU_BUTTON_ID_4X;
-            }
-            UiObject2 backButton = mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_MENU_BUTTON_ID));
+            String uiMenuButton = (mIsVersionK)? UI_MENU_BUTTON_ID_4X:UI_MENU_BUTTON_ID_3X;
+            UiObject2 backButton = mDevice.findObject(By.res(UI_PACKAGE_NAME, uiMenuButton));
             if (backButton != null) {
                 backButton.click();
             }
@@ -1004,11 +992,8 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
     private void waitForAppInit() {
         boolean initalized = false;
         if (mIsVersionI || mIsVersionJ || mIsVersionK) {
-            String UI_MENU_BUTTON_ID = UI_MENU_BUTTON_ID_3X;
-            if (mIsVersionK) {
-                UI_MENU_BUTTON_ID = UI_MENU_BUTTON_ID_4X;
-            }
-            initalized = mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, UI_MENU_BUTTON_ID)),
+            String uiMenuButton = (mIsVersionK)? UI_MENU_BUTTON_ID_4X:UI_MENU_BUTTON_ID_3X;
+            initalized = mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, uiMenuButton)),
                     APP_INIT_WAIT);
         } else {
             initalized = mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, UI_MODE_OPTION_TOGGLE_BUTTON_ID)),
