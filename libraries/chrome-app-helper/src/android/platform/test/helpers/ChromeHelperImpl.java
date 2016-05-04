@@ -132,6 +132,9 @@ public class ChromeHelperImpl extends AbstractChromeHelper {
                 }
             }
         }
+
+        mDevice.wait(Until.findObject(By.res(getPackage(), UI_SEARCH_BOX_ID)),
+                MAX_DIALOG_TRANSITION);
     }
 
     /**
