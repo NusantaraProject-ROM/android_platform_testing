@@ -56,6 +56,7 @@ public class GmailHelperImpl extends AbstractGmailHelper {
     private static final String UI_CONVERSATIONS_LIST_ID = "conversation_list_view";
     private static final String UI_CONVERSATION_PAGER = "conversation_pager";
     private static final String UI_MULTI_PANE_CONTAINER_ID = "two_pane_activity";
+    private static final String UI_SEARCH_ID = "search";
     private static final BySelector PRIMARY_SELECTOR =
             By.res(UI_PACKAGE_NAME, "name").text("Primary");
     private static final BySelector INBOX_SELECTOR =
@@ -457,6 +458,36 @@ public class GmailHelperImpl extends AbstractGmailHelper {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void scrollMailbox(Direction direction, int amount) {
+        if (!isInMailbox()) {
+            throw new IllegalStateException("Not in mailbox");
+        }
+
+        UiObject2 scrollContainer = getConversationList();
+        Assert.assertNotNull("Could not find scroll container");
+
+        scroll(scrollContainer, direction, amount);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void scrollEmail(Direction direction, int amount) {
+        if (!(Direction.UP.equals(direction) || Direction.DOWN.equals(direction))) {
+            throw new UnsupportedOperationException("Scroll direction must be UP or DOWN");
+        }
+
+        UiObject2 scrollContainer = getConversationPager();
+        Assert.assertNotNull("Could not find email scroll container", scrollContainer);
+
+        scroll(scrollContainer, direction, amount);
+    }
+
     private UiObject2 getToField() {
         return mDevice.findObject(By.res(UI_PACKAGE_NAME, "to"));
     }
@@ -520,5 +551,23 @@ public class GmailHelperImpl extends AbstractGmailHelper {
                 mDevice.hasObject(By.res(UI_PACKAGE_NAME, UI_MULTI_PANE_CONTAINER_ID));
         boolean isLandscape = getOrientation() == Configuration.ORIENTATION_LANDSCAPE;
         return (hasMultiPane && isLandscape);
+    }
+
+    private boolean isInMailbox() {
+        return mDevice.hasObject(By.res(UI_PACKAGE_NAME, UI_SEARCH_ID));
+    }
+
+    private void scroll(UiObject2 scrollContainer, Direction direction, int amount) {
+        if (amount < -1) {
+            throw new IllegalArgumentException(String.format("Invalid scroll amount: %d", amount));
+        }
+
+        if (amount == -1) {
+            while (scrollContainer.scroll(direction, 1.0f)) {
+                // empty
+            }
+        } else {
+            scrollContainer.scroll(direction, (float) amount);
+        }
     }
 }
