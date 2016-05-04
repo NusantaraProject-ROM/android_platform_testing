@@ -143,24 +143,4 @@ public abstract class AbstractGmailHelper extends AbstractStandardAppHelper {
      * This method will scroll the navigation drawer and block until idle. Only accepts UP and DOWN.
      */
     public abstract void scrollNavigationDrawer(Direction dir);
-
-    /**
-     * Setup expectations: Gmail is open and a mailbox is open.
-     *
-     * This method will scroll the mailbox view.
-     *
-     * @param direction The direction to scroll, only accepts UP and DOWN.
-     * @param amount    The number of times to scroll, -1 scrolls to the end in the given direction
-     */
-    public abstract void scrollMailbox(Direction direction, int amount);
-
-    /**
-     * Setup expectations: Gmail is open and an email is open.
-     *
-     * This method will scroll the current email.
-     *
-     * @param direction The direction to scroll, only accepts UP and DOWN.
-     * @param amount    The number of times to scroll, -1 scrolls to the end in the given direction
-     */
-    public abstract void scrollEmail(Direction direction, int amount);
 }
