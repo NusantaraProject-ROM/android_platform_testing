@@ -62,6 +62,13 @@ public abstract class AbstractPlayMusicHelper extends AbstractStandardAppHelper 
     public abstract void expandMediaControls();
 
     /**
+     * Setup expectations: PlayMusic is open and on the Songs library tab
+     *
+     * This method will press the "Shuffle All" button and block until the song is playing.
+     */
+    public abstract void pressShuffleAll();
+
+    /**
      * Setup expectations: PlayMusic is open with a song open and expanded.
      *
      * This method will press the repeat button and cycle to the next state. Unfortunately, the
