@@ -15,8 +15,11 @@
  */
 package com.android.wearable.sysapp.janktests;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.os.RemoteException;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
 import android.support.test.jank.GfxMonitor;
 import android.support.test.jank.JankTest;
 import android.support.test.jank.JankTestBase;
@@ -35,6 +38,8 @@ public class AppLauncherFlingJankTest extends JankTestBase {
 
     private UiDevice mDevice;
     private SysAppTestHelper mHelper;
+    private PowerManager mPm;
+    private WakeLock mWakeLock;
 
     /*
      * (non-Javadoc)
@@ -42,10 +47,14 @@ public class AppLauncherFlingJankTest extends JankTestBase {
      */
     @Override
     protected void setUp() throws Exception {
+        super.setUp();
         mDevice = UiDevice.getInstance(getInstrumentation());
         mHelper = SysAppTestHelper.getInstance(mDevice, this.getInstrumentation());
-        mDevice.wakeUp();
-        super.setUp();
+        mPm = (PowerManager) getInstrumentation().
+                getContext().getSystemService(Context.POWER_SERVICE);
+        mWakeLock = mPm.newWakeLock(PowerManager.FULL_WAKE_LOCK,
+                AppLauncherFlingJankTest.class.getSimpleName());
+        mWakeLock.acquire();
     }
 
     /**
@@ -88,5 +97,6 @@ public class AppLauncherFlingJankTest extends JankTestBase {
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
+        mWakeLock.release();
     }
 }
