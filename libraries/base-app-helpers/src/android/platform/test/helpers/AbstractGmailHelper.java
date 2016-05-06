@@ -165,4 +165,32 @@ public abstract class AbstractGmailHelper extends AbstractStandardAppHelper {
      * @param scrollToEnd   Whether or not to scroll to the end
      */
     public abstract void scrollEmail(Direction direction, float amount, boolean scrollToEnd);
+
+    /**
+     * Setup expectations: Gmail is open and the navigation drawer is open.
+     *
+     * This method will open the mailbox with the given name and block until emails in
+     * that mailbox have loaded.
+     *
+     * @param mailboxName The case insensitive name of the mailbox to open
+     */
+    public abstract void openMailbox(String mailboxName);
+
+    /**
+     * Setup expectations: Gmail is open and an email is open.
+     *
+     * This method will return to the mailbox the current email was opened from.
+     */
+    public abstract void returnToMailbox();
+
+    /**
+     * Setup expectations: Gmail is open and an email is open.
+     *
+     * This method starts downloading the attachment at the specified index in the current email.
+     * The download happens in the background. This method returns immediately after starting
+     * the download and does not wait for the download to complete.
+     *
+     * @param index The index of the attachment to download
+     */
+    public abstract void downloadAttachment(int index);
 }
