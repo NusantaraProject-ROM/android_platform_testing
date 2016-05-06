@@ -140,7 +140,8 @@ public class ApiDemoJankTests extends JankTestBase {
     @GfxMonitor(processName=PACKAGE_NAME)
     public void testActivityTransitionAnimation() {
         for (int i = 0; i < INNER_LOOP; i++) {
-            UiObject2 redBallTile = mDevice.findObject(By.res(PACKAGE_NAME, "ball"));
+            UiObject2 redBallTile = mDevice.wait(Until.findObject(By.res(PACKAGE_NAME, "ball")),
+                    LONG_TIMEOUT);
             redBallTile.click();
             SystemClock.sleep(LONG_TIMEOUT);
             mDevice.pressBack();
