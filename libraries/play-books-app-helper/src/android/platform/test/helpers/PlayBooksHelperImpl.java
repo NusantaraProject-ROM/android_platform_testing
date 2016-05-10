@@ -17,6 +17,7 @@
 package android.platform.test.helpers;
 
 import android.app.Instrumentation;
+import android.os.SystemClock;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.Until;
@@ -43,12 +44,16 @@ public class PlayBooksHelperImpl extends AbstractPlayBooksHelper {
     private static final String UI_NAVIGATION_DRAWER_SETTING_TEXT = "Settings";
     private static final String UI_NAVIGATION_DRAWER_MYLIBRARY_TEXT = "My library";
     private static final String UI_OPTION_MENU_READ_ALOUD_TEXT = "Read aloud";
+    private static final String UI_TURN_SYNC_ON_TEXT = "TURN SYNC ON";
+    private static final String UI_SKIP_TEXT = "SKIP";
     private static final String UI_FULL_SCREEN_READER = "reader";
     private static final String UI_PLAY_DRAWER_ROOT = "play_drawer_root";
     private static final String UI_BOOK_THUMBNAIL = "li_thumbnail";
 
+    private static final long SKIP_DELAY = 2000; // 2 secs
     private static final long UI_ANIMATION_TIMEOUT = 2500; // 2.5 secs
     private static final long OPEN_BOOK_TIMEOUT = 10000; // 10 secs
+    private static final long SYNCING_BOOKS_TIMEOUT = 10000; //10 secs
 
     public PlayBooksHelperImpl(Instrumentation instr) {
         super(instr);
@@ -75,6 +80,16 @@ public class PlayBooksHelperImpl extends AbstractPlayBooksHelper {
      */
     @Override
     public void dismissInitialDialogs() {
+        UiObject2 skipButton = getSkipButton();
+        if (skipButton != null) {
+            skipButton.click();
+            SystemClock.sleep(SKIP_DELAY);
+        }
+        UiObject2 turnSyncOnButton = getTurnSyncOnButton();
+        if (turnSyncOnButton != null) {
+            turnSyncOnButton.click();
+            SystemClock.sleep(SYNCING_BOOKS_TIMEOUT);
+        }
     }
 
     /**
@@ -223,6 +238,14 @@ public class PlayBooksHelperImpl extends AbstractPlayBooksHelper {
 
     private boolean isDrawerOpen() {
         return mDevice.hasObject(By.res(UI_PACKAGE_NAME, UI_PLAY_DRAWER_ROOT));
+    }
+
+    private UiObject2 getSkipButton() {
+        return mDevice.findObject(By.text(UI_SKIP_TEXT));
+    }
+
+    private UiObject2 getTurnSyncOnButton() {
+        return mDevice.findObject(By.text(UI_TURN_SYNC_ON_TEXT));
     }
 
     private UiObject2 getFullScreenReader() {
