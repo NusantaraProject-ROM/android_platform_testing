@@ -642,6 +642,9 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
         UiObject2 modeoptions = getModeOptionsMenuButton();
         if (modeoptions != null) {
             modeoptions.click();
+            // If succeeded, the hdr toggle button should be visible.
+            mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, "hdr_plus_toggle_button")),
+                    DIALOG_TRANSITION_WAIT);
         } else {
             Assert.fail("Fail to find modeoption button when trying to check HDR mode");
         }
