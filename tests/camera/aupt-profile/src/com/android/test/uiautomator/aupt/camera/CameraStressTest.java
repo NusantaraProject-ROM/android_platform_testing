@@ -56,14 +56,16 @@ public class CameraStressTest extends AuptTestCase {
     public void testCameraStressVideoBasicBack() {
         mHelper.goToBackCamera();
         mHelper.goToVideoMode();
-        mHelper.set4KMode(GoogleCameraHelperImpl.VIDEO_HD_1080);
+        //TODO: enable this once b/28723710 is fixed.
+        //mHelper.set4KMode(GoogleCameraHelperImpl.VIDEO_HD_1080);
         mHelper.captureVideo(videoTimeMS);
     }
 
     public void testCameraStressVideoBasicFront() {
         mHelper.goToFrontCamera();
         mHelper.goToVideoMode();
-        mHelper.set4KMode(GoogleCameraHelperImpl.VIDEO_HD_1080);
+        //TODO: enable this once b/28723710 is fixed
+        //mHelper.set4KMode(GoogleCameraHelperImpl.VIDEO_HD_1080);
         mHelper.captureVideo(videoTimeMS);
     }
 

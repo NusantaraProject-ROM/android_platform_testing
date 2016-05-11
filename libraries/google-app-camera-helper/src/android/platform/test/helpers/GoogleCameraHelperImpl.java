@@ -57,6 +57,13 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
     private static final String UI_MENU_BUTTON_ID_3X = "menuButton";
     private static final String UI_MENU_BUTTON_ID_4X = "toybox_menu_button";
     private static final String UI_SPECIAL_MODE_CLOSE = "closeButton";
+    private static final String UI_HDR_BUTTON_ID_2X = "hdr_plus_toggle_button";
+    private static final String UI_HDR_BUTTON_ID_3X = "hdr_plus_toggle_button";
+    private static final String UI_HDR_BUTTON_ID_4X = "hdr_button";
+    private static final String UI_HDR_AUTO_ID_4X = "hdr_auto";
+    private static final String UI_HDR_ON_ID_4X = "hdr_on";
+    private static final String UI_HDR_OFF_ID_4X = "hdr_off";
+    private static final String UI_SELECTED_OPTION_ID = "selected_option_label";
     private static final String UI_HFR_TOGGLE_ID_J = "hfr_button";
     private static final String UI_HFR_TOGGLE_ID_I = "hfr_mode_toggle_button";
 
@@ -74,6 +81,11 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
     private static final String TEXT_4K_ON = "UHD 4K";
     private static final String TEXT_HD_1080 = "HD 1080p";
     private static final String TEXT_HD_720 = "HD 720p";
+    private static final String TEXT_HDR_AUTO = "HDR off";
+    private static final String TEXT_HDR_ON = "HDR+ Auto";
+    private static final String TEXT_HDR_OFF = "HDR on";
+    private static final String TEXT_BACK_VIDEO_RESOLUTION_4X = "Back camera resolution";
+    private static final String TEXT_BACK_VIDEO_RESOLUTION_3X = "Back camera video";
 
     public static final int HDR_MODE_AUTO = -1;
     public static final int HDR_MODE_OFF = 0;
@@ -401,7 +413,34 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
             throw new IllegalStateException("Cannot set HDR unless in camera mode.");
         }
 
-        if (mIsVersionI || mIsVersionJ || mIsVersionK) {
+        if (mIsVersionK) {
+            if (getHdrToggleButton() == null) {
+                if (mode == HDR_MODE_OFF) {
+                    return;
+                } else {
+                    throw new UnsupportedOperationException(
+                            "Cannot set HDR on this device as requested.");
+                }
+            }
+
+            getHdrToggleButton().click();
+            mDevice.waitForIdle();
+
+            switch (mode) {
+                case HDR_MODE_AUTO:
+                    mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_HDR_AUTO_ID_4X)).click();
+                    break;
+                case HDR_MODE_ON:
+                    mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_HDR_ON_ID_4X)).click();
+                    break;
+                case HDR_MODE_OFF:
+                    mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_HDR_OFF_ID_4X)).click();
+                    break;
+                default:
+                    Assert.fail("Failing setting HDR+ mode!");
+            }
+            mDevice.waitForIdle();
+        } else if (mIsVersionI || mIsVersionJ) {
             if (getHdrToggleButton() == null) {
                 if (mode == HDR_MODE_OFF) {
                     return;
@@ -447,7 +486,31 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
     }
 
     private boolean isHdrMode(int mode) {
-        if (mIsVersionI || mIsVersionJ || mIsVersionK) {
+        if (mIsVersionK) {
+            getHdrToggleButton().click();
+            mDevice.waitForIdle();
+            UiObject2 selectedOption = mDevice.wait(Until.findObject(
+                    By.res(UI_PACKAGE_NAME, UI_SELECTED_OPTION_ID)), MENU_WAIT_TIME);
+            String currentHdrModeText = selectedOption.getText();
+            int currentMode = 0;
+            switch (currentHdrModeText) {
+                case TEXT_HDR_AUTO:
+                    currentMode = HDR_MODE_AUTO;
+                    break;
+                case TEXT_HDR_ON:
+                    currentMode = HDR_MODE_ON;
+                    break;
+                case TEXT_HDR_OFF:
+                    currentMode = HDR_MODE_OFF;
+                    break;
+                default:
+                    Assert.fail("Failed to identify the HDR+ settings!");
+            }
+            selectedOption.click();
+            mDevice.wait(Until.findObject(
+                    By.res(UI_PACKAGE_NAME, UI_HDR_BUTTON_ID_4X)), MENU_WAIT_TIME);
+            return mode == currentMode;
+        } else if (mIsVersionI || mIsVersionJ) {
             String modeDesc = getHdrToggleButton().getContentDescription();
             if (DESC_HDR_AUTO.equals(modeDesc)) {
                 return HDR_MODE_AUTO == mode;
@@ -492,12 +555,19 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
             selectSetting2X();
         }
 
-        // Select Item "Resolution & Quality"
-        selectSettingItem("Resolution & quality");
+        if (mIsVersionI || mIsVersionJ) {
+            // Select Item "Resolution & Quality"
+            selectSettingItem("Resolution & quality");
+        }
+
         // Select Item "Back camera video", which is the only mode supports 4k
         selectVideoResolution(mode);
-        // Quit Menu "Resolution & Quality"
-        closeSettingItem();
+
+        if (mIsVersionI || mIsVersionJ) {
+            // Quit Menu "Resolution & Quality"
+            closeSettingItem();
+        }
+
         // Close Main Menu
         closeMenuItem();
     }
@@ -729,7 +799,9 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
     }
 
     private void selectVideoResolution(int mode) {
-        UiObject2 backCamera = mDevice.findObject(By.text("Back camera video"));
+        String textBackVideoResolution =
+                (mIsVersionK)? TEXT_BACK_VIDEO_RESOLUTION_4X:TEXT_BACK_VIDEO_RESOLUTION_3X;
+        UiObject2 backCamera = mDevice.findObject(By.text(textBackVideoResolution));
         if (backCamera != null) {
             backCamera.click();
         } else {
@@ -864,7 +936,13 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
     }
 
     private UiObject2 getHdrToggleButton() {
-        return mDevice.findObject(By.res(UI_PACKAGE_NAME, "hdr_plus_toggle_button"));
+        if (mIsVersionK) {
+            return mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_HDR_BUTTON_ID_4X));
+        } else if (mIsVersionI || mIsVersionJ) {
+            return mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_HDR_BUTTON_ID_3X));
+        } else {
+            return mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_HDR_BUTTON_ID_2X));
+        }
     }
 
     private UiObject2 getHfrToggleButton() {
