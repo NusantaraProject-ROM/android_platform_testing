@@ -50,7 +50,7 @@ public class SysAppTestHelper {
     private static final String HOME_INDICATOR = "charging_icon";
     private static final String LAUNCHER_VIEW_NAME = "launcher_view";
     private static final String CARD_VIEW_NAME = "activity_view";
-    private static final String QUICKSETTING_VIEW_NAME = "quicksettings_body";
+    private static final String QUICKSETTING_VIEW_NAME = "settings_icon";
 
     // Demo card selectors
     private static final UiSelector CARD_SELECTOR = new UiSelector()
