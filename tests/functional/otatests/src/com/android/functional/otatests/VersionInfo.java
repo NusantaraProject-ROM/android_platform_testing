@@ -34,11 +34,15 @@ public class VersionInfo {
                 new InputStreamReader(new FileInputStream(new File(fileName))));
         try {
             return new VersionInfo(
-                    r.readLine(),
-                    r.readLine(),
-                    r.readLine());
+                    denull(r.readLine()),
+                    denull(r.readLine()),
+                    denull(r.readLine()));
         } finally {
             r.close();
         }
+    }
+
+    private static String denull(String s) {
+        return  s == null || s.equals("null") ? "" : s;
     }
 }
