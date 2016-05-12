@@ -45,6 +45,7 @@ public class GoogleKeyboardHelperImpl extends AbstractGoogleKeyboardHelper {
     private static final Set<Character> KEYBOARD_OTHER_SYMBOLS;
 
     private static final String UI_ANDROID_VIEW_CLASS = "android.view.View";
+    private static final String UI_DECLINE_BUTTON_ID = "decline_button";
     private static final String UI_KEYBOARD_KEY_CLASS = "com.android.inputmethod.keyboard.Key";
     private static final String UI_KEYBOARD_LETTER_KEY_DESC = "Letters";
     private static final String UI_KEYBOARD_NUMBER_KEY_DESC = "Symbols";
@@ -53,6 +54,8 @@ public class GoogleKeyboardHelperImpl extends AbstractGoogleKeyboardHelper {
     private static final String UI_KEYBOARD_VIEW_ID = "keyboard_view";
     private static final String UI_RESOURCE_NAME = "com.android.inputmethod.latin";
     private static final String UI_PACKAGE_NAME = "com.google.android.inputmethod.latin";
+    private static final String UI_QUICK_SEARCH_BOX_PACKAGE_NAME =
+            "com.google.android.googlequicksearchbox";
 
     private static final char KEYBOARD_TEST_LOWER_CASE_LETTER = 'a';
     private static final char KEYBOARD_TEST_NUMBER = '1';
@@ -118,9 +121,14 @@ public class GoogleKeyboardHelperImpl extends AbstractGoogleKeyboardHelper {
     public void dismissInitialDialogs() {
         mDevice.pressHome();
         UiObject2 searchPlate = mDevice.findObject(
-                By.res("com.google.android.googlequicksearchbox", "search_plate"));
+                By.res(UI_QUICK_SEARCH_BOX_PACKAGE_NAME, "search_plate"));
         if (searchPlate != null) {
             searchPlate.click();
+            UiObject2 skipGoogleNowButton = mDevice.wait(Until.findObject(
+                    By.res(UI_QUICK_SEARCH_BOX_PACKAGE_NAME, UI_DECLINE_BUTTON_ID)), 20000);
+            if (skipGoogleNowButton != null) {
+                skipGoogleNowButton.click();
+            }
             BySelector closeSelector = By.text(Pattern.compile("CLOSE", Pattern.CASE_INSENSITIVE));
             Assert.assertTrue("Could not find close button to dismiss Google Keyboard dialog",
                     mDevice.wait(Until.hasObject(closeSelector), 5000));
