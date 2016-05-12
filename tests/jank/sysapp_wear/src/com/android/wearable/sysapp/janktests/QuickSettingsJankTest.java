@@ -40,7 +40,7 @@ public class QuickSettingsJankTest extends JankTestBase {
     private SysAppTestHelper mHelper;
 
     private static final String WEARABLE_APP_PACKAGE = "com.google.android.wearable.app";
-    private static final String QUICK_SETTINGS_LAUNCHED_INDICATOR = "quicksettings_body";
+    private static final String QUICK_SETTINGS_LAUNCHED_INDICATOR = "settings_icon";
 
     /*
      * (non-Javadoc)
@@ -89,14 +89,6 @@ public class QuickSettingsJankTest extends JankTestBase {
     @GfxMonitor(processName = WEARABLE_APP_PACKAGE)
     public void testPullUpQuickSettings() {
         mHelper.swipeUp();
-    }
-
-    // Verify jank while swiping to different options in quick settings
-    @JankTest(beforeLoop = "openPullUpQuickSettings", afterTest = "goBackHome",
-            expectedFrames = SysAppTestHelper.EXPECTED_FRAMES_CARDS_TEST)
-    @GfxMonitor(processName = WEARABLE_APP_PACKAGE)
-    public void testSwipeInQuickSettings() {
-        mHelper.swipeLeft();
     }
 
     // Ensuring that we head back to the first screen before launching the app again
