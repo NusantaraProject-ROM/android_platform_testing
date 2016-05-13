@@ -19,6 +19,7 @@ package com.android.test.util.dismissdialogs;
 import android.app.Activity;
 import android.app.Instrumentation;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.RemoteException;
 import android.os.SystemClock;
 import android.support.test.aupt.UiWatchers;
@@ -62,15 +63,18 @@ public class DismissDialogsInstrumentation extends Instrumentation {
 
     // Comma-separated value indicating for which apps to dismiss dialogs
     private static final String PARAM_APP = "apps";
+    // Boolean to indicate if this should take screenshots to document dismissal
+    private static final String PARAM_SCREENSHOTS = "screenshots";
     // Boolean to indicate if this should quit if any failure occurs
     private static final String PARAM_QUIT_ON_ERROR = "quitOnError";
 
     // Key for status bundles provided when running the preparer
     private static final String BUNDLE_DISMISSED_APP_KEY = "dismissedApp";
-    private static final String BUNDLE_APP_ERROR = "appError";
+    private static final String BUNDLE_APP_ERROR_KEY = "appError";
 
     private Map<String, Class<? extends IStandardAppHelper>> mKeyHelperMap;
     private String[] mApps;
+    private boolean mScreenshots;
     private boolean mQuitOnError;
     private UiDevice mDevice;
 
@@ -97,9 +101,17 @@ public class DismissDialogsInstrumentation extends Instrumentation {
         }
         mApps = appsString.split(",");
 
+        String screenshotsString = arguments.getString(PARAM_SCREENSHOTS);
+        if (screenshotsString == null) {
+            Log.i(LOG_TAG, "No 'screenshots' parameter. Defaulting to true.");
+            mScreenshots = true;
+        } else {
+            mScreenshots = "true".equals(screenshotsString);
+        }
+
         String quitString = arguments.getString(PARAM_QUIT_ON_ERROR);
         if (quitString == null) {
-            Log.e(LOG_TAG, "No 'quitOnError' parameter. Defaulting to quit on error.");
+            Log.i(LOG_TAG, "No 'quitOnError' parameter. Defaulting to quit on error.");
             mQuitOnError = true;
         } else {
             mQuitOnError = "true".equals(quitString);
@@ -120,7 +132,7 @@ public class DismissDialogsInstrumentation extends Instrumentation {
         try {
             mDevice.setOrientationNatural();
         } catch (RemoteException e) {
-            Log.e(LOG_TAG, e.toString());
+            Log.e(LOG_TAG, "Unable to set device orientation.", e);
         }
 
         for (int retry = 1; retry <= MAX_INIT_RETRIES; retry++) {
@@ -145,14 +157,14 @@ public class DismissDialogsInstrumentation extends Instrumentation {
                         mDevice.pressMenu();
                         UiDevice.getInstance(this).pressHome();
                     } catch (RemoteException e) {
-                        Log.e(LOG_TAG, e.toString());
+                        Log.e(LOG_TAG, "Failed to avoid UI bug b/21448825.", e);
                     }
                 }
             }
         }
 
         for (String app : mApps) {
-            Log.e(LOG_TAG, String.format("Dismissing dialogs for app, %s", app));
+            Log.i(LOG_TAG, String.format("Dismissing dialogs for app, %s.", app));
             try {
                 if (!dismissDialogs(app)) {
                     throw new IllegalArgumentException(
@@ -162,27 +174,24 @@ public class DismissDialogsInstrumentation extends Instrumentation {
                 }
             } catch (ReflectiveOperationException e) {
                 if (mQuitOnError) {
-                    quitWithError(app, e.toString());
+                    quitWithError(app, e);
                 } else {
                     sendStatusUpdate(Activity.RESULT_CANCELED, app);
-                    Log.e(LOG_TAG, e.toString());
-                    throw new RuntimeException("Reflection exception. Please investigate!");
+                    Log.w(LOG_TAG, "ReflectiveOperationException. Continuing with dismissal.", e);
                 }
             } catch (RuntimeException e) {
                 if (mQuitOnError) {
-                    quitWithError(app, e.toString());
+                    quitWithError(app, e);
                 } else {
                     sendStatusUpdate(Activity.RESULT_CANCELED, app);
-                    Log.e(LOG_TAG, e.toString());
-                    Log.e(LOG_TAG, "Skipping RuntimeException. Proceeding with dialog dismissal.");
+                    Log.w(LOG_TAG, "RuntimeException. Continuing with dismissal.", e);
                 }
             } catch (AssertionError e) {
                 if (mQuitOnError) {
-                    quitWithError(app, e.toString());
+                    quitWithError(app, new Exception(e));
                 } else {
                     sendStatusUpdate(Activity.RESULT_CANCELED, app);
-                    Log.e(LOG_TAG, e.toString());
-                    Log.e(LOG_TAG, "Skipping AssertionError. Proceeding with dialog dismissal.");
+                    Log.w(LOG_TAG, "AssertionError. Continuing with dismissal.", e);
                 }
             }
 
@@ -201,18 +210,13 @@ public class DismissDialogsInstrumentation extends Instrumentation {
             Class<? extends IStandardAppHelper> appHelperClass = mKeyHelperMap.get(app);
             IStandardAppHelper helper =
                     appHelperClass.getDeclaredConstructor(Instrumentation.class).newInstance(this);
-
-            SystemClock.sleep(5000);
-            takeScreenDump(app, "-dialog-img1");
+            takeScreenDump(app, "-dialog1-pre-open");
             helper.open();
-            SystemClock.sleep(5000);
-            takeScreenDump(app, "-dialog-img2");
+            takeScreenDump(app, "-dialog2-pre-dismissal");
             helper.dismissInitialDialogs();
-            SystemClock.sleep(5000);
-            takeScreenDump(app, "-dialog-img3");
+            takeScreenDump(app, "-dialog3-post-dismissal");
             helper.exit();
-            SystemClock.sleep(5000);
-            takeScreenDump(app, "-dialog-img4");
+            takeScreenDump(app, "-dialog4-post-exit");
             return true;
         } else {
             return false;
@@ -225,21 +229,36 @@ public class DismissDialogsInstrumentation extends Instrumentation {
         sendStatus(code, result);
     }
 
-    private void quitWithError(String app, String error) {
+    private void quitWithError(String app, Exception exception) {
+        Log.e(LOG_TAG, "Quitting with exception.", exception);
+        // Pass Bundle with debugging information to TF
         Bundle result = new Bundle();
         result.putString(BUNDLE_DISMISSED_APP_KEY, app);
-        result.putString(BUNDLE_APP_ERROR, error);
+        result.putString(BUNDLE_APP_ERROR_KEY, exception.toString());
         finish(Activity.RESULT_CANCELED, result);
     }
 
     private void takeScreenDump(String app, String suffix) {
+        if (!mScreenshots) {
+            return;
+        }
+
         try {
-            File scr = new File("/sdcard/" + IMAGE_SUBFOLDER + "/" + app + suffix + ".png");
-            File uix = new File("/sdcard/" + IMAGE_SUBFOLDER + "/" + app + suffix + ".uix");
+            File dir = new File(Environment.getExternalStorageDirectory(), IMAGE_SUBFOLDER);
+            if (!dir.exists() && !dir.mkdirs()) {
+                    throw new RuntimeException(String.format(
+                            "Unable to create or find directory, %s.", dir.getPath()));
+            }
+            File scr = new File(dir, app + suffix + ".png");
+            File uix = new File(dir, app + suffix + ".uix");
+            Log.v(LOG_TAG, String.format("Screen file path: %s", scr.getPath()));
+            Log.v(LOG_TAG, String.format("UI XML file path: %s", uix.getPath()));
+            scr.createNewFile();
+            uix.createNewFile();
             UiDevice.getInstance(this).takeScreenshot(scr);
             UiDevice.getInstance(this).dumpWindowHierarchy(uix);
         } catch (IOException e) {
-            Log.e(LOG_TAG, e.toString());
+            Log.e(LOG_TAG, "Failed screen dump.", e);
         }
     }
 }
