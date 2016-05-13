@@ -19,6 +19,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.test.util.dismissdialogs">
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <application>
         <uses-library android:name="android.test.runner" />
     </application>
