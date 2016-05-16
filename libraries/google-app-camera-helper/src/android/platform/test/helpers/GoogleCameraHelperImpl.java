@@ -127,15 +127,6 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
      * {@inheritDoc}
      */
     @Override
-    public void open() {
-        super.open();
-        waitForAppInit();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public String getPackage() {
         return "com.google.android.GoogleCamera";
     }
@@ -154,7 +145,15 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
      */
     @Override
     public void dismissInitialDialogs() {
-        if (mIsVersionI || mIsVersionJ || mIsVersionK) {
+        if (mIsVersionK) {
+            // Dismiss dogfood confidentiality dialog
+            Pattern okText = Pattern.compile("OK, GOT IT", Pattern.CASE_INSENSITIVE);
+            UiObject2 dogfoodMessage = mDevice.wait(
+                    Until.findObject(By.text(okText)), APP_INIT_WAIT);
+            if (dogfoodMessage != null) {
+                dogfoodMessage.click();
+            }
+        } else if (mIsVersionI || mIsVersionJ) {
             // Dismiss dogfood confidentiality dialog
             Pattern okText = Pattern.compile("OK, GOT IT", Pattern.CASE_INSENSITIVE);
             UiObject2 dogfoodMessage = mDevice.wait(
