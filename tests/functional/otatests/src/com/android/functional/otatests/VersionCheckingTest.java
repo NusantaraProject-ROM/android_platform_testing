@@ -13,6 +13,7 @@ public class VersionCheckingTest extends InstrumentationTestCase {
     protected static final String KEY_BUILD_ID = "ro.build.version.incremental";
     protected static final String KEY_BOOTLOADER = "ro.bootloader";
     protected static final String KEY_BASEBAND = "ro.build.expect.baseband";
+    protected static final String KEY_BASEBAND_GSM = "gsm.version.baseband";
 
     protected VersionInfo mOldVersion;
     protected VersionInfo mNewVersion;
@@ -30,14 +31,20 @@ public class VersionCheckingTest extends InstrumentationTestCase {
 
     protected void assertNotUpdated() throws IOException {
         assertEquals(mOldVersion.getBuildId(), getProp(KEY_BUILD_ID));
-        assertEquals(mOldVersion.getBasebandVersion(), getProp(KEY_BASEBAND));
         assertEquals(mOldVersion.getBootloaderVersion(), getProp(KEY_BOOTLOADER));
+        assertTrue(mOldVersion.getBasebandVersion().equals(getProp(KEY_BASEBAND))
+                || mOldVersion.getBasebandVersion().equals(getProp(KEY_BASEBAND_GSM)));
     }
 
     protected void assertUpdated() throws IOException {
         assertEquals(mNewVersion.getBuildId(), getProp(KEY_BUILD_ID));
-        assertEquals(mNewVersion.getBasebandVersion(), getProp(KEY_BASEBAND));
         assertEquals(mNewVersion.getBootloaderVersion(), getProp(KEY_BOOTLOADER));
+        // Due to legacy property names (an old meaning to gsm.version.baseband),
+        // the KEY_BASEBAND and KEY_BASEBAND_GSM properties may not match each other.
+        // At least one of them will always match the baseband version recorded by
+        // NEW_VERSION.
+        assertTrue(mNewVersion.getBasebandVersion().equals(getProp(KEY_BASEBAND))
+                || mNewVersion.getBasebandVersion().equals(getProp(KEY_BASEBAND_GSM)));
     }
 
     private String getProp(String key) throws IOException {
