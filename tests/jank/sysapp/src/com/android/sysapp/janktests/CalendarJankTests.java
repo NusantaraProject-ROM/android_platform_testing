@@ -127,7 +127,7 @@ public class CalendarJankTests extends JankTestBase {
     private void dismissCling() {
         UiObject2 splashScreen = null;
         splashScreen = mDevice.wait(Until.findObject(
-              By.pkg(PACKAGE_NAME).clazz(View.class).desc("Got it")), LONG_TIMEOUT);
+                By.pkg(PACKAGE_NAME).clazz(View.class).desc("Got it")), LONG_TIMEOUT);
         if (splashScreen != null) {
             splashScreen.clickAndWait(Until.newWindow(), SHORT_TIMEOUT);
         }
@@ -142,14 +142,14 @@ public class CalendarJankTests extends JankTestBase {
 
         Pattern pattern = Pattern.compile("GOT IT", Pattern.CASE_INSENSITIVE);
         UiObject2 gotIt = mDevice.wait(Until.findObject(
-              By.res(PACKAGE_NAME, "done_button").text(pattern)), LONG_TIMEOUT);
+                By.res(PACKAGE_NAME, "done_button").text(pattern)), LONG_TIMEOUT);
         if (gotIt != null) {
             gotIt.click();
         }
 
         pattern = Pattern.compile("DISMISS", Pattern.CASE_INSENSITIVE);
         UiObject2 dismissSync = mDevice.wait(Until.findObject(
-        By.res(PACKAGE_NAME, "button_dismiss").text(pattern)), LONG_TIMEOUT);
+                By.res(PACKAGE_NAME, "button_dismiss").text(pattern)), LONG_TIMEOUT);
         if (dismissSync != null) {
             dismissSync.click();
         }
