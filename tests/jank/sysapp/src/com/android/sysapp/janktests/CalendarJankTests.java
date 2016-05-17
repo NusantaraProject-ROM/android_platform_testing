@@ -146,5 +146,13 @@ public class CalendarJankTests extends JankTestBase {
         if (gotIt != null) {
             gotIt.click();
         }
+
+        pattern = Pattern.compile("DISMISS", Pattern.CASE_INSENSITIVE);
+        UiObject2 dismissSync = mDevice.wait(Until.findObject(
+        By.res(PACKAGE_NAME, "button_dismiss").text(pattern)), LONG_TIMEOUT);
+        if (dismissSync != null) {
+            dismissSync.click();
+        }
+
     }
 }
