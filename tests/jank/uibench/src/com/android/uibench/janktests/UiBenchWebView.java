@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,21 +19,18 @@ package com.android.uibench.janktests;
 import static com.android.uibench.janktests.UiBenchJankTestsHelper.EXPECTED_FRAMES;
 import static com.android.uibench.janktests.UiBenchJankTestsHelper.PACKAGE_NAME;
 
-import android.os.SystemClock;
 import android.support.test.jank.GfxMonitor;
 import android.support.test.jank.JankTest;
 import android.support.test.jank.JankTestBase;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.Until;
-import android.widget.ListView;
-import junit.framework.Assert;
 
 /**
- * Jank benchmark Rendering tests for UiBench app
+ * Jank benchmark WebView tests from UiBench app
  */
 
-public class UiBenchRenderingJankTests extends JankTestBase {
+public class UiBenchWebView extends JankTestBase {
 
     private UiDevice mDevice;
     private UiBenchJankTestsHelper mHelper;
@@ -53,32 +50,18 @@ public class UiBenchRenderingJankTests extends JankTestBase {
         super.tearDown();
     }
 
-    // Open Bitmap Upload
-    public void openBitmapUpload() {
-        mHelper.launchActivity("BitmapUploadActivity",
-                "Rendering/Bitmap Upload");
-    }
-
-    // Test Bitmap Upload jank
-    @JankTest(beforeTest = "openBitmapUpload", expectedFrames = EXPECTED_FRAMES)
-    @GfxMonitor(processName = PACKAGE_NAME)
-    public void testBitmapUploadJank() {
-        SystemClock.sleep(mHelper.LONG_TIMEOUT * 5);
-    }
-
-    // Open Shadow Grid
-    public void openRenderingList() {
-        mHelper.launchActivity("ShadowGridActivity",
-                "Rendering/Shadow Grid");
+    // Open Scrollable WebView from WebView test
+    public void openScrollableWebView() {
+        mHelper.launchActivity("ScrollableWebViewActivity",
+                "WebView/Scrollable WebView");
         mHelper.mContents = mDevice.wait(Until.findObject(
-                By.clazz(ListView.class)), mHelper.TIMEOUT);
-        Assert.assertNotNull("Shadow Grid list isn't found", mHelper.mContents);
+                By.res("android", "content")), mHelper.TIMEOUT);
     }
 
-    // Test Shadow Grid fling
-    @JankTest(beforeTest = "openRenderingList", expectedFrames = EXPECTED_FRAMES)
+    // Test Scrollable WebView fling
+    @JankTest(beforeTest = "openScrollableWebView", expectedFrames = EXPECTED_FRAMES)
     @GfxMonitor(processName = PACKAGE_NAME)
-    public void testShadowGridListFling() {
+    public void testWebViewFling() {
         mHelper.flingUpDown(mHelper.mContents, mHelper.SHORT_TIMEOUT, 1);
     }
 
