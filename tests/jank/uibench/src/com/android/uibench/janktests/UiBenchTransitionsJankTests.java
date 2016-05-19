@@ -16,21 +16,16 @@
 
 package com.android.uibench.janktests;
 
-import android.content.Intent;
-import android.os.Bundle;
-import android.os.SystemClock;
+import static com.android.uibench.janktests.UiBenchJankTestsHelper.EXPECTED_FRAMES;
+import static com.android.uibench.janktests.UiBenchJankTestsHelper.PACKAGE_NAME;
+
 import android.support.test.jank.GfxMonitor;
 import android.support.test.jank.JankTest;
 import android.support.test.jank.JankTestBase;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
-import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.Until;
-
-import com.android.uibench.janktests.UiBenchJankTestsHelper;
-import static com.android.uibench.janktests.UiBenchJankTestsHelper.PACKAGE_NAME;
-import static com.android.uibench.janktests.UiBenchJankTestsHelper.EXPECTED_FRAMES;
 import junit.framework.Assert;
 
 /**
@@ -47,8 +42,8 @@ public class UiBenchTransitionsJankTests extends JankTestBase {
         super.setUp();
         mDevice = UiDevice.getInstance(getInstrumentation());
         mDevice.setOrientationNatural();
-        mHelper = UiBenchJankTestsHelper.getInstance(mDevice,
-             this.getInstrumentation().getContext());
+        mHelper = UiBenchJankTestsHelper.getInstance(
+                this.getInstrumentation().getContext(), mDevice);
     }
 
     @Override
@@ -57,53 +52,32 @@ public class UiBenchTransitionsJankTests extends JankTestBase {
         super.tearDown();
     }
 
-    // Open Transitions Components
-    public void openTransitionsComponents(String componentName) {
-        mHelper.launchUiBench();
-        UiObject2 transitions = mDevice.wait(Until.findObject(
-               By.res(mHelper.RES_PACKAGE_NAME, "text1").text("Transitions")), mHelper.TIMEOUT);
-        Assert.assertNotNull("Transitions isn't found in UiBench", transitions);
-        transitions.click();
-        SystemClock.sleep(mHelper.TIMEOUT);
-        UiObject2 component = mDevice.wait(Until.findObject(
-                By.res(mHelper.RES_PACKAGE_NAME, "text1").text(componentName)), mHelper.TIMEOUT);
-        Assert.assertNotNull(componentName + ": isn't found in UiBench:Text", component);
-        component.click();
-        SystemClock.sleep(mHelper.TIMEOUT);
-    }
-
     // Open Transitions
     public void openActivityTransition() {
-        openTransitionsComponents("Activity Transition");
+        mHelper.launchActivity("ActivityTransition",
+                "Transitions/Activity Transition");
     }
 
     // Get the image to click
-    public void clickImage(String imageName){
+    public void clickImage(String imageName) {
         UiObject2 image = mDevice.wait(Until.findObject(
-               By.res(mHelper.PACKAGE_NAME, imageName)), mHelper.TIMEOUT);
-        Assert.assertNotNull( imageName + "Image not found", image);
+                By.res(mHelper.PACKAGE_NAME, imageName)), mHelper.TIMEOUT);
+        Assert.assertNotNull(imageName + "Image not found", image);
         image.clickAndWait(Until.newWindow(), mHelper.TIMEOUT);
         mDevice.pressBack();
     }
 
     // Measures jank for activity transition animation
-    @JankTest(beforeTest="openActivityTransition", afterTest="goBackHome",
-        expectedFrames=EXPECTED_FRAMES)
-    @GfxMonitor(processName=PACKAGE_NAME)
+    @JankTest(beforeTest = "openActivityTransition", expectedFrames = EXPECTED_FRAMES)
+    @GfxMonitor(processName = PACKAGE_NAME)
     public void testActivityTransitionsAnimation() {
-       clickImage("ducky");
-       clickImage("woot");
-       clickImage("ball");
-       clickImage("block");
-       clickImage("jellies");
-       clickImage("mug");
-       clickImage("pencil");
-       clickImage("scissors");
-    }
-
-    // Ensuring that we head back to the first screen before launching the app again
-    public void goBackHome(Bundle metrics) throws UiObjectNotFoundException {
-           mHelper.goBackHome();
-           super.afterTest(metrics);
+        clickImage("ducky");
+        clickImage("woot");
+        clickImage("ball");
+        clickImage("block");
+        clickImage("jellies");
+        clickImage("mug");
+        clickImage("pencil");
+        clickImage("scissors");
     }
 }

@@ -16,25 +16,17 @@
 
 package com.android.uibench.janktests;
 
-import android.content.Intent;
-import android.os.Bundle;
-import android.os.RemoteException;
+import static com.android.uibench.janktests.UiBenchJankTestsHelper.EXPECTED_FRAMES;
+import static com.android.uibench.janktests.UiBenchJankTestsHelper.PACKAGE_NAME;
+
 import android.os.SystemClock;
 import android.support.test.jank.GfxMonitor;
 import android.support.test.jank.JankTest;
 import android.support.test.jank.JankTestBase;
 import android.support.test.uiautomator.By;
-import android.support.test.uiautomator.StaleObjectException;
-import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
-import android.support.test.uiautomator.UiObject2;
-import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.Until;
 import android.widget.ListView;
-
-import com.android.uibench.janktests.UiBenchJankTestsHelper;
-import static com.android.uibench.janktests.UiBenchJankTestsHelper.PACKAGE_NAME;
-import static com.android.uibench.janktests.UiBenchJankTestsHelper.EXPECTED_FRAMES;
 import junit.framework.Assert;
 
 /**
@@ -51,8 +43,8 @@ public class UiBenchTextJankTests extends JankTestBase {
         super.setUp();
         mDevice = UiDevice.getInstance(getInstrumentation());
         mDevice.setOrientationNatural();
-        mHelper = UiBenchJankTestsHelper.getInstance(mDevice,
-             this.getInstrumentation().getContext());
+        mHelper = UiBenchJankTestsHelper.getInstance(
+                this.getInstrumentation().getContext(), mDevice);
     }
 
     @Override
@@ -61,91 +53,51 @@ public class UiBenchTextJankTests extends JankTestBase {
         super.tearDown();
     }
 
-    // Open Text Components
-    public void openTextComponents(String componentName) {
-        mHelper.launchUiBench();
-        UiObject2 text = mDevice.wait(Until.findObject(
-               By.res(mHelper.RES_PACKAGE_NAME, "text1").text("Text")), mHelper.TIMEOUT);
-        Assert.assertNotNull("Text isn't found in UiBench", text);
-        text.click();
-        SystemClock.sleep(mHelper.TIMEOUT);
-        UiObject2 component = mDevice.wait(Until.findObject(
-                By.res(mHelper.RES_PACKAGE_NAME, "text1").text(componentName)), mHelper.TIMEOUT);
-        Assert.assertNotNull(componentName + ": isn't found in UiBench:Text", component);
-        component.clickAndWait(Until.newWindow(), 500);
-        SystemClock.sleep(mHelper.TIMEOUT);
-    }
-
     // Open EditText Typing
     public void openEditTextTyping() {
-        openTextComponents("EditText Typing");
+        mHelper.launchActivity("EditTextTypeActivity",
+                "Text/EditText Typing");
     }
 
     // Measure jank metrics for EditText Typing
-    @JankTest(beforeTest="openEditTextTyping", afterTest="goBackHome",
-        expectedFrames=EXPECTED_FRAMES)
-    @GfxMonitor(processName=PACKAGE_NAME)
+    @JankTest(beforeTest = "openEditTextTyping", expectedFrames = EXPECTED_FRAMES)
+    @GfxMonitor(processName = PACKAGE_NAME)
     public void testEditTextTyping() {
-        SystemClock.sleep(mHelper.LONG_TIMEOUT);
+        SystemClock.sleep(mHelper.LONG_TIMEOUT * 2);
     }
 
     // Open Layout Cache High Hitrate
     public void openLayoutCacheHighHitrate() {
-        openTextComponents("Layout Cache High Hitrate");
+        mHelper.launchActivity("TextCacheHighHitrateActivity",
+                "Text/Layout Cache High Hitrate");
+        mHelper.mContents = mDevice.wait(Until.findObject(
+                By.clazz(ListView.class)), mHelper.TIMEOUT);
+        Assert.assertNotNull("LayoutCacheHighHitrateContents isn't found",
+                mHelper.mContents);
     }
 
     // Test Layout Cache High Hitrate fling
-    @JankTest(beforeTest="openLayoutCacheHighHitrate", afterTest="goBackHome",
-        expectedFrames=EXPECTED_FRAMES)
-    @GfxMonitor(processName=PACKAGE_NAME)
+    @JankTest(beforeTest = "openLayoutCacheHighHitrate", expectedFrames = EXPECTED_FRAMES)
+    @GfxMonitor(processName = PACKAGE_NAME)
     public void testLayoutCacheHighHitrateFling() {
-        UiObject2 layoutCacheHighHitrateContents = mDevice.wait(Until.findObject(
-                By.clazz(ListView.class)), mHelper.TIMEOUT);
-        Assert.assertNotNull("LayoutCacheHighHitrateContents isn't found", layoutCacheHighHitrateContents);
-
-        for (int i = 0; i < mHelper.INNER_LOOP; i++) {
-            try {
-                layoutCacheHighHitrateContents.fling(Direction.DOWN);
-                SystemClock.sleep(mHelper.SHORT_TIMEOUT);
-                layoutCacheHighHitrateContents.fling(Direction.UP);
-                SystemClock.sleep(mHelper.SHORT_TIMEOUT);
-            } catch (StaleObjectException soex) {
-                layoutCacheHighHitrateContents = mDevice.wait(Until.findObject(
-                By.clazz(ListView.class)), mHelper.TIMEOUT);
-            }
-        }
+        mHelper.flingUpDown(mHelper.mContents, mHelper.SHORT_TIMEOUT, 3);
     }
 
     // Open Layout Cache Low Hitrate
     public void openLayoutCacheLowHitrate() {
-        openTextComponents("Layout Cache Low Hitrate");
+        mHelper.launchActivity("TextCacheLowHitrateActivity",
+                "Text/Layout Cache Low Hitrate");
+        mHelper.mContents = mDevice.wait(Until.findObject(
+                By.clazz(ListView.class)), mHelper.TIMEOUT);
+        Assert.assertNotNull("LayoutCacheLowHitrateContents isn't found",
+                mHelper.mContents);
     }
 
     // Test Layout Cache Low Hitrate fling
-    @JankTest(beforeTest="openLayoutCacheLowHitrate", afterTest="goBackHome",
-        expectedFrames=EXPECTED_FRAMES)
-    @GfxMonitor(processName=PACKAGE_NAME)
+    @JankTest(beforeTest = "openLayoutCacheLowHitrate", expectedFrames = EXPECTED_FRAMES)
+    @GfxMonitor(processName = PACKAGE_NAME)
     public void testLayoutCacheLowHitrateFling() {
-        UiObject2 layoutCacheLowHitrateContents = mDevice.wait(Until.findObject(
-                By.clazz(ListView.class)), mHelper.TIMEOUT);
-        Assert.assertNotNull("LayoutCacheLowHitrateContents isn't found", layoutCacheLowHitrateContents);
-
-        for (int i = 0; i < mHelper.INNER_LOOP; i++) {
-            try {
-                layoutCacheLowHitrateContents.fling(Direction.DOWN);
-                SystemClock.sleep(mHelper.SHORT_TIMEOUT);
-                layoutCacheLowHitrateContents.fling(Direction.UP);
-                SystemClock.sleep(mHelper.SHORT_TIMEOUT);
-            } catch (StaleObjectException soex) {
-                layoutCacheLowHitrateContents = mDevice.wait(Until.findObject(
-                By.clazz(ListView.class)), mHelper.TIMEOUT);
-            }
-         }
+        mHelper.flingUpDown(mHelper.mContents, mHelper.SHORT_TIMEOUT, 3);
     }
 
-    // Ensuring that we head back to the first screen before launching the app again
-    public void goBackHome(Bundle metrics) throws UiObjectNotFoundException {
-           mHelper.goBackHome();
-           super.afterTest(metrics);
-    }
 }
