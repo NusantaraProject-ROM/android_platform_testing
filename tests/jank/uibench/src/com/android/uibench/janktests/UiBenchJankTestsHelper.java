@@ -16,14 +16,16 @@
 
 package com.android.uibench.janktests;
 
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.os.SystemClock;
 import android.support.test.uiautomator.By;
+import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
-import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.Until;
-
+import junit.framework.Assert;
 /**
  * Jank benchmark tests helper for UiBench app
  */
@@ -31,70 +33,62 @@ import android.support.test.uiautomator.Until;
 public class UiBenchJankTestsHelper {
     public static final int LONG_TIMEOUT = 5000;
     public static final int TIMEOUT = 250;
-    public static final int SHORT_TIMEOUT = 250;
-    public static final int INNER_LOOP = 3;
+    public static final int SHORT_TIMEOUT = 2000;
     public static final int EXPECTED_FRAMES = 100;
 
-    public static final String RES_PACKAGE_NAME = "android";
     public static final String PACKAGE_NAME = "com.android.test.uibench";
-    private static final String LEANBACK_LAUNCHER = "com.google.android.leanbacklauncher";
 
     private static UiBenchJankTestsHelper mInstance;
-    private UiDevice mDevice;
+    private static UiDevice mDevice;
     private Context mContext;
+    protected UiObject2 mContents;
 
-    private UiBenchJankTestsHelper(UiDevice device, Context context) {
-        mDevice = device;
+    private UiBenchJankTestsHelper(Context context, UiDevice device) {
         mContext = context;
+        mDevice = device;
     }
 
-    public static UiBenchJankTestsHelper getInstance(UiDevice device) {
-        return new UiBenchJankTestsHelper(device, null);
-    }
-
-    public static UiBenchJankTestsHelper getInstance(UiDevice device, Context context) {
+    public static UiBenchJankTestsHelper getInstance(Context context, UiDevice device) {
         if (mInstance == null) {
-            mInstance = new UiBenchJankTestsHelper(device, context);
+            mInstance = new UiBenchJankTestsHelper(context, device);
         }
         return mInstance;
     }
 
-    // Launch UiBench app
-    public void launchUiBench() {
-        Intent intent = mContext.getPackageManager()
-                .getLaunchIntentForPackage(PACKAGE_NAME);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+    /**
+     * Launch activity using intent
+     * @param activityName
+     * @param verifyText
+     */
+    public void launchActivity(String activityName, String verifyText) {
+        ComponentName cn = new ComponentName(PACKAGE_NAME,
+                String.format("%s.%s", PACKAGE_NAME, activityName));
+        Intent intent = new Intent(Intent.ACTION_MAIN);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        intent.setComponent(cn);
+        // Launch the activity
         mContext.startActivity(intent);
-        mDevice.waitForIdle();
-        // ensure test starts from home despite last failed test left UiBench in weird state
-        UiObject2 initScreen = mDevice.wait(Until.findObject(By.text("UiBench")), 2000);
-        int counter = 3;
-        while (initScreen == null && --counter > 0) {
-            mDevice.pressBack();
-            initScreen = mDevice.wait(Until.findObject(By.text("UiBench")), 2000);
+        UiObject2 expectedTextCmp = mDevice.wait(Until.findObject(
+                By.text(verifyText)), LONG_TIMEOUT);
+        Assert.assertNotNull(String.format("Issue in opening %s", activityName),
+                expectedTextCmp);
+    }
+
+    /**
+     * To perform the fling down and up on given content for flingCount number
+     * of times
+     * @param content
+     * @param timeout
+     * @param flingCount
+     */
+    public void flingUpDown(UiObject2 content, long timeout, int flingCount) {
+        for (int count = 0; count < flingCount; count++) {
+            SystemClock.sleep(timeout);
+            content.fling(Direction.DOWN);
+            SystemClock.sleep(timeout);
+            content.fling(Direction.UP);
         }
     }
 
-    // Helper method to go back to home screen
-    public void goBackHome() throws UiObjectNotFoundException {
-        UiObject2 homeScreen = getHomeScreen();
-        while (homeScreen == null) {
-            mDevice.pressBack();
-            homeScreen = getHomeScreen();
-        }
-    }
-
-    // This method distinguishes between home screen for handheld devices
-    // and home screen for Android TV, both of whom have different Home elements.
-    public UiObject2 getHomeScreen() throws UiObjectNotFoundException {
-        if (mDevice.getProductName().equals("fugu")) {
-            return mDevice.wait(Until.findObject(By.res(LEANBACK_LAUNCHER, "main_list_view")),
-                    LONG_TIMEOUT);
-        }
-        else {
-            String launcherPackage = mDevice.getLauncherPackageName();
-            return mDevice.wait(Until.findObject(By.res(launcherPackage,"workspace")),
-                    LONG_TIMEOUT);
-        }
-    }
 }
