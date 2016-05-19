@@ -19,7 +19,6 @@ package com.android.uibench.janktests;
 import static com.android.uibench.janktests.UiBenchJankTestsHelper.EXPECTED_FRAMES;
 import static com.android.uibench.janktests.UiBenchJankTestsHelper.PACKAGE_NAME;
 
-import android.os.SystemClock;
 import android.support.test.jank.GfxMonitor;
 import android.support.test.jank.JankTest;
 import android.support.test.jank.JankTestBase;
@@ -54,7 +53,7 @@ public class UiBenchTextJankTests extends JankTestBase {
     }
 
     // Open EditText Typing
-    public void openEditTextTyping() {
+    /*public void openEditTextTyping() {
         mHelper.launchActivity("EditTextTypeActivity",
                 "Text/EditText Typing");
     }
@@ -64,7 +63,7 @@ public class UiBenchTextJankTests extends JankTestBase {
     @GfxMonitor(processName = PACKAGE_NAME)
     public void testEditTextTyping() {
         SystemClock.sleep(mHelper.LONG_TIMEOUT * 2);
-    }
+    }*/
 
     // Open Layout Cache High Hitrate
     public void openLayoutCacheHighHitrate() {
