@@ -63,7 +63,7 @@ public class DataUsageSettingsTests extends InstrumentationTestCase {
                 mDevice.wait(Until.findObject(By.res(SETTINGS_PACKAGE,
                 "color_bar")), TIMEOUT));
         assertNotNull("Data saver element not found",
-                mDevice.wait(Until.findObject(By.text("Data Saver")),
+                mDevice.wait(Until.findObject(By.text("Data saver")),
                 TIMEOUT));
         assertNotNull("WiFi Data usage element not found",
                 mDevice.wait(Until.findObject(By.text("Wi-Fi data usage")),

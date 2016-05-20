@@ -164,8 +164,8 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
     public void testKeepWiFiDuringSleepAlways() throws Exception {
         // Change the default and then change it back
         Settings.Global.putInt(getInstrumentation().getContext().getContentResolver(),
-                Settings.Global.WIFI_SLEEP_POLICY, Settings.Global.WIFI_SLEEP_POLICY_NEVER);
-        verifyKeepWiFiOnDuringSleep("Always", Settings.Global.WIFI_SLEEP_POLICY_DEFAULT);
+                Settings.Global.WIFI_SLEEP_POLICY, Settings.Global.WIFI_SLEEP_POLICY_DEFAULT);
+        verifyKeepWiFiOnDuringSleep("Always", Settings.Global.WIFI_SLEEP_POLICY_NEVER);
     }
 
     @MediumTest
@@ -176,7 +176,7 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
 
     @MediumTest
     public void testKeepWiFiDuringSleepNever() throws Exception {
-        verifyKeepWiFiOnDuringSleep("Never", Settings.Global.WIFI_SLEEP_POLICY_NEVER);
+        verifyKeepWiFiOnDuringSleep("Never", Settings.Global.WIFI_SLEEP_POLICY_DEFAULT);
     }
 
     @MediumTest
@@ -654,6 +654,10 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
                 continue;
             }
             // If we get here, we successfully clicked on the Add network button, so we are done.
+            // Adding a sleep and a back press to dismiss the IME, as a workaround for
+            // b/28862652
+            Thread.sleep(SLEEP_TIME*5);
+            mDevice.pressBack();
             return;
         }
 
