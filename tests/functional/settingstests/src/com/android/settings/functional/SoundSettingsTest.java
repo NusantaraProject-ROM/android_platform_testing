@@ -58,15 +58,20 @@ public class SoundSettingsTest extends InstrumentationTestCase {
         mHelper.clickSetting("Other sounds");
         Thread.sleep(1000);
         try {
-            assertTrue(mHelper.verifyToggleSetting(SettingsType.SYSTEM, PAGE,
-                    "Dial pad tones", Settings.System.DTMF_TONE_WHEN_DIALING));
-            assertTrue(mHelper.verifyToggleSetting(SettingsType.SYSTEM, PAGE,
+            assertTrue("Dial pad tones not toggled", mHelper.verifyToggleSetting(
+                    SettingsType.SYSTEM, PAGE, "Dial pad tones",
+                    Settings.System.DTMF_TONE_WHEN_DIALING));
+            assertTrue("Screen locking sounds not toggled",
+                    mHelper.verifyToggleSetting(SettingsType.SYSTEM, PAGE,
                     "Screen locking sounds", Settings.System.LOCKSCREEN_SOUNDS_ENABLED));
-            assertTrue(mHelper.verifyToggleSetting(SettingsType.GLOBAL, PAGE,
+            assertTrue("Charging sounds not toggled",
+                    mHelper.verifyToggleSetting(SettingsType.GLOBAL, PAGE,
                     "Charging sounds", Settings.Global.CHARGING_SOUNDS_ENABLED));
-            assertTrue(mHelper.verifyToggleSetting(SettingsType.SYSTEM, PAGE,
+            assertTrue("Touch sounds not toggled",
+                    mHelper.verifyToggleSetting(SettingsType.SYSTEM, PAGE,
                     "Touch sounds", Settings.System.SOUND_EFFECTS_ENABLED));
-            assertTrue(mHelper.verifyToggleSetting(SettingsType.SYSTEM, PAGE,
+            assertTrue("Vibrate on tap not toggled",
+                    mHelper.verifyToggleSetting(SettingsType.SYSTEM, PAGE,
                     "Vibrate on tap", Settings.System.HAPTIC_FEEDBACK_ENABLED));
         } finally {
             mDevice.pressBack();
@@ -173,7 +178,7 @@ public class SoundSettingsTest extends InstrumentationTestCase {
     public void testPhoneRingtoneUmbriel() throws Exception {
         SettingsHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         mHelper.clickSetting("Phone ringtone");
-        verifyRingtone(new RingtoneSetting("Umbriel", "40"),
+        verifyRingtone(new RingtoneSetting("Umbriel", "49"),
                 Settings.System.RINGTONE, ScrollDir.DOWN);
     }
 
@@ -198,7 +203,7 @@ public class SoundSettingsTest extends InstrumentationTestCase {
     public void testNotificationRingtoneTitan() throws Exception {
         SettingsHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         mHelper.clickSetting("Default notification ringtone");
-        verifyRingtone(new RingtoneSetting("Titan", "26"),
+        verifyRingtone(new RingtoneSetting("Titan", "35"),
                 Settings.System.NOTIFICATION_SOUND, ScrollDir.DOWN);
     }
 
@@ -214,7 +219,7 @@ public class SoundSettingsTest extends InstrumentationTestCase {
     public void testAlarmRingtoneXenon() throws Exception {
         SettingsHelper.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         mHelper.clickSetting("Default alarm ringtone");
-        verifyRingtone(new RingtoneSetting("Xenon", "14"),
+        verifyRingtone(new RingtoneSetting("Xenon", "22"),
                 Settings.System.ALARM_ALERT, ScrollDir.DOWN);
     }
 

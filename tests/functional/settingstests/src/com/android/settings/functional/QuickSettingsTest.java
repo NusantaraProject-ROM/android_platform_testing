@@ -37,9 +37,9 @@ public class QuickSettingsTest extends InstrumentationTestCase {
     private static final int SHORT_TIMEOUT = 500;
 
     private enum QuickSettingTiles {
-        WIFI("Wifi"), SIM("SIM"), DND("Do not disturb"), FLASHLIGHT("Flashlight"), SCREEN(
-                "Screen"), BLUETOOTH("Bluetooth"), AIRPLANE("Airplane mode"), LOCATION(
-                        "Location");
+        WIFI("Wi-Fi"), SIM("SIM"), DND("Do not disturb"), FLASHLIGHT("Flashlight"), SCREEN(
+                "Auto-rotate screen"), BLUETOOTH("Bluetooth"), AIRPLANE("Airplane mode"),
+                LOCATION("Location"), BRIGHTNESS("Display brightness");
 
         private final String name;
 
@@ -77,53 +77,56 @@ public class QuickSettingsTest extends InstrumentationTestCase {
     @MediumTest
     public void testQuickSettingDrawDown() throws Exception {
         mDevice.pressHome();
+        // Draw down once to load quick settings shade only
         swipeDown();
         UiObject2 quicksettingsShade = mDevice.wait(
-                Until.findObject(By.descContains(QuickSettingTiles.WIFI.getName())),
+                Until.findObject(By.res("com.android.systemui:id/expand_indicator")),
                 LONG_TIMEOUT);
-        assertNotNull(quicksettingsShade);
+        assertNotNull("Quick settings shade not visible on draw down", quicksettingsShade);
     }
 
     @MediumTest
     public void testQuickSettingExpand() throws Exception {
-        mDevice.pressHome();
-        swipeDown();
-        swipeDown();
-        UiObject2 quicksettingsExpand = mDevice.wait(Until.findObject(By.desc("Settings")),
+        launchQuickSetting();
+        // Verify that the settings object is visible on full expansion
+        UiObject2 quicksettingsExpand = mDevice.wait(Until.findObject(By.desc("Open settings.")),
                 LONG_TIMEOUT);
-        assertNotNull(quicksettingsExpand);
+        assertNotNull("Quick settings shade did not expand correctly on two swipe downs",
+                quicksettingsExpand);
     }
 
     @MediumTest
     public void testQuickSettingCollapse() throws Exception {
-        mDevice.pressHome();
-        swipeDown();
-        swipeDown();
+        launchQuickSetting();
+        // Tap on the expand chevron once more to collapse the QS shade
         mDevice.wait(Until.findObject(By.res("com.android.systemui:id/expand_indicator")),
                 LONG_TIMEOUT).click();
-        UiObject2 quicksettingsShade = mDevice.wait(
-                Until.findObject(By.descContains(QuickSettingTiles.WIFI.getName())),
+
+        // Verify that the brightness slider which is only visible on full expansion
+        // isn't visible in the collapsed state
+        UiObject2 quicksettingsExpandedShade = mDevice.wait(
+                Until.findObject(By.descContains(QuickSettingTiles.BRIGHTNESS.getName())),
                 LONG_TIMEOUT);
-        assertNotNull(quicksettingsShade);
+        assertNotNull("Quick settings shade did not collapse correctly",
+                quicksettingsExpandedShade);
     }
 
     @MediumTest
     public void testQuickSettingDismiss() throws Exception {
-        mDevice.pressHome();
-        swipeDown();
-        swipeDown();
+        launchQuickSetting();
+        // Swipe up twice to fully dismiss quick settings
+        swipeUp();
         swipeUp();
         UiObject2 quicksettingsShade = mDevice.wait(
                 Until.findObject(By.res("com.android.systemui:id/expand_indicator")),
                 SHORT_TIMEOUT);
-        assertNull(quicksettingsShade);
+        assertNull("Quick settings collapsed shade was not dismissed correctly",
+                quicksettingsShade);
     }
 
     @MediumTest
-    public void testQuickSettingTiles() throws Exception {
-        mDevice.pressHome();
-        swipeDown();
-        swipeDown();
+    public void testQuickSettingTilesVisible() throws Exception {
+        launchQuickSetting();
         Thread.sleep(LONG_TIMEOUT);
         for (QuickSettingTiles tile : QuickSettingTiles.values()) {
             UiObject2 quickSettingTile = mDevice.wait(
@@ -216,14 +219,14 @@ public class QuickSettingsTest extends InstrumentationTestCase {
 
     @MediumTest
     public void testQuickSettingFlashLight() throws Exception {
-        String lightOn = "Flashlight on.";
-        String lightOff = "Flashlight off.";
+        String lightOn = "On";
+        String lightOff = "Off";
         boolean verifyOn = false;
         launchQuickSetting();
         UiObject2 flashLight = mDevice.wait(
                 Until.findObject(By.descContains(QuickSettingTiles.FLASHLIGHT.getName())),
                 LONG_TIMEOUT);
-        if (flashLight.getContentDescription().equals(lightOn)) {
+        if (flashLight.getText().equals(lightOn)) {
             verifyOn = true;
         }
         mDevice.wait(Until.findObject(By.textContains(QuickSettingTiles.FLASHLIGHT.getName())),
@@ -233,9 +236,9 @@ public class QuickSettingsTest extends InstrumentationTestCase {
                 Until.findObject(By.descContains(QuickSettingTiles.FLASHLIGHT.getName())),
                 LONG_TIMEOUT);
         if (verifyOn) {
-            assertTrue(flashLight.getContentDescription().equals(lightOff));
+            assertTrue(flashLight.getText().equals(lightOff));
         } else {
-            assertTrue(flashLight.getContentDescription().equals(lightOn));
+            assertTrue(flashLight.getText().equals(lightOn));
             mDevice.wait(Until.findObject(By.textContains(QuickSettingTiles.FLASHLIGHT.getName())),
                     LONG_TIMEOUT).click();
         }

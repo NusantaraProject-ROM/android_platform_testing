@@ -99,7 +99,7 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
     public void testDaydreamToggle() throws Exception {
         SettingsHelperImpl.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         Pattern p = Pattern.compile("On|Off");
-        mHelper.clickSetting("Daydream");
+        mHelper.clickSetting("Screen saver");
         Thread.sleep(1000);
         try {
             assertTrue(mHelper.verifyToggleSetting(SettingsType.SECURE, PAGE, p,
@@ -122,6 +122,7 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
         };
         int currentAccelSetting = Settings.System.getInt(
                 mResolver, Settings.System.ACCELEROMETER_ROTATION);
+        mHelper.scrollVert(false);
         mHelper.clickSetting("When device is rotated");
         assertTrue(mHelper.verifyToggleSetting(SettingsType.SYSTEM, PAGE,
                 buttons[currentAccelSetting], Settings.System.ACCELEROMETER_ROTATION, false));
@@ -136,7 +137,7 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
         SettingsHelperImpl.launchSettingsPage(getInstrumentation().getContext(), PAGE);
         try {
             assertTrue(mHelper.verifyRadioSetting(SettingsType.SECURE, PAGE,
-                    "Daydream", "Clock", Settings.Secure.SCREENSAVER_COMPONENTS,
+                    "Screen saver", "Clock", Settings.Secure.SCREENSAVER_COMPONENTS,
                     "com.google.android.deskclock/com.android.deskclock.Screensaver"));
             assertTrue(mHelper.verifyRadioSetting(SettingsType.SECURE, PAGE,
                     null, "Colors", Settings.Secure.SCREENSAVER_COMPONENTS,
