@@ -423,7 +423,9 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
             }
 
             getHdrToggleButton().click();
-            mDevice.waitForIdle();
+            // After clicking the HDR auto button should be visible.
+            mDevice.wait(Until.findObject(By.res(UI_PACKAGE_NAME, UI_HDR_AUTO_ID_4X)),
+                    DIALOG_TRANSITION_WAIT);
 
             switch (mode) {
                 case HDR_MODE_AUTO:
