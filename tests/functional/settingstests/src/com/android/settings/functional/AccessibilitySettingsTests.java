@@ -172,9 +172,9 @@ public class AccessibilitySettingsTests extends InstrumentationTestCase {
 
     private void verifyAccessibilitySettingOnOrOff(String settingText,
             String settingFlag, int initialFlagValue, int expectedFlagValue) throws Exception {
-        launchAccessibilitySettings();
         Settings.Secure.putInt(getInstrumentation().getContext().getContentResolver(),
                 settingFlag, initialFlagValue);
+        launchAccessibilitySettings();
         UiObject2 settingsTitle = findItemOnScreen(settingText);
         settingsTitle.click();
         Thread.sleep(TIMEOUT);
@@ -208,6 +208,7 @@ public class AccessibilitySettingsTests extends InstrumentationTestCase {
         // Toogle value
         settingToggle.click();
         dismissOpenDialog();
+        mDevice.pressBack();
         Thread.sleep(TIMEOUT*2);
         // Assert reset to old value
         settingValue = Settings.Secure.
