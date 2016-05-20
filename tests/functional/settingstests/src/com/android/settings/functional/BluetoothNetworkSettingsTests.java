@@ -104,6 +104,9 @@ public class BluetoothNetworkSettingsTests extends InstrumentationTestCase {
      */
     public void verifyBluetoothOverflowOptions(String overflowOptionText, boolean verifyClick,
             String optionLoaded) throws Exception {
+        BluetoothAdapter bluetoothAdapter = ((BluetoothManager) getInstrumentation().getContext()
+                .getSystemService(Context.BLUETOOTH_SERVICE)).getAdapter();
+        bluetoothAdapter.enable();
         launchBluetoothSettings();
         mDevice.wait(Until.findObject(By.desc("More options")), TIMEOUT).click();
         Thread.sleep(TIMEOUT);
