@@ -20,6 +20,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.RemoteException;
 import android.os.SystemClock;
+import android.platform.test.helpers.SettingsHelperImpl;
 import android.provider.Settings;
 import android.provider.Settings.SettingNotFoundException;
 import android.util.Log;
@@ -86,14 +87,19 @@ public class MainSettingsTests extends InstrumentationTestCase {
     }
 
     private void launchMainSettingsCategory(String category, String[] items) throws Exception {
-        launchMainSettings(Settings.ACTION_SETTINGS);
-        UiObject2 settingHeading = mDevice.wait(Until.findObject(By.text("Settings")),
-                TIMEOUT * 2);
-        assertNotNull("Setting menu has not loaded correctly", settingHeading);
+        SettingsHelper.launchSettingsPage(getInstrumentation().getContext(),
+                Settings.ACTION_SETTINGS);
         launchSettingItems(category);
         for (String i : items) {
             launchSettingItems(i);
             Log.d(SETTINGS_PACKAGE, String.format("launch setting: %s", i));
+        }
+        UiObject2 mainSettings = mDevice.wait(
+                Until.findObject(By.res("com.android.settings:id/main_content")),
+                TIMEOUT);
+        // Scrolling back up twice so we're at the top of the settings list.
+        for ( int i = 0; i < 2; i++) {
+            mainSettings.scroll(Direction.UP, 1.0f);
         }
     }
 
