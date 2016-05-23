@@ -210,6 +210,8 @@ public class AppSmokeTest {
     @After
     public void after() throws RemoteException {
         mDevice.pressHome();
+        ActivityManagerNative.getDefault().forceStopPackage(
+                mAppInfo.packageName, UserHandle.USER_ALL);
         ActivityManagerNative.getDefault().setActivityController(null, false);
     }
 
