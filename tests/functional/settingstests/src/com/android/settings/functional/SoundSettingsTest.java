@@ -33,6 +33,7 @@ public class SoundSettingsTest extends InstrumentationTestCase {
     public void setUp() throws Exception {
         super.setUp();
         mDevice = UiDevice.getInstance(getInstrumentation());
+        mDevice.setOrientationNatural();
         mResolver = getInstrumentation().getContext().getContentResolver();
         mHelper = new SettingsHelperImpl(getInstrumentation());
         ConditionProviders cps = new ConditionProviders(
@@ -40,6 +41,12 @@ public class SoundSettingsTest extends InstrumentationTestCase {
         mZenHelper = new ZenModeHelper(getInstrumentation().getContext(),
                 getInstrumentation().getContext().getMainLooper(),
                 cps);
+    }
+
+    @Override
+    public void tearDown() throws Exception {
+        mDevice.unfreezeRotation();
+        super.tearDown();
     }
 
     @MediumTest
