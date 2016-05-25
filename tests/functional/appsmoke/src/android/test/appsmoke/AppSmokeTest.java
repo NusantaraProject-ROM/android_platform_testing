@@ -35,8 +35,10 @@ import android.support.test.uiautomator.UiDevice;
 import android.util.Log;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -65,7 +67,7 @@ public class AppSmokeTest {
     private boolean mAppHasError = false;
     private boolean mLaunchIntentDetected = false;
     private ILauncherStrategy mLauncherStrategy = null;
-    private UiDevice mDevice = null;
+    private static UiDevice sDevice = null;
 
     /**
      * Convenient internal class to hold some launch specific data
@@ -201,18 +203,28 @@ public class AppSmokeTest {
     @Before
     public void before() throws RemoteException {
         ActivityManagerNative.getDefault().setActivityController(mActivityController, false);
-        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-        mLauncherStrategy = LauncherStrategyFactory.getInstance(mDevice).getLauncherStrategy();
+        mLauncherStrategy = LauncherStrategyFactory.getInstance(sDevice).getLauncherStrategy();
         mAppHasError = false;
         mLaunchIntentDetected = false;
     }
 
+    @BeforeClass
+    public static void beforeClass() throws RemoteException {
+        sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+        sDevice.setOrientationNatural();
+    }
+
     @After
     public void after() throws RemoteException {
-        mDevice.pressHome();
+        sDevice.pressHome();
         ActivityManagerNative.getDefault().forceStopPackage(
                 mAppInfo.packageName, UserHandle.USER_ALL);
         ActivityManagerNative.getDefault().setActivityController(null, false);
+    }
+
+    @AfterClass
+    public static void afterClass() throws RemoteException {
+        sDevice.unfreezeRotation();
     }
 
     @Test
@@ -236,10 +248,10 @@ public class AppSmokeTest {
     }
 
     private void pokeApp() {
-        int w = mDevice.getDisplayWidth();
-        int h = mDevice.getDisplayHeight();
+        int w = sDevice.getDisplayWidth();
+        int h = sDevice.getDisplayHeight();
         int dY = h / 4;
-        boolean ret = mDevice.swipe(w / 2, h / 2 + dY, w / 2, h / 2 - dY, 40);
+        boolean ret = sDevice.swipe(w / 2, h / 2 + dY, w / 2, h / 2 - dY, 40);
         if (!ret) {
             Log.w(TAG, "Failed while attempting to poke front end window with swipe");
         }
