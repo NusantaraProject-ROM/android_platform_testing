@@ -221,26 +221,26 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
         BySelector proxySettingsBySelector =
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_PROXY_SETTINGS_RES_ID)
                 .clazz(SPINNER_CLASS);
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR, proxySettingsBySelector);
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR, proxySettingsBySelector);
         assertEquals("None", mDevice.wait(Until.findObject(proxySettingsBySelector), TIMEOUT)
                 .getChildren().get(0).getText());
 
         // Verify that Proxy Manual fields appear.
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR, proxySettingsBySelector);
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR, proxySettingsBySelector);
         mDevice.wait(Until.findObject(proxySettingsBySelector), TIMEOUT).click();
         mDevice.wait(Until.findObject(By.text("Manual")), TIMEOUT).click();
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, "proxy_warning_limited_support"));
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, "proxy_hostname"));
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, "proxy_exclusionlist"));
 
         // Verify that Proxy Auto-Config options appear.
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR, proxySettingsBySelector);
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR, proxySettingsBySelector);
         mDevice.wait(Until.findObject(proxySettingsBySelector), TIMEOUT).click();
         mDevice.wait(Until.findObject(By.text("Proxy Auto-Config")), TIMEOUT).click();
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, "proxy_pac"));
     }
 
@@ -256,21 +256,23 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
         // Verify IP settings defaults to DHCP.
         BySelector ipSettingsBySelector =
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_IP_SETTINGS_RES_ID).clazz(SPINNER_CLASS);
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR, ipSettingsBySelector);
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR, ipSettingsBySelector);
         assertEquals("DHCP", mDevice.wait(Until.findObject(ipSettingsBySelector), TIMEOUT)
                 .getChildren().get(0).getText());
 
         // Verify that Static IP settings options appear.
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR, ipSettingsBySelector).click();
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR, ipSettingsBySelector).click();
         mDevice.wait(Until.findObject(By.text("Static")), TIMEOUT).click();
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, "ipaddress"));
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, "gateway"));
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, "network_prefix_length"));
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR, By.res(SETTINGS_PACKAGE, "dns1"));
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR, By.res(SETTINGS_PACKAGE, "dns2"));
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, "dns1"));
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+                By.res(SETTINGS_PACKAGE, "dns2"));
     }
 
     @MediumTest
@@ -280,7 +282,7 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
 
         BySelector phase2SettingsBySelector =
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_PHASE2_RES_ID).clazz(SPINNER_CLASS);
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR, phase2SettingsBySelector);
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR, phase2SettingsBySelector);
         assertEquals(PHASE2_MENU_NONE_TEXT, mDevice.wait(Until
                 .findObject(phase2SettingsBySelector), TIMEOUT).getChildren().get(0).getText());
         mDevice.wait(Until.findObject(phase2SettingsBySelector), TIMEOUT).click();
@@ -299,7 +301,7 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
 
         BySelector caCertSettingsBySelector =
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_CACERT_RES_ID).clazz(SPINNER_CLASS);
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR, caCertSettingsBySelector);
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR, caCertSettingsBySelector);
         assertEquals(CACERT_MENU_PLEASE_SELECT_TEXT, mDevice.wait(Until
                 .findObject(caCertSettingsBySelector), TIMEOUT).getChildren().get(0).getText());
         mDevice.wait(Until.findObject(caCertSettingsBySelector), TIMEOUT).click();
@@ -316,15 +318,15 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
         // Verify that a domain field and warning appear when the user selects the
         // "Use system certificates" option.
         mDevice.wait(Until.findObject(By.text(CACERT_MENU_USE_SYSTEM_CERTS_TEXT)), TIMEOUT).click();
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_DOMAIN_LAYOUT_RES_ID));
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_NO_DOMAIN_WARNING_RES_ID));
 
         // Verify that a warning appears when the user chooses the "Do Not Validate" option.
         mDevice.wait(Until.findObject(caCertSettingsBySelector), TIMEOUT).click();
         mDevice.wait(Until.findObject(By.text(CACERT_MENU_DO_NOT_VALIDATE_TEXT)), TIMEOUT).click();
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_NO_CACERT_WARNING_RES_ID));
     }
 
@@ -347,9 +349,9 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
                 By.text(ADD_NETWORK_MENU_SAVE_BUTTON_TEXT)), TIMEOUT).isEnabled());
 
         // Verify that WEP fields appear.
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_PASSWORD_LAYOUT_RES_ID));
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_SHOW_PASSWORD_LAYOUT_RES_ID));
 
         // Entering an SSID alone does not enable the submit button.
@@ -371,9 +373,9 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
                 By.text(ADD_NETWORK_MENU_SAVE_BUTTON_TEXT)), TIMEOUT).isEnabled());
 
         // Verify that PSK fields appear.
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_PASSWORD_LAYOUT_RES_ID));
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_SHOW_PASSWORD_LAYOUT_RES_ID));
 
         // Entering an SSID alone does not enable the submit button.
@@ -402,17 +404,17 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
         selectEAPMethod(EAP_METHOD_PEAP_TEXT);
 
         // Verify that EAP-PEAP fields appear.
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_PHASE2_RES_ID));
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_CACERT_RES_ID));
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_IDENTITY_LAYOUT_RES_ID));
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_ANONYMOUS_LAYOUT_RES_ID));
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_PASSWORD_LAYOUT_RES_ID));
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_SHOW_PASSWORD_LAYOUT_RES_ID));
 
         // Entering an SSID alone does not enable the submit button.
@@ -433,11 +435,11 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
         selectEAPMethod(EAP_METHOD_TLS_TEXT);
 
         // Verify that EAP-TLS fields appear.
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_CACERT_RES_ID));
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_USERCERT_RES_ID));
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_IDENTITY_LAYOUT_RES_ID));
 
         // Entering an SSID alone does not enable the submit button.
@@ -464,15 +466,15 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
         selectEAPMethod(EAP_METHOD_TTLS_TEXT);
 
         // Verify that EAP-TLS fields appear.
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_PHASE2_RES_ID));
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_CACERT_RES_ID));
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_IDENTITY_LAYOUT_RES_ID));
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_ANONYMOUS_LAYOUT_RES_ID));
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_PASSWORD_LAYOUT_RES_ID));
 
         // Entering an SSID alone does not enable the submit button.
@@ -493,9 +495,9 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
         selectEAPMethod(EAP_METHOD_PWD_TEXT);
 
         // Verify that EAP-TLS fields appear.
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_IDENTITY_LAYOUT_RES_ID));
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_PASSWORD_LAYOUT_RES_ID));
 
         // Entering an SSID alone enables the submit button.
@@ -647,7 +649,8 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
         for (int attempts = 0; attempts < MAX_ADD_NETWORK_BUTTON_ATTEMPTS; ++attempts) {
             UiObject2 found = null;
             try {
-                scrollToObject(By.scrollable(true), By.text(ADD_NETWORK_PREFERENCE_TEXT)).click();
+                findOrScrollToObject(By.scrollable(true), By.text(ADD_NETWORK_PREFERENCE_TEXT))
+                        .click();
             } catch (StaleObjectException e) {
                 // The network list might have been updated between when the Add network button was
                 // found, and when it UI automator attempted to click on it. Retry.
@@ -676,22 +679,22 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
     }
 
     private void selectEAPMethod(String eapMethod) throws Exception {
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_EAP_METHOD_RES_ID).clazz(SPINNER_CLASS))
                 .click();
         Thread.sleep(SLEEP_TIME);
-        scrollToObject(SPINNER_OPTIONS_SCROLLABLE_BY_SELECTOR, By.text(eapMethod)).click();
+        findOrScrollToObject(SPINNER_OPTIONS_SCROLLABLE_BY_SELECTOR, By.text(eapMethod)).click();
     }
 
     private void selectUserCertificateOption(String userCertificateOption) throws Exception {
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_USERCERT_RES_ID).clazz(SPINNER_CLASS))
                 .click();
         mDevice.wait(Until.findObject(By.text(userCertificateOption)), TIMEOUT).click();
     }
 
     private void selectCaCertificateOption(String caCertificateOption) throws Exception {
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_CACERT_RES_ID).clazz(SPINNER_CLASS))
                 .click();
         mDevice.wait(Until.findObject(By.text(caCertificateOption)), TIMEOUT).click();
@@ -706,13 +709,13 @@ public class WirelessNetworkSettingsTests extends InstrumentationTestCase {
     }
 
     private void enterPassword(String password) throws Exception {
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_PASSWORD_RES_ID).clazz(EDIT_TEXT_CLASS))
                 .setText(password);
     }
 
     private void enterDomain(String domain) throws Exception {
-        scrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
+        findOrScrollToObject(ADD_NETWORK_MENU_SCROLLABLE_BY_SELECTOR,
                 By.res(SETTINGS_PACKAGE, ADD_NETWORK_MENU_DOMAIN_RES_ID)).setText(domain);
     }
 
