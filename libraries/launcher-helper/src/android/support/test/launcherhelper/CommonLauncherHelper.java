@@ -16,6 +16,7 @@
 package android.support.test.launcherhelper;
 
 import android.graphics.Rect;
+import android.os.RemoteException;
 import android.os.SystemClock;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
@@ -136,6 +137,15 @@ public class CommonLauncherHelper {
      */
     public long launchApp(ILauncherStrategy launcherStrategy, BySelector app,
             String packageName, int maxScrollAttempts) {
+        unlockDeviceIfAsleep();
+
+        if (isAppOpen(packageName)) {
+            // Application is already open
+            return 0;
+        }
+
+        // Go to the home page
+        launcherStrategy.open();
         Direction dir = launcherStrategy.getAllAppsScrollDirection();
         // attempt to find the app icon if it's not already on the screen
         if (!mDevice.hasObject(app)) {
@@ -175,6 +185,25 @@ public class CommonLauncherHelper {
             }
         } else {
             return ready;
+        }
+    }
+
+    private boolean isAppOpen (String appPackage) {
+        return mDevice.hasObject(By.pkg(appPackage).depth(0));
+    }
+
+    private void unlockDeviceIfAsleep () {
+        // Turn screen on if necessary
+        try {
+            if (!mDevice.isScreenOn()) {
+                mDevice.wakeUp();
+            }
+        } catch (RemoteException e) {
+            Log.e(LOG_TAG, "Failed to unlock the screen-off device.", e);
+        }
+        // Check for lock screen element
+        if (mDevice.hasObject(By.res("com.android.systemui", "keyguard_bottom_area"))) {
+            mDevice.pressMenu();
         }
     }
 }
