@@ -206,20 +206,25 @@ public class DismissDialogsInstrumentation extends Instrumentation {
 
     private boolean dismissDialogs(String app) throws NoSuchMethodException, InstantiationException,
             IllegalAccessException, InvocationTargetException {
-        if (mKeyHelperMap.containsKey(app)) {
-            Class<? extends IStandardAppHelper> appHelperClass = mKeyHelperMap.get(app);
-            IStandardAppHelper helper =
-                    appHelperClass.getDeclaredConstructor(Instrumentation.class).newInstance(this);
-            takeScreenDump(app, "-dialog1-pre-open");
-            helper.open();
-            takeScreenDump(app, "-dialog2-pre-dismissal");
-            helper.dismissInitialDialogs();
-            takeScreenDump(app, "-dialog3-post-dismissal");
-            helper.exit();
-            takeScreenDump(app, "-dialog4-post-exit");
-            return true;
-        } else {
-            return false;
+        try {
+            if (mKeyHelperMap.containsKey(app)) {
+                Class<? extends IStandardAppHelper> appHelperClass = mKeyHelperMap.get(app);
+                IStandardAppHelper helper =
+                        appHelperClass.getDeclaredConstructor(Instrumentation.class).newInstance(this);
+                takeScreenDump(app, "-dialog1-pre-open");
+                helper.open();
+                takeScreenDump(app, "-dialog2-pre-dismissal");
+                helper.dismissInitialDialogs();
+                takeScreenDump(app, "-dialog3-post-dismissal");
+                helper.exit();
+                takeScreenDump(app, "-dialog4-post-exit");
+                return true;
+            } else {
+                return false;
+            }
+        } catch (Exception | AssertionError e) {
+            takeScreenDump(app, "-exception");
+            throw e;
         }
     }
 
