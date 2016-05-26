@@ -27,22 +27,29 @@ public abstract class AbstractMapsHelper extends AbstractStandardAppHelper {
     /**
      * Setup expectation: On the standard Map screen in any setup.
      *
-     * Goes to the query screen (if not currently there), does a search, and selects the results.
-     * Blocks until the result can be set as a destination.
+     * Best effort attempt to go to the query screen (if not currently there),
+     * does a search, and selects the results.
      */
     public abstract void doSearch(String query);
 
     /**
      * Setup expectation: Destination is selected.
      *
-     * Goes to the directions screen for the selected destination.
+     * Best effort attempt to go to the directions screen for the selected destination.
      */
     public abstract void getDirections();
 
     /**
      * Setup expectation: On directions screen.
      *
-     * Goes to the navigation screen for the selected destination.
+     * Best effort attempt to start navigation for the selected destination.
      */
     public abstract void startNavigation();
+
+    /**
+     * Setup expectation: On navigation screen.
+     *
+     * Best effort attempt to stop navigation, and go back to the directions screen.
+     */
+    public abstract void stopNavigation();
 }
