@@ -51,12 +51,15 @@ public class GmailHelperImpl extends AbstractGmailHelper {
     private static final long RELOAD_INBOX_TIMEOUT = 10 * 1000;
     private static final long COMPOSE_EMAIL_TIMEOUT = 10 * 1000;
 
+    private static final String UI_ATTACHMENT_TILE_SAVE_ID = "attachment_tile_save";
+    private static final String UI_NAME_ID = "name";
     private static final String UI_PACKAGE_NAME = "com.google.android.gm";
     private static final String UI_PROMO_ACTION_NEG_RES = "promo_action_negative_single_line";
     private static final String UI_CONVERSATIONS_LIST_ID = "conversation_list_view";
+    private static final String UI_CONVERSATION_LIST_LOADING_VIEW_ID =
+            "conversation_list_loading_view";
     private static final String UI_CONVERSATION_PAGER = "conversation_pager";
     private static final String UI_MULTI_PANE_CONTAINER_ID = "two_pane_activity";
-    private static final String UI_SEARCH_ID = "search";
     private static final BySelector PRIMARY_SELECTOR =
             By.res(UI_PACKAGE_NAME, "name").text("Primary");
     private static final BySelector INBOX_SELECTOR =
@@ -192,18 +195,16 @@ public class GmailHelperImpl extends AbstractGmailHelper {
             // If in another e-mail sub-folder, go to Primary or Inbox
             if (!isInPrimaryOrInbox()) {
                 // Search with the navigation drawer
-                UiObject2 backBtn = mDevice.findObject(By.desc("Open navigation drawer"));
-                if (backBtn != null) {
-                    backBtn.click();
-                    // Select for "Primary" and for "Inbox"
-                    UiObject2 primaryInboxSelector = mDevice.findObject(PRIMARY_SELECTOR);
-                    if (primaryInboxSelector == null) {
-                        primaryInboxSelector = mDevice.findObject(INBOX_SELECTOR);
-                    }
+                openNavigationDrawer();
 
-                    primaryInboxSelector.click();
-                    waitForConversationsList();
+                // Select for "Primary" and for "Inbox"
+                UiObject2 primaryInboxSelector = mDevice.findObject(PRIMARY_SELECTOR);
+                if (primaryInboxSelector == null) {
+                    primaryInboxSelector = mDevice.findObject(INBOX_SELECTOR);
                 }
+
+                primaryInboxSelector.click();
+                waitForConversationsList();
             }
         }
     }
@@ -225,11 +226,8 @@ public class GmailHelperImpl extends AbstractGmailHelper {
      */
     @Override
     public void openEmailByIndex(int index) {
-        if (!isMultiPaneActivity()) {
-            if (!isInPrimaryOrInbox()) {
-                throw new IllegalStateException(
-                        "Must be in Primary or Inbox to open an e-mail by index.");
-            }
+        if (!isInMailbox()) {
+            throw new IllegalStateException("Must be in a mailbox to open an email by index");
         }
 
         if (index >= getVisibleEmailCount()) {
@@ -260,11 +258,8 @@ public class GmailHelperImpl extends AbstractGmailHelper {
      */
     @Override
     public int getVisibleEmailCount() {
-        if (!isMultiPaneActivity()) {
-            if (!isInPrimaryOrInbox()) {
-                throw new IllegalStateException(
-                        "Must be in Primary or Inbox to open an e-mail by index.");
-            }
+        if (!isInMailbox()) {
+            throw new IllegalStateException("Must be in a mailbox to open an email by index");
         }
 
         return getConversationList().getChildCount();
@@ -400,8 +395,12 @@ public class GmailHelperImpl extends AbstractGmailHelper {
                 return;
             }
 
-            UiObject2 nav = mDevice.findObject(By.desc("Navigate up"));
-            Assert.assertNotNull("'Navigate up' object not found.", nav);
+            UiObject2 nav = mDevice.findObject(By.desc(Pattern.compile(
+                    "(Open navigation drawer)|(Navigate up)")));
+
+            if (nav == null) {
+                throw new IllegalStateException("Could not find navigation drawer");
+            }
             nav.click();
             mDevice.waitForIdle();
         }
@@ -496,6 +495,68 @@ public class GmailHelperImpl extends AbstractGmailHelper {
         scroll(scrollContainer, direction, amount, scrollToEnd);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void openMailbox(String mailboxName) {
+        if (!isNavDrawerOpen()) {
+            throw new IllegalStateException("Navigation drawer is not open");
+        }
+
+        UiObject2 mailbox = null;
+        for (int scrollsRemaining = 5; scrollsRemaining > 0; --scrollsRemaining) {
+            mailbox = mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_NAME_ID).text(
+                    Pattern.compile(mailboxName, Pattern.CASE_INSENSITIVE)));
+            if (mailbox != null) {
+                break;
+            } else {
+                scrollNavigationDrawer(Direction.DOWN);
+            }
+        }
+        if (mailbox == null) {
+            throw new IllegalArgumentException(
+                    String.format("Could not find mailbox '%s'", mailboxName));
+        }
+        mailbox.click();
+        mDevice.waitForIdle();
+        mDevice.wait(Until.gone(
+                By.res(UI_PACKAGE_NAME, UI_CONVERSATION_LIST_LOADING_VIEW_ID)), WIFI_TIMEOUT);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void returnToMailbox() {
+        for (int retriesRemaining = 5; retriesRemaining > 0; --retriesRemaining) {
+            if (isInMailbox()) {
+                break;
+            } else {
+                mDevice.pressBack();
+                mDevice.waitForIdle();
+            }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void downloadAttachment(int index) {
+        if (!isInConversation()) {
+            throw new IllegalStateException("Email is not open");
+        }
+
+        List<UiObject2> downloadButtons =
+                mDevice.findObjects(By.res(UI_PACKAGE_NAME, UI_ATTACHMENT_TILE_SAVE_ID));
+        if (downloadButtons != null && index >= 0 && index < downloadButtons.size()) {
+            downloadButtons.get(index).click();
+        } else {
+            throw new IndexOutOfBoundsException("attachment index out of bounds");
+        }
+    }
+
     private UiObject2 getToField() {
         return mDevice.findObject(By.res(UI_PACKAGE_NAME, "to"));
     }
@@ -555,14 +616,15 @@ public class GmailHelperImpl extends AbstractGmailHelper {
     }
 
     private boolean isMultiPaneActivity() {
-        boolean hasMultiPane =
-                mDevice.hasObject(By.res(UI_PACKAGE_NAME, UI_MULTI_PANE_CONTAINER_ID));
-        boolean isLandscape = getOrientation() == Configuration.ORIENTATION_LANDSCAPE;
-        return (hasMultiPane && isLandscape);
+        return mDevice.hasObject(By.res(UI_PACKAGE_NAME, UI_MULTI_PANE_CONTAINER_ID));
     }
 
     private boolean isInMailbox() {
-        return mDevice.hasObject(By.res(UI_PACKAGE_NAME, UI_SEARCH_ID));
+        if (isMultiPaneActivity()) {
+            return mDevice.hasObject(By.desc("Search"));
+        } else {
+            return mDevice.hasObject(By.desc("Search")) && getNavDrawerContainer() == null;
+        }
     }
 
     private void scroll(UiObject2 scrollContainer, Direction direction,
