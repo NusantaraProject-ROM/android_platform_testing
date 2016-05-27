@@ -17,21 +17,16 @@
 package android.platform.test.helpers;
 
 import android.app.Instrumentation;
-import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.SystemClock;
 import android.support.test.uiautomator.By;
-import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.Direction;
-import android.support.test.uiautomator.Until;
-import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
+import android.support.test.uiautomator.Until;
 import android.util.Log;
 import android.webkit.WebView;
 import android.widget.ListView;
 
 import java.io.IOException;
-
-import junit.framework.Assert;
 
 public class ChromeHelperImpl extends AbstractChromeHelper {
     private static final String LOG_TAG = ChromeHelperImpl.class.getSimpleName();
@@ -143,7 +138,10 @@ public class ChromeHelperImpl extends AbstractChromeHelper {
     @Override
     public void openUrl(String url) {
         UiObject2 urlBar = getUrlBar();
-        Assert.assertNotNull("Failed to detect a URL bar", urlBar);
+        if (urlBar == null) {
+            throw new IllegalStateException("Failed to detect a URL bar");
+        }
+
         mDevice.waitForIdle();
         urlBar.setText(url);
         mDevice.pressEnter();
@@ -180,7 +178,10 @@ public class ChromeHelperImpl extends AbstractChromeHelper {
                 break;
             }
         }
-        Assert.assertNotNull("Unable to find menu button.", menuButton);
+
+        if (menuButton == null) {
+            throw new IllegalStateException("Unable to find menu button.");
+        }
         menuButton.clickAndWait(Until.newWindow(), 5000);
     }
 
@@ -267,7 +268,7 @@ public class ChromeHelperImpl extends AbstractChromeHelper {
         if (urlLoc != null) {
             urlLoc.click();
         } else {
-            Assert.fail("Failed to find a URL bar");
+            throw new IllegalStateException("Failed to find a URL bar.");
         }
 
         return urlLoc;
