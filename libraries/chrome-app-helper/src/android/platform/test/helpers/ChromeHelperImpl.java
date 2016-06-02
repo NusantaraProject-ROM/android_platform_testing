@@ -35,6 +35,8 @@ public class ChromeHelperImpl extends AbstractChromeHelper {
     private static final String UI_SEARCH_BOX_ID = "search_box_text";
     private static final String UI_URL_BAR_ID = "url_bar";
     private static final String UI_VIEW_HOLDER_ID = "compositor_view_holder";
+    private static final String UI_POSITIVE_BUTTON_ID = "positive_button";
+    private static final String UI_NEGATIVE_BUTTON_ID = "negative_button";
 
     private static final long APP_INIT_WAIT = 10000;
     private static final long MAX_DIALOG_TRANSITION = 5000;
@@ -103,12 +105,12 @@ public class ChromeHelperImpl extends AbstractChromeHelper {
             tos.click();
         }
 
-        if (mDevice.wait(Until.hasObject(By.textStartsWith("Add an account")),
-                MAX_DIALOG_TRANSITION)) {
+        if (!hasAccountRegistered()) {
             // Device has no accounts registered that Chrome recognizes
             // Select negative button to skip setup wizard sign in
             UiObject2 negative = mDevice.wait(Until.findObject(
-                    By.res(getPackage(), "negative_button")), MAX_DIALOG_TRANSITION);
+                    By.res(getPackage(), UI_NEGATIVE_BUTTON_ID)), MAX_DIALOG_TRANSITION);
+
             if (negative != null) {
                 negative.click();
             }
@@ -121,7 +123,7 @@ public class ChromeHelperImpl extends AbstractChromeHelper {
                 }
 
                 UiObject2 positive = mDevice.wait(Until.findObject(
-                        By.res(getPackage(), "positive_button")), MAX_DIALOG_TRANSITION);
+                        By.res(getPackage(), UI_POSITIVE_BUTTON_ID)), MAX_DIALOG_TRANSITION);
                 if (positive != null) {
                     positive.click();
                 }
@@ -289,5 +291,17 @@ public class ChromeHelperImpl extends AbstractChromeHelper {
 
     private boolean isInSetupWizard() {
         return mDevice.hasObject(By.res(getPackage(), "fre_pager"));
+    }
+
+    private boolean hasAccountRegistered() {
+        boolean addAcountTextPresent = mDevice.wait(Until.hasObject(By.textStartsWith("Add an " +
+                "account")), MAX_DIALOG_TRANSITION);
+
+        UiObject2 next = mDevice.wait(Until.findObject(
+                By.res(getPackage(), UI_POSITIVE_BUTTON_ID)), MAX_DIALOG_TRANSITION);
+        boolean signInButtonPresent =  next != null && "SIGN IN".equals(next.getText());
+
+        // If any of theese elements is present, then there is no account registered.
+        return !addAcountTextPresent && !signInButtonPresent;
     }
 }
