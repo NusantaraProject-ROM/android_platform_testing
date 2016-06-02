@@ -15,8 +15,14 @@
 #
 LOCAL_PATH := $(call my-dir)
 
+# Build for device side tests
 include $(CLEAR_VARS)
 LOCAL_MODULE := platform-test-annotations
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
-
 include $(BUILD_STATIC_JAVA_LIBRARY)
+
+# Build for host side tests
+include $(CLEAR_VARS)
+LOCAL_MODULE := platform-test-annotations-host
+LOCAL_SRC_FILES := $(call all-java-files-under, src)
+include $(BUILD_HOST_JAVA_LIBRARY)
