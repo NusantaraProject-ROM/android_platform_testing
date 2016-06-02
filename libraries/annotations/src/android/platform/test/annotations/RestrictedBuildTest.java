@@ -22,13 +22,15 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Marks a test that should not be executed as part of the continuous testing. Typical reason for
- * annotating a test as such is that steps used by automated test harness in preparation may break
- * precondition or assumption of the test.
+ * Marks a test as only suitable for execution on restricted builds. Such builds are typically
+ * user builds for release to end users, as opposed to userdebug or eng builds meant for
+ * development. Tests that only passes on restricted builds typically assert on tightened security
+ * restrictions not implemented on userdebug/eng builds, therefore it's important to distinguish
+ * with this annotation.
  *
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD, ElementType.TYPE})
-public @interface NotForContinuousTesting {
+public @interface RestrictedBuildTest {
 
 }
