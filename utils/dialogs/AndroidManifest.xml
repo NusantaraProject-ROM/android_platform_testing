@@ -20,6 +20,8 @@
     package="com.android.test.util.dismissdialogs">
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-sdk android:minSdkVersion="23"
+              android:targetSdkVersion="23" />
     <application>
         <uses-library android:name="android.test.runner" />
     </application>
