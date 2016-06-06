@@ -19,7 +19,7 @@ LOCAL_PACKAGE_NAME := LauncherFunctionalTests
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
 LOCAL_MODULE_TAGS := tests
 
-LOCAL_STATIC_JAVA_LIBRARIES := ub-uiautomator timeresult-helper-lib launcher-helper-lib
+LOCAL_STATIC_JAVA_LIBRARIES := ub-uiautomator timeresult-helper-lib launcher-helper-lib android-support-test
 
 LOCAL_SDK_VERSION := current
 
