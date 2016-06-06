@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.RemoteException;
 import android.provider.Settings;
 import android.provider.Settings.Global;
@@ -28,6 +29,10 @@ import android.util.Log;
 import com.android.server.notification.NotificationManagerService;
 import com.android.server.notification.ConditionProviders;
 import com.android.server.notification.ManagedServices.UserProfiles;
+
+import java.util.concurrent.Callable;
+import java.util.concurrent.FutureTask;
+
 import com.android.server.notification.ZenModeHelper;
 import com.android.server.notification.NotificationRecord;
 import com.android.server.notification.ZenModeFiltering;
@@ -50,16 +55,23 @@ public class NotificationDNDTests extends InstrumentationTestCase {
     public void setUp() throws Exception {
         super.setUp();
         mDevice = UiDevice.getInstance(getInstrumentation());
-        mContext = getInstrumentation().getContext();
+        mContext = getInstrumentation().getTargetContext();
         mNotificationManager = (NotificationManager) mContext
                 .getSystemService(Context.NOTIFICATION_SERVICE);
         mHelper = new NotificationHelper(mDevice, getInstrumentation(), mNotificationManager);
-        mResolver = getInstrumentation().getContext().getContentResolver();
+        mResolver = mContext.getContentResolver();
         ConditionProviders cps = new ConditionProviders(
-                getInstrumentation().getContext(), new Handler(), new UserProfiles());
-        mZenHelper = new ZenModeHelper(getInstrumentation().getContext(),
-                getInstrumentation().getContext().getMainLooper(),
-                cps);
+                mContext, new Handler(Looper.getMainLooper()),
+                new UserProfiles());
+        Callable<ZenModeHelper> callable = new Callable<ZenModeHelper>() {
+            @Override
+            public ZenModeHelper call() throws Exception {
+                return new ZenModeHelper(mContext, Looper.getMainLooper(), cps);
+            }
+        };
+        FutureTask<ZenModeHelper> task = new FutureTask<>(callable);
+        getInstrumentation().runOnMainSync(task);
+        mZenHelper = task.get();
         mDevice.setOrientationNatural();
         mHelper.unlockScreen();
         mDevice.pressHome();
