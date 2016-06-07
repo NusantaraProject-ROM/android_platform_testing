@@ -129,6 +129,8 @@ public class DismissDialogsInstrumentation extends Instrumentation {
         UiWatchers watcherManager = new UiWatchers();
         watcherManager.registerAnrAndCrashWatchers(this);
 
+        takeScreenDump("init", "pre-setup");
+
         try {
             mDevice.setOrientationNatural();
         } catch (RemoteException e) {
@@ -144,6 +146,7 @@ public class DismissDialogsInstrumentation extends Instrumentation {
                 sendStatusUpdate(Activity.RESULT_OK, "launcher");
                 break;
             } else {
+                takeScreenDump("init", String.format("launcher-selection-failure-%d", retry));
                 if (retry == MAX_INIT_RETRIES && mQuitOnError) {
                     throw new RuntimeException("Unable to select launcher workspace. Quitting.");
                 } else {
@@ -254,8 +257,8 @@ public class DismissDialogsInstrumentation extends Instrumentation {
                     throw new RuntimeException(String.format(
                             "Unable to create or find directory, %s.", dir.getPath()));
             }
-            File scr = new File(dir, app + suffix + ".png");
-            File uix = new File(dir, app + suffix + ".uix");
+            File scr = new File(dir, "dd-" + app + suffix + ".png");
+            File uix = new File(dir, "dd-" + app + suffix + ".uix");
             Log.v(LOG_TAG, String.format("Screen file path: %s", scr.getPath()));
             Log.v(LOG_TAG, String.format("UI XML file path: %s", uix.getPath()));
             scr.createNewFile();
