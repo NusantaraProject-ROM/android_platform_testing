@@ -123,7 +123,7 @@ public class YouTubeHelperImpl extends AbstractYouTubeHelper {
         }
 
         if (isLoading()) {
-            Assert.fail("Difficulty loading search results due to poor WiFi");
+            Assert.fail("Timed out waiting for video search result to load.");
         } else {
             Assert.fail("YouTube does not support playing videos from this page or an " +
                     "unexpected automation failure occurred.");
