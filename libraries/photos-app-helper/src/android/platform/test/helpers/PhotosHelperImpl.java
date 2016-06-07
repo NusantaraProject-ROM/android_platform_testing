@@ -19,6 +19,7 @@ package android.platform.test.helpers;
 import android.app.Instrumentation;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.SystemClock;
+import android.platform.test.helpers.exceptions.UnknownUiException;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.Direction;
@@ -32,18 +33,32 @@ import java.util.regex.Pattern;
 
 import junit.framework.Assert;
 
+
+import android.os.Environment;
+import java.io.File;
+import java.io.IOException;
+
 public class PhotosHelperImpl extends AbstractPhotosHelper {
     private static final String LOG_TAG = PhotosHelperImpl.class.getSimpleName();
 
     private static final long APP_LOAD_WAIT = 7500;
     private static final long HACKY_WAIT = 2500;
+    private static final long PICTURE_LOAD_WAIT = 20000;
     private static final long UI_NAVIGATION_WAIT = 5000;
 
     private static final Pattern UI_PHOTO_DESC = Pattern.compile("^Photo.*");
 
+    private static final String UI_DONE_BUTTON_ID = "done_button";
+    private static final String UI_GET_STARTED_ID = "get_started_container";
+    private static final String UI_LOADING_ICON_ID = "list_empty_progress_bar";
+    private static final String UI_NEXT_BUTTON_ID = "next_button";
     private static final String UI_PACKAGE_NAME = "com.google.android.apps.photos";
-    private static final String UI_PHOTOS_TEXT = "Photos";
+    private static final String UI_PHOTO_TAB_ID = "tab_photos";
+    private static final String UI_DEVICE_FOLDER_TEXT = "Device folders";
     private static final String UI_PHOTO_VIEW_PAGER_ID = "photo_view_pager";
+    private static final String UI_PHOTO_SCROLL_VIEW_ID = "recycler_view";
+    private static final String UI_NAVIGATION_LIST_ID = "navigation_list";
+    private static final int MAX_UI_SCROLL_COUNT = 20;
 
     public PhotosHelperImpl(Instrumentation instr) {
         super(instr);
@@ -71,26 +86,29 @@ public class PhotosHelperImpl extends AbstractPhotosHelper {
      */
     @Override
     public void dismissInitialDialogs() {
-        // Target Photos version 1.4.0.102264174
+        // Target Photos version 1.18.0.119671374
         SystemClock.sleep(APP_LOAD_WAIT);
-        // Press 'GET STARTED'
-        UiObject2 getStartedButton = null;
-        for (int retries = 3; retries > 0; retries--) {
-            getStartedButton = mDevice.wait(Until.findObject(
-                    By.res(UI_PACKAGE_NAME, "get_started")), HACKY_WAIT);
-            if (getStartedButton == null) {
-                Pattern getStartedWords = Pattern.compile("GET STARTED", Pattern.CASE_INSENSITIVE);
-                getStartedButton = mDevice.wait(Until.findObject(By.text(getStartedWords)), HACKY_WAIT);
-            }
-            if (getStartedButton != null) {
-                getStartedButton.click();
-                mDevice.waitForIdle();
-                break;
-            }
+
+        if (mDevice.hasObject(By.res(UI_PACKAGE_NAME, UI_GET_STARTED_ID))) {
+            /*
+              The GET STARTED button sometimes cannot be found by UiAutomator
+              even though it is seen on the screen.  The reason is because the
+              initial "spinner" animation screen updates views too quickly
+              for UiAutomator to catch the change.
+
+              The following hack is used to get pass this initial screen.
+             */
+
+            mDevice.pressBack();
+            mDevice.waitForIdle();
+            mDevice.pressHome();
+            mDevice.waitForIdle();
+            open();
         }
-        if (getStartedButton == null) {
-            Log.e(LOG_TAG, "Unable to find GET STARTED button.");
+        else {
+            Log.e(LOG_TAG, "Didn't find GET STARTED button.");
         }
+
         // Address dialogs with an account vs. without an account
         Pattern signInWords = Pattern.compile("Sign in", Pattern.CASE_INSENSITIVE);
         boolean hasAccount = !mDevice.hasObject(By.text(signInWords));
@@ -105,20 +123,20 @@ public class PhotosHelperImpl extends AbstractPhotosHelper {
                 Log.e(LOG_TAG, "Unable to find NO THANKS button.");
             }
         } else {
-            // Press 'CONTINUE' twice
-            for (int repeat = 0; repeat < 2; repeat++) {
-                Pattern continueWords = Pattern.compile("Continue", Pattern.CASE_INSENSITIVE);
-                UiObject2 continueButton = mDevice.findObject(By.text(continueWords));
-                if (continueButton != null) {
-                    continueButton.click();
-                    mDevice.waitForIdle();
-                } else {
-                    Log.e(LOG_TAG, "Unable to find CONTINUE button.");
-                }
+            UiObject2 doneButton = mDevice.wait(Until.findObject(
+                    By.res(UI_PACKAGE_NAME, UI_DONE_BUTTON_ID)), 5000);
+            if (doneButton != null) {
+                doneButton.click();
+                mDevice.waitForIdle();
             }
+            else {
+                Log.e(LOG_TAG, "Didn't find DONE button.");
+            }
+
             // Press the next button (arrow and check mark) four consecutive times
             for (int repeat = 0; repeat < 4; repeat++) {
-                UiObject2 nextButton = mDevice.findObject(By.desc("Next"));
+                UiObject2 nextButton = mDevice.findObject(
+                        By.res(UI_PACKAGE_NAME, UI_NEXT_BUTTON_ID));
                 if (nextButton != null) {
                     nextButton.click();
                     mDevice.waitForIdle();
@@ -126,9 +144,9 @@ public class PhotosHelperImpl extends AbstractPhotosHelper {
                     Log.e(LOG_TAG, "Unable to find arrow or check mark buttons.");
                 }
             }
-            // Dismiss the fullscreen dialog
-            openFirstClip();
-            mDevice.pressBack();
+
+            mDevice.wait(Until.gone(
+                         By.res(UI_PACKAGE_NAME, UI_LOADING_ICON_ID)), PICTURE_LOAD_WAIT);
         }
     }
 
@@ -137,23 +155,20 @@ public class PhotosHelperImpl extends AbstractPhotosHelper {
      */
     @Override
     public void openFirstClip() {
-        for (int i = 0; i < 3; i++) {
-            // Select and open the first clip if found
+        if (searchForVideoClip()) {
             UiObject2 clip = getFirstClip();
             if (clip != null) {
                 clip.click();
                 mDevice.wait(Until.findObject(
                         By.res(UI_PACKAGE_NAME, "photos_videoplayer_play_button_holder")), 2000);
-                return;
             }
-
-            // No visible clips; scroll DOWN if possible
-            if (!scrollContainer(Direction.DOWN)) {
-                break;
+            else {
+                throw new IllegalStateException("Cannot play a video after finding video clips");
             }
         }
-
-        Assert.fail("Unable to find any clips to play.");
+        else {
+            throw new UnsupportedOperationException("Cannot find a video clip");
+        }
     }
 
     /**
@@ -166,7 +181,7 @@ public class PhotosHelperImpl extends AbstractPhotosHelper {
         if (holder != null) {
             holder.click();
         } else {
-            Assert.fail("Unable to find pause button holder.");
+            throw new UnknownUiException("Unable to find pause button holder.");
         }
 
         UiObject2 pause = mDevice.wait(Until.findObject(
@@ -175,7 +190,7 @@ public class PhotosHelperImpl extends AbstractPhotosHelper {
             pause.click();
             mDevice.wait(Until.findObject(By.desc("Play video")), 2500);
         } else {
-            Assert.fail("Unable to find pause button.");
+            throw new UnknownUiException("Unable to find pause button.");
         }
     }
 
@@ -190,69 +205,266 @@ public class PhotosHelperImpl extends AbstractPhotosHelper {
             mDevice.wait(Until.findObject(
                     By.res(UI_PACKAGE_NAME, "photos_videoplayer_pause_button")), 2500);
         } else {
-            Assert.fail("Unable to find play button.");
+            throw new UnknownUiException("Unable to find play button");
         }
     }
 
-    private boolean scrollContainer(Direction dir) {
-        UiObject2 container = mDevice.findObject(By.res(UI_PACKAGE_NAME, "photo_container"));
-        if (container == null) {
-            return false;
-        }
-
-        return container.scroll(dir, 1.0f);
-    }
-
-    private UiObject2 getFirstClip() {
-        return mDevice.findObject(By.descStartsWith("Video"));
-    }
-
-    private boolean isOnMainScreen() {
-        return mDevice.hasObject(By.pkg(UI_PACKAGE_NAME).text(UI_PHOTOS_TEXT));
-    }
-
-    /*
+    /**
      * {@inheritDoc}
      */
     @Override
     public void goToMainScreen() {
         for (int retriesRemaining = 5; retriesRemaining > 0 && !isOnMainScreen();
                 --retriesRemaining) {
-            mDevice.pressBack();
+            // check if we see the Photos tab at the bottom of the screen
+            // If we do, clicking on the tab should go to home screen.
+            UiObject2 photosButton = mDevice.findObject(
+                    By.res(UI_PACKAGE_NAME, UI_PHOTO_TAB_ID));
+            if (photosButton != null) {
+                photosButton.click();
+            }
+            else {
+                mDevice.pressBack();
+            }
             mDevice.waitForIdle();
+        }
+
+        if (!isOnMainScreen()) {
+            throw new IllegalStateException("Cannot go to main screen");
         }
     }
 
-    /*
+    /**
      * {@inheritDoc}
      */
     @Override
     public void openPicture(int index) {
-        Assert.assertTrue("Not on home page", isOnMainScreen());
 
+        mDevice.waitForIdle();
         List<UiObject2> photos = mDevice.findObjects(By.pkg(UI_PACKAGE_NAME).desc(UI_PHOTO_DESC));
-        Assert.assertNotNull("Could not find photos", photos);
-        Assert.assertTrue("Photo index out of bounds",
-                index >= 0 && index < photos.size());
+
+        if (photos == null) {
+            throw new IllegalStateException("Cannot find photos on current view screen");
+        }
+
+        if ((index < 0) || (index >= photos.size())) {
+            String errMsg = String.format("Photo index (%d) out of bound (0..%d)",
+                                          index, photos.size());
+            throw new IllegalArgumentException(errMsg);
+        }
 
         UiObject2 photo = photos.get(index);
         photo.click();
-        mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, UI_PHOTO_VIEW_PAGER_ID)),
-                UI_NAVIGATION_WAIT);
+        if (!mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, UI_PHOTO_VIEW_PAGER_ID)),
+                UI_NAVIGATION_WAIT)) {
+            throw new IllegalStateException("Cannot display photo on screen");
+        }
     }
 
-    /*
+    /**
      * {@inheritDoc}
      */
     @Override
     public void scrollAlbum(Direction direction) {
-        Assert.assertTrue("Scroll direction must be LEFT or RIGHT",
-                Direction.LEFT.equals(direction) || Direction.RIGHT.equals(direction));
+        if (!(Direction.LEFT.equals(direction) || Direction.RIGHT.equals(direction))) {
+            throw new IllegalArgumentException("Scroll direction must be LEFT or RIGHT");
+        }
 
         UiObject2 scrollContainer = mDevice.findObject(
                 By.res(UI_PACKAGE_NAME, UI_PHOTO_VIEW_PAGER_ID));
-        Assert.assertNotNull("Could not find scroll container", scrollContainer);
+
+        if (scrollContainer == null) {
+            throw new UnknownUiException("Cannot find scroll container");
+        }
 
         scrollContainer.scroll(direction, 1.0f);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void goToDeviceFolderScreen() {
+        if (!isOnDeviceFolderScreen()) {
+
+            if (!isOnMainScreen()) {
+                goToMainScreen();
+            }
+
+            openNavigationDrawer();
+
+            UiObject2 deviceFolderButton = mDevice.wait(Until.findObject(
+                                               By.text(UI_DEVICE_FOLDER_TEXT)), UI_NAVIGATION_WAIT);
+            if (deviceFolderButton != null) {
+                deviceFolderButton.click();
+            }
+            else {
+                UiObject2 photosButton = mDevice.wait(Until.findObject(By.text("Photos")),
+                                                      UI_NAVIGATION_WAIT);
+                if (photosButton != null) {
+                    photosButton.click();
+                }
+                else {
+                    throw new IllegalStateException("No device folder in navigation drawer");
+                }
+            }
+        }
+
+        if (!isOnDeviceFolderScreen()) {
+            throw new UnknownUiException("Can not go to device folder screen");
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean searchForDeviceFolder(String folderName) {
+        boolean foundFolder = false;
+        int scrollCount = 0;
+        while (!foundFolder && (scrollCount < MAX_UI_SCROLL_COUNT)) {
+            foundFolder = mDevice.wait(Until.hasObject(By.text(folderName)), 2000);
+            if (!foundFolder) {
+                if (!scrollView(Direction.DOWN)) {
+                    break;
+                }
+            }
+            scrollCount += 1;
+        }
+
+        if (!foundFolder) {
+            foundFolder = mDevice.wait(Until.hasObject(By.text(folderName)), 2000);
+        }
+
+        return foundFolder;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean searchForVideoClip() {
+        boolean foundVideoClip = false;
+        int scrollCount = 0;
+        while (!foundVideoClip && (scrollCount < MAX_UI_SCROLL_COUNT)) {
+            foundVideoClip = (getFirstClip() != null);
+            if (!foundVideoClip) {
+                if (!scrollView(Direction.DOWN)) {
+                    break;
+                }
+            }
+            scrollCount += 1;
+        }
+        return foundVideoClip;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean searchForPicture() {
+        boolean foundPicture = false;
+        int scrollCount = 0;
+        while (!foundPicture && (scrollCount < MAX_UI_SCROLL_COUNT)) {
+            foundPicture = mDevice.wait(Until.hasObject(By.descStartsWith("Photo")), 2000);
+            if (!foundPicture) {
+                if (!scrollView(Direction.DOWN)) {
+                    break;
+                }
+            }
+            scrollCount += 1;
+        }
+        return foundPicture;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void openDeviceFolder(String folderName) {
+        UiObject2 deviceFolder = mDevice.wait(Until.findObject(By.text(folderName)),
+                                              UI_NAVIGATION_WAIT);
+        if (deviceFolder != null) {
+            deviceFolder.click();
+        }
+        else {
+            throw new IllegalArgumentException(String.format("Cannot open device folder %s",
+                                                             folderName));
+        }
+    }
+
+    private UiObject2 getFirstClip() {
+        return mDevice.wait(Until.findObject(By.descStartsWith("Video")), 2000);
+    }
+
+    private boolean isOnMainScreen() {
+        return mDevice.hasObject(By.descContains("Photos, selected"));
+    }
+
+    /**
+     *  This function returns true if Photos is currently in the
+     *  photo-viewing screen, displaying either one photo
+     *  or video on the screen.
+     *
+     * @return Returns true if one photo or video is displayed on the screen,
+     *         false otherwise.
+     */
+    private boolean isOnPhotoViewingScreen() {
+        return mDevice.hasObject(By.res(UI_PACKAGE_NAME, UI_PHOTO_VIEW_PAGER_ID));
+    }
+
+    private boolean isOnDeviceFolderScreen() {
+
+        if (mDevice.hasObject(By.pkg(UI_PACKAGE_NAME).text(UI_DEVICE_FOLDER_TEXT))) {
+            return true;
+        }
+
+        // sometimes the "Device Folder" tab is hidden.
+        // scroll down once to make sure the tab is visible
+        UiObject2 scrollContainer = mDevice.findObject(
+                                        By.res(UI_PACKAGE_NAME, UI_PHOTO_SCROLL_VIEW_ID));
+        if (scrollContainer != null) {
+            scrollContainer.scroll(Direction.DOWN, 1.0f);
+            return mDevice.hasObject(By.pkg(UI_PACKAGE_NAME).text(UI_DEVICE_FOLDER_TEXT));
+        }
+        else {
+            return false;
+        }
+    }
+
+    /**
+     * This function performs one scroll on the current screen, in the direction
+     * specified by input argument.
+     *
+     * @param dir The direction of the scroll
+     * @return Returns whether the object can still scroll in the given direction
+     */
+   private boolean scrollView(Direction dir) {
+        UiObject2 scrollContainer = mDevice.findObject(By.res(UI_PACKAGE_NAME,
+                                                              UI_PHOTO_SCROLL_VIEW_ID));
+        if (scrollContainer == null) {
+            return false;
+        }
+
+        return scrollContainer.scroll(dir, 1.0f);
+    }
+
+    private void openNavigationDrawer() {
+        UiObject2 navigationDrawer = mDevice.findObject(By.desc("Show Navigation Drawer"));
+        if (navigationDrawer == null) {
+            mDevice.pressBack();
+            navigationDrawer = mDevice.wait(Until.findObject(By.desc("Show Navigation Drawer")),
+                                            UI_NAVIGATION_WAIT);
+        }
+
+        if (navigationDrawer == null) {
+            throw new UnknownUiException("Cannot find navigation drawer");
+        }
+
+        navigationDrawer.click();
+
+        if (!mDevice.hasObject(By.res(UI_PACKAGE_NAME, UI_NAVIGATION_LIST_ID))) {
+            throw new UnknownUiException("Cannot open navigation drawer");
+        }
     }
 }
