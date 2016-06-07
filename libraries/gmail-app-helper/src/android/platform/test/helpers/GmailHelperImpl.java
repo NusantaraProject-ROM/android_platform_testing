@@ -120,10 +120,10 @@ public class GmailHelperImpl extends AbstractGmailHelper {
         }
         // Wait for "Getting your messages" to disappear
         if (mDevice.findObject(By.textContains("Getting your messages")) != null) {
-            Assert.assertTrue("Timed out at 'Getting your messages' due to poor WiFi",
+            Assert.assertTrue("Timed out waiting for 'Getting your messages' to disappear",
                     mDevice.wait(Until.gone(By.text("Getting your messages")), WIFI_TIMEOUT));
         }
-        Assert.assertTrue("Timed out waiting for messages to appear due to poor WiFi",
+        Assert.assertTrue("Timed out waiting for conversation list to appear",
                 mDevice.wait(Until.hasObject(
                 By.res(UI_PACKAGE_NAME, UI_CONVERSATIONS_LIST_ID)), WIFI_TIMEOUT));
         // Dismiss "Tap a sender image" dialog
