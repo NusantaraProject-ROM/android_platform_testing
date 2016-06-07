@@ -48,16 +48,8 @@ public class PlayMusicHelperImpl extends AbstractPlayMusicHelper {
     private static final long NAV_BAR_WAIT = 5000;
     private static final long TOGGLE_PAUSE_PLAY_WAIT = 5000;
 
-    private boolean mIsVersion6p4 = false;
-
     public PlayMusicHelperImpl(Instrumentation instr) {
         super(instr);
-
-        try {
-            mIsVersion6p4 = getVersion().startsWith("6.4");
-        } catch (NameNotFoundException e) {
-            Log.e(LOG_TAG, String.format("Unable to find package by name, %s", getPackage()));
-        }
     }
 
     /**
@@ -82,10 +74,11 @@ public class PlayMusicHelperImpl extends AbstractPlayMusicHelper {
      */
     @Override
     public void dismissInitialDialogs() {
-        // Dismiss "LISTEN NOW" Dialog
-        UiObject2 listenNow = mDevice.wait(Until.findObject(By.text("LISTEN NOW")), APP_LOAD_WAIT);
-        if (listenNow != null) {
-            listenNow.clickAndWait(Until.newWindow(), APP_INIT_WAIT);
+        // Dismiss "Add account" Dialog
+        UiObject2 skipButton = mDevice.wait(Until.findObject(By.res(UI_PACKAGE, "skip_button")),
+                APP_LOAD_WAIT);
+        if (skipButton != null) {
+            skipButton.clickAndWait(Until.newWindow(), APP_INIT_WAIT);
         }
     }
 
@@ -132,7 +125,7 @@ public class PlayMusicHelperImpl extends AbstractPlayMusicHelper {
                 EXPAND_WAIT);
 
         for (int retries = 5; retries > 0; retries--) {
-            UiObject2 songItem = mDevice.findObject(By.res(UI_PACKAGE, "line1").
+            UiObject2 songItem = mDevice.findObject(By.res(UI_PACKAGE, "li_title").
                     textStartsWith(song));
             if (songItem != null) {
                 songItem.click();
@@ -273,7 +266,7 @@ public class PlayMusicHelperImpl extends AbstractPlayMusicHelper {
     }
 
     private BySelector getLibraryTextSelector() {
-        String libraryText = mIsVersion6p4 ? "Music library" : "My Library";
+        String libraryText = "Music library";
         Pattern libraryTextPattern = Pattern.compile(libraryText, Pattern.CASE_INSENSITIVE);
         return By.text(libraryTextPattern);
     }
