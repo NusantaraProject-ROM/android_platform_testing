@@ -27,8 +27,8 @@ import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
-
 import android.platform.test.helpers.AbstractSettingsHelper;
+import android.util.Log;
 
 import junit.framework.Assert;
 
@@ -167,13 +167,17 @@ public class SettingsHelperImpl extends AbstractSettingsHelper {
             onSettingBaseVal = "0";
         }
         int onSetting = Integer.parseInt(onSettingBaseVal);
+        Log.d(null, "On Setting value is : " + onSetting);
         if (doLaunch) {
             launchSettingsPage(mInstrumentation.getContext(), settingAction);
         }
         clickSetting(settingName);
+        Log.d(null, "Clicked setting : " + settingName);
         Thread.sleep(1000);
         String changedSetting = getStringSetting(type, internalName);
+        Log.d(null, "Changed Setting value is : " + changedSetting);
         if (changedSetting == null) {
+            Log.d(null, "Changed Setting value is : NULL");
             changedSetting = "0";
         }
         return (1 - onSetting) == Integer.parseInt(changedSetting);

@@ -56,6 +56,7 @@ public class BluetoothNetworkSettingsTests extends InstrumentationTestCase {
     protected void tearDown() throws Exception {
         mDevice.pressBack();
         mDevice.pressHome();
+        mDevice.waitForIdle();
         super.tearDown();
     }
 
@@ -116,6 +117,10 @@ public class BluetoothNetworkSettingsTests extends InstrumentationTestCase {
                 overflowOption);
         if (verifyClick) {
             overflowOption.click();
+            // Adding an extra back press to deal with IME+UiAutomator bug
+            if (optionLoaded.equals("RENAME")) {
+                mDevice.pressBack();
+            }
             UiObject2 loadOption = mDevice.wait(Until.findObject(By.text(optionLoaded)), TIMEOUT);
             assertNotNull(overflowOptionText + " option did not load correctly on tapping",
                     loadOption);
