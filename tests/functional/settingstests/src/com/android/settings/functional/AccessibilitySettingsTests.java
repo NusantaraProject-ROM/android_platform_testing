@@ -52,6 +52,7 @@ public class AccessibilitySettingsTests extends InstrumentationTestCase {
         // Need to finish settings activity
         mDevice.pressBack();
         mDevice.pressHome();
+        mDevice.waitForIdle();
         super.tearDown();
     }
 
@@ -141,6 +142,8 @@ public class AccessibilitySettingsTests extends InstrumentationTestCase {
                 Settings.Secure.ACCESSIBILITY_DISPLAY_DALTONIZER_ENABLED);
     }
 
+    // Suppressing this test, since UiAutomator + talkback don't play nice
+    @Suppress
     @MediumTest
     public void testTalkback() throws Exception {
         verifySettingToggleAfterScreenLoad("TalkBack",
@@ -178,7 +181,6 @@ public class AccessibilitySettingsTests extends InstrumentationTestCase {
         UiObject2 settingsTitle = findItemOnScreen(settingText);
         settingsTitle.click();
         Thread.sleep(TIMEOUT);
-        mDevice.pressBack();
         int settingValue = Settings.Secure
                 .getInt(getInstrumentation().getContext().getContentResolver(), settingFlag);
         assertEquals(settingText + " not correctly set after toggle", expectedFlagValue, settingValue);
@@ -209,7 +211,7 @@ public class AccessibilitySettingsTests extends InstrumentationTestCase {
         settingToggle.click();
         dismissOpenDialog();
         mDevice.pressBack();
-        Thread.sleep(TIMEOUT*2);
+        Thread.sleep(TIMEOUT);
         // Assert reset to old value
         settingValue = Settings.Secure.
                 getInt(getInstrumentation().getContext().getContentResolver(), settingFlag);
