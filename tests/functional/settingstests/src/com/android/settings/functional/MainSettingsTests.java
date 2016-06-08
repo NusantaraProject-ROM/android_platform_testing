@@ -65,6 +65,7 @@ public class MainSettingsTests extends InstrumentationTestCase {
         // Need to finish settings activity
         mDevice.pressHome();
         mDevice.unfreezeRotation();
+        mDevice.waitForIdle();
         super.tearDown();
     }
 
