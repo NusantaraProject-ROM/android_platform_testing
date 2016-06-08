@@ -55,6 +55,7 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
     public void tearDown() throws Exception {
         // reset settings we touched that may impact others
         Settings.System.putFloat(mResolver, Settings.System.FONT_SCALE, 1.00f);
+        mDevice.waitForIdle();
         super.tearDown();
     }
 
@@ -126,6 +127,7 @@ public class DisplaySettingsTest extends InstrumentationTestCase {
         mHelper.clickSetting("When device is rotated");
         assertTrue(mHelper.verifyToggleSetting(SettingsType.SYSTEM, PAGE,
                 buttons[currentAccelSetting], Settings.System.ACCELEROMETER_ROTATION, false));
+        mHelper.scrollVert(false);
         mHelper.clickSetting("When device is rotated");
         assertTrue(mHelper.verifyToggleSetting(SettingsType.SYSTEM, PAGE,
                 buttons[1 - currentAccelSetting], Settings.System.ACCELEROMETER_ROTATION, false));
