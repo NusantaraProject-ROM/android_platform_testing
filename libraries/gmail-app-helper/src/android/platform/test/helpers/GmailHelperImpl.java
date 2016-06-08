@@ -20,6 +20,7 @@ import android.app.Instrumentation;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
 import android.os.SystemClock;
+import android.platform.test.helpers.exceptions.UnknownUiException;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.Direction;
@@ -34,8 +35,6 @@ import android.widget.ImageButton;
 import java.io.IOException;
 import java.util.List;
 import java.util.regex.Pattern;
-
-import junit.framework.Assert;
 
 public class GmailHelperImpl extends AbstractGmailHelper {
     private static final String LOG_TAG = GmailHelperImpl.class.getSimpleName();
@@ -120,12 +119,15 @@ public class GmailHelperImpl extends AbstractGmailHelper {
         }
         // Wait for "Getting your messages" to disappear
         if (mDevice.findObject(By.textContains("Getting your messages")) != null) {
-            Assert.assertTrue("Timed out waiting for 'Getting your messages' to disappear",
-                    mDevice.wait(Until.gone(By.text("Getting your messages")), WIFI_TIMEOUT));
+            if (!mDevice.wait(Until.gone(By.text("Getting your messages")), WIFI_TIMEOUT)) {
+                throw new UnknownUiException(
+                        "Timed out waiting for 'Getting your messages' to disappear");
+            }
         }
-        Assert.assertTrue("Timed out waiting for conversation list to appear",
-                mDevice.wait(Until.hasObject(
-                By.res(UI_PACKAGE_NAME, UI_CONVERSATIONS_LIST_ID)), WIFI_TIMEOUT));
+        if (!mDevice.wait(Until.hasObject(
+                By.res(UI_PACKAGE_NAME, UI_CONVERSATIONS_LIST_ID)), WIFI_TIMEOUT)) {
+            throw new UnknownUiException("Timed out waiting for conversation list to appear");
+        }
         // Dismiss "Tap a sender image" dialog
         UiObject2 senderImageDismissButton =
                 mDevice.findObject(By.res(UI_PACKAGE_NAME, "dismiss_icon"));
@@ -214,9 +216,13 @@ public class GmailHelperImpl extends AbstractGmailHelper {
      */
     @Override
     public void goToComposeEmail() {
-        Assert.assertTrue("Gmail is not on the Inbox or Primary page", isInPrimaryOrInbox());
+        if (!isInPrimaryOrInbox()) {
+            throw new IllegalStateException("Gmail is not on the Inbox or Primary page");
+        }
         UiObject2 compose = mDevice.findObject(By.desc("Compose"));
-        Assert.assertNotNull("Compose button not found", compose);
+        if (compose == null) {
+            throw new UnknownUiException("Compose button not found");
+        }
         compose.clickAndWait(Until.newWindow(), COMPOSE_TIMEOUT);
         waitForCompose();
     }
@@ -239,7 +245,9 @@ public class GmailHelperImpl extends AbstractGmailHelper {
         UiObject2 conversationList = getConversationList();
         List<UiObject2> emails = conversationList.findObjects(
                 By.clazz(android.widget.FrameLayout.class));
-        Assert.assertNotNull("No e-mails found.", emails);
+        if (conversationList == null) {
+            throw new UnknownUiException("No e-mails found.");
+        }
         emails.get(index).click();
 
         // Wait until the e-mail is open
@@ -271,7 +279,7 @@ public class GmailHelperImpl extends AbstractGmailHelper {
     @Override
     public void sendReplyEmail(String address, String body) {
         if (!isInConversation()) {
-            Assert.fail("Must have an e-mail open to send a reply.");
+            throw new IllegalStateException("Must have an e-mail open to send a reply.");
         }
 
         UiObject2 convScroll = getConversationPager();
@@ -282,7 +290,7 @@ public class GmailHelperImpl extends AbstractGmailHelper {
             replyButton.clickAndWait(Until.newWindow(), COMPOSE_TIMEOUT);
             waitForCompose();
         } else {
-            Assert.fail("Failed to find a 'Reply' button.");
+            throw new UnknownUiException("Failed to find a 'Reply' button.");
         }
 
         // Set the necessary fields (address and body)
@@ -310,7 +318,7 @@ public class GmailHelperImpl extends AbstractGmailHelper {
         if (toField != null) {
             toField.setText(address);
         } else {
-            Assert.fail("Failed to find a 'To' field.");
+            throw new UnknownUiException("Failed to find a 'To' field.");
         }
     }
 
@@ -332,7 +340,7 @@ public class GmailHelperImpl extends AbstractGmailHelper {
         if (subjectField != null) {
             subjectField.setText(subject);
         } else {
-            Assert.fail("Failed to find a 'Subject' field.");
+            throw new UnknownUiException("Failed to find a 'Subject' field.");
         }
     }
 
@@ -355,7 +363,7 @@ public class GmailHelperImpl extends AbstractGmailHelper {
             bodyField.click();
             bodyField.setText(body);
         } else {
-            Assert.fail("Failed to find a 'Body' field.");
+            throw new UnknownUiException("Failed to find a 'Body' field.");
         }
     }
 
@@ -372,7 +380,7 @@ public class GmailHelperImpl extends AbstractGmailHelper {
             sendButton.clickAndWait(Until.newWindow(), SEND_TIMEOUT);
             waitForConversation();
         } else {
-            Assert.fail("Failed to find a 'Send' button.");
+            throw new UnknownUiException("Failed to find a 'Send' button.");
         }
     }
 
@@ -416,7 +424,9 @@ public class GmailHelperImpl extends AbstractGmailHelper {
         }
 
         UiObject2 scroll = getNavDrawerContainer();
-        Assert.assertNotNull("No navigation drawer found to scroll", scroll);
+        if (scroll == null) {
+            throw new UnknownUiException("No navigation drawer found to scroll");
+        }
         scroll.scroll(dir, 1.0f);
     }
 
