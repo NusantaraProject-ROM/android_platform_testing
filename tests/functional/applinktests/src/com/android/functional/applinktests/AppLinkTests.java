@@ -57,48 +57,29 @@ public class AppLinkTests extends InstrumentationTestCase {
     }
 
     // Ensures that default app link setting set to 'undefined' for 3P apps
-    public void testDefaultAppLinkSettting() {
-        String out = executeShellCommand("pm get-app-link " + TEST_PKG_NAME);
+    public void testDefaultAppLinkSettting() throws InterruptedException {
+        String out = getAppLink(TEST_PKG_NAME);
         assertTrue("Default app link not set to 'undefined' mode", "undefined".equals(out));
         openLink(HTTP_SCHEME, TEST_HOST);
         ensureDisambigPresent();
     }
 
-    // User sets an app to open for a link 'Always' and disambig never shows up
-    public void testUserSetToAlways() throws InterruptedException {
-        openLink(HTTP_SCHEME, TEST_HOST);
-        ensureDisambigPresent();
-        mDevice.wait(Until.findObject(By.text("AppLinkTestApp1")), TIMEOUT).click();
-        mDevice.wait(Until.findObject(By.res("android:id/button_always")), TIMEOUT).click();
-        Thread.sleep(TIMEOUT);
-        openLink(HTTP_SCHEME, TEST_HOST);
-        List<AccessibilityWindowInfo> windows = mUiAutomation.getWindows();
-        boolean success = windows.get(windows.size() - 1).getRoot().getPackageName()
-                .equals(TEST_PKG_NAME);
-        assertTrue(String.format("%s is not top activity", TEST_APP_NAME), success);
-    }
-
     // User sets an app to open for a link 'Just Once' and disambig shows up next time too
-    public void testUserSetToJustOnce() throws InterruptedException {
+    // Once user set to 'always' disambig never shows up
+    public void testUserSetToJustOnceAndAlways() throws InterruptedException {
         openLink(HTTP_SCHEME, TEST_HOST);
         ensureDisambigPresent();
-        mDevice.wait(Until.findObject(By.text("AppLinkTestApp1")), TIMEOUT).click();
+        mDevice.wait(Until.findObject(By.text("AppLinkTestApp")), TIMEOUT).click();
         mDevice.wait(Until.findObject(By.res("android:id/button_once")), TIMEOUT).click();
         Thread.sleep(TIMEOUT);
-        List<AccessibilityWindowInfo> windows = mUiAutomation.getWindows();
-        assertTrue(String.format("%s is not top activity", TEST_APP_NAME),
-                windows.get(windows.size() - 1).getRoot().getPackageName()
-                        .equals(TEST_PKG_NAME));
+        verifyForegroundAppPackage(TEST_PKG_NAME);
         openLink(HTTP_SCHEME, TEST_HOST);
         assertTrue("Target app isn't the default choice",
-                mDevice.wait(Until.hasObject(By.text("Open with AppLinkTestApp1")), TIMEOUT));
+                mDevice.wait(Until.hasObject(By.text("Open with AppLinkTestApp")), TIMEOUT));
         mDevice.wait(Until.findObject(By.res("android:id/button_once")), TIMEOUT)
                 .clickAndWait(Until.newWindow(), TIMEOUT);
         Thread.sleep(TIMEOUT);
-        windows = mUiAutomation.getWindows();
-        assertTrue(String.format("%s is not top activity", TEST_APP_NAME),
-                windows.get(windows.size() - 1).getRoot().getPackageName()
-                        .equals(TEST_PKG_NAME));
+        verifyForegroundAppPackage(TEST_PKG_NAME);
         mDevice.pressHome();
         // Ensure it doesn't change on second attempt
         openLink(HTTP_SCHEME, TEST_HOST);
@@ -107,87 +88,67 @@ public class AppLinkTests extends InstrumentationTestCase {
         mDevice.pressHome();
         // User chose to set to always and intent is opened in target direct
         openLink(HTTP_SCHEME, TEST_HOST);
-        Thread.sleep(TIMEOUT);
-        windows = mUiAutomation.getWindows();
-        assertTrue(String.format("%s is not top activity", TEST_APP_NAME),
-                windows.get(windows.size() - 1).getRoot().getPackageName()
-                        .equals(TEST_PKG_NAME));
+        verifyForegroundAppPackage(TEST_PKG_NAME);
     }
 
     // Ensure verified app always open even candidate but unverified app set to 'always'
     public void testVerifiedAppOpenWhenNotVerifiedSetToAlways() throws InterruptedException {
-        executeShellCommand("pm set-app-link " + TEST_PKG_NAME + " always");
-        executeShellCommand("pm set-app-link " + YOUTUBE_PKG_NAME + " always");
+        setAppLink(TEST_PKG_NAME, "always");
+        setAppLink(YOUTUBE_PKG_NAME, "always");
         Thread.sleep(TIMEOUT);
         openLink(HTTP_SCHEME, "youtube.com");
-        Thread.sleep(TIMEOUT);
-        List<AccessibilityWindowInfo> windows = mUiAutomation.getWindows();
-        assertTrue(String.format("%s is not top activity", "youtube"),
-                windows.get(windows.size() - 1).getRoot().getPackageName()
-                        .equals("com.google.android.youtube"));
+        verifyForegroundAppPackage(YOUTUBE_PKG_NAME);
     }
 
     // Ensure verified app always open even one candidate but unverified app set to 'ask'
     public void testVerifiedAppOpenWhenUnverifiedSetToAsk() throws InterruptedException {
-        executeShellCommand("pm set-app-link " + TEST_PKG_NAME + " ask");
-        executeShellCommand("pm set-app-link " + YOUTUBE_PKG_NAME + " always");
-        String out = executeShellCommand("pm get-app-link " + YOUTUBE_PKG_NAME);
+        setAppLink(TEST_PKG_NAME, "ask");
+        setAppLink(YOUTUBE_PKG_NAME, "always");
+        String out = getAppLink(YOUTUBE_PKG_NAME);
         openLink(HTTP_SCHEME, "youtube.com");
-        Thread.sleep(TIMEOUT);
-        List<AccessibilityWindowInfo> windows = mUiAutomation.getWindows();
-        assertTrue(String.format("%s is not top activity", "youtube"),
-                windows.get(windows.size() - 1).getRoot().getPackageName()
-                        .equals("com.google.android.youtube"));
+        verifyForegroundAppPackage(YOUTUBE_PKG_NAME);
     }
 
     // Ensure disambig is shown if verified app set to 'never' and unverified app set to 'ask'
     public void testUserChangeVerifiedLinkHandler() throws InterruptedException {
-        executeShellCommand("pm set-app-link " + TEST_PKG_NAME + " ask");
-        executeShellCommand("pm set-app-link " + YOUTUBE_PKG_NAME + " never");
+        setAppLink(TEST_PKG_NAME, "ask");
+        setAppLink(YOUTUBE_PKG_NAME, "never");
         Thread.sleep(TIMEOUT);
         openLink(HTTP_SCHEME, "youtube.com");
         ensureDisambigPresent();
-        executeShellCommand("pm set-app-link " + YOUTUBE_PKG_NAME + " always");
+        setAppLink(YOUTUBE_PKG_NAME, "always");
         Thread.sleep(TIMEOUT);
         openLink(HTTP_SCHEME, "youtube.com");
-        Thread.sleep(TIMEOUT * 2);
-        List<AccessibilityWindowInfo> windows = mUiAutomation.getWindows();
-        assertTrue(String.format("%s is not top activity", "youtube"),
-                windows.get(windows.size() - 1).getRoot().getPackageName()
-                        .equals(YOUTUBE_PKG_NAME));
+        verifyForegroundAppPackage(YOUTUBE_PKG_NAME);
     }
 
     // Ensure unverified app always open when unverified app set to always but verified app set to
     // never
-    public void testCandidateSetToAlwaysVerifiedSetToNever() throws InterruptedException {
-        executeShellCommand("pm set-app-link " + TEST_PKG_NAME + " always");
-        executeShellCommand("pm set-app-link " + YOUTUBE_PKG_NAME + " never");
+    public void testTestAppSetToAlwaysVerifiedSetToNever() throws InterruptedException {
+        setAppLink(TEST_PKG_NAME, "always");
+        setAppLink(YOUTUBE_PKG_NAME, "never");
         Thread.sleep(TIMEOUT);
         openLink(HTTP_SCHEME, "youtube.com");
-        Thread.sleep(TIMEOUT);
-        List<AccessibilityWindowInfo> windows = mUiAutomation.getWindows();
-        assertTrue(String.format("%s is not top activity", TEST_APP_NAME),
-                windows.get(windows.size() - 1).getRoot().getPackageName()
-                        .equals(TEST_PKG_NAME));
+        verifyForegroundAppPackage(TEST_PKG_NAME);
     }
 
     // Test user can modify 'App Link Settings'
-    public void testSettingsChangeUI1() throws InterruptedException {
+    public void testSettingsChangeUI() throws InterruptedException {
         Intent intent_as = new Intent(
                 android.provider.Settings.ACTION_APPLICATION_SETTINGS);
         mContext.startActivity(intent_as);
-        Thread.sleep(TIMEOUT);
+        Thread.sleep(TIMEOUT * 5);
         mDevice.wait(Until.findObject(By.res("com.android.settings:id/advanced")), TIMEOUT)
                 .clickAndWait(Until.newWindow(), TIMEOUT);
         mDevice.wait(Until.findObject(By.text("Opening links")), TIMEOUT)
                 .clickAndWait(Until.newWindow(), TIMEOUT);
-        mDevice.wait(Until.findObject(By.text("AppLinkTestApp1")), TIMEOUT)
+        mDevice.wait(Until.findObject(By.text("AppLinkTestApp")), TIMEOUT)
                 .clickAndWait(Until.newWindow(), TIMEOUT);
         mDevice.wait(Until.findObject(By.text("Open supported links")), TIMEOUT)
                 .clickAndWait(Until.newWindow(), TIMEOUT);
         mDevice.wait(Until.findObject(By.text("Open in this app")), TIMEOUT)
                 .clickAndWait(Until.newWindow(), TIMEOUT);
-        String out = executeShellCommand("pm get-app-link " + TEST_PKG_NAME);
+        String out = getAppLink(TEST_PKG_NAME);
         Thread.sleep(TIMEOUT);
         assertTrue(String.format("Default app link not set to 'always ask' rather set to %s", out),
                 "always".equals(out));
@@ -195,7 +156,7 @@ public class AppLinkTests extends InstrumentationTestCase {
                 .clickAndWait(Until.newWindow(), TIMEOUT);
         mDevice.wait(Until.findObject(By.text("Don’t open in this app")), TIMEOUT)
                 .clickAndWait(Until.newWindow(), TIMEOUT);
-        out = executeShellCommand("pm get-app-link " + TEST_PKG_NAME);
+        out = getAppLink(TEST_PKG_NAME);
         Thread.sleep(TIMEOUT);
         assertTrue(String.format("Default app link not set to 'never' rather set to %s", out),
                 "never".equals(out));
@@ -203,14 +164,14 @@ public class AppLinkTests extends InstrumentationTestCase {
                 .clickAndWait(Until.newWindow(), TIMEOUT);
         mDevice.wait(Until.findObject(By.text("Ask every time")), TIMEOUT)
                 .clickAndWait(Until.newWindow(), TIMEOUT);
-        out = executeShellCommand("pm get-app-link " + TEST_PKG_NAME);
+        out = getAppLink(TEST_PKG_NAME);
         Thread.sleep(TIMEOUT);
         assertTrue(String.format("Default app link not set to 'always ask' rather set to %s", out),
                 "always ask".equals(out));
     }
 
     // Ensure system apps that claim to open always for set to always
-    public void ztestSysappAppLinkSettings() {
+    public void testSysappAppLinkSettings() {
         // List of system app that are set to 'Always' for certain urls
         List<String> alwaysOpenApps = new ArrayList<String>();
         alwaysOpenApps.add("com.google.android.apps.docs.editors.docs"); // Docs
@@ -218,29 +179,35 @@ public class AppLinkTests extends InstrumentationTestCase {
         alwaysOpenApps.add("com.google.android.apps.docs.editors.slides"); // Slides
         alwaysOpenApps.add("com.google.android.apps.docs"); // Drive
         alwaysOpenApps.add("com.google.android.youtube"); // YouTube
-        for (String s : alwaysOpenApps) {
-            String out = executeShellCommand(String.format("pm get-app-link %s", s));
-            assertTrue(String.format("App link for %s should be set to 'Always'", s),
+        for (String alwaysOpenApp : alwaysOpenApps) {
+            String out = getAppLink(alwaysOpenApp);
+            assertTrue(String.format("App link for %s should be set to 'Always'", alwaysOpenApp),
                     "always".equalsIgnoreCase(out));
         }
-
     }
 
     @Override
     protected void tearDown() throws Exception {
-        executeShellCommand("pm clear com.android.applinktestapp");
+        executeShellCommand("pm clear " + TEST_PKG_NAME);
+        executeShellCommand("pm clear " + YOUTUBE_PKG_NAME);
         executeShellCommand("pm set-app-link " + TEST_PKG_NAME + " undefined");
         executeShellCommand("pm set-app-link " + YOUTUBE_PKG_NAME + " always");
         Thread.sleep(TIMEOUT);
         mDevice.unfreezeRotation();
+        mDevice.pressHome();
         super.tearDown();
     }
 
-    private void openLink(String scheme, String host) {
+    // Start an intent to open a test link
+    private void openLink(String scheme, String host) throws InterruptedException {
         String out = executeShellCommand(String.format(
                 "am start -a android.intent.action.VIEW -d %s://%s/", scheme, host));
+        Thread.sleep(TIMEOUT * 2);
     }
 
+    // If framework identifies more than one app that can handle a link intent, framework presents a
+    // window to user to choose the app to handle the intent.
+    // This is also known as 'disambig' window
     private void ensureDisambigPresent() {
         assertNotNull("Disambig dialog is not shown",
                 mDevice.wait(Until.hasObject(By.res("android:id/resolver_list")),
@@ -249,11 +216,37 @@ public class AppLinkTests extends InstrumentationTestCase {
                 TIMEOUT);
         assertTrue("There aren't exactly 2 apps to resolve", resolverApps.size() == 2);
         assertTrue("Resolver apps aren't correct",
-                "AppLinkTestApp1".equals(resolverApps.get(0).getText()) &&
+                "AppLinkTestApp".equals(resolverApps.get(0).getText()) &&
                         "Chrome".equals(resolverApps.get(1).getText()));
     }
 
+    // Verifies that a certain package is in foreground
+    private void verifyForegroundAppPackage(String pkgName) throws InterruptedException {
+        int counter = 3;
+        List<AccessibilityWindowInfo> windows = null;
+        while (--counter > 0 && windows == null) {
+            windows = mUiAutomation.getWindows();
+            Thread.sleep(TIMEOUT);
+        }
+        assertTrue(String.format("%s is not top activity", "youtube"),
+                windows.get(windows.size() - 1).getRoot().getPackageName().equals(pkgName));
+    }
+
+    // Gets app link for a package
+    private String getAppLink(String pkgName) {
+        return executeShellCommand(String.format("pm get-app-link %s", pkgName));
+    }
+
+    // Sets Openlink settings for a package to passed value
+    private void setAppLink(String pkgName, String valueToBeSet) {
+        executeShellCommand(String.format("pm set-app-link %s %s", pkgName, valueToBeSet));
+    }
+
+    // Executes 'adb shell' command. Converts ParcelFileDescriptor output to String
     private String executeShellCommand(String command) {
+        if (command == null || command.isEmpty()) {
+            return null;
+        }
         ParcelFileDescriptor pfd = mUiAutomation.executeShellCommand(command);
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(new FileInputStream(pfd.getFileDescriptor())))) {
