@@ -19,6 +19,7 @@ package android.platform.test.helpers;
 import android.app.Instrumentation;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.SystemClock;
+import android.platform.test.helpers.exceptions.UnknownUiException;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.Direction;
@@ -26,8 +27,6 @@ import android.support.test.uiautomator.Until;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.util.Log;
-
-import junit.framework.Assert;
 
 public class FacebookHelperImpl extends AbstractFacebookHelper {
     private static final String TAG = "android.platform.test.helpers.FacebookHelperImpl";
@@ -90,7 +89,9 @@ public class FacebookHelperImpl extends AbstractFacebookHelper {
     @Override
     public void scrollHomePage(Direction dir) {
         UiObject2 scrollContainer = getHomePageContainer();
-        Assert.assertNotNull("No valid scrolling mechanism found.", scrollContainer);
+        if (scrollContainer == null) {
+            throw new IllegalStateException("No valid scrolling mechanism found.");
+        }
 
         scrollContainer.scroll(dir, 5.f);
     }
@@ -126,10 +127,14 @@ public class FacebookHelperImpl extends AbstractFacebookHelper {
      */
     @Override
     public void goToNewsFeed() {
-        Assert.assertTrue("Not on home page", isOnHomePage());
+        if (!isOnHomePage()) {
+            throw new IllegalStateException("Not on home page");
+        }
 
         UiObject2 newsFeedTab = getNewsFeedTab();
-        Assert.assertNotNull("Could not find news feed tab", newsFeedTab);
+        if (newsFeedTab == null) {
+            throw new UnknownUiException("Could not find news feed tab");
+        }
 
         newsFeedTab.click();
         mDevice.wait(Until.findObject(By.res(UI_PACKAGE_NAME, UI_NEWS_FEED_TAB_ID).descContains(
@@ -141,7 +146,9 @@ public class FacebookHelperImpl extends AbstractFacebookHelper {
      */
     @Override
     public void goToStatusUpdate() {
-        Assert.assertTrue("Not on News Feed", isOnNewsFeed());
+        if (!isOnNewsFeed()) {
+            throw new IllegalStateException("Not on News Feed");
+        }
 
         UiObject2 statusUpdateButton = null;
         for (int retriesRemaining = 50; retriesRemaining > 0 && statusUpdateButton == null;
@@ -150,7 +157,9 @@ public class FacebookHelperImpl extends AbstractFacebookHelper {
             statusUpdateButton = mDevice.findObject(
                     By.res(UI_PACKAGE_NAME, UI_STATUS_UPDATE_BUTTON_ID));
         }
-        Assert.assertNotNull("Could not find status update button", statusUpdateButton);
+        if (statusUpdateButton == null) {
+            throw new UnknownUiException("Could not find status update button");
+        }
 
         statusUpdateButton.click();
         mDevice.wait(Until.findObject(
@@ -167,7 +176,9 @@ public class FacebookHelperImpl extends AbstractFacebookHelper {
     @Override
     public void setStatusText(String statusText) {
         UiObject2 statusTextField = getStatusTextField();
-        Assert.assertNotNull(statusTextField);
+        if (statusTextField == null) {
+            throw new UnknownUiException("Could not find status text field");
+        }
 
         statusTextField.setText(statusText);
     }
@@ -182,7 +193,9 @@ public class FacebookHelperImpl extends AbstractFacebookHelper {
     @Override
     public void postStatusUpdate() {
         UiObject2 postButton = getPostButton();
-        Assert.assertNotNull(postButton);
+        if (postButton == null) {
+            throw new UnknownUiException("Could not find post status button");
+        }
 
         postButton.click();
         mDevice.wait(Until.findObject(
@@ -207,9 +220,15 @@ public class FacebookHelperImpl extends AbstractFacebookHelper {
         UiObject2 passwordTextField = mDevice.findObject(
                 By.res(UI_PACKAGE_NAME, UI_LOGIN_PASSWORD_ID));
         UiObject2 loginButton = mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_LOGIN_BUTTON_ID));
-        Assert.assertNotNull("Could not find username text field", usernameTextField);
-        Assert.assertNotNull("Could not find password text field", passwordTextField);
-        Assert.assertNotNull("Could not find login button", loginButton);
+        if (usernameTextField == null) {
+            throw new UnknownUiException("Could not find username text field");
+        }
+        if (passwordTextField == null) {
+            throw new UnknownUiException("Could not find password text field");
+        }
+        if (loginButton == null) {
+            throw new UnknownUiException("Could not find login button");
+        }
 
         usernameTextField.setText(username);
         passwordTextField.setText(password);
