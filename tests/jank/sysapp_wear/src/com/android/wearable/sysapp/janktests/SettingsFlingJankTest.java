@@ -40,8 +40,12 @@ public class SettingsFlingJankTest extends JankTestBase {
     // Settings app resources
     private static final String CLOCK_SETTINGS_PACKAGE =
         "com.google.android.apps.wearable.settings";
+
+    // TODO: Yuanlang@
+    // Main Settings Activity also contains Recyclerview, so this might be a duplicated test
+    // with AppLauncher Fling. Need to modify after Settings UI is final.
     private static final String CLOCK_SETTINGS_ACTIVITY =
-        "com.google.android.clockwork.settings.SettingsActivity";
+        "com.google.android.clockwork.settings.MainSettingsActivity";
 
     /*
      * (non-Javadoc)
