@@ -32,20 +32,21 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 public class ConnectivityWifiTest extends TestCase {
-    private static final String TEST_TAG = "AndroidBVT";
     private final static String DEFAULT_PING_SITE = "www.google.com";
-    private final static int TIMEOUT = 5000;
     private UiDevice mDevice;
     private WifiManager mWifiManager = null;
     private Context mContext = null;
+    private AndroidBvtHelper mABvtHelper = null;
 
     @Override
     public void setUp() throws Exception {
         super.setUp();
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-        mDevice.freezeRotation();
+        mDevice.setOrientationNatural();
         mContext = InstrumentationRegistry.getTargetContext();
-        mWifiManager = (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
+        mABvtHelper = AndroidBvtHelper.getInstance(mDevice, mContext,
+                InstrumentationRegistry.getInstrumentation().getUiAutomation());
+        mWifiManager = mABvtHelper.getWifiManager();
     }
 
     @Override
@@ -56,30 +57,42 @@ public class ConnectivityWifiTest extends TestCase {
         super.tearDown();
     }
 
+    /**
+     * Test verifies wifi can be disconnected, disabled followed by enable and reconnect. As part of
+     * connection check, it pings a site and ensures HTTP_OK return
+     */
     @LargeTest
     public void testWifiConnection() throws InterruptedException {
+        // Wifi is already connected as part of tradefed device setup, assert that
         assertTrue("Wifi should be connected", isWifiConnected());
         assertNotNull("Wifi manager is null", mWifiManager);
         assertTrue("Wifi isn't enabled", mWifiManager.isWifiEnabled());
+        // Disconnect wifi and disable network, save NetId to be used for re-enabling network
         int netId = mWifiManager.getConnectionInfo().getNetworkId();
         disconnectWifi();
         assertFalse("Wifi shouldn't be connected", isWifiConnected());
+        // Network enabled successfully
         assertTrue("Network isn't enabled", mWifiManager.enableNetwork(netId, false));
         // Allow time to settle down
-        Thread.sleep(TIMEOUT);
+        Thread.sleep(mABvtHelper.LONG_TIMEOUT * 2);
         assertTrue("Wifi should be connected", isWifiConnected());
     }
 
+    /**
+     * Test verifies from UI that bunch of AP are listed on enabling Wifi
+     */
     @LargeTest
     public void testWifiDiscoveredAPShownUI() throws InterruptedException {
         Intent intent_as = new Intent(
                 android.provider.Settings.ACTION_WIFI_SETTINGS);
         mContext.startActivity(intent_as);
-        Thread.sleep(TIMEOUT);
+        Thread.sleep(mABvtHelper.SHORT_TIMEOUT);
         assertNotNull("AP list shouldn't be null",
-                mDevice.wait(Until.findObject(By.res("com.android.settings:id/list")), TIMEOUT));
+                mDevice.wait(Until.findObject(By.res("com.android.settings:id/list")),
+                        mABvtHelper.SHORT_TIMEOUT));
         assertTrue("At least 1 AP should be visible",
-                mDevice.wait(Until.findObject(By.res("com.android.settings:id/list")), TIMEOUT)
+                mDevice.wait(Until.findObject(By.res("com.android.settings:id/list")),
+                        mABvtHelper.SHORT_TIMEOUT)
                         .getChildren().size() > 0);
         mDevice.pressHome();
     }
@@ -93,11 +106,11 @@ public class ConnectivityWifiTest extends TestCase {
             URL url = new URL(mPingSite);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
-            conn.setConnectTimeout(TIMEOUT);
-            conn.setReadTimeout(TIMEOUT);
+            conn.setConnectTimeout(mABvtHelper.SHORT_TIMEOUT);
+            conn.setReadTimeout(mABvtHelper.SHORT_TIMEOUT);
             int counter = 5;
             while ((conn.getResponseCode() != HttpURLConnection.HTTP_OK) && --counter > 0) {
-                Thread.sleep(TIMEOUT);
+                Thread.sleep(mABvtHelper.SHORT_TIMEOUT);
             }
             assertTrue("Couldn't establish connection",
                     conn.getResponseCode() == HttpURLConnection.HTTP_OK);
@@ -107,6 +120,9 @@ public class ConnectivityWifiTest extends TestCase {
         return true;
     }
 
+    /**
+     * Disconnects and disables network
+     */
     private void disconnectWifi() {
         assertTrue("Wifi not disconnected", mWifiManager.disconnect());
         mWifiManager.disableNetwork(mWifiManager.getConnectionInfo().getNetworkId());
