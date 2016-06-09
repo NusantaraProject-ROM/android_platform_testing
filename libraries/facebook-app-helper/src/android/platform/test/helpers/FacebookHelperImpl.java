@@ -46,10 +46,20 @@ public class FacebookHelperImpl extends AbstractFacebookHelper {
     private static final String UI_STATUS_UPDATE_BUTTON_ID = "feed_composer_status_button";
 
     private static final long UI_LOGIN_WAIT = 30000;
-    private static final long UI_NAVIGATION_WAIT = 5000;
+    private static final long UI_NAVIGATION_WAIT = 10000;
 
     public FacebookHelperImpl(Instrumentation instr) {
         super(instr);
+    }
+
+     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void open() {
+        super.open();
+        mDevice.wait(Until.findObject(
+                By.res(UI_PACKAGE_NAME, UI_HOME_PAGE_CONTAINER_ID)), UI_NAVIGATION_WAIT);
     }
 
     /**
