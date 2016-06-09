@@ -40,6 +40,7 @@ import android.widget.ImageButton;
 import junit.framework.Assert;
 import android.platform.test.helpers.GmailHelperImpl;
 import android.support.test.timeresulthelper.TimeResultLogger;
+import java.util.regex.Pattern;
 
 /**
  * Jank test for scrolling gmail inbox mails
@@ -157,8 +158,10 @@ public class GMailJankTests extends JankTestBase {
         Assert.assertNotNull("Failed to locate Nav Drawer Openner", navDrawer);
         navDrawer.click();
         // Ensure test is ready to be executed
-        UiObject2 container = getNavigationDrawerContainer();
-        Assert.assertNotNull("Failed to locate Nav drawer container", container);
+        UiObject2 acctListBtn = mDevice.wait(
+                Until.findObject(By.res(PACKAGE_NAME, "account_list_button")),
+                SHORT_TIMEOUT);
+        Assert.assertNotNull("Failed to locate Nav drawer ", acctListBtn);
         TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
                 getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
     }
@@ -193,15 +196,12 @@ public class GMailJankTests extends JankTestBase {
 
 
     public UiObject2 openNavigationDrawer() {
-        UiObject2 navDrawer = null;
-        if (mDevice.getDisplaySizeDp().x < TAB_MIN_WIDTH) {
-            navDrawer = mDevice.wait(Until.findObject(
-                    By.clazz(ImageButton.class).desc("Navigate up")), SHORT_TIMEOUT);
-        } else {
-            navDrawer = mDevice.wait(Until.findObject(
-                    By.clazz(ImageButton.class).desc("Open navigation drawer")), SHORT_TIMEOUT);
+        UiObject2 nav = mDevice.findObject(By.desc(Pattern.compile(
+                "(Open navigation drawer)|(Navigate up)")));
+        if (nav == null) {
+            throw new IllegalStateException("Could not find navigation drawer");
         }
-        return navDrawer;
+        return nav;
     }
 
     public UiObject2 getNavigationDrawerContainer() {
