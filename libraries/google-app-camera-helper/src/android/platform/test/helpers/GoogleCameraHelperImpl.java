@@ -84,7 +84,7 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
     private static final String TEXT_HDR_AUTO = "HDR off";
     private static final String TEXT_HDR_ON = "HDR+ Auto";
     private static final String TEXT_HDR_OFF = "HDR on";
-    private static final String TEXT_BACK_VIDEO_RESOLUTION_4X = "Back camera resolution";
+    private static final String TEXT_BACK_VIDEO_RESOLUTION_4X = "Back camera video resolution";
     private static final String TEXT_BACK_VIDEO_RESOLUTION_3X = "Back camera video";
 
     public static final int HDR_MODE_AUTO = -1;
