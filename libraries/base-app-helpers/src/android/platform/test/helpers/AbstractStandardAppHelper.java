@@ -56,6 +56,7 @@ public abstract class AbstractStandardAppHelper implements IStandardAppHelper {
         int maxBacks = 4;
         while (!mDevice.hasObject(mLauncherStrategy.getWorkspaceSelector()) && maxBacks > 0) {
             mDevice.pressBack();
+            mDevice.waitForIdle();
             maxBacks--;
         }
 
