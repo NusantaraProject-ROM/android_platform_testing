@@ -21,7 +21,7 @@ LOCAL_SDK_VERSION := current
 
 LOCAL_SRC_FILES := $(call all-subdir-java-files)
 LOCAL_JAVA_LIBRARIES := android.test.runner
-LOCAL_STATIC_JAVA_LIBRARIES := android-support-test ub-uiautomator
+LOCAL_STATIC_JAVA_LIBRARIES := android-support-test ub-uiautomator launcher-helper-lib
 
 LOCAL_PACKAGE_NAME := AndroidBvtTests
 LOCAL_CERTIFICATE := platform
