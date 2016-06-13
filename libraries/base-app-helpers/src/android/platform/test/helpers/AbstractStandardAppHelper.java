@@ -20,13 +20,10 @@ import android.app.Instrumentation;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
-import android.os.SystemClock;
 import android.support.test.launcherhelper.ILauncherStrategy;
 import android.support.test.launcherhelper.LauncherStrategyFactory;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
-
-import junit.framework.Assert;
 
 public abstract class AbstractStandardAppHelper implements IStandardAppHelper {
     public UiDevice mDevice;
