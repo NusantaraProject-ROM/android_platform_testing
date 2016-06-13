@@ -77,7 +77,7 @@ public class CommonLauncherHelper {
             attempts++;
             if (attempts > maxAttempts) {
                 throw new RuntimeException(
-                        "scrollBackToBeginning: exceeded max attampts: " + maxAttempts);
+                        "scrollBackToBeginning: exceeded max attempts: " + maxAttempts);
             }
         }
     }
@@ -158,7 +158,7 @@ public class CommonLauncherHelper {
                     attempts++;
                     if (attempts > maxScrollAttempts) {
                         throw new RuntimeException(
-                                "launchApp: exceeded max attampts to locate app icon: "
+                                "launchApp: exceeded max attempts to locate app icon: "
                                         + maxScrollAttempts);
                     }
                 }
