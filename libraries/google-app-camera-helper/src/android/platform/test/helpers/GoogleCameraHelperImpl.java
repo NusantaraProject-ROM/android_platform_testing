@@ -19,6 +19,7 @@ package android.platform.test.helpers;
 import android.app.Instrumentation;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.SystemClock;
+import android.platform.test.helpers.exceptions.UnknownUiException;
 import android.support.test.launcherhelper.ILauncherStrategy;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
@@ -34,8 +35,6 @@ import java.text.SimpleDateFormat;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.regex.Pattern;
-
-import junit.framework.Assert;
 
 public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
     private static final String LOG_TAG = GoogleCameraHelperImpl.class.getSimpleName();
@@ -200,7 +199,8 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
     @Override
     public void capturePhoto() {
         if (!isCameraMode()) {
-            Assert.fail("GoogleCamera must be in Camera mode to capture photos.");
+            throw new IllegalStateException(
+                    "GoogleCamera must be in Camera mode to capture photos.");
         }
 
         getCameraShutter().click();
@@ -213,7 +213,7 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
     @Override
     public void captureVideo(long timeInMs) {
         if (!isVideoMode()) {
-            Assert.fail("GoogleCamera must be in Video mode to record videos.");
+            throw new IllegalStateException("GoogleCamera must be in Video mode to record videos.");
         }
 
         if (isRecording()) {
@@ -242,9 +242,10 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
     @Override
     public void snapshotVideo(long videoTimeInMs, long snapshotStartTimeInMs) {
         if (!isVideoMode()) {
-            Assert.fail("GoogleCamera must be in Video mode to record videos.");
+            throw new IllegalStateException("GoogleCamera must be in Video mode to record videos.");
         } else if (videoTimeInMs <= snapshotStartTimeInMs) {
-            Assert.fail("video recording time length must be larger than snapshot start time");
+            throw new IllegalArgumentException(
+                    "video recording time length must be larger than snapshot start time");
         }
 
         // Temporary hack #2: Make UI code responsive by shortening the UiAutomator idle timeout.
@@ -284,8 +285,7 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
             if (!snapshot_success) {
                 getVideoShutter().click();
                 waitForVideoShutterEnabled();
-                Assert.fail("snapshot button not found!");
-                return;
+                throw new UnknownUiException("snapshot button not found!");
             }
 
             SystemClock.sleep(videoTimeInMs - snapshotStartTimeInMs);
@@ -438,7 +438,7 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
                     mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_HDR_OFF_ID_4X)).click();
                     break;
                 default:
-                    Assert.fail("Failing setting HDR+ mode!");
+                    throw new UnknownUiException("Failing setting HDR+ mode!");
             }
             mDevice.waitForIdle();
         } else if (mIsVersionI || mIsVersionJ) {
@@ -505,7 +505,7 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
                     currentMode = HDR_MODE_OFF;
                     break;
                 default:
-                    Assert.fail("Failed to identify the HDR+ settings!");
+                    throw new UnknownUiException("Failed to identify the HDR+ settings!");
             }
             selectedOption.click();
             mDevice.wait(Until.findObject(
@@ -520,7 +520,7 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
             } else if (DESC_HDR_ON_3X.equals(modeDesc)) {
                 return HDR_MODE_ON == mode;
             } else {
-                Assert.fail("Unexpected failure.");
+                throw new UnknownUiException("Unexpected failure.");
             }
         } else {
             // Open mode options before checking Hdr status
@@ -532,11 +532,9 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
             } else if (DESC_HDR_ON_2X.equals(modeDesc)) {
                 return HDR_MODE_ON == mode;
             } else {
-                Assert.fail("Unexpected failure.");
+                throw new UnknownUiException("Unexpected failure.");
             }
         }
-
-        return HDR_MODE_OFF == mode;
     }
 
     /**
@@ -578,7 +576,7 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
      */
     public void setHFRMode(int mode) {
         if (!isVideoMode()) {
-            Assert.fail("Must be in video mode to set HFR mode.");
+            throw new IllegalStateException("Must be in video mode to set HFR mode.");
         }
 
         // Haleakala doesn't support slow motion, so throw exception
@@ -600,9 +598,9 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
             }
             //If none of the 3 options match expected option, throw an exception
             if (mode == HFR_MODE_OFF) {
-                Assert.fail("Failed to turn off the HFR mode");
+                throw new UnknownUiException("Failed to turn off the HFR mode");
             } else {
-                Assert.fail(String.format("Failed to select HFR mode to FPS %d",
+                throw new UnknownUiException(String.format("Failed to select HFR mode to FPS %d",
                         (int) Math.floor(mode * 120)));
             }
         } else if (mIsVersionJ || mIsVersionK) {
@@ -616,7 +614,8 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
                     mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, uiMenuButton)),
                             MENU_WAIT_TIME);
                 } else {
-                    Assert.fail("Fail to find hfr mode close button when trying to turn off HFR mode");
+                    throw new UnknownUiException(
+                            "Fail to find hfr mode close button when trying to turn off HFR mode");
                 }
                 return;
             }
@@ -631,7 +630,8 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
                     mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, uiMenuButton)),
                             MENU_WAIT_TIME);
                 } else {
-                    Assert.fail("Fail to close other special mode before setting hfr mode");
+                    throw new UnknownUiException(
+                            "Fail to close other special mode before setting hfr mode");
                 }
             }
 
@@ -649,7 +649,8 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
             // Detect if hfr toggle exists in the interface
             if (!mDevice.hasObject(By.res(UI_PACKAGE_NAME, UI_HFR_TOGGLE_ID_J))) {
                 if (mode == HFR_MODE_240_FPS) {
-                    Assert.fail("The 240 fps HFR mode is not supported on the device.");
+                    throw new UnknownUiException(
+                            "The 240 fps HFR mode is not supported on the device.");
                 }
                 return;
             }
@@ -666,10 +667,10 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
                 }
             }
             //If neither of the 2 options match expected option, throw an exception
-            Assert.fail(String.format("Failed to select HFR mode to FPS %d",
+            throw new UnknownUiException(String.format("Failed to select HFR mode to FPS %d",
                     (int) Math.floor(mode * 120)));
         } else {
-            Assert.fail("The Google Camera version is not supported.");
+            throw new UnknownUiException("The Google Camera version is not supported.");
         }
     }
 
@@ -683,7 +684,7 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
             } else if (DESC_HFR_OFF.equals(modeDesc)) {
                 return HFR_MODE_OFF == mode;
             } else {
-                Assert.fail("Fail to identify HFR toggle description.");
+                throw new UnknownUiException("Fail to identify HFR toggle description.");
             }
         } else if (mIsVersionJ || mIsVersionK) {
             if (getHfrToggleButton() == null) {
@@ -695,7 +696,7 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
             } else if (DESC_HFR_240_FPS.equals(modeDesc)) {
                 return HFR_MODE_240_FPS == mode;
             } else {
-                Assert.fail("Fail to identify HFR toggle description.");
+                throw new UnknownUiException("Fail to identify HFR toggle description.");
             }
         }
         return HFR_MODE_OFF == mode;
@@ -717,7 +718,8 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
             mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, "hdr_plus_toggle_button")),
                     DIALOG_TRANSITION_WAIT);
         } else {
-            Assert.fail("Fail to find modeoption button when trying to check HDR mode");
+            throw new UnknownUiException(
+                    "Fail to find modeoption button when trying to check HDR mode");
         }
     }
 
@@ -742,7 +744,8 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
         if (menuItem != null) {
             menuItem.click();
         } else {
-            Assert.fail(String.format("Menu item button was not enabled with %d seconds",
+            throw new UnknownUiException(
+                    String.format("Menu item button was not enabled with %d seconds",
                     (int)Math.floor(MENU_WAIT_TIME / 1000)));
         }
         mDevice.wait(Until.gone(By.text("Photo Sphere")), MENU_WAIT_TIME);
@@ -755,7 +758,8 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
         if (navUp != null) {
             navUp.click();
         } else {
-            Assert.fail(String.format("Navigation up button was not enabled with %d seconds",
+            throw new UnknownUiException(String.format(
+                    "Navigation up button was not enabled with %d seconds",
                     (int)Math.floor(MENU_WAIT_TIME / 1000)));
         }
         mDevice.wait(Until.gone(By.text("Help & feedback")), MENU_WAIT_TIME);
@@ -768,7 +772,8 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
         if (settingItem != null) {
             settingItem.click();
         } else {
-            Assert.fail(String.format("Setting item button was not enabled with %d seconds",
+            throw new UnknownUiException(
+                    String.format("Setting item button was not enabled with %d seconds",
                     (int)Math.floor(MENU_WAIT_TIME / 1000)));
         }
         mDevice.wait(Until.gone(By.text("Help & feedback")), MENU_WAIT_TIME);
@@ -781,7 +786,8 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
         if (settingItem != null) {
             settingItem.click();
         } else {
-            Assert.fail(String.format("Setting item button was not enabled with %d seconds",
+            throw new UnknownUiException(
+                    String.format("Setting item button was not enabled with %d seconds",
                     (int)Math.floor(MENU_WAIT_TIME / 1000)));
         }
         mDevice.wait(Until.gone(By.text("Help & feedback")), MENU_WAIT_TIME);
@@ -794,7 +800,8 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
         if (navUp != null) {
             navUp.click();
         } else {
-            Assert.fail(String.format("Navigation up button was not enabled with %d seconds",
+            throw new UnknownUiException(
+                    String.format("Navigation up button was not enabled with %d seconds",
                     (int)Math.floor(MENU_WAIT_TIME / 1000)));
         }
         mDevice.wait(Until.findObject(By.text("Help & feedback")), MENU_WAIT_TIME);
@@ -809,7 +816,8 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
         if (backCamera != null) {
             backCamera.click();
         } else {
-            Assert.fail(String.format("Back camera button was not enabled with %d seconds",
+            throw new UnknownUiException(
+                    String.format("Back camera button was not enabled with %d seconds",
                     (int)Math.floor(MENU_WAIT_TIME / 1000)));
         }
         mDevice.wait(Until.findObject(By.text("CANCEL")), MENU_WAIT_TIME);
@@ -822,7 +830,7 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
         } else if (mode == VIDEO_HD_720){
             mDevice.wait(Until.findObject(By.text(TEXT_HD_720)), MENU_WAIT_TIME).click();
         } else {
-            Assert.fail("Failed to set video resolution");
+            throw new UnknownUiException("Failed to set video resolution");
         }
 
         mDevice.wait(Until.gone(By.text("CANCEL")), MENU_WAIT_TIME);
@@ -927,7 +935,7 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
         if (toggle != null) {
             toggle.click();
         } else {
-            Assert.fail("Failed to detect a back-front toggle button");
+            throw new UnknownUiException("Failed to detect a back-front toggle button");
         }
     }
 
@@ -1003,7 +1011,8 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
         }
 
         if (!uiSuccess) {
-            Assert.fail(String.format("Camera shutter was not enabled with %d seconds",
+            throw new UnknownUiException(
+                    String.format("Camera shutter was not enabled with %d seconds",
                     (int)Math.floor(SHUTTER_WAIT_TIME / 1000)));
         }
     }
@@ -1023,7 +1032,8 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
         }
 
         if (!uiSuccess) {
-            Assert.fail(String.format("Video shutter was not enabled with %d seconds",
+            throw new UnknownUiException(
+                    String.format("Video shutter was not enabled with %d seconds",
                     (int)Math.floor(SHUTTER_WAIT_TIME / 1000)));
         }
     }
@@ -1067,7 +1077,7 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
             mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, UI_HFR_TOGGLE_ID_I).enabled(true)),
                     SWITCH_WAIT_TIME);
         } else {
-            Assert.fail("HFR is not supported on this version of Google Camera");
+            throw new UnknownUiException("HFR is not supported on this version of Google Camera");
         }
     }
 
@@ -1107,7 +1117,7 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
                 UiObject2 buttonDismiss = fDevice.findObject(By.text(dismissWords).enabled(true));
                 if (buttonDismiss != null) {
                     buttonDismiss.click();
-                    Assert.fail("Camera crash dialog encountered. Failing test.");
+                    throw new UnknownUiException("Camera crash dialog encountered. Failing test.");
                 }
 
                 return false;
@@ -1136,7 +1146,7 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
         }
 
         if (launchStart == ILauncherStrategy.LAUNCH_FAILED_TIMESTAMP) {
-            Assert.fail("Failed to launch GoogleCamera.");
+            throw new UnknownUiException("Failed to launch GoogleCamera.");
         }
 
         waitForAppInit();
@@ -1161,22 +1171,29 @@ public class GoogleCameraHelperImpl extends AbstractGoogleCameraHelper {
      */
     public void goToAlbum() {
         UiObject2 thumbnailAlbumButton = getThumbnailAlbumButton();
-        Assert.assertNotNull("Could not find thumbnail album button", thumbnailAlbumButton);
+        if (thumbnailAlbumButton == null) {
+            throw new UnknownUiException("Could not find thumbnail album button");
+        }
 
         thumbnailAlbumButton.click();
-        Assert.assertTrue("Could not find album filmstrip", mDevice.wait(Until.hasObject(
-                By.res(UI_PACKAGE_NAME, UI_ALBUM_FILMSTRIP_VIEW_ID)), DIALOG_TRANSITION_WAIT));
+        if (!mDevice.wait(Until.hasObject(
+                By.res(UI_PACKAGE_NAME, UI_ALBUM_FILMSTRIP_VIEW_ID)), DIALOG_TRANSITION_WAIT)) {
+            throw new UnknownUiException("Could not find album filmstrip");
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     public void scrollAlbum(Direction direction) {
-        Assert.assertTrue("direction must be LEFT or RIGHT", Direction.LEFT.equals(direction) ||
-                Direction.RIGHT.equals(direction));
+        if (!(Direction.LEFT.equals(direction) || Direction.RIGHT.equals(direction))) {
+            throw new IllegalArgumentException("direction must be LEFT or RIGHT");
+        }
 
         UiObject2 albumFilmstripView = getAlbumFilmstripView();
-        Assert.assertNotNull("Could not find album filmstrip view", albumFilmstripView);
+        if (albumFilmstripView == null) {
+            throw new UnknownUiException("Could not find album filmstrip view");
+        }
 
         albumFilmstripView.scroll(direction, 5.0f);
         mDevice.waitForIdle();
