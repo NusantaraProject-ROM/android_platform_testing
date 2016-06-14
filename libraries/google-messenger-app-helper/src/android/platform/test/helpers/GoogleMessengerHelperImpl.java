@@ -19,6 +19,7 @@ package android.platform.test.helpers;
 import android.app.Instrumentation;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.SystemClock;
+import android.platform.test.helpers.exceptions.UnknownUiException;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.Direction;
@@ -28,8 +29,6 @@ import android.support.test.uiautomator.UiObject2;
 import android.util.Log;
 
 import java.util.List;
-
-import junit.framework.Assert;
 
 public class GoogleMessengerHelperImpl extends AbstractGoogleMessengerHelper {
     private static final String TAG = GoogleMessengerHelperImpl.class.getSimpleName();
@@ -132,12 +131,15 @@ public class GoogleMessengerHelperImpl extends AbstractGoogleMessengerHelper {
     @Override
     public void goToNewConversationPage() {
         UiObject2 startNewConversationButton = getStartNewConversationButton();
-        Assert.assertNotNull(
-                "Could not find start new conversation button", startNewConversationButton);
+        if (startNewConversationButton == null) {
+            throw new IllegalStateException("Could not find start new conversation button");
+        }
 
         startNewConversationButton.click();
-        Assert.assertTrue("Could not find recipient text view", mDevice.wait(Until.hasObject(
-                By.res(UI_PACKAGE_NAME, UI_RECIPIENT_TEXT_VIEW_ID)), UI_DIALOG_WAIT));
+        if (!mDevice.wait(Until.hasObject(
+                By.res(UI_PACKAGE_NAME, UI_RECIPIENT_TEXT_VIEW_ID)), UI_DIALOG_WAIT)) {
+            throw new UnknownUiException("Could not find recipient text view");
+        }
     }
 
     /*
@@ -146,21 +148,28 @@ public class GoogleMessengerHelperImpl extends AbstractGoogleMessengerHelper {
     @Override
     public void goToMessagesPage() {
         UiObject2 contact = mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_CONTACT_NAME_ID));
-        Assert.assertNotNull("Could not find first contact drop down menu item", contact);
+        if (contact == null) {
+            throw new IllegalStateException("Could not find first contact drop down menu item");
+        }
 
         contact.click();
-        Assert.assertTrue("Could not find compose message edit text", mDevice.wait(Until.hasObject(
-                By.res(UI_PACKAGE_NAME, UI_COMPOSE_MESSAGE_TEXT_ID)), UI_DIALOG_WAIT));
+        if (!mDevice.wait(Until.hasObject(
+                By.res(UI_PACKAGE_NAME, UI_COMPOSE_MESSAGE_TEXT_ID)), UI_DIALOG_WAIT)) {
+            throw new UnknownUiException("Could not find compose message edit text");
+        }
     }
 
     private void goToFullscreenChooseMediaPage() {
         UiObject2 mediaGalleryGridView = getMediaGalleryGridView();
-        Assert.assertNotNull("Could not find media gallery grid view", mediaGalleryGridView);
+        if (mediaGalleryGridView == null) {
+            throw new IllegalStateException("Could not find media gallery grid view");
+        }
 
         mediaGalleryGridView.scroll(Direction.DOWN, 5.0f);
-        Assert.assertTrue("Could not find full screen media gallery grid view", mDevice.wait(
-                Until.hasObject(By.pkg(UI_PACKAGE_NAME).text(UI_CHOOSE_PHOTO_TEXT)),
-                UI_DIALOG_WAIT));
+        if (!mDevice.wait(Until.hasObject(By.pkg(UI_PACKAGE_NAME).text(UI_CHOOSE_PHOTO_TEXT)),
+                UI_DIALOG_WAIT)) {
+            throw new UnknownUiException("Could not find full screen media gallery grid view");
+        }
     }
 
     /*
@@ -168,11 +177,14 @@ public class GoogleMessengerHelperImpl extends AbstractGoogleMessengerHelper {
      */
     @Override
     public void scrollMessages(Direction direction) {
-        Assert.assertTrue("Direction must be UP or DOWN",
-                Direction.UP.equals(direction) || Direction.DOWN.equals(direction));
+        if (!(Direction.UP.equals(direction) || Direction.DOWN.equals(direction))) {
+            throw new IllegalArgumentException("Direction must be UP or DOWN");
+        }
 
         UiObject2 messageRecyclerView = getMessageRecyclerView();
-        Assert.assertNotNull("Could not find message recycler view", messageRecyclerView);
+        if (messageRecyclerView == null) {
+            throw new UnknownUiException("Could not find message recycler view");
+        }
 
         messageRecyclerView.scroll(direction, 10.0f);
     }
@@ -183,7 +195,9 @@ public class GoogleMessengerHelperImpl extends AbstractGoogleMessengerHelper {
     @Override
     public void clickComposeMessageText() {
         UiObject2 composeMessageEditText = getComposeMessageEditText();
-        Assert.assertNotNull("Could not find compose message edit text", composeMessageEditText);
+        if (composeMessageEditText == null) {
+            throw new IllegalStateException("Could not find compose message edit text");
+        }
 
         composeMessageEditText.click();
     }
@@ -194,29 +208,38 @@ public class GoogleMessengerHelperImpl extends AbstractGoogleMessengerHelper {
     @Override
     public void clickSendMessageButton() {
         UiObject2 sendMessageButton = getSendMessageButton();
-        Assert.assertNotNull("Could not find send message button", sendMessageButton);
+        if (sendMessageButton == null) {
+            throw new IllegalStateException("Could not find send message button");
+        }
 
         sendMessageButton.click();
     }
 
     private void clickAttachMediaButton() {
         UiObject2 attachMediaButton = getAttachMediaButton();
-        Assert.assertNotNull("Could not find attach media button", attachMediaButton);
+        if (attachMediaButton == null) {
+            throw new IllegalStateException("Could not find attach media button");
+        }
 
         attachMediaButton.click();
-        Assert.assertTrue("Could not find media picker tabstrip", mDevice.wait(Until.hasObject(
-                By.res(UI_PACKAGE_NAME, UI_MEDIA_PICKER_TABSTRIP_ID)), UI_DIALOG_WAIT));
+           if (!mDevice.wait(Until.hasObject(
+                By.res(UI_PACKAGE_NAME, UI_MEDIA_PICKER_TABSTRIP_ID)), UI_DIALOG_WAIT)) {
+            throw new UnknownUiException("Could not find media picker tabstrip");
+        }
     }
 
     private void clickMediaFromDeviceTab() {
         UiObject2 mediaFromDeviceTab = getMediaFromDeviceTab();
-        Assert.assertNotNull("Could not find media from device tab", mediaFromDeviceTab);
+        if (mediaFromDeviceTab == null) {
+            throw new IllegalStateException("Could not find media from device tab");
+        }
 
         if (!mediaFromDeviceTab.isSelected()) {
             mediaFromDeviceTab.click();
-            Assert.assertTrue("Media from device tab not selected", mDevice.wait(Until.hasObject(
-                    By.pkg(UI_PACKAGE_NAME).desc(UI_MEDIA_FROM_DEVICE_DESC).selected(true)),
-                    UI_DIALOG_WAIT));
+            if (!mDevice.wait(Until.hasObject(By.pkg(UI_PACKAGE_NAME).desc(
+                    UI_MEDIA_FROM_DEVICE_DESC).selected(true)), UI_DIALOG_WAIT)) {
+                throw new UnknownUiException("Media from device tab not selected");
+            }
         }
     }
 
@@ -230,10 +253,15 @@ public class GoogleMessengerHelperImpl extends AbstractGoogleMessengerHelper {
         goToFullscreenChooseMediaPage();
 
         UiObject2 mediaGalleryGridView = getMediaGalleryGridView();
-        Assert.assertNotNull("Could not find media gallery grid view", mediaGalleryGridView);
+        if (mediaGalleryGridView == null) {
+            throw new UnknownUiException("Could not find media gallery grid view");
+        }
 
         List<UiObject2> mediaGalleryChildren = mediaGalleryGridView.getChildren();
-        Assert.assertTrue(index >= 0 && index < mediaGalleryChildren.size());
+        if (index < 0 || index >= mediaGalleryChildren.size()) {
+            throw new IndexOutOfBoundsException(String.format("index %d >= size %d",
+                    index, mediaGalleryChildren.size()));
+        }
 
         int imageChildIndex = 1;
         UiObject2 imageView = mediaGalleryChildren.get(index).
