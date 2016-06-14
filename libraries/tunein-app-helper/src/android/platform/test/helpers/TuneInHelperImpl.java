@@ -16,6 +16,7 @@
 package android.platform.test.helpers;
 
 import android.app.Instrumentation;
+import android.platform.test.helpers.exceptions.UnknownUiException;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.Until;
@@ -81,7 +82,9 @@ public class TuneInHelperImpl extends AbstractTuneInHelper {
             mDevice.pressBack();
             mDevice.waitForIdle();
         }
-        Assert.assertTrue("Fail to go back to Browse Page", isOnBrowsePage());
+        if (!isOnBrowsePage()) {
+            throw new IllegalStateException("Fail to go to Browse Page");
+        }
     }
 
     /**
@@ -89,15 +92,20 @@ public class TuneInHelperImpl extends AbstractTuneInHelper {
      */
     @Override
     public void goToLocalRadio() {
-        Assert.assertTrue("Not on Browse Page", isOnBrowsePage());
+        if (!isOnBrowsePage()) {
+            throw new IllegalStateException("Not on Browse Page");
+        }
 
         UiObject2 localRadio = mDevice.findObject(By.text(UI_LOCAL_RADIO_TEXT));
 
-        Assert.assertNotNull("Could not find local radio item", localRadio);
-        Assert.assertTrue(
-            "Fail to load Local Radio page",
-            localRadio.clickAndWait(Until.newWindow(), UI_ACTION_TIMEOUT)
-        );
+        if (localRadio == null) {
+            throw new UnknownUiException("Cannot not find local radio");
+        }
+        else {
+            if (!localRadio.clickAndWait(Until.newWindow(), UI_ACTION_TIMEOUT)) {
+                throw new UnknownUiException("Fail to load Local Radio page");
+            }
+        }
     }
 
     /**
@@ -110,16 +118,21 @@ public class TuneInHelperImpl extends AbstractTuneInHelper {
               UI_ACTION_TIMEOUT
             );
 
-        Assert.assertNotNull("Could not find fm list", fmList);
-        Assert.assertTrue("Invalid ith fm to select",
-                          i > 0 && i < fmList.getChildren().size());
+        if (fmList == null) {
+            throw new UnknownUiException("Cannot not find fm list to select FM");
+        }
+
+        if (i <= 0 && i >= fmList.getChildren().size()) {
+            String errMsg = String.format("Trying to select %dth FM radio, valid range = (1, %d)",
+                                          i, fmList.getChildren().size() - 1);
+            throw new IllegalArgumentException(errMsg);
+        }
 
         UiObject2 fm = fmList.getChildren().get(i);
 
-        Assert.assertTrue(
-            "Fail to load into fm profile page",
-            fm.clickAndWait(Until.newWindow(), UI_ACTION_TIMEOUT)
-        );
+        if (!fm.clickAndWait(Until.newWindow(), UI_ACTION_TIMEOUT)) {
+            throw new UnknownUiException("Fail to load into fm profile page");
+        }
     }
 
     /**
@@ -130,11 +143,13 @@ public class TuneInHelperImpl extends AbstractTuneInHelper {
         UiObject2 start = mDevice
             .findObject(By.res(UI_PACKAGE_NAME, UI_START_PLAY_ID));
 
-        Assert.assertNotNull("Could not find start play button", start);
-        Assert.assertTrue(
-            "Fail to start playing the fm",
-            start.clickAndWait(Until.newWindow(), UI_ACTION_TIMEOUT)
-        );
+        if (start == null) {
+            throw new UnknownUiException("Cannot find start play button");
+        }
+
+        if (!start.clickAndWait(Until.newWindow(), UI_ACTION_TIMEOUT)) {
+            throw new UnknownUiException("Fail to start playing the fm");
+        }
     }
 
     /**
@@ -144,12 +159,16 @@ public class TuneInHelperImpl extends AbstractTuneInHelper {
     public void stopChannel() {
         UiObject2 stop = mDevice
             .findObject(By.res(UI_PACKAGE_NAME, UI_MINI_PLAYER_STOP_ID));
-        Assert.assertNotNull("Could not find stop button", stop);
+
+        if (stop == null) {
+            throw new UnknownUiException("Could not find stop button");
+        }
+
         stop.click();
-        Assert.assertTrue(
-            "Fail to stop playing the fm",
-            stop.wait(Until.enabled(!stop.isEnabled()), UI_ACTION_TIMEOUT)
-        );
+
+        if (!stop.wait(Until.enabled(!stop.isEnabled()), UI_ACTION_TIMEOUT)) {
+            throw new UnknownUiException("Fail to stop playing the fm");
+        }
     }
 
 }
