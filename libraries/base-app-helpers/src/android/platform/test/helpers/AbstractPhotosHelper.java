@@ -26,7 +26,17 @@ public abstract class AbstractPhotosHelper extends AbstractStandardAppHelper {
     }
 
     /**
-     * Setup expectations: Photos is open and on the main screen.
+     * Setup expectations: Photos is open and on the main or a device folder's screen.
+     *
+     * This method will check if there are videos that can be opened on current screen
+     * by looking for any view objects with content-desc that starts with "Video"
+     *
+     * @return true if video clips are found, false otherwise
+     */
+    public abstract boolean searchForVideoClip();
+
+    /**
+     * Setup expectations: Photos is open and on the main or a device folder's screen.
      *
      * This method will select the first clip to open and play. This will block until the clip
      * begins to plays.
@@ -55,7 +65,51 @@ public abstract class AbstractPhotosHelper extends AbstractStandardAppHelper {
     public abstract void goToMainScreen();
 
     /**
-     * Setup expectations: Photos is open and on the main screen.
+     * Setup expectations: Photos is open.
+     *
+     * This method will go to device folder screen.
+     */
+    public abstract void goToDeviceFolderScreen();
+
+    /**
+     * Setup expectations:
+     *   1. Photos is open
+     *   2. on device folder screen
+     *   3. the first device folder is shown on the screen
+     *
+     * This method will search for user-specified device folder in device folders.
+     * If the device folder is found, the function will return with the device
+     * folder on current screen.
+     *
+     * @param folderName  User-specified device folder name
+     * @return true if device folder is found, false otherwise
+     */
+    public abstract boolean searchForDeviceFolder(String folderName);
+
+    /**
+     * Setup expectations:
+     *   1. Photos is open
+     *   2. on device folder screen
+     *   3. user-specified device folder is currently on screen
+     *
+     * This method will open the user-specified device folder.
+     *
+     * @param folderName  User-specified device folder name
+     */
+    public abstract void openDeviceFolder(String folderName);
+
+    /**
+     * Setup expectations: Photos is open and on the main or a device folder's screen.
+     *
+     * This method will check if there are pictures that can be opened on current screen
+     * by looking for any view objects with content-desc that starts with "Photo"
+     *
+     * @return true if pictures are found
+     */
+    public abstract boolean searchForPicture();
+
+    /**
+     * Setup expectations: Photos is open and on the main or a device folder's screen.
      *
      * This method will open the picture at the specified index.
      *
