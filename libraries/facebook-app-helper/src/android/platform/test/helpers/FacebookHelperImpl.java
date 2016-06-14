@@ -32,18 +32,19 @@ import junit.framework.Assert;
 public class FacebookHelperImpl extends AbstractFacebookHelper {
     private static final String TAG = "android.platform.test.helpers.FacebookHelperImpl";
 
-    private static final String UI_HOME_PAGE_CONTAINER_ID = "tab_content_viewpager";
+    private static final String UI_HOME_PAGE_CONTAINER_ID = "cs7";
     private static final String UI_LOADING_VIEW_ID = "loading_view";
-    private static final String UI_LOGIN_BUTTON_ID = "login_login";
-    private static final String UI_LOGIN_PASSWORD_ID = "login_password";
-    private static final String UI_LOGIN_ROOT_ID = "login_root";
-    private static final String UI_LOGIN_USERNAME_ID = "login_username";
-    private static final String UI_NEWS_FEED_TAB_ID = "news_feed_tab";
-    private static final String UI_NEWS_FEED_TAB_SELECTED_DESC = "Selected";
+    private static final String UI_LOGIN_BUTTON_ID = "bjb";
+    private static final String UI_LOGIN_PASSWORD_ID = "bj_";
+    private static final String UI_LOGIN_ROOT_ID = "bj6";
+    private static final String UI_LOGIN_USERNAME_ID = "bj8";
+    private static final String UI_NEWS_FEED_TAB_ID = "a0";
+    private static final String UI_NEWS_FEED_TAB_SELECTED_DESC = "News";
     private static final String UI_PACKAGE_NAME = "com.facebook.katana";
-    private static final String UI_POST_BUTTON_ID = "primary_named_button";
-    private static final String UI_STATUS_TEXT_ID = "status_text";
-    private static final String UI_STATUS_UPDATE_BUTTON_ID = "feed_composer_status_button";
+    private static final String UI_POST_BUTTON_ID = "rk";
+    private static final String UI_STATUS_TEXT_ID = "cmk";
+    private static final String UI_STATUS_UPDATE_BUTTON_ID = "bmp";
+    private static final String UI_LOGIN_ONE_TAP = "sc";
 
     private static final long UI_LOGIN_WAIT = 30000;
     private static final long UI_NAVIGATION_WAIT = 10000;
@@ -165,6 +166,8 @@ public class FacebookHelperImpl extends AbstractFacebookHelper {
         statusUpdateButton.click();
         mDevice.wait(Until.findObject(
                 By.res(UI_PACKAGE_NAME, UI_STATUS_TEXT_ID)), UI_NAVIGATION_WAIT);
+
+        getStatusTextField().click();
     }
 
     private UiObject2 getStatusTextField() {
@@ -224,6 +227,14 @@ public class FacebookHelperImpl extends AbstractFacebookHelper {
         usernameTextField.setText(username);
         passwordTextField.setText(password);
         loginButton.click();
+
+        // Check if one tap login screen is prompted and click on it
+        UiObject2 oneTapLogin = mDevice.wait(Until.findObject(
+                By.res(UI_PACKAGE_NAME, UI_LOGIN_ONE_TAP)), UI_NAVIGATION_WAIT);
+        if (oneTapLogin != null) {
+            oneTapLogin.click();
+        }
+
         mDevice.wait(Until.findObject(
                 By.res(UI_PACKAGE_NAME, UI_HOME_PAGE_CONTAINER_ID)), UI_NAVIGATION_WAIT);
         // Wait for user content to load after logging in
