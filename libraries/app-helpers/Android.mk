@@ -24,7 +24,7 @@ LOCAL_STATIC_JAVA_LIBRARIES := launcher-helper-lib base-app-helpers google-camer
                                facebook-app-helper google-keyboard-app-helper \
                                google-messenger-app-helper reddit-app-helper \
                                play-books-app-helper tunein-app-helper \
-                               google-docs-app-helper
+                               google-docs-app-helper flightdemo-app-helper
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
 include $(BUILD_STATIC_JAVA_LIBRARY)
