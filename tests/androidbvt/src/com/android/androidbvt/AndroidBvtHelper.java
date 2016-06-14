@@ -85,8 +85,9 @@ public class AndroidBvtHelper {
      * java.lang.String)
      */
     public List<String> executeShellCommand(String cmd) {
-        if (cmd == null || cmd.isEmpty())
+        if (cmd == null || cmd.isEmpty()) {
             return null;
+        }
         List<String> output = new ArrayList<String>();
         ParcelFileDescriptor pfd = mUiAutomation.executeShellCommand(cmd);
         try (BufferedReader reader = new BufferedReader(
