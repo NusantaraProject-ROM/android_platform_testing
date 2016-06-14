@@ -180,6 +180,29 @@ public class FacebookHelperImpl extends AbstractFacebookHelper {
         return mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_STATUS_TEXT_ID));
     }
 
+    private boolean isOnStatusUpdatePage() {
+        return (mDevice.hasObject(By.text("Post to Facebook")) &&
+                mDevice.hasObject(By.text("What's on your mind?")));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void clickStatusUpdateTextField() {
+        if (!isOnStatusUpdatePage()) {
+            throw new IllegalStateException("Not on status update page");
+        }
+
+        UiObject2 statusTextField = getStatusTextField();
+
+        if (statusTextField == null) {
+            throw new UnknownUiException("Cannot find status update text field");
+        }
+
+        statusTextField.click();
+    }
+
     /**
      * {@inheritDoc}
      */
