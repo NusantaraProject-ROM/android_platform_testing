@@ -56,6 +56,13 @@ public abstract class AbstractFacebookHelper extends AbstractStandardAppHelper {
     public abstract void goToStatusUpdate();
 
     /**
+     * Setup expectations: Facebook is on the status update page.
+     *
+     * This method clicks on the status update text field to move the keyboard cursor there
+     */
+    public abstract void clickStatusUpdateTextField();
+
+    /**
      * Setup expections: Facebook is on the status update page.
      *
      * This method sets the status update text.
