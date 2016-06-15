@@ -17,8 +17,8 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE_TAGS := tests
 
-LOCAL_SDK_VERSION := current
-
+LOCAL_SDK_VERSION := system_current
+media_framework_app_base := frameworks/base/media/tests/MediaFrameworkTest/src/com/android/mediaframeworktest
 LOCAL_SRC_FILES := $(call all-subdir-java-files)
 LOCAL_JAVA_LIBRARIES := android.test.runner
 LOCAL_STATIC_JAVA_LIBRARIES := android-support-test ub-uiautomator launcher-helper-lib

@@ -27,6 +27,7 @@ import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.Until;
 import android.test.suitebuilder.annotation.LargeTest;
+import android.test.suitebuilder.annotation.Suppress;
 import android.util.Log;
 
 import junit.framework.TestCase;
@@ -37,6 +38,8 @@ import java.net.URL;
 
 public class ConnectivityWifiTests extends TestCase {
     private final static String DEFAULT_PING_SITE = "www.google.com";
+    private final String NETWORK_ID = "AndroidAP";
+    private final String PASSWD = "androidwifi";
     private UiDevice mDevice;
     private WifiManager mWifiManager = null;
     private Context mContext = null;
@@ -103,6 +106,68 @@ public class ConnectivityWifiTests extends TestCase {
                 mDevice.wait(Until.findObject(By.res("com.android.settings:id/list")),
                         mABvtHelper.LONG_TIMEOUT)
                         .getChildren().size() > 0);
+    }
+
+    /**
+     * Verifies WifiAp is by default disabled Then enable adn disable it
+     */
+    @LargeTest
+    @Suppress
+    public void testWifiTetheringDisableEnable() throws InterruptedException {
+        WifiConfiguration config = new WifiConfiguration();
+        config.SSID = NETWORK_ID;
+        config.allowedKeyManagement.set(KeyMgmt.WPA_PSK);
+        config.allowedAuthAlgorithms.set(AuthAlgorithm.OPEN);
+        config.preSharedKey = PASSWD;
+        int counter;
+        try {
+            // disable wifiap
+            assertTrue("wifi hotspot not disabled by default",
+                    mWifiManager.getWifiApState() == WifiManager.WIFI_AP_STATE_DISABLED);
+            // Enable wifiap
+            assertTrue("failed to disable wifi hotspot",
+                    mWifiManager.setWifiApEnabled(config, true));
+            Log.d("MyTestTag", "Now checkign wifi ap");
+            counter = 10;
+            while (--counter > 0
+                    && mWifiManager.getWifiApState() != WifiManager.WIFI_AP_STATE_ENABLED) {
+                Thread.sleep(mABvtHelper.SHORT_TIMEOUT);
+            }
+            assertTrue("wifi hotspot not enabled",
+                    mWifiManager.getWifiApState() == WifiManager.WIFI_AP_STATE_ENABLED);
+            // Navigate to Wireless Settings page and verify Wifi AP setting is on
+            Intent intent_as = new Intent(
+                    android.provider.Settings.ACTION_WIRELESS_SETTINGS);
+            mContext.startActivity(intent_as);
+            Thread.sleep(mABvtHelper.LONG_TIMEOUT);
+            mDevice.wait(Until.findObject(By.text("Tethering & portable hotspot")),
+                    mABvtHelper.LONG_TIMEOUT).click();
+            Thread.sleep(mABvtHelper.SHORT_TIMEOUT);
+            assertTrue("Settings UI for Wifi AP is not ON",
+                    mDevice.wait(Until.hasObject(By.text("Portable hotspot AndroidAP active")),
+                            mABvtHelper.LONG_TIMEOUT));
+
+            mDevice.wait(Until.findObject(By.text("Portable Wi‑Fi hotspot")),
+                    mABvtHelper.LONG_TIMEOUT).click();
+            assertTrue("Wifi ap disable call fails", mWifiManager.setWifiApEnabled(config,
+                    false));
+            counter = 5;
+            while (--counter > 0
+                    && mWifiManager.getWifiApState() != WifiManager.WIFI_AP_STATE_DISABLED) {
+                Thread.sleep(mABvtHelper.LONG_TIMEOUT);
+            }
+            assertTrue("wifi hotspot not enabled",
+                    mWifiManager.getWifiApState() == WifiManager.WIFI_AP_STATE_DISABLED);
+            Thread.sleep(mABvtHelper.LONG_TIMEOUT * 2);
+        } finally {
+            assertTrue("Wifi enable call fails", mWifiManager
+                    .enableNetwork(mWifiManager.getConnectionInfo().getNetworkId(), false));
+            counter = 10;
+            while (--counter > 0 && !mWifiManager.isWifiEnabled()) {
+                Thread.sleep(mABvtHelper.LONG_TIMEOUT);
+            }
+            assertTrue("Wifi isn't enabled", mWifiManager.isWifiEnabled());
+        }
     }
 
     /**
