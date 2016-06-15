@@ -23,8 +23,7 @@ import android.os.RemoteException;
 import android.provider.Settings;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.UiDevice;
-import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiSelector;
+import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.Until;
 import android.test.suitebuilder.annotation.LargeTest;
@@ -33,11 +32,12 @@ import android.widget.EditText;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 
-public class LockScreenTest extends TestCase {
+public class SysUILockScreenTests extends TestCase {
     private static final int SHORT_TIMEOUT = 200;
     private static final int LONG_TIMEOUT = 2000;
     private static final int PIN = 1234;
     private static final String PASSWORD = "aaaa";
+    private static final String EDIT_TEXT_CLASS_NAME = "android.widget.EditText";
     private UiDevice mDevice = null;
     private Context mContext;
 
@@ -59,6 +59,10 @@ public class LockScreenTest extends TestCase {
         super.tearDown();
     }
 
+    /**
+     * Following test will add PIN for Lock Screen, and remove PIN
+     * @throws Exception
+     */
     @LargeTest
     public void testLockScreenPIN() throws Exception {
         setScreenLock(Integer.toString(PIN), "PIN");
@@ -69,6 +73,10 @@ public class LockScreenTest extends TestCase {
         Assert.assertFalse("Lock Screen is still enabled", isLockScreenEnabled());
     }
 
+    /**
+     * Following test will add password for Lock Screen, and remove Password
+     * @throws Exception
+     */
     @LargeTest
     public void testLockScreenPwd() throws Exception {
         setScreenLock(PASSWORD, "Password");
@@ -79,28 +87,59 @@ public class LockScreenTest extends TestCase {
         Assert.assertFalse("Lock Screen is still enabled", isLockScreenEnabled());
     }
 
-    /** Sets the screen lock pin or password
+    /**
+     * Following test will add password for Lock Screen, check Emergency Call Page existence, and
+     * remove password for Lock Screen
+     * @throws Exception
+     */
+    @LargeTest
+    public void testEmergencyCall() throws Exception {
+        setScreenLock(PASSWORD, "Password");
+        sleepAndWakeUpDevice();
+        checkCheckEmergencyCall();
+        unlockScreen(PASSWORD);
+        removeScreenLock(PASSWORD);
+        Thread.sleep(LONG_TIMEOUT);
+        Assert.assertFalse("Lock Screen is still enabled", isLockScreenEnabled());
+    }
+
+    /**
+     * Sets the screen lock pin or password
      * @param pwd text of Password or Pin for lockscreen
      * @param mode indicate if its password or PIN
      */
     private void setScreenLock(String pwd, String mode) throws Exception {
         navigateToScreenLock();
         mDevice.wait(Until.findObject(By.text(mode)), LONG_TIMEOUT).click();
-        //set up Secure start-up page
+        // set up Secure start-up page
         mDevice.wait(Until.findObject(By.text("No thanks")), LONG_TIMEOUT).click();
-        UiObject pinField = new UiObject(
-                new UiSelector().className(EditText.class.getName()));
+        UiObject2 pinField = mDevice.wait(Until.findObject(By.clazz(EDIT_TEXT_CLASS_NAME)),
+                LONG_TIMEOUT);
         pinField.setText(pwd);
-        //enter and verify password
+        // enter and verify password
         mDevice.pressEnter();
         pinField.setText(pwd);
         mDevice.pressEnter();
         mDevice.wait(Until.findObject(By.text("DONE")), LONG_TIMEOUT).click();
     }
 
+    /**
+     * check if Emergency Call page exists
+     */
+    private void checkCheckEmergencyCall() throws Exception {
+        mDevice.pressMenu();
+        mDevice.wait(Until.findObject(By.text("EMERGENCY")), LONG_TIMEOUT).click();
+        Thread.sleep(LONG_TIMEOUT);
+        UiObject2 dialButton = mDevice.wait(Until.findObject(By.desc("dial")), LONG_TIMEOUT);
+        Assert.assertNotNull("Can't reach emergency call page", dialButton);
+        mDevice.pressBack();
+        Thread.sleep(LONG_TIMEOUT);
+    }
+
     private void removeScreenLock(String pwd) throws Exception {
         navigateToScreenLock();
-        UiObject pinField = new UiObject(new UiSelector().className(EditText.class.getName()));
+        UiObject2 pinField = mDevice.wait(Until.findObject(By.clazz(EDIT_TEXT_CLASS_NAME)),
+                LONG_TIMEOUT);
         pinField.setText(pwd);
         mDevice.pressEnter();
         mDevice.wait(Until.findObject(By.text("Swipe")), LONG_TIMEOUT).click();
@@ -110,7 +149,7 @@ public class LockScreenTest extends TestCase {
     private void unlockScreen(String pwd) throws Exception {
         swipeUp();
         Thread.sleep(SHORT_TIMEOUT);
-        //enter password to unlock screen
+        // enter password to unlock screen
         String command = String.format(" %s %s %s", "input", "text", pwd);
         mDevice.executeShellCommand(command);
         mDevice.waitForIdle();
@@ -120,7 +159,7 @@ public class LockScreenTest extends TestCase {
 
     private void navigateToScreenLock() throws Exception {
         launchSettingsPage(mContext, Settings.ACTION_SECURITY_SETTINGS);
-        new UiObject(new UiSelector().text("Screen lock")).click();
+        mDevice.wait(Until.findObject(By.text("Screen lock")), LONG_TIMEOUT).click();
     }
 
     private void launchSettingsPage(Context ctx, String pageName) throws Exception {
@@ -142,8 +181,8 @@ public class LockScreenTest extends TestCase {
         Thread.sleep(SHORT_TIMEOUT);
     }
 
-    private boolean isLockScreenEnabled(){
-        KeyguardManager km = (KeyguardManager)mContext.getSystemService(Context.KEYGUARD_SERVICE);
+    private boolean isLockScreenEnabled() {
+        KeyguardManager km = (KeyguardManager) mContext.getSystemService(Context.KEYGUARD_SERVICE);
         return km.isKeyguardSecure();
     }
 }
