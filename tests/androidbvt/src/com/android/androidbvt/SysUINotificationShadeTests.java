@@ -48,8 +48,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class NotificationShadeTests extends TestCase {
-    private static final String LOG_TAG = NotificationShadeTests.class.getSimpleName();
+public class SysUINotificationShadeTests extends TestCase {
+    private static final String LOG_TAG = SysUINotificationShadeTests.class.getSimpleName();
     private static final int SHORT_TIMEOUT = 200;
     private static final int LONG_TIMEOUT = 2000;
     private static final int GROUP_NOTIFICATION_ID = 1;
@@ -66,7 +66,7 @@ public class NotificationShadeTests extends TestCase {
     private ContentResolver mResolver;
 
     private enum QuickSettingTiles {
-        WIFI("Wifi"), SIM("SIM"), DND("Do not disturb"), BATTERY("Battery"),
+        WIFI("Wi-Fi"), SIM("SIM"), DND("Do not disturb"), BATTERY("Battery"),
         FLASHLIGHT("Flashlight"), SCREEN("screen"), BLUETOOTH("Bluetooth"),
         AIRPLANE("Airplane mode"), LOCATION("Location");
 
@@ -104,7 +104,8 @@ public class NotificationShadeTests extends TestCase {
     }
 
     /**
-     * ABVT tests for notifications
+     * Following test will create notifications, and verify notification can be expanded and
+     * redacted
      */
     @LargeTest
     public void testNotifications() throws Exception {
@@ -115,12 +116,12 @@ public class NotificationShadeTests extends TestCase {
     }
 
     /**
-     * ABVT tests for Quick Setting
+     * Following test will open Quick Setting shade, and verify icons in the shade
      */
     @MediumTest
     public void testQuickSettings() throws Exception {
         mDevice.openQuickSettings();
-        Thread.sleep(LONG_TIMEOUT);
+        Thread.sleep(LONG_TIMEOUT * 2);
         // Verify quick settings are displayed on the phone screen.
         for (QuickSettingTiles tile : QuickSettingTiles.values()) {
             UiObject2 quickSettingTile = mDevice.wait(
@@ -141,13 +142,14 @@ public class NotificationShadeTests extends TestCase {
         List<Integer> lists = new ArrayList<Integer>(Arrays.asList(GROUP_NOTIFICATION_ID,
                 CHILD_NOTIFICATION_ID, SECOND_CHILD_NOTIFICATION_ID));
         sendBundlingNotifications(lists, BUNDLE_GROUP_KEY);
-        Thread.sleep(SHORT_TIMEOUT);
+        Thread.sleep(LONG_TIMEOUT);
         swipeDown();
         UiObject2 obj = mDevice.wait(
                 Until.findObject(By.textContains(lists.get(1).toString())),
                 LONG_TIMEOUT);
         int currentY = obj.getVisibleCenter().y;
-        mDevice.wait(Until.findObject(By.res("android:id/expand_button")), LONG_TIMEOUT).click();
+        mDevice.wait(Until.findObject(By.res("android:id/expand_button")), LONG_TIMEOUT * 2)
+                .click();
         obj = mDevice.wait(Until.findObject(By.textContains(lists.get(0).toString())),
                 LONG_TIMEOUT);
         assertFalse("The notifications has not been bundled",
@@ -162,7 +164,7 @@ public class NotificationShadeTests extends TestCase {
 
     private void verifyInlineAndDimissNotification() throws Exception {
         sendNotificationsWithInLineReply(NOTIFICATION_ID_2, INLINE_REPLY_TITLE);
-        Thread.sleep(SHORT_TIMEOUT);
+        Thread.sleep(LONG_TIMEOUT);
         mDevice.openNotification();
         mDevice.wait(Until.findObject(By.text("REPLY")), LONG_TIMEOUT).click();
         UiObject2 replyBox = mDevice.wait(
@@ -184,7 +186,6 @@ public class NotificationShadeTests extends TestCase {
 
     /**
      * send out a group of notifications
-     *
      * @param lists notification list for a group of notifications which includes two child
      *            notifications and one summary notification
      * @param groupKey the group key of group notification
