@@ -49,7 +49,8 @@ public class PhotosHelperImpl extends AbstractPhotosHelper {
     private static final Pattern UI_PHOTO_DESC = Pattern.compile("^Photo.*");
 
     private static final String UI_DONE_BUTTON_ID = "done_button";
-    private static final String UI_GET_STARTED_ID = "get_started_container";
+    private static final String UI_GET_STARTED_CONTAINER = "get_started_container";
+    private static final String UI_GET_STARTED_ID = "get_started";
     private static final String UI_LOADING_ICON_ID = "list_empty_progress_bar";
     private static final String UI_NEXT_BUTTON_ID = "next_button";
     private static final String UI_PACKAGE_NAME = "com.google.android.apps.photos";
@@ -59,6 +60,7 @@ public class PhotosHelperImpl extends AbstractPhotosHelper {
     private static final String UI_PHOTO_SCROLL_VIEW_ID = "recycler_view";
     private static final String UI_NAVIGATION_LIST_ID = "navigation_list";
     private static final int MAX_UI_SCROLL_COUNT = 20;
+    private static final int MAX_DISMISS_INIT_DIALOG_RETRY = 20;
 
     public PhotosHelperImpl(Instrumentation instr) {
         super(instr);
@@ -89,21 +91,46 @@ public class PhotosHelperImpl extends AbstractPhotosHelper {
         // Target Photos version 1.18.0.119671374
         SystemClock.sleep(APP_LOAD_WAIT);
 
-        if (mDevice.hasObject(By.res(UI_PACKAGE_NAME, UI_GET_STARTED_ID))) {
-            /*
-              The GET STARTED button sometimes cannot be found by UiAutomator
-              even though it is seen on the screen.  The reason is because the
-              initial "spinner" animation screen updates views too quickly
-              for UiAutomator to catch the change.
+        if (isOnInitialDialogScreen()) {
+            UiObject2 getStartedButton = mDevice.wait(
+                    Until.findObject(By.res(UI_PACKAGE_NAME, UI_GET_STARTED_ID)), APP_LOAD_WAIT);
+            int retryCount = 0;
+            while ((retryCount < MAX_DISMISS_INIT_DIALOG_RETRY) &&
+                   (getStartedButton == null)) {
+                /*
+                  The UiAutomator sometimes cannot find GET STARTED button even though
+                  it is seen on the screen.
+                  The reason is because the initial "spinner" animation screen updates
+                  views too quickly for UiAutomator to catch the change.
 
-              The following hack is used to get pass this initial screen.
-             */
+                  The following hack is used to reload the init dialog for UiAutomator to
+                  retry catching the GET STARTED button.
+                */
 
-            mDevice.pressBack();
-            mDevice.waitForIdle();
-            mDevice.pressHome();
-            mDevice.waitForIdle();
-            open();
+                mDevice.pressBack();
+                mDevice.waitForIdle();
+                mDevice.pressHome();
+                mDevice.waitForIdle();
+                open();
+
+                getStartedButton = mDevice.wait(
+                        Until.findObject(By.res(UI_PACKAGE_NAME, UI_GET_STARTED_ID)),
+                        APP_LOAD_WAIT);
+                retryCount += 1;
+
+                if (!isOnInitialDialogScreen()) {
+                    break;
+                }
+            }
+
+            if (isOnInitialDialogScreen() && (getStartedButton == null)) {
+                throw new IllegalStateException("UiAutomator cannot catch GET STARTED button");
+            }
+            else {
+                if (getStartedButton != null) {
+                    getStartedButton.click();
+                }
+            }
         }
         else {
             Log.e(LOG_TAG, "Didn't find GET STARTED button.");
@@ -148,6 +175,8 @@ public class PhotosHelperImpl extends AbstractPhotosHelper {
             mDevice.wait(Until.gone(
                          By.res(UI_PACKAGE_NAME, UI_LOADING_ICON_ID)), PICTURE_LOAD_WAIT);
         }
+
+        mDevice.waitForIdle();
     }
 
     /**
@@ -395,6 +424,16 @@ public class PhotosHelperImpl extends AbstractPhotosHelper {
 
     private UiObject2 getFirstClip() {
         return mDevice.wait(Until.findObject(By.descStartsWith("Video")), 2000);
+    }
+
+    /**
+     *  This function returns true if Photos is currently on the first-use
+     *  initial dialog screen, with "Get Started" button displayed on screen
+     *
+     * @return Returns true if app is on the initial dialog screen, false otherwise
+     */
+    private boolean isOnInitialDialogScreen() {
+        return mDevice.hasObject(By.res(UI_PACKAGE_NAME, UI_GET_STARTED_CONTAINER));
     }
 
     private boolean isOnMainScreen() {
