@@ -76,7 +76,14 @@ public class FrameworkDownloadTests extends TestCase {
     @LargeTest
     public void testPhotoDownloadSucceed() throws InterruptedException, IOException {
         // Device already connected to wifi as part of tradefed setup
-        assertTrue("Wifi should be enabled by device setup already", mWifiManager.isWifiEnabled());
+        if (!mWifiManager.isWifiEnabled()) {
+            mWifiManager.enableNetwork(mWifiManager.getConnectionInfo().getNetworkId(), true);
+            int counter = 5;
+            while (--counter > 0 && mWifiManager.isWifiEnabled()) {
+                Thread.sleep(mABvtHelper.LONG_TIMEOUT);
+            }
+        }
+        assertTrue("Wifi should be enabled by now", mWifiManager.isWifiEnabled());
         removeAllCurrentDownloads(); // if there are any in progress
         Uri downloadUri = Uri.parse(String.format("http://%s/%s", TEST_HOST, TEST_FILE));
         Request request = new Request(downloadUri);
@@ -88,6 +95,7 @@ public class FrameworkDownloadTests extends TestCase {
         try {
             IntentFilter intentFilter = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
             mContext.registerReceiver(receiver, intentFilter);
+            Thread.sleep(mABvtHelper.LONG_TIMEOUT);
             assertTrue("download not finished", receiver.isDownloadCompleted(dlRequest));
             // Verify Download file size
             ParcelFileDescriptor pfd = null;
@@ -134,7 +142,6 @@ public class FrameworkDownloadTests extends TestCase {
      * provides a download id
      */
     private class DownloadCompleteReceiver extends BroadcastReceiver {
-        private int TIMEOUT = 1000;
         private HashSet<Long> mCompleteIds = new HashSet<>();
 
         public DownloadCompleteReceiver() {
@@ -150,16 +157,16 @@ public class FrameworkDownloadTests extends TestCase {
             }
         }
 
-        // Tries 5 times/5 secs for deownload to be completed
+        // Tries 5 times/5 secs for download to be completed
         public boolean isDownloadCompleted(long id)
                 throws InterruptedException {
-            int counter = 5;
+            int counter = 10;
             while (--counter > 0) {
                 synchronized (mCompleteIds) {
-                    mCompleteIds.wait(TIMEOUT);
-                }
-                if (mCompleteIds.contains(id)) {
-                    return true;
+                    mCompleteIds.wait(mABvtHelper.LONG_TIMEOUT);
+                    if (mCompleteIds.contains(id)) {
+                        return true;
+                    }
                 }
             }
             return false;

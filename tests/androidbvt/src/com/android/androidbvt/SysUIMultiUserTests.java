@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class MultiUserTests extends TestCase {
+public class SysUIMultiUserTests extends TestCase {
     private UiAutomation mUiAutomation = null;
     private UiDevice mDevice;
     private Context mContext = null;
@@ -92,22 +92,20 @@ public class MultiUserTests extends TestCase {
             // Get Second user id from 'list users' cmd
             // Ensure that matches with previously created user id
             pattern = Pattern.compile(
-                    "(.*{)(\\d+)(:)(.*?)(:)(\\d+)(}.*)"); // 2 = id 6 = flag
+                    "(.*\\{)(\\d+)(:)(.*?)(:)(\\d+)(\\}.*)"); // 2 = id 6 = flag
             matcher = pattern.matcher(cmdOut.get(2));
             if (matcher.find()) {
                 assertTrue("Second User id doesn't match",
-                        Integer.parseInt(matcher.group(2)) == secondUserId
-                                && Integer.parseInt(matcher.group(6)) == 10);
+                        Integer.parseInt(matcher.group(2)) == secondUserId);
             }
             Thread.sleep(mABvtHelper.SHORT_TIMEOUT);
 
             // Ensure owner has no access to second user's directory
             final File myPath = Environment.getExternalStorageDirectory();
-            Log.d("MyTag", "user id = " + android.os.Process.myUid());
             final int myId = android.os.Process.myUid() / 100000;
             assertEquals(String.valueOf(myId), myPath.getName());
 
-            Log.d(mABvtHelper.TEST_TAG, "My path is " + myPath);
+            Log.i(mABvtHelper.TEST_TAG, "My path is " + myPath);
             final File basePath = myPath.getParentFile();
             for (int i = 0; i < 128; i++) {
                 if (i == myId) {
@@ -120,7 +118,7 @@ public class MultiUserTests extends TestCase {
             }
         } finally {
             cmdOut = mABvtHelper.executeShellCommand("pm remove-user " + secondUserId);
-            Log.d(mABvtHelper.TEST_TAG,
+            Log.i(mABvtHelper.TEST_TAG,
                     String.format("Second user has been removed? %s. CmdOut = %s",
                             cmdOut.get(0).equals("Success: removed user"), cmdOut.get(0)));
         }
