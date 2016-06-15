@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import android.util.Log;
-public class MultiWindowTests extends TestCase {
+public class SysUIMultiWindowTests extends TestCase {
     private static final String CALCULATOR_PACKAGE = "com.google.android.calculator";
     private static final String CALCULATOR_ACTIVITY = "com.android.calculator2.Calculator";
     private static final String SETTINGS_PACKAGE = "com.android.settings";
@@ -84,11 +84,11 @@ public class MultiWindowTests extends TestCase {
         // Convert calculator to multiwindow mode
         mUiAutomation.executeShellCommand(
                 String.format("am stack movetask %d %d true", taskId, SPLITSCREEN));
-        Thread.sleep(mABvtHelper.SHORT_TIMEOUT);
+        Thread.sleep(mABvtHelper.SHORT_TIMEOUT * 2);
         // Launch Settings
         launchIntent = mContext.getPackageManager().getLaunchIntentForPackage(SETTINGS_PACKAGE);
         mContext.startActivity(launchIntent);
-        Thread.sleep(mABvtHelper.SHORT_TIMEOUT);
+        Thread.sleep(mABvtHelper.SHORT_TIMEOUT * 2);
         // Ensure settings is active window
         List<AccessibilityWindowInfo> windows = mUiAutomation.getWindows();
         AccessibilityWindowInfo window = windows.get(windows.size() - 1);
@@ -104,7 +104,7 @@ public class MultiWindowTests extends TestCase {
         // Make Calculator FullWindow again and ensure Settings package isn't found on window
         mUiAutomation.executeShellCommand(
                 String.format("am stack movetask %d %d true", taskId, FULLSCREEN));
-        Thread.sleep(mABvtHelper.SHORT_TIMEOUT);
+        Thread.sleep(mABvtHelper.SHORT_TIMEOUT * 2);
         windows = mUiAutomation.getWindows();
         for(int i = 0; i < windows.size() && windows.get(i).getRoot() != null; ++i) {
             assertFalse("Settings have been found",
