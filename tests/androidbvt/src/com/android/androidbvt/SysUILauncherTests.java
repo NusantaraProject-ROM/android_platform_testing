@@ -37,7 +37,7 @@ import junit.framework.TestCase;
 import java.io.IOException;
 import java.util.List;
 
-public class LauncherTests extends TestCase {
+public class SysUILauncherTests extends TestCase {
     private static final int LONG_TIMEOUT = 5000;
     private static final String APP_NAME = "Clock";
     private static final String PKG_NAME = "com.google.android.deskclock";
