@@ -22,22 +22,25 @@ import android.content.Intent;
 import android.os.RemoteException;
 import android.provider.Settings;
 import android.support.test.InstrumentationRegistry;
+import android.support.test.uiautomator.By;
+import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
-import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.Until;
 import android.test.suitebuilder.annotation.LargeTest;
-import android.widget.EditText;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
 
 public class SysUILockScreenTests extends TestCase {
+    private static final String LAUNCHER_PACKAGE = "com.google.android.googlequicksearchbox";
+    private static final String SYSTEMUI_PACKAGE = "com.android.systemui";
+    private static final String EDIT_TEXT_CLASS_NAME = "android.widget.EditText";
     private static final int SHORT_TIMEOUT = 200;
     private static final int LONG_TIMEOUT = 2000;
     private static final int PIN = 1234;
     private static final String PASSWORD = "aaaa";
-    private static final String EDIT_TEXT_CLASS_NAME = "android.widget.EditText";
+    private AndroidBvtHelper mABvtHelper = null;
     private UiDevice mDevice = null;
     private Context mContext;
 
@@ -47,6 +50,8 @@ public class SysUILockScreenTests extends TestCase {
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
         mDevice.freezeRotation();
         mContext = InstrumentationRegistry.getTargetContext();
+        mABvtHelper = AndroidBvtHelper.getInstance(mDevice, mContext,
+                InstrumentationRegistry.getInstrumentation().getUiAutomation());
         mDevice.wakeUp();
         mDevice.pressHome();
     }
@@ -69,7 +74,7 @@ public class SysUILockScreenTests extends TestCase {
         sleepAndWakeUpDevice();
         unlockScreen(Integer.toString(PIN));
         removeScreenLock(Integer.toString(PIN));
-        Thread.sleep(LONG_TIMEOUT);
+        Thread.sleep(mABvtHelper.LONG_TIMEOUT);
         Assert.assertFalse("Lock Screen is still enabled", isLockScreenEnabled());
     }
 
@@ -83,7 +88,7 @@ public class SysUILockScreenTests extends TestCase {
         sleepAndWakeUpDevice();
         unlockScreen(PASSWORD);
         removeScreenLock(PASSWORD);
-        Thread.sleep(LONG_TIMEOUT);
+        Thread.sleep(mABvtHelper.LONG_TIMEOUT);
         Assert.assertFalse("Lock Screen is still enabled", isLockScreenEnabled());
     }
 
@@ -99,8 +104,26 @@ public class SysUILockScreenTests extends TestCase {
         checkCheckEmergencyCall();
         unlockScreen(PASSWORD);
         removeScreenLock(PASSWORD);
-        Thread.sleep(LONG_TIMEOUT);
+        Thread.sleep(mABvtHelper.LONG_TIMEOUT);
         Assert.assertFalse("Lock Screen is still enabled", isLockScreenEnabled());
+    }
+
+    /**
+     * Just lock the screen and slide up to unlock
+     */
+    @LargeTest
+    public void testSlideUnlock() throws Exception {
+        sleepAndWakeUpDevice();
+        mDevice.wait(Until.findObject(
+                By.res(SYSTEMUI_PACKAGE, "notification_stack_scroller")), 2000)
+                .swipe(Direction.UP, 1.0f);
+        int counter = 6;
+        UiObject2 workspace = mDevice.findObject(By.res(LAUNCHER_PACKAGE, "workspace"));
+        while (counter-- > 0 && workspace == null) {
+            workspace = mDevice.findObject(By.res(LAUNCHER_PACKAGE, "workspace"));
+            Thread.sleep(500);
+        }
+        assertNotNull("Workspace wasn't found", workspace);
     }
 
     /**
@@ -110,17 +133,17 @@ public class SysUILockScreenTests extends TestCase {
      */
     private void setScreenLock(String pwd, String mode) throws Exception {
         navigateToScreenLock();
-        mDevice.wait(Until.findObject(By.text(mode)), LONG_TIMEOUT).click();
+        mDevice.wait(Until.findObject(By.text(mode)), mABvtHelper.LONG_TIMEOUT).click();
         // set up Secure start-up page
-        mDevice.wait(Until.findObject(By.text("No thanks")), LONG_TIMEOUT).click();
+        mDevice.wait(Until.findObject(By.text("No thanks")), mABvtHelper.LONG_TIMEOUT).click();
         UiObject2 pinField = mDevice.wait(Until.findObject(By.clazz(EDIT_TEXT_CLASS_NAME)),
-                LONG_TIMEOUT);
+                mABvtHelper.LONG_TIMEOUT);
         pinField.setText(pwd);
         // enter and verify password
         mDevice.pressEnter();
         pinField.setText(pwd);
         mDevice.pressEnter();
-        mDevice.wait(Until.findObject(By.text("DONE")), LONG_TIMEOUT).click();
+        mDevice.wait(Until.findObject(By.text("DONE")), mABvtHelper.LONG_TIMEOUT).click();
     }
 
     /**
@@ -128,57 +151,58 @@ public class SysUILockScreenTests extends TestCase {
      */
     private void checkCheckEmergencyCall() throws Exception {
         mDevice.pressMenu();
-        mDevice.wait(Until.findObject(By.text("EMERGENCY")), LONG_TIMEOUT).click();
-        Thread.sleep(LONG_TIMEOUT);
-        UiObject2 dialButton = mDevice.wait(Until.findObject(By.desc("dial")), LONG_TIMEOUT);
+        mDevice.wait(Until.findObject(By.text("EMERGENCY")), mABvtHelper.LONG_TIMEOUT).click();
+        Thread.sleep(mABvtHelper.LONG_TIMEOUT);
+        UiObject2 dialButton = mDevice.wait(Until.findObject(By.desc("dial")),
+                mABvtHelper.LONG_TIMEOUT);
         Assert.assertNotNull("Can't reach emergency call page", dialButton);
         mDevice.pressBack();
-        Thread.sleep(LONG_TIMEOUT);
+        Thread.sleep(mABvtHelper.LONG_TIMEOUT);
     }
 
     private void removeScreenLock(String pwd) throws Exception {
         navigateToScreenLock();
         UiObject2 pinField = mDevice.wait(Until.findObject(By.clazz(EDIT_TEXT_CLASS_NAME)),
-                LONG_TIMEOUT);
+                mABvtHelper.LONG_TIMEOUT);
         pinField.setText(pwd);
         mDevice.pressEnter();
-        mDevice.wait(Until.findObject(By.text("Swipe")), LONG_TIMEOUT).click();
-        mDevice.wait(Until.findObject(By.text("YES, REMOVE")), LONG_TIMEOUT).click();
+        mDevice.wait(Until.findObject(By.text("Swipe")), mABvtHelper.LONG_TIMEOUT).click();
+        mDevice.wait(Until.findObject(By.text("YES, REMOVE")), mABvtHelper.LONG_TIMEOUT).click();
     }
 
     private void unlockScreen(String pwd) throws Exception {
         swipeUp();
-        Thread.sleep(SHORT_TIMEOUT);
+        Thread.sleep(mABvtHelper.SHORT_TIMEOUT);
         // enter password to unlock screen
         String command = String.format(" %s %s %s", "input", "text", pwd);
         mDevice.executeShellCommand(command);
         mDevice.waitForIdle();
-        Thread.sleep(SHORT_TIMEOUT);
+        Thread.sleep(mABvtHelper.SHORT_TIMEOUT);
         mDevice.pressEnter();
     }
 
     private void navigateToScreenLock() throws Exception {
         launchSettingsPage(mContext, Settings.ACTION_SECURITY_SETTINGS);
-        mDevice.wait(Until.findObject(By.text("Screen lock")), LONG_TIMEOUT).click();
+        mDevice.wait(Until.findObject(By.text("Screen lock")), mABvtHelper.LONG_TIMEOUT).click();
     }
 
     private void launchSettingsPage(Context ctx, String pageName) throws Exception {
         Intent intent = new Intent(pageName);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         ctx.startActivity(intent);
-        Thread.sleep(LONG_TIMEOUT * 2);
+        Thread.sleep(mABvtHelper.LONG_TIMEOUT * 2);
     }
 
     private void sleepAndWakeUpDevice() throws RemoteException, InterruptedException {
         mDevice.sleep();
-        Thread.sleep(LONG_TIMEOUT);
+        Thread.sleep(mABvtHelper.LONG_TIMEOUT);
         mDevice.wakeUp();
     }
 
     private void swipeUp() throws Exception {
         mDevice.swipe(mDevice.getDisplayWidth() / 2, mDevice.getDisplayHeight(),
                 mDevice.getDisplayWidth() / 2, 0, 30);
-        Thread.sleep(SHORT_TIMEOUT);
+        Thread.sleep(mABvtHelper.SHORT_TIMEOUT);
     }
 
     private boolean isLockScreenEnabled() {
@@ -186,3 +210,4 @@ public class SysUILockScreenTests extends TestCase {
         return km.isKeyguardSecure();
     }
 }
+
