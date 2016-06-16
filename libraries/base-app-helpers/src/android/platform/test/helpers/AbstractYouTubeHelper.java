@@ -45,13 +45,6 @@ public abstract class AbstractYouTubeHelper extends AbstractStandardAppHelper {
     }
 
     /**
-     * Setup expectations: YouTube is on the home page.
-     *
-     * This method selects the first video and blocks until the video is playing.
-     */
-    public abstract void playFirstVideo();
-
-    /**
      * Setup expectations: YouTube app is open.
      *
      * This method keeps pressing the back button until YouTube is on the home page.
@@ -64,6 +57,28 @@ public abstract class AbstractYouTubeHelper extends AbstractStandardAppHelper {
      * This method scrolls to the top of the home page and clicks the search button.
      */
     public abstract void goToSearchPage();
+
+    /**
+     * Setup expectations: YouTube is on the non-fullscreen video player page.
+     *
+     * This method changes the video player to fullscreen mode. Has no effect if the video player
+     * is already in fullscreen mode.
+     */
+    public abstract void goToFullscreenMode();
+
+    /**
+     * Setup expectations: YouTube is on the home page.
+     *
+     * This method selects a video on the home page and blocks until the video is playing.
+     */
+    public abstract void playHomePageVideo();
+
+    /**
+     * Setup expectations: YouTube is on the search results page.
+     *
+     * This method selects a search result video and blocks until the video is playing.
+     */
+    public abstract void playSearchResultPageVideo();
 
     /**
      * Setup expectations: Recently opened a video in the YouTube app.
@@ -96,17 +111,9 @@ public abstract class AbstractYouTubeHelper extends AbstractStandardAppHelper {
     public abstract void setVideoQuality(VideoQuality quality);
 
     /**
-     * Setup expectations: YouTube is on the non-fullscreen video player page.
-     *
-     * This method changes the video player to fullscreen mode. Has no effect if the video player
-     * is already in fullscreen mode.
-     */
-    public abstract void goToFullscreenMode();
-
-    /**
      * Setup expectations: YouTube is on the video player page.
      *
-     * This method plays the video if it is paused.
+     * This method resumes the video if it is paused.
      */
-    public abstract void playVideo();
+    public abstract void resumeVideo();
 }
