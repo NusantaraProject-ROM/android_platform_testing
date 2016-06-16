@@ -19,6 +19,7 @@ package android.platform.test.helpers;
 import android.app.Instrumentation;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.SystemClock;
+import android.platform.test.helpers.exceptions.UnknownUiException;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.Configurator;
@@ -31,12 +32,14 @@ import android.widget.EditText;
 
 import java.util.regex.Pattern;
 
-import junit.framework.Assert;
-
 public class PlayMoviesHelperImpl extends AbstractPlayMoviesHelper {
     private static final String LOG_TAG = PlayMoviesHelperImpl.class.getSimpleName();
-    private static final String UI_PACKAGE = "com.google.android.videos";
 
+    private static final String UI_PACKAGE = "com.google.android.videos";
+    private static final String UI_NAV_DRAWER_ID = "play_drawer_list";
+    private static final String UI_MOVIE_LIST_ID = "play_header_listview";
+
+    private static final int SEARCH_MOVIES_SCROLL_RETRY = 4;
     private static final long APP_INIT_WAIT = 5000;
 
     private boolean mIsVersion3p8 = false;
@@ -69,7 +72,7 @@ public class PlayMoviesHelperImpl extends AbstractPlayMoviesHelper {
      */
     @Override
     public String getPackage() {
-        return "com.google.android.videos";
+        return UI_PACKAGE;
     }
 
     /**
@@ -126,12 +129,15 @@ public class PlayMoviesHelperImpl extends AbstractPlayMoviesHelper {
     public void openMoviesTab() {
         // Navigate to the Movies tab through the Navigation drawer
         openNavigationDrawer();
-        UiObject2 libraryButton = mDevice.findObject(By.text("My Library").clickable(true));
+        Pattern myLibraryPattern = Pattern.compile("My Library", Pattern.CASE_INSENSITIVE);
+        UiObject2 libraryButton = mDevice.findObject(By.text(myLibraryPattern).clickable(true));
         libraryButton.click();
         waitForNavigationDrawerClose();
         // Select the Movies tab if necessary
-        UiObject2 moviesTab = mDevice.findObject(By.text("MY MOVIES"));
-        Assert.assertNotNull("Unable to find movies tab", moviesTab);
+        UiObject2 moviesTab = getMoviesTab();
+        if (moviesTab == null) {
+            throw new UnknownUiException("Unable to find the movies tab.");
+        }
         if (!moviesTab.isSelected()) {
             moviesTab.click();
             mDevice.waitForIdle();
@@ -143,16 +149,38 @@ public class PlayMoviesHelperImpl extends AbstractPlayMoviesHelper {
      */
     @Override
     public void playMovie(String name) {
-        UiObject2 title = mDevice.findObject(By.textContains(name));
-        Assert.assertNotNull(String.format("Failed to find movie by name %s", name), title);
+        UiObject2 title = null;
+        for (int retry = 0; retry < SEARCH_MOVIES_SCROLL_RETRY; retry++) {
+            title = mDevice.findObject(By.textContains(name));
+            if (title == null) {
+                UiObject2 scroller = mDevice.findObject(By.res(UI_PACKAGE, UI_MOVIE_LIST_ID));
+                if (scroller != null) {
+                    scroller.scroll(Direction.DOWN, 1.0f);
+                }
+            }
+        }
+        if (title == null) {
+            throw new IllegalArgumentException(
+                    String.format("Failed to find movie by name %s", name));
+        }
         title.click();
         UiObject2 play = mDevice.wait(Until.findObject(By.res(UI_PACKAGE, "play")), 5000);
-        Assert.assertNotNull("Failed to find play button", play);
+        if (play == null) {
+            throw new UnknownUiException("Failed to find the play button.");
+        }
         play.click();
         mDevice.waitForIdle();
     }
 
+    private boolean isNavigationDrawerOpen () {
+        return mDevice.hasObject(By.res(UI_PACKAGE, UI_NAV_DRAWER_ID));
+    }
+
     private void openNavigationDrawer() {
+        if (isNavigationDrawerOpen()) {
+            return;
+        }
+
         UiObject2 backButton = mDevice.findObject(By.pkg(getPackage()).desc("Navigate up"));
         if (backButton != null) {
             backButton.click();
@@ -160,7 +188,9 @@ public class PlayMoviesHelperImpl extends AbstractPlayMoviesHelper {
         }
 
         UiObject2 navButton = mDevice.findObject(By.desc("Show navigation drawer"));
-        Assert.assertNotNull("Unable to find navigation drawer button", navButton);
+        if (navButton == null) {
+            throw new UnknownUiException("Unable to find the navigation drawer button.");
+        }
         navButton.click();
         waitForNavigationDrawerOpen();
     }
@@ -171,5 +201,15 @@ public class PlayMoviesHelperImpl extends AbstractPlayMoviesHelper {
 
     private void waitForNavigationDrawerClose() {
         mDevice.wait(Until.gone(By.text("Settings").clickable(true)), 2500);
+    }
+
+    private UiObject2 getMoviesTab() {
+        Pattern moviesText = Pattern.compile("MY MOVIES", Pattern.CASE_INSENSITIVE);
+        UiObject2 tab = mDevice.findObject(By.text(moviesText));
+        if (tab == null) {
+            moviesText = Pattern.compile("MOVIES", Pattern.CASE_INSENSITIVE);
+            tab = mDevice.findObject(By.text(moviesText));
+        }
+        return tab;
     }
 }
