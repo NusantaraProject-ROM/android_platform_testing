@@ -21,6 +21,8 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
 import android.graphics.Point;
 import android.os.SystemClock;
+import android.platform.test.helpers.exceptions.UiTimeoutException;
+import android.platform.test.helpers.exceptions.UnknownUiException;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.Direction;
@@ -29,7 +31,7 @@ import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.util.Log;
 
-import junit.framework.Assert;
+import java.util.regex.Pattern;
 
 public class YouTubeHelperImpl extends AbstractYouTubeHelper {
     private static final String TAG = AbstractYouTubeHelper.class.getSimpleName();
@@ -39,15 +41,17 @@ public class YouTubeHelperImpl extends AbstractYouTubeHelper {
     private static final String UI_FULLSCREEN_BUTTON_DESC = "Enter fullscreen";
     private static final String UI_HELP_AND_FEEDBACK_TEXT = "Help & feedback";
     private static final String UI_HOME_BUTTON_DESC = "Home";
-    private static final String UI_VIDEO_PLAYER_ID = "watch_player";
+    private static final String UI_HOME_PAGE_VIDEO_ID = "event_item";
+    private static final String UI_VIDEO_INFO_VIEW_ID = "video_info_view";
     private static final String UI_PACKAGE_NAME = "com.google.android.youtube";
     private static final String UI_PLAY_VIDEO_DESC = "Play video";
     private static final String UI_PROGRESS_ID = "load_progress";
+    private static final String UI_RESULT_FILTER_ID = "menu_filter_results";
     private static final String UI_SEARCH_BUTTON_ID = "menu_search";
     private static final String UI_SEARCH_EDIT_TEXT_ID = "search_edit_text";
     private static final String UI_SELECT_DIALOG_LISTVIEW_ID = "select_dialog_listview";
     private static final String UI_TRENDING_BUTTON_DESC = "Trending";
-    private static final String UI_VIDEO_CARD_ID = "video_info_view";
+    private static final String UI_VIDEO_PLAYER_ID = "watch_player";
     private static final String UI_VIDEO_PLAYER_OVERFLOW_BUTTON_ID = "player_overflow_button";
     private static final String UI_VIDEO_PLAYER_PLAY_PAUSE_REPLAY_BUTTON_ID =
             "player_control_play_pause_replay_button";
@@ -112,26 +116,62 @@ public class YouTubeHelperImpl extends AbstractYouTubeHelper {
      * {@inheritDoc}
      */
     @Override
-    public void playFirstVideo() {
+    public void playHomePageVideo() {
+        if (!isOnHomePage()) {
+            throw new IllegalStateException("YouTube is not on the home page.");
+        }
+
+        if (hasConnectionEstablishedMessage()) {
+            pressGoOnline();
+        }
+
         for (int i = 0; i < 3; i++) {
-            UiObject2 video = getFirstVideo();
+            UiObject2 video = getPlayableVideo();
             if (video != null) {
                 video.click();
                 waitForVideoToLoad(UI_NAVIGATION_WAIT);
                 return;
+            } else {
+                scrollHomePage(Direction.DOWN);
             }
         }
 
         if (isLoading()) {
-            Assert.fail("Timed out waiting for video search result to load.");
-        } else {
-            Assert.fail("YouTube does not support playing videos from this page or an " +
-                    "unexpected automation failure occurred.");
+            throw new UiTimeoutException("Timed out waiting for video search results.");
         }
+
+        throw new UnknownUiException("Unsuccessful attempt playing home page video.");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void playSearchResultPageVideo() {
+        if (!isOnSearchResultsPage()) {
+            throw new IllegalStateException("YouTube is not on the home page.");
+        }
+
+        for (int i = 0; i < 3; i++) {
+            UiObject2 video = getPlayableVideo();
+            if (video != null) {
+                video.click();
+                waitForVideoToLoad(UI_NAVIGATION_WAIT);
+                return;
+            } else {
+                scrollSearchResultsPage(Direction.DOWN);
+            }
+        }
+
+        throw new UnknownUiException("Unsuccessful attempt playing search result video.");
     }
 
     private UiObject2 getHomePageContainer() {
         return mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_HOME_CONTAINER_ID));
+    }
+
+    private UiObject2 getSearchResultsPageContainer() {
+        return getHomePageContainer();
     }
 
     private UiObject2 getHomeButton() {
@@ -151,16 +191,35 @@ public class YouTubeHelperImpl extends AbstractYouTubeHelper {
     }
 
     private void scrollHomePage(Direction dir) {
+        if (dir == Direction.RIGHT || dir == Direction.LEFT) {
+            throw new IllegalArgumentException("Can only scroll up and down.");
+        }
+
         UiObject2 scrollContainer = getHomePageContainer();
         if (scrollContainer != null) {
             scrollContainer.scroll(dir, 1.0f);
             mDevice.waitForIdle();
         } else {
-            Assert.fail("No valid scrolling mechanism found.");
+            throw new UnknownUiException("No scrolling mechanism found.");
+        }
+    }
+
+    private void scrollSearchResultsPage(Direction dir) {
+        if (dir == Direction.RIGHT || dir == Direction.LEFT) {
+            throw new IllegalArgumentException("Can only scroll up and down.");
+        }
+
+        UiObject2 scrollContainer = getSearchResultsPageContainer();
+        if (scrollContainer != null) {
+            scrollContainer.scroll(dir, 1.0f);
+            mDevice.waitForIdle();
+        } else {
+            throw new UnknownUiException("No scrolling mechanism found.");
         }
     }
 
     private boolean isLoading() {
+        // TODO: Is loading what? Requires more documentation.
         return mDevice.hasObject(By.res(UI_PACKAGE_NAME, UI_PROGRESS_ID));
     }
 
@@ -179,8 +238,19 @@ public class YouTubeHelperImpl extends AbstractYouTubeHelper {
         return (accountButton != null && accountButton.isSelected());
     }
 
-    private UiObject2 getFirstVideo() {
-        return mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_VIDEO_CARD_ID));
+    private boolean isOnSearchResultsPage() {
+        // Simplest way to identify search result page is the result filter button.
+        UiObject2 resultFilterButton =
+                mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_RESULT_FILTER_ID));
+        return (resultFilterButton != null);
+    }
+
+    private UiObject2 getPlayableVideo() {
+        UiObject2 video = mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_HOME_PAGE_VIDEO_ID));
+        if (video == null) {
+            video = mDevice.findObject(By.res(UI_PACKAGE_NAME, UI_VIDEO_INFO_VIEW_ID));
+        }
+        return video;
     }
 
     /**
@@ -192,6 +262,7 @@ public class YouTubeHelperImpl extends AbstractYouTubeHelper {
             By.res(UI_PACKAGE_NAME, UI_VIDEO_PLAYER_ID)), timeout);
     }
 
+
     /**
      * {@inheritDoc}
      */
@@ -202,13 +273,22 @@ public class YouTubeHelperImpl extends AbstractYouTubeHelper {
             mDevice.pressBack();
             SystemClock.sleep(3000);
         }
+        // Get and press the home button
         UiObject2 homeButton = getHomeButton();
-        Assert.assertNotNull("Could not find home button", homeButton);
-
-        homeButton.click();
-        Assert.assertTrue("Not on home page after pressing home button",
-                mDevice.wait(Until.hasObject(By.pkg(UI_PACKAGE_NAME).desc(
-                UI_HOME_BUTTON_DESC).selected(true)), UI_NAVIGATION_WAIT));
+        if (homeButton == null) {
+            throw new UnknownUiException("Could not find home button.");
+        } else if (!homeButton.isSelected()) {
+            homeButton.click();
+            // Validate the home button is selected
+            if (!mDevice.wait(Until.hasObject(
+                    By.pkg(UI_PACKAGE_NAME).desc(UI_HOME_BUTTON_DESC).selected(true)),
+                    UI_NAVIGATION_WAIT)) {
+                throw new UnknownUiException("Not on home page after pressing home button.");
+            } else {
+                // Make sure the transition is complete
+                mDevice.waitForIdle();
+            }
+        }
     }
 
     /**
@@ -216,20 +296,55 @@ public class YouTubeHelperImpl extends AbstractYouTubeHelper {
      */
     @Override
     public void goToSearchPage() {
+        if (!isOnHomePage()) {
+            throw new IllegalStateException("YouTube is not on the home page.");
+        }
+
         UiObject2 searchButton = getSearchButton();
         if (searchButton == null) {
-            UiObject2 homeButton = getHomeButton();
-            Assert.assertNotNull("Could not find home button", homeButton);
-
-            homeButton.click();
-            searchButton = mDevice.wait(Until.findObject(
-                    By.res(UI_PACKAGE_NAME, UI_SEARCH_BUTTON_ID)), UI_NAVIGATION_WAIT);
+            throw new UnknownUiException("Could not find search button.");
+        } else {
+            searchButton.click();
+            if (!mDevice.wait(Until.hasObject(
+                    By.res(UI_PACKAGE_NAME, UI_SEARCH_EDIT_TEXT_ID)), UI_NAVIGATION_WAIT)) {
+                throw new UnknownUiException("Not on search page after pressing search button.");
+            }
         }
-        Assert.assertNotNull("Could not find search button", searchButton);
-        searchButton.click();
-        Assert.assertTrue("Not on search page after pressing search button",
-                mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, UI_SEARCH_EDIT_TEXT_ID)),
-                UI_NAVIGATION_WAIT));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void goToFullscreenMode() {
+        if (!isOnVideo()) {
+            throw new IllegalStateException("YouTube is not on a video page.");
+        }
+
+        if (getOrientation() == Configuration.ORIENTATION_LANDSCAPE) {
+            return;
+        }
+
+        UiObject2 fullscreenButton = null;
+        for (int retriesRemaining = 5; retriesRemaining > 0; --retriesRemaining) {
+            UiObject2 miniVideoPlayer = getVideoPlayer();
+            if (miniVideoPlayer == null) {
+                throw new UnknownUiException("Could not find mini video player.");
+            }
+
+            miniVideoPlayer.click();
+            SystemClock.sleep(1500);
+            fullscreenButton = getFullscreenButton();
+            if (fullscreenButton != null) {
+                fullscreenButton.click();
+                // TODO: Add a valid wait for fullscreen
+                break;
+            }
+        }
+
+        if (fullscreenButton == null) {
+            throw new UnknownUiException("Did not find a fullscreen button.");
+        }
     }
 
     private UiObject2 getVideoPlayer() {
@@ -260,7 +375,8 @@ public class YouTubeHelperImpl extends AbstractYouTubeHelper {
      */
     @Override
     public boolean waitForSearchResults(long timeout) {
-        return mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, UI_VIDEO_CARD_ID)), timeout);
+        return mDevice.wait(Until.hasObject(
+                By.res(UI_PACKAGE_NAME, UI_VIDEO_INFO_VIEW_ID)), timeout);
     }
 
     /**
@@ -268,32 +384,46 @@ public class YouTubeHelperImpl extends AbstractYouTubeHelper {
      */
     @Override
     public void setVideoQuality(VideoQuality quality) {
-        Assert.assertTrue("Not on video player", isOnVideo());
+        if (!isOnVideo()) {
+            throw new IllegalStateException("YouTube is not on a video page.");
+        }
 
         UiObject2 overflowButton = getVideoPlayerOverflowButton();
+        // Open the mini video player
         if (overflowButton == null) {
             UiObject2 miniVideoPlayer = getVideoPlayer();
-            Assert.assertNotNull("Could not find video player", miniVideoPlayer);
+            if (miniVideoPlayer == null) {
+                throw new UnknownUiException("Could not find mini video player.");
+            }
 
             miniVideoPlayer.click();
             mDevice.wait(Until.findObject(By.res(
                 UI_PACKAGE_NAME, UI_VIDEO_PLAYER_OVERFLOW_BUTTON_ID)), UI_NAVIGATION_WAIT);
             overflowButton = getVideoPlayerOverflowButton();
         }
-        Assert.assertNotNull("Could not find overflow button", overflowButton);
+
+        if (overflowButton == null) {
+            throw new UnknownUiException("Could not find overflow button.");
+        }
 
         overflowButton.click();
         UiObject2 qualityButton = mDevice.wait(Until.findObject(
                 By.res(UI_PACKAGE_NAME, UI_VIDEO_PLAYER_QUALITY_BUTTON_ID)), UI_NAVIGATION_WAIT);
-        Assert.assertNotNull("Could not find video quality button", qualityButton);
+        if (qualityButton == null) {
+            throw new UnknownUiException("Could not find video quality button.");
+        }
 
         qualityButton.click();
         UiObject2 quality360pLabel = mDevice.wait(Until.findObject(By.text(
                 AbstractYouTubeHelper.VideoQuality.QUALITY_360p.getText())), UI_NAVIGATION_WAIT);
-        Assert.assertNotNull("Could not find 360p quality label", quality360pLabel);
+        if (quality360pLabel == null) {
+            throw new UnknownUiException("Could not find 360p quality label.");
+        }
 
         UiObject2 selectDialog = quality360pLabel.getParent();
-        Assert.assertNotNull("Could not find video quality dialog", selectDialog);
+        if (selectDialog == null) {
+            throw new UnknownUiException("Could not find video quality dialog.");
+        }
 
         UiObject2 qualityLabel = null;
         for (int retriesRemaining = 5; retriesRemaining > 0; --retriesRemaining) {
@@ -304,45 +434,21 @@ public class YouTubeHelperImpl extends AbstractYouTubeHelper {
             selectDialog.scroll(Direction.DOWN, 1.0f);
             mDevice.waitForIdle();
         }
-        Assert.assertNotNull(String.format("Could not find quality %s label", quality.getText()),
-                qualityLabel);
+        if (qualityLabel == null) {
+            throw new UnknownUiException(
+                    String.format("Could not find quality %s label", quality.getText()));
+        }
 
         Log.v(TAG, String.format("Found quality %s label", quality.getText()));
         qualityLabel.click();
-        Assert.assertTrue("Could not find video player after selecting quality",
-                mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, UI_VIDEO_PLAYER_ID)),
-                UI_NAVIGATION_WAIT));
+        if (!mDevice.wait(Until.hasObject(By.res(UI_PACKAGE_NAME, UI_VIDEO_PLAYER_ID)),
+                UI_NAVIGATION_WAIT)) {
+            throw new UnknownUiException("Did not find video player after selecting quality.");
+        }
     }
 
     private UiObject2 getFullscreenButton() {
         return mDevice.findObject(By.desc(UI_FULLSCREEN_BUTTON_DESC));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void goToFullscreenMode() {
-        Assert.assertTrue(isOnVideo());
-
-        if (getOrientation() == Configuration.ORIENTATION_LANDSCAPE) {
-            return;
-        }
-
-        UiObject2 fullscreenButton = null;
-        for (int retriesRemaining = 5; retriesRemaining > 0; --retriesRemaining) {
-            UiObject2 miniVideoPlayer = getVideoPlayer();
-            Assert.assertNotNull("Could not find video player", miniVideoPlayer);
-
-            miniVideoPlayer.click();
-            SystemClock.sleep(1500);
-            fullscreenButton = getFullscreenButton();
-            if (fullscreenButton != null) {
-                fullscreenButton.click();
-                break;
-            }
-        }
-        Assert.assertNotNull("Could not find fullscreen button", fullscreenButton);
     }
 
     private UiObject2 getPlayPauseReplayButton() {
@@ -350,17 +456,38 @@ public class YouTubeHelperImpl extends AbstractYouTubeHelper {
             By.res(UI_PACKAGE_NAME, UI_VIDEO_PLAYER_PLAY_PAUSE_REPLAY_BUTTON_ID));
     }
 
-    public void playVideo() {
+    public void resumeVideo() {
         UiObject2 videoPlayer = getVideoPlayer();
-        Assert.assertNotNull("Could not find video player", videoPlayer);
+        if (videoPlayer == null) {
+            throw new UnknownUiException("Could not find video player.");
+        }
 
         videoPlayer.click();
         UiObject2 playPauseReplayButton = mDevice.wait(Until.findObject(By.res(UI_PACKAGE_NAME,
                 UI_VIDEO_PLAYER_PLAY_PAUSE_REPLAY_BUTTON_ID)), UI_NAVIGATION_WAIT);
-        Assert.assertNotNull("Could not find pause / play button", playPauseReplayButton);
+        if (playPauseReplayButton == null) {
+            throw new UnknownUiException("Could not find the pause/play button.");
+        }
 
         if (UI_PLAY_VIDEO_DESC.equals(playPauseReplayButton.getContentDescription())) {
             playPauseReplayButton.click();
+        }
+    }
+
+    private boolean hasConnectionEstablishedMessage() {
+        Pattern establishedMsg =
+                Pattern.compile("Connection established", Pattern.CASE_INSENSITIVE);
+        return mDevice.hasObject(By.res(UI_PACKAGE_NAME, "message").text(establishedMsg));
+    }
+
+    private void pressGoOnline() {
+        Pattern goOnlineMsg = Pattern.compile("Go online", Pattern.CASE_INSENSITIVE);
+        UiObject2 button = mDevice.findObject(By.res(UI_PACKAGE_NAME, "action").text(goOnlineMsg));
+        if (button != null) {
+            button.click();
+            mDevice.waitForIdle();
+        } else {
+            throw new UnknownUiException("Unable to find GO ONLINE button.");
         }
     }
 }
