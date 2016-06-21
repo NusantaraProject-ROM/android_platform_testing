@@ -16,5 +16,7 @@ native_metric_tests := \
     binderAddInts \
     bionic-benchmarks \
     crashcollector \
+    hwuimicro \
     libjavacore-benchmarks \
+    minikin_perftests \
     mmapPerf

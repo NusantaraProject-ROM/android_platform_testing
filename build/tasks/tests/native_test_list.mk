@@ -17,6 +17,8 @@ native_tests := \
     bionic-unit-tests \
     bionic-unit-tests-static \
     bluetoothtbd_test \
+    bootstat_tests \
+    bsdiff_unittest \
     camera2_test \
     camera_client_test \
     crashcollector \
@@ -47,6 +49,7 @@ native_tests := \
     netd_unit_test \
     pagemap_test \
     perfprofd_test \
+    recovery_component_test \
     simpleperf_cpu_hotplug_test \
     simpleperf_unit_test \
     time-unit-tests \
