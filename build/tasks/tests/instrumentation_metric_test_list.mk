@@ -14,6 +14,8 @@
 
 instrumentation_metric_tests := \
     crashcollector \
+    CorePerfTests \
     DocumentsUIPerfTests \
     DocumentsUIAppPerfTests \
-    SurfaceComposition
+    SurfaceComposition \
+    GraphicsPerfTests
