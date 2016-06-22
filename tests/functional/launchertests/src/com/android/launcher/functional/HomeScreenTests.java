@@ -30,6 +30,7 @@ import android.os.SystemClock;
 import android.support.test.launcherhelper.ILauncherStrategy;
 import android.support.test.launcherhelper.LauncherStrategyFactory;
 import android.support.test.uiautomator.By;
+import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
@@ -115,6 +116,9 @@ public class HomeScreenTests extends InstrumentationTestCase {
         mDevice.pressKeyCode(KeyEvent.KEYCODE_POWER);
         Thread.sleep(TIMEOUT);
         assertTrue("Screen wasn't turned on by pressing Power Key", pm.isInteractive());
+        // Unlock screen since this ends up putting the device in Swpe lock mode.
+        mDevice.wakeUp();
+        mDevice.pressMenu();
     }
 
     // Wallpaper menu from home page
