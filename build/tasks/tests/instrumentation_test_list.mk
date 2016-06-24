@@ -17,6 +17,7 @@ instrumentation_tests := \
     ManagedProvisioningTests \
     FrameworksCoreTests \
     FrameworksServicesTests \
+    FrameworksUtilsTests \
     MtpDocumentsProviderTests \
     DocumentsUITests \
     ShellTests \
