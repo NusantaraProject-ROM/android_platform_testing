@@ -17,5 +17,6 @@ instrumentation_metric_tests := \
     CorePerfTests \
     DocumentsUIPerfTests \
     DocumentsUIAppPerfTests \
+    perf-setup.sh \
     SurfaceComposition \
     GraphicsPerfTests

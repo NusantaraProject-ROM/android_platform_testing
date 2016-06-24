@@ -19,4 +19,5 @@ native_metric_tests := \
     hwuimicro \
     libjavacore-benchmarks \
     minikin_perftests \
-    mmapPerf
+    mmapPerf \
+    perf-setup.sh
