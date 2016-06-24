@@ -16,6 +16,7 @@ instrumentation_tests := \
     ManagedProvisioningTests \
     FrameworksCoreTests \
     FrameworksServicesTests \
+    FrameworksUtilsTests \
     DocumentsUITests \
     SystemUITests \
     RecyclerViewTests \
