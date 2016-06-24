@@ -16,4 +16,5 @@ instrumentation_metric_tests := \
     crashcollector \
     DocumentsUIPerfTests \
     DocumentsUIAppPerfTests \
+    perf-setup.sh \
     SurfaceComposition
