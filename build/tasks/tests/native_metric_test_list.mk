@@ -17,4 +17,5 @@ native_metric_tests := \
     bionic-benchmarks \
     crashcollector \
     libjavacore-benchmarks \
-    mmapPerf
+    mmapPerf \
+    perf-setup.sh
