@@ -107,6 +107,19 @@ public class UiBenchJankTests extends JankTestBase {
         SystemClock.sleep(mHelper.LONG_TIMEOUT * 5);
     }
 
+    // Open InvalidateTree from General
+    public void openInvalidateTree() {
+        mHelper.launchActivity("InvalidateTreeActivity",
+                "General/Invalidate Tree");
+    }
+
+    // Measure InvalidateTree jank metrics
+    @JankTest(beforeTest = "openInvalidateTree", expectedFrames = EXPECTED_FRAMES)
+    @GfxMonitor(processName = PACKAGE_NAME)
+    public void testInvalidateTree() {
+        SystemClock.sleep(mHelper.LONG_TIMEOUT * 5);
+    }
+
     // Open Trivial Animation from General
     public void openTrivialAnimation() {
         mHelper.launchActivity("TrivialAnimationActivity",
