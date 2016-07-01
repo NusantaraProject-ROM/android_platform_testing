@@ -183,4 +183,20 @@ public class UiBenchJankTests extends JankTestBase {
         mHelper.flingUpDown(mHelper.mContents, mHelper.SHORT_TIMEOUT, 2);
     }
 
+    // Open Navigation Drawer Activity
+    public void openNavigationDrawerActivity() {
+        mHelper.launchActivity("NavigationDrawerActivity", "Navigation Drawer Activity");
+        mHelper.mContents = mDevice.wait(Until.findObject(By.res("android", "content")),
+                mHelper.TIMEOUT);
+        Assert.assertNotNull("NavigationDrawerActivity isn't found", mHelper.mContents);
+        mHelper.mContents.setGestureMargins(0, 0, 10, 0);
+    }
+
+    // Test Navigation Drawer
+    @JankTest(beforeTest = "openNavigationDrawerActivity", expectedFrames = EXPECTED_FRAMES)
+    @GfxMonitor(processName = PACKAGE_NAME)
+    public void testOpenNavigationDrawer() {
+        mHelper.swipeRightLeft(mHelper.mContents, mHelper.SHORT_TIMEOUT, 4);
+    }
+
 }

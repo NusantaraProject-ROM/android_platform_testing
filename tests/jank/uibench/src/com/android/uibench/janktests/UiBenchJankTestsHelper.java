@@ -26,10 +26,10 @@ import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
 import junit.framework.Assert;
+
 /**
  * Jank benchmark tests helper for UiBench app
  */
-
 public class UiBenchJankTestsHelper {
     public static final int LONG_TIMEOUT = 5000;
     public static final int TIMEOUT = 250;
@@ -38,8 +38,8 @@ public class UiBenchJankTestsHelper {
 
     public static final String PACKAGE_NAME = "com.android.test.uibench";
 
-    private static UiBenchJankTestsHelper mInstance;
-    private static UiDevice mDevice;
+    private static UiBenchJankTestsHelper sInstance;
+    private UiDevice mDevice;
     private Context mContext;
     protected UiObject2 mContents;
 
@@ -49,16 +49,14 @@ public class UiBenchJankTestsHelper {
     }
 
     public static UiBenchJankTestsHelper getInstance(Context context, UiDevice device) {
-        if (mInstance == null) {
-            mInstance = new UiBenchJankTestsHelper(context, device);
+        if (sInstance == null) {
+            sInstance = new UiBenchJankTestsHelper(context, device);
         }
-        return mInstance;
+        return sInstance;
     }
 
     /**
      * Launch activity using intent
-     * @param activityName
-     * @param verifyText
      */
     public void launchActivity(String activityName, String verifyText) {
         ComponentName cn = new ComponentName(PACKAGE_NAME,
@@ -78,9 +76,6 @@ public class UiBenchJankTestsHelper {
     /**
      * To perform the fling down and up on given content for flingCount number
      * of times
-     * @param content
-     * @param timeout
-     * @param flingCount
      */
     public void flingUpDown(UiObject2 content, long timeout, int flingCount) {
         for (int count = 0; count < flingCount; count++) {
@@ -88,6 +83,19 @@ public class UiBenchJankTestsHelper {
             content.fling(Direction.DOWN);
             SystemClock.sleep(timeout);
             content.fling(Direction.UP);
+        }
+    }
+
+    /**
+     * To perform the swipe right and left on given content for swipeCount number
+     * of times
+     */
+    public void swipeRightLeft(UiObject2 content, long timeout, int swipeCount) {
+        for (int count = 0; count < swipeCount; count++) {
+            SystemClock.sleep(timeout);
+            content.swipe(Direction.RIGHT, 1);
+            SystemClock.sleep(timeout);
+            content.swipe(Direction.LEFT, 1);
         }
     }
 
