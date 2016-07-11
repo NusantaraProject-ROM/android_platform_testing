@@ -24,7 +24,9 @@ import android.net.wifi.WifiManager;
 import android.os.ParcelFileDescriptor;
 import android.support.test.uiautomator.UiDevice;
 import android.telecom.TelecomManager;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.WindowManager;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -35,13 +37,15 @@ import java.util.List;
 
 /**
  * Defines constants & implements common methods to be used by Framework, SysUI, System e2e BVT
- * tests Also ensures single instance of this object
+ * tests. Also ensures single instance of this object
  */
 public class AndroidBvtHelper {
     public static final String TEST_TAG = "AndroidBVT";
     public static final int SHORT_TIMEOUT = 1000;
     public static final int LONG_TIMEOUT = 5000;
-    private static AndroidBvtHelper mInstance = null;
+    // 600dp is the threshold value for 7-inch tablets.
+    private static final int TABLET_DP_THRESHOLD = 600;
+    private static AndroidBvtHelper sInstance = null;
     private Context mContext = null;
     private UiDevice mDevice = null;
     private UiAutomation mUiAutomation = null;
@@ -54,10 +58,10 @@ public class AndroidBvtHelper {
 
     public static AndroidBvtHelper getInstance(UiDevice device, Context context,
             UiAutomation uiAutomation) {
-        if (mInstance == null) {
-            mInstance = new AndroidBvtHelper(device, context, uiAutomation);
+        if (sInstance == null) {
+            sInstance = new AndroidBvtHelper(device, context, uiAutomation);
         }
-        return mInstance;
+        return sInstance;
     }
 
     public TelecomManager getTelecomManager() {
@@ -79,7 +83,7 @@ public class AndroidBvtHelper {
     }
 
     /**
-     * Only executes 'adb shell' commands that run in the same process as the runner Converts output
+     * Only executes 'adb shell' commands that run in the same process as the runner. Converts output
      * of the command from ParcelFileDescriptior to user friendly list of strings
      * https://developer.android.com/reference/android/app/UiAutomation.html#executeShellCommand(
      * java.lang.String)
@@ -98,7 +102,28 @@ public class AndroidBvtHelper {
             }
         } catch (IOException e) {
             Log.e(TEST_TAG, e.getMessage());
+            return null;
         }
         return output;
+    }
+
+    /** Returns true if the device is a tablet */
+    public boolean isTablet() {
+        // Get screen density & screen size from window manager
+        WindowManager wm = (WindowManager) mContext.getSystemService(
+                Context.WINDOW_SERVICE);
+        DisplayMetrics metrics = new DisplayMetrics();
+        wm.getDefaultDisplay().getMetrics(metrics);
+        // Determines the smallest screen width DP which is
+        // calculated as ( pixels * density-independent pixel unit ) / density.
+        // http://developer.android.com/guide/practices/screens_support.html.
+        int screenDensity = metrics.densityDpi;
+        int screenWidth = Math.min(
+                metrics.widthPixels, metrics.heightPixels);
+        int screenHeight = Math.max(
+                metrics.widthPixels, metrics.heightPixels);
+        int smallestScreenWidthDp = (Math.min(screenWidth, screenHeight)
+                * DisplayMetrics.DENSITY_DEFAULT) / screenDensity;
+        return smallestScreenWidthDp >= TABLET_DP_THRESHOLD;
     }
 }
