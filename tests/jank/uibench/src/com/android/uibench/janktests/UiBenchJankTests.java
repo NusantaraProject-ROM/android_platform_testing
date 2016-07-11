@@ -135,11 +135,7 @@ public class UiBenchJankTests extends JankTestBase {
 
     // Open Trivial listview from General
     public void openTrivialListView() {
-        mHelper.launchActivity("TrivialListActivity",
-                "General/Trivial ListView");
-        mHelper.mContents = mDevice.wait(Until.findObject(
-                By.res("android", "content")), mHelper.TIMEOUT);
-        Assert.assertNotNull("Trivial ListView isn't found in General", mHelper.mContents);
+        mHelper.launchActivityAndAssert("TrivialListActivity", "General/Trivial ListView");
     }
 
     // Test trivialListView fling
@@ -151,12 +147,8 @@ public class UiBenchJankTests extends JankTestBase {
 
     // Open Trivial Recycler List View from General
     public void openTrivialRecyclerListView() {
-        mHelper.launchActivity("TrivialRecyclerViewActivity",
+        mHelper.launchActivityAndAssert("TrivialRecyclerViewActivity",
                 "General/Trivial Recycler ListView");
-        mHelper.mContents = mDevice.wait(Until.findObject(
-                By.res("android", "content")), mHelper.TIMEOUT);
-        Assert.assertNotNull("Trivial Recycler ListView isn't found in General",
-                mHelper.mContents);
     }
 
     // Test trivialRecyclerListView fling
@@ -168,12 +160,8 @@ public class UiBenchJankTests extends JankTestBase {
 
     // Open Inflation Listview contents
     public void openInflatingListView() {
-        mHelper.launchActivity("InflatingListActivity",
+        mHelper.launchActivityAndAssert("InflatingListActivity",
                 "Inflation/Inflating ListView");
-        mHelper.mContents = mDevice.wait(Until.findObject(
-                By.res("android", "content")), mHelper.TIMEOUT);
-        Assert.assertNotNull("Inflating ListView isn't found in Inflation",
-                mHelper.mContents);
     }
 
     // Test Inflating List View fling
@@ -185,10 +173,7 @@ public class UiBenchJankTests extends JankTestBase {
 
     // Open Navigation Drawer Activity
     public void openNavigationDrawerActivity() {
-        mHelper.launchActivity("NavigationDrawerActivity", "Navigation Drawer Activity");
-        mHelper.mContents = mDevice.wait(Until.findObject(By.res("android", "content")),
-                mHelper.TIMEOUT);
-        Assert.assertNotNull("NavigationDrawerActivity isn't found", mHelper.mContents);
+        mHelper.launchActivityAndAssert("NavigationDrawerActivity", "Navigation Drawer Activity");
         mHelper.mContents.setGestureMargins(0, 0, 10, 0);
     }
 
@@ -197,6 +182,18 @@ public class UiBenchJankTests extends JankTestBase {
     @GfxMonitor(processName = PACKAGE_NAME)
     public void testOpenNavigationDrawer() {
         mHelper.swipeRightLeft(mHelper.mContents, mHelper.SHORT_TIMEOUT, 4);
+    }
+
+    // Open Notification Shade Activity
+    public void openNotificationShade() {
+        mHelper.launchActivityAndAssert("NotificationShadeActivity", "Notification Shade");
+    }
+
+    // Test Notification Shade
+    @JankTest(beforeTest = "openNotificationShade", expectedFrames = EXPECTED_FRAMES)
+    @GfxMonitor(processName = PACKAGE_NAME)
+    public void testOpenNotificationShade() {
+        mHelper.flingUpDown(mHelper.mContents, mHelper.SHORT_TIMEOUT, 2, true);
     }
 
 }
