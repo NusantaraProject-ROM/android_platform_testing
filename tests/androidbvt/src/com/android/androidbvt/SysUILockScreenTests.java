@@ -99,13 +99,15 @@ public class SysUILockScreenTests extends TestCase {
      */
     @LargeTest
     public void testEmergencyCall() throws Exception {
-        setScreenLock(PASSWORD, "Password");
-        sleepAndWakeUpDevice();
-        checkCheckEmergencyCall();
-        unlockScreen(PASSWORD);
-        removeScreenLock(PASSWORD);
-        Thread.sleep(mABvtHelper.LONG_TIMEOUT);
-        Assert.assertFalse("Lock Screen is still enabled", isLockScreenEnabled());
+        if (!mABvtHelper.isTablet()) {
+            setScreenLock(PASSWORD, "Password");
+            sleepAndWakeUpDevice();
+            checkEmergencyCall();
+            unlockScreen(PASSWORD);
+            removeScreenLock(PASSWORD);
+            Thread.sleep(mABvtHelper.LONG_TIMEOUT);
+            Assert.assertFalse("Lock Screen is still enabled", isLockScreenEnabled());
+        }
     }
 
     /**
@@ -149,7 +151,7 @@ public class SysUILockScreenTests extends TestCase {
     /**
      * check if Emergency Call page exists
      */
-    private void checkCheckEmergencyCall() throws Exception {
+    private void checkEmergencyCall() throws Exception {
         mDevice.pressMenu();
         mDevice.wait(Until.findObject(By.text("EMERGENCY")), mABvtHelper.LONG_TIMEOUT).click();
         Thread.sleep(mABvtHelper.LONG_TIMEOUT);

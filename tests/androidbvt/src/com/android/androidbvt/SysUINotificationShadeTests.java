@@ -64,6 +64,7 @@ public class SysUINotificationShadeTests extends TestCase {
     private Context mContext;
     private NotificationManager mNotificationManager;
     private ContentResolver mResolver;
+    private AndroidBvtHelper mABvtHelper = null;
 
     private enum QuickSettingTiles {
         WIFI("Wi-Fi"), SIM("SIM"), DND("Do not disturb"), BATTERY("Battery"),
@@ -87,6 +88,8 @@ public class SysUINotificationShadeTests extends TestCase {
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
         mContext = InstrumentationRegistry.getTargetContext();
         mResolver = mContext.getContentResolver();
+        mABvtHelper = AndroidBvtHelper.getInstance(mDevice, mContext,
+                InstrumentationRegistry.getInstrumentation().getUiAutomation());
         mDevice.setOrientationNatural();
         mNotificationManager = (NotificationManager) mContext
                 .getSystemService(Context.NOTIFICATION_SERVICE);
@@ -124,11 +127,13 @@ public class SysUINotificationShadeTests extends TestCase {
         Thread.sleep(LONG_TIMEOUT * 2);
         // Verify quick settings are displayed on the phone screen.
         for (QuickSettingTiles tile : QuickSettingTiles.values()) {
-            UiObject2 quickSettingTile = mDevice.wait(
-                    Until.findObject(By.descContains(tile.getName())),
-                    SHORT_TIMEOUT);
-            assertNotNull(String.format("%s did not load correctly", tile.getName()),
-                    quickSettingTile);
+            if (!(mABvtHelper.isTablet() && tile.getName().equals("SIM"))) {
+                UiObject2 quickSettingTile = mDevice.wait(
+                        Until.findObject(By.descContains(tile.getName())),
+                        SHORT_TIMEOUT);
+                assertNotNull(String.format("%s did not load correctly", tile.getName()),
+                        quickSettingTile);
+            }
         }
         // Verify tapping on Settings icon in Quick settings launches Settings.
         mDevice.wait(Until.findObject(By.descContains("Open settings.")), LONG_TIMEOUT)
