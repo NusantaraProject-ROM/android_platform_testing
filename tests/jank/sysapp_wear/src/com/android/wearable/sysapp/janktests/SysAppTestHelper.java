@@ -40,6 +40,7 @@ public class SysAppTestHelper {
 
     private static final String LOG_TAG = SysAppTestHelper.class.getSimpleName();
     public static final int EXPECTED_FRAMES_CARDS_TEST = 20;
+    public static final int EXPECTED_FRAMES_WATCHFACE_PICKER_TEST = 20;
     public static final int EXPECTED_FRAMES = 100;
     public static final int LONG_TIMEOUT = 5000;
     public static final int SHORT_TIMEOUT = 500;
@@ -51,6 +52,7 @@ public class SysAppTestHelper {
     private static final String LAUNCHER_VIEW_NAME = "launcher_view";
     private static final String CARD_VIEW_NAME = "activity_view";
     private static final String QUICKSETTING_VIEW_NAME = "settings_icon";
+    private static final String WATCHFACE_PREVIEW_NAME = "preview_image";
 
     // Demo card selectors
     private static final UiSelector CARD_SELECTOR = new UiSelector()
@@ -162,6 +164,11 @@ public class SysAppTestHelper {
         }
         // Make sure we're not in the quick settings
         homeScreen = mDevice.findObject(By.res(launcherPackage, QUICKSETTING_VIEW_NAME));
+        if (homeScreen != null) {
+            mDevice.pressBack();
+        }
+        // Make sure we're not in watch face picker
+        homeScreen = mDevice.findObject(By.res(launcherPackage, WATCHFACE_PREVIEW_NAME));
         if (homeScreen != null) {
             mDevice.pressBack();
         }
