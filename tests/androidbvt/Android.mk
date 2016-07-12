@@ -21,9 +21,26 @@ LOCAL_SDK_VERSION := system_current
 media_framework_app_base := frameworks/base/media/tests/MediaFrameworkTest/src/com/android/mediaframeworktest
 LOCAL_SRC_FILES := $(call all-subdir-java-files)
 LOCAL_JAVA_LIBRARIES := android.test.runner
-LOCAL_STATIC_JAVA_LIBRARIES := android-support-test ub-uiautomator launcher-helper-lib
+LOCAL_STATIC_JAVA_LIBRARIES := android-support-test ub-uiautomator launcher-helper-lib app-helpers
 
 LOCAL_PACKAGE_NAME := AndroidBvtTests
+LOCAL_CERTIFICATE := platform
+
+include $(BUILD_PACKAGE)
+
+include $(CLEAR_VARS)
+
+LOCAL_MODULE_TAGS := tests
+
+LOCAL_SDK_VERSION := current
+LOCAL_SRC_FILES := $(call all-java-files-under, apps)
+LOCAL_JAVA_LIBRARIES := android.test.runner
+LOCAL_STATIC_JAVA_LIBRARIES := \
+    android-support-test \
+    app-helpers \
+    launcher-helper-lib \
+    ub-uiautomator
+LOCAL_PACKAGE_NAME := AndroidAppsBvtTests
 LOCAL_CERTIFICATE := platform
 
 include $(BUILD_PACKAGE)
