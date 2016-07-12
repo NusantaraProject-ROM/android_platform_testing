@@ -16,6 +16,7 @@ native_metric_tests := \
     binderAddInts \
     bionic-benchmarks \
     crashcollector \
+    hwuimacro \
     hwuimicro \
     libjavacore-benchmarks \
     minikin_perftests \
