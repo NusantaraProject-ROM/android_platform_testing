@@ -181,14 +181,14 @@ public class ConnectivityWifiTests extends TestCase {
                 URL url = new URL(mPingSite);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
-                conn.setConnectTimeout(mABvtHelper.LONG_TIMEOUT * 5);
-                conn.setReadTimeout(mABvtHelper.LONG_TIMEOUT * 5);
+                conn.setConnectTimeout(mABvtHelper.LONG_TIMEOUT * 12);
+                conn.setReadTimeout(mABvtHelper.LONG_TIMEOUT * 12);
                 if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
                     return true;
                 }
                 Thread.sleep(mABvtHelper.SHORT_TIMEOUT);
             } catch (IOException ex) {
-                // Wifi being flaky in the lab, test retries 5 times to connect to google.com
+                // Wifi being flaky in the lab, test retries 10 times to connect to google.com
                 // as IOException is throws connection isn't made and response stream is null
                 // so for retrying purpose, exception hasn't been rethrown
                 Log.i(mABvtHelper.TEST_TAG, ex.getMessage());
