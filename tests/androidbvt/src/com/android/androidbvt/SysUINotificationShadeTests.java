@@ -25,8 +25,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
-import android.os.RemoteException;
-import android.provider.Settings;
+import android.platform.test.annotations.HermeticTest;
 import android.service.notification.StatusBarNotification;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.By;
@@ -38,17 +37,15 @@ import android.view.KeyEvent;
 import android.view.inputmethod.InputMethodManager;
 import android.test.suitebuilder.annotation.LargeTest;
 import android.test.suitebuilder.annotation.MediumTest;
-import android.widget.EditText;
-import android.widget.Toast;
-
 import android.util.Log;
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import junit.framework.TestCase;
 
+@HermeticTest
 public class SysUINotificationShadeTests extends TestCase {
     private static final String LOG_TAG = SysUINotificationShadeTests.class.getSimpleName();
     private static final int SHORT_TIMEOUT = 200;
