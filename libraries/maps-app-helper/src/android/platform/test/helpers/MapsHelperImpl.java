@@ -17,7 +17,6 @@
 package android.platform.test.helpers;
 
 import android.app.Instrumentation;
-import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.SystemClock;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
@@ -53,15 +52,6 @@ public class MapsHelperImpl extends AbstractMapsHelper {
 
     public MapsHelperImpl(Instrumentation instr) {
         super(instr);
-
-        try {
-            // This version of MapsHelperImpl only support Maps version 9.31
-            if (!getVersion().startsWith("9.31.")) {
-                throw new IllegalStateException("MapsHelper only support Maps version 9.31.*");
-            }
-        } catch (NameNotFoundException e) {
-            Log.e(LOG_TAG, String.format("Unable to find package by name, %s", getPackage()));
-        }
     }
 
     /**
