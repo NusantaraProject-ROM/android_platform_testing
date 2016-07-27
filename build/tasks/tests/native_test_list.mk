@@ -17,6 +17,7 @@ native_tests := \
     bionic-unit-tests \
     bionic-unit-tests-static \
     bluetoothtbd_test \
+    bugreportz_test \
     camera2_test \
     camera_client_test \
     crashcollector \
