@@ -96,7 +96,7 @@ public class SysUIMultiWindowTests extends TestCase {
                 window.getRoot().getPackageName().equals(SETTINGS_PACKAGE));
         // Calculate midpoint for Calculator window and click
         mDevice.click(mDevice.getDisplayHeight() / 4, mDevice.getDisplayWidth() / 2);
-        Thread.sleep(mABvtHelper.SHORT_TIMEOUT);
+        Thread.sleep(mABvtHelper.SHORT_TIMEOUT * 2);
         windows = mUiAutomation.getWindows();
         window = windows.get(windows.size() - 2);
         assertTrue("Calcualtor isn't active window",

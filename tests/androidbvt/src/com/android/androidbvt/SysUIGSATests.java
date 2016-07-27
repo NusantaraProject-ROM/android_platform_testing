@@ -36,10 +36,12 @@ import java.util.List;
  */
 public class SysUIGSATests extends TestCase {
     private final String QSB_PKG = "com.google.android.googlequicksearchbox";
+    private final String NEXUS_LAUNCHER_PKG = "com.google.android.apps.nexuslauncher";
     private UiAutomation mUiAutomation = null;
     private UiDevice mDevice;
     private Context mContext = null;
     private AndroidBvtHelper mABvtHelper = null;
+    private boolean mIsMr1Device = false;
 
     @Override
     public void setUp() throws Exception {
@@ -49,6 +51,7 @@ public class SysUIGSATests extends TestCase {
         mContext = InstrumentationRegistry.getTargetContext();
         mUiAutomation = InstrumentationRegistry.getInstrumentation().getUiAutomation();
         mABvtHelper = AndroidBvtHelper.getInstance(mDevice, mContext, mUiAutomation);
+        mIsMr1Device = mABvtHelper.isMr1Device();
         mDevice.pressMenu();
         mDevice.pressHome();
     }
@@ -66,6 +69,12 @@ public class SysUIGSATests extends TestCase {
      */
     @LargeTest
     public void testGoogleQuickSearchBar() throws InterruptedException {
+        String container = "search_suggestions_container";
+        if (mIsMr1Device){
+            mDevice.wait(Until.findObject(By.res(NEXUS_LAUNCHER_PKG, "g_icon")),
+                    mABvtHelper.SHORT_TIMEOUT).click();
+            container = "cards_view";
+        }
         final String TextToSearch = "co";
         UiObject2 searchBox = null;
         int counter = 5;
@@ -84,7 +93,7 @@ public class SysUIGSATests extends TestCase {
         // searching for 'co' will result from web, as well as 'Contacts' app. So there should be
         // more than 1 container
         UiObject2 searchSuggestionsContainer = mDevice.wait(Until.findObject(By.res(
-                QSB_PKG, "search_suggestions_container")), mABvtHelper.LONG_TIMEOUT);
+                QSB_PKG, container)), mABvtHelper.LONG_TIMEOUT);
         assertTrue("QS suggestion should have more than 1 container",
                 searchSuggestionsContainer.getChildCount() > 1);
         UiObject2 searchSuggestions = mDevice.wait(Until.findObject(By.res(
@@ -102,7 +111,12 @@ public class SysUIGSATests extends TestCase {
         // Search again and ensure last searched item showed as top suggestion
         mDevice.pressHome();
         Thread.sleep(mABvtHelper.SHORT_TIMEOUT);
-        mDevice.pressSearch();
+        if (mIsMr1Device){
+            mDevice.wait(Until.findObject(By.res(NEXUS_LAUNCHER_PKG, "g_icon")),
+                    mABvtHelper.LONG_TIMEOUT).click();
+        }else{
+            mDevice.pressSearch();
+        }
         String currentTopSuggestion = mDevice.wait(Until.findObjects(By.res(QSB_PKG, "text_1")),
                 mABvtHelper.LONG_TIMEOUT).get(0).getText();
         assertTrue("Previous searched item isn't top suggested word",
@@ -114,8 +128,19 @@ public class SysUIGSATests extends TestCase {
      */
     @LargeTest
     public void testGoogleAssist() throws InterruptedException {
-        mDevice.wait(Until.findObject(By.res(QSB_PKG, "search_plate")),
-                mABvtHelper.SHORT_TIMEOUT).click();
+        if (mIsMr1Device){
+            mDevice.pressKeyCode(KeyEvent.KEYCODE_ASSIST);
+            Thread.sleep(1000);
+            mDevice.pressHome();
+            mDevice.wait(Until.findObject(By.res(NEXUS_LAUNCHER_PKG, "g_icon")),
+                    mABvtHelper.SHORT_TIMEOUT).click();
+            Thread.sleep(2000);
+            mDevice.wait(Until.findObject(By.res(QSB_PKG, "navigation_viewport")),
+                    mABvtHelper.SHORT_TIMEOUT).click();
+        }else{
+            mDevice.wait(Until.findObject(By.res(QSB_PKG, "search_plate")),
+                mABvtHelper.LONG_TIMEOUT).click();
+        }
         Thread.sleep(mABvtHelper.SHORT_TIMEOUT);
         UiObject2 getStarted = mDevice.wait(Until.findObject(By.text("GET STARTED")),
                 mABvtHelper.SHORT_TIMEOUT);
@@ -127,8 +152,11 @@ public class SysUIGSATests extends TestCase {
                     mABvtHelper.SHORT_TIMEOUT)
                     .clickAndWait(Until.newWindow(), mABvtHelper.SHORT_TIMEOUT);
         }
+        Thread.sleep(mABvtHelper.LONG_TIMEOUT);
         // Search for Paris and click on first suggested text
         mDevice.wait(Until.findObject(By.res(QSB_PKG, "text_container")),
+                mABvtHelper.SHORT_TIMEOUT).click();
+        mDevice.wait(Until.findObject(By.res(QSB_PKG, "search_box")),
                 mABvtHelper.LONG_TIMEOUT).setText("Paris");
         Thread.sleep(mABvtHelper.LONG_TIMEOUT);
         List<UiObject2> suggestedTexts = null;
