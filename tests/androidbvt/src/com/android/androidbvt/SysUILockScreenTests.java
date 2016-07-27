@@ -43,6 +43,7 @@ public class SysUILockScreenTests extends TestCase {
     private AndroidBvtHelper mABvtHelper = null;
     private UiDevice mDevice = null;
     private Context mContext;
+    private boolean mIsMr1Device = false;
 
     @Override
     public void setUp() throws Exception {
@@ -54,6 +55,7 @@ public class SysUILockScreenTests extends TestCase {
                 InstrumentationRegistry.getInstrumentation().getUiAutomation());
         mDevice.wakeUp();
         mDevice.pressHome();
+        mIsMr1Device = mABvtHelper.isMr1Device();
     }
 
     @Override
@@ -120,11 +122,8 @@ public class SysUILockScreenTests extends TestCase {
                 By.res(SYSTEMUI_PACKAGE, "notification_stack_scroller")), 2000)
                 .swipe(Direction.UP, 1.0f);
         int counter = 6;
-        UiObject2 workspace = mDevice.findObject(By.res(LAUNCHER_PACKAGE, "workspace"));
-        while (counter-- > 0 && workspace == null) {
-            workspace = mDevice.findObject(By.res(LAUNCHER_PACKAGE, "workspace"));
-            Thread.sleep(500);
-        }
+        Thread.sleep(LONG_TIMEOUT);
+        UiObject2 workspace = mDevice.wait(Until.findObject(By.clazz("com.android.launcher3.Workspace")),LONG_TIMEOUT);
         assertNotNull("Workspace wasn't found", workspace);
     }
 
@@ -137,7 +136,9 @@ public class SysUILockScreenTests extends TestCase {
         navigateToScreenLock();
         mDevice.wait(Until.findObject(By.text(mode)), mABvtHelper.LONG_TIMEOUT).click();
         // set up Secure start-up page
-        mDevice.wait(Until.findObject(By.text("No thanks")), mABvtHelper.LONG_TIMEOUT).click();
+        if (!mIsMr1Device){
+            mDevice.wait(Until.findObject(By.text("No thanks")), mABvtHelper.LONG_TIMEOUT).click();
+        }
         UiObject2 pinField = mDevice.wait(Until.findObject(By.clazz(EDIT_TEXT_CLASS_NAME)),
                 mABvtHelper.LONG_TIMEOUT);
         pinField.setText(pwd);
@@ -212,4 +213,3 @@ public class SysUILockScreenTests extends TestCase {
         return km.isKeyguardSecure();
     }
 }
-
