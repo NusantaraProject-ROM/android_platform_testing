@@ -27,6 +27,7 @@ import android.telecom.TelecomManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.WindowManager;
+import junit.framework.Assert;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -43,6 +44,8 @@ public class AndroidBvtHelper {
     public static final String TEST_TAG = "AndroidBVT";
     public static final int SHORT_TIMEOUT = 1000;
     public static final int LONG_TIMEOUT = 5000;
+    public static final String MARLIN = "marlin";
+    public static final String SAILFISH = "sailfish";
     // 600dp is the threshold value for 7-inch tablets.
     private static final int TABLET_DP_THRESHOLD = 600;
     private static AndroidBvtHelper sInstance = null;
@@ -99,6 +102,7 @@ public class AndroidBvtHelper {
             String line;
             while ((line = reader.readLine()) != null) {
                 output.add(line);
+                Log.i(TEST_TAG, line);
             }
         } catch (IOException e) {
             Log.e(TEST_TAG, e.getMessage());
@@ -125,5 +129,13 @@ public class AndroidBvtHelper {
         int smallestScreenWidthDp = (Math.min(screenWidth, screenHeight)
                 * DisplayMetrics.DENSITY_DEFAULT) / screenDensity;
         return smallestScreenWidthDp >= TABLET_DP_THRESHOLD;
+    }
+
+    public boolean isMr1Device() {
+        String result = mDevice.getProductName();
+        if (result.indexOf(MARLIN)>=0||result.indexOf(SAILFISH)>=0){
+           return true;
+        }
+        return false;
     }
 }

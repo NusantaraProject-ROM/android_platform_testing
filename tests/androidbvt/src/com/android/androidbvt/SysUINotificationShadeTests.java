@@ -34,6 +34,7 @@ import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
+import android.view.KeyEvent;
 import android.view.inputmethod.InputMethodManager;
 import android.test.suitebuilder.annotation.LargeTest;
 import android.test.suitebuilder.annotation.MediumTest;
@@ -69,7 +70,7 @@ public class SysUINotificationShadeTests extends TestCase {
     private enum QuickSettingTiles {
         WIFI("Wi-Fi"), SIM("SIM"), DND("Do not disturb"), BATTERY("Battery"),
         FLASHLIGHT("Flashlight"), SCREEN("screen"), BLUETOOTH("Bluetooth"),
-        AIRPLANE("Airplane mode"), LOCATION("Location");
+        AIRPLANE("Airplane mode");
 
         private final String name;
 
@@ -180,6 +181,8 @@ public class SysUINotificationShadeTests extends TestCase {
         if (!imm.isAcceptingText()) {
             assertNotNull("Keyboard for inline reply has not loaded correctly", replyBox);
         }
+        // make the IME down
+        mDevice.pressKeyCode(KeyEvent.KEYCODE_BACK);
         UiObject2 obj = mDevice.wait(Until.findObject(By.text(INLINE_REPLY_TITLE)),
                 LONG_TIMEOUT);
         obj.swipe(Direction.LEFT, 1.0f);
