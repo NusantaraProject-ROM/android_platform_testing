@@ -49,7 +49,7 @@ public class IMEJankTestsHelper {
     private static final String REPLY_BUTTON_TEXT = "Reply";
     private static final String REMOTE_INPUT_TEXT = "Quick reply";
     private static final String REMOTE_INPUT_PACKAGE_NAME =
-            "com.google.android.googlequicksearchbox";
+            "com.google.android.wearable.app";
     private static final String RELOAD_NOTIFICATION_CARD_INTENT = "com.google.android.wearable."
             + "support.wearnotificationgenerator.SHOW_NOTIFICATION";
     private static final String KEYBOARD_ID =
@@ -153,8 +153,8 @@ public class IMEJankTestsHelper {
     }
 
     public void tapIMEButton() {
-        UiObject2 imeButton = mDevice
-                .findObject(By.res(REMOTE_INPUT_PACKAGE_NAME, IME_BUTTON_NAME));
+        UiObject2 imeButton = mDevice.wait(
+                Until.findObject(By.res(REMOTE_INPUT_PACKAGE_NAME, IME_BUTTON_NAME)), LONG_TIMEOUT);
         Assert.assertNotNull(imeButton);
         imeButton.click();
         SystemClock.sleep(SHORT_TIMEOUT);
