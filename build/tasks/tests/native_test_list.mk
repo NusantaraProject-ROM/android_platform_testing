@@ -18,6 +18,7 @@ native_tests := \
     bionic-unit-tests-static \
     bluetoothtbd_test \
     bootstat_tests \
+    bugreportz_test \
     bsdiff_unittest \
     camera2_test \
     camera_client_test \
