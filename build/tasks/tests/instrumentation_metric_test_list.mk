@@ -19,4 +19,6 @@ instrumentation_metric_tests := \
     DocumentsUIAppPerfTests \
     perf-setup.sh \
     SurfaceComposition \
-    GraphicsPerfTests
+    GraphicsPerfTests \
+    RsBlasBenchmark \
+    ImageProcessingJB
