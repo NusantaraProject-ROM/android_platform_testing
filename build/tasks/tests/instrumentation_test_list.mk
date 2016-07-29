@@ -13,6 +13,7 @@
 # limitations under the License.
 
 instrumentation_tests := \
+    HelloWorldTests \
     crashcollector \
     ManagedProvisioningTests \
     FrameworksCoreTests \
