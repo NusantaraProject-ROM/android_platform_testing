@@ -84,11 +84,11 @@ public class SysUIMultiWindowTests extends TestCase {
         // Convert calculator to multiwindow mode
         mUiAutomation.executeShellCommand(
                 String.format("am stack movetask %d %d true", taskId, SPLITSCREEN));
-        Thread.sleep(mABvtHelper.SHORT_TIMEOUT * 2);
+        Thread.sleep(mABvtHelper.LONG_TIMEOUT * 2);
         // Launch Settings
         launchIntent = mContext.getPackageManager().getLaunchIntentForPackage(SETTINGS_PACKAGE);
         mContext.startActivity(launchIntent);
-        Thread.sleep(mABvtHelper.SHORT_TIMEOUT * 2);
+        Thread.sleep(mABvtHelper.LONG_TIMEOUT * 2);
         // Ensure settings is active window
         List<AccessibilityWindowInfo> windows = mUiAutomation.getWindows();
         AccessibilityWindowInfo window = windows.get(windows.size() - 1);
