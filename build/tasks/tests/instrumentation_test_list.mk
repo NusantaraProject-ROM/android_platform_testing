@@ -37,4 +37,5 @@ instrumentation_tests := \
     NotificationFunctionalTests \
     DownloadProviderTests \
     EmergencyInfoTests \
-    CalendarProviderTests
+    CalendarProviderTests \
+    RSTest
