@@ -14,26 +14,19 @@
  * limitations under the License.
  */
 
-package com.android.androidbvt;
+package com.android.androidbvt.apps;
 
-import android.content.ContentValues;
 import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
-import android.os.Environment;
 import android.platform.test.helpers.GoogleCameraHelperImpl;
-import android.provider.MediaStore;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
-import android.test.InstrumentationTestCase;
 import android.test.suitebuilder.annotation.LargeTest;
-
-import junit.framework.TestCase;
 import java.io.File;
 import java.util.regex.Pattern;
+import junit.framework.TestCase;
 
 /**
  * Basic tests for the Camera app.
