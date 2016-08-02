@@ -51,7 +51,7 @@ public class DispatchActivity extends Activity {
             mSimpleperfEvt = mExtras.getString("SIMPLEPERF_EVT");
             mSimpleperfDir = mExtras.getString("SIMPLEPERF_DIR");
             if (mSimpleperfBin == null || mSimpleperfBin.isEmpty()) {
-                mSimpleperfEvt = "/system/xbin/simpleperf";
+                mSimpleperfBin = "/system/xbin/simpleperf";
             }
             if (mSimpleperfEvt == null || mSimpleperfEvt.isEmpty()) {
                 mSimpleperfEvt = "cpu-cycles,instructions:k,instructions:u";
