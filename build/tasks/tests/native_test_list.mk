@@ -33,6 +33,7 @@ native_tests := \
     libgui_test \
     libjavacore-unit-tests \
     liblog-unit-tests \
+    libwifi-system_tests \
     linker-unit-tests \
     logcat-unit-tests \
     logd-unit-tests \
@@ -54,4 +55,5 @@ native_tests := \
     simpleperf_cpu_hotplug_test \
     simpleperf_unit_test \
     time-unit-tests \
+    wificond_unit_test \
     ziparchive-tests
