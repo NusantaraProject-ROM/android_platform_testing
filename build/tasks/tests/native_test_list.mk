@@ -24,6 +24,7 @@ native_tests := \
     camera_client_test \
     crashcollector \
     debuggerd_test \
+    hello_world_test \
     hwui_unit_tests \
     init_tests \
     JniInvocation_test \
