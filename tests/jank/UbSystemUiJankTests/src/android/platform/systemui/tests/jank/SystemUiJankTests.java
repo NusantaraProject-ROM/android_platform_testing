@@ -40,6 +40,7 @@ import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.Until;
 import android.util.Log;
 import android.widget.Button;
+import android.widget.ImageView;
 
 import java.io.File;
 import java.io.IOException;
@@ -227,14 +228,14 @@ public class SystemUiJankTests extends JankTestBase {
         }
     }
 
-    private void openNotification() {
+    private void swipeDown() {
         mDevice.swipe(mDevice.getDisplayWidth() / 2,
                 SWIPE_MARGIN, mDevice.getDisplayWidth() / 2,
                 mDevice.getDisplayHeight() - SWIPE_MARGIN,
                 DEFAULT_SCROLL_STEPS);
     }
 
-    private void closeNotification() {
+    private void swipeUp() {
         mDevice.swipe(mDevice.getDisplayWidth() / 2,
                 mDevice.getDisplayHeight() - SWIPE_MARGIN,
                 mDevice.getDisplayWidth() / 2,
@@ -248,9 +249,46 @@ public class SystemUiJankTests extends JankTestBase {
     @GfxMonitor(processName = SYSTEMUI_PACKAGE)
     public void testNotificationListPull() {
         for (int i = 0; i < INNER_LOOP; i++) {
-            openNotification();
+            swipeDown();
             mDevice.waitForIdle();
-            closeNotification();
+            swipeUp();
+            mDevice.waitForIdle();
+        }
+    }
+
+    public void beforeQuickSettings() throws Exception {
+
+        // Make sure we have some notifications.
+        prepareNotifications();
+        mDevice.openNotification();
+        SystemClock.sleep(100);
+        mDevice.waitForIdle();
+        TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+    }
+
+    public void afterQuickSettings(Bundle metrics) throws Exception {
+        TimeResultLogger.writeTimeStampLogEnd(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+        cancelNotifications(metrics);
+        mDevice.pressHome();
+        TimeResultLogger.writeResultToFile(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), RESULTS_FILE, metrics);
+        super.afterTest(metrics);
+    }
+
+    /** Measures jank while pulling down the quick settings */
+    @JankTest(expectedFrames = 100,
+            beforeTest = "beforeQuickSettings", afterTest = "afterQuickSettings")
+    @GfxMonitor(processName = SYSTEMUI_PACKAGE)
+    public void testQuickSettingsPull() throws Exception {
+        UiObject quickSettingsButton = mDevice.findObject(
+                new UiSelector().className(ImageView.class)
+                        .descriptionContains("quick settings"));
+        for (int i = 0; i < INNER_LOOP; i++) {
+            quickSettingsButton.click();
+            mDevice.waitForIdle();
+            quickSettingsButton.click();
             mDevice.waitForIdle();
         }
     }
