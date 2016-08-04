@@ -20,6 +20,7 @@ import android.app.KeyguardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.RemoteException;
+import android.platform.test.annotations.HermeticTest;
 import android.provider.Settings;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.By;
@@ -28,10 +29,10 @@ import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
 import android.test.suitebuilder.annotation.LargeTest;
-
 import junit.framework.Assert;
 import junit.framework.TestCase;
 
+@HermeticTest
 public class SysUILockScreenTests extends TestCase {
     private static final String LAUNCHER_PACKAGE = "com.google.android.googlequicksearchbox";
     private static final String SYSTEMUI_PACKAGE = "com.android.systemui";

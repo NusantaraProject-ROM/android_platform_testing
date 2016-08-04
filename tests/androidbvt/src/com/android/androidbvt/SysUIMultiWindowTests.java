@@ -20,17 +20,17 @@ import android.app.UiAutomation;
 import android.content.Context;
 import android.content.Intent;
 import android.os.RemoteException;
+import android.platform.test.annotations.HermeticTest;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.UiDevice;
 import android.test.suitebuilder.annotation.LargeTest;
 import android.view.accessibility.AccessibilityWindowInfo;
-
-import junit.framework.TestCase;
-
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import android.util.Log;
+import junit.framework.TestCase;
+
+@HermeticTest
 public class SysUIMultiWindowTests extends TestCase {
     private static final String CALCULATOR_PACKAGE = "com.google.android.calculator";
     private static final String CALCULATOR_ACTIVITY = "com.android.calculator2.Calculator";

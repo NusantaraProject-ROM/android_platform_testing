@@ -20,8 +20,7 @@ import android.app.WallpaperManager;
 import android.content.Context;
 import android.graphics.Point;
 import android.graphics.drawable.Drawable;
-import android.os.RemoteException;
-import android.provider.Settings;
+import android.platform.test.annotations.HermeticTest;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.launcherhelper.ILauncherStrategy;
 import android.support.test.launcherhelper.LauncherStrategyFactory;
@@ -31,13 +30,11 @@ import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
 import android.test.suitebuilder.annotation.LargeTest;
-
+import java.io.IOException;
+import java.util.regex.Pattern;
 import junit.framework.TestCase;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.regex.Pattern;
-
+@HermeticTest
 public class SysUILauncherTests extends TestCase {
     private static final int LONG_TIMEOUT = 5000;
     private static final String APP_NAME = "Calendar";
