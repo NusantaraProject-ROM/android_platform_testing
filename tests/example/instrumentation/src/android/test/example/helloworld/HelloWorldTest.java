@@ -16,6 +16,7 @@
 
 package android.test.example.helloworld;
 
+import android.support.test.filters.SmallTest;
 import android.util.Log;
 
 import org.junit.After;
@@ -53,12 +54,14 @@ public class HelloWorldTest {
     }
 
     @Test
+    @SmallTest
     public void testHelloWorld() {
         Log.d(TAG, "testHelloWorld()");
         Assert.assertNotEquals("Hello", "world");
     }
 
     @Test
+    @SmallTest
     public void testHalloWelt() {
         Log.d(TAG, "testHalloWelt()");
         Assert.assertNotEquals("Hallo", "Welt");
