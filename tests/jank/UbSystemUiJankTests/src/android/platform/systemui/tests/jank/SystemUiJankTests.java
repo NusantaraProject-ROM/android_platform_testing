@@ -32,11 +32,15 @@ import android.support.test.jank.JankTestBase;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.UiDevice;
+import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObject2;
+import android.support.test.uiautomator.UiObjectNotFoundException;
+import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.Until;
 import android.support.test.timeresulthelper.TimeResultLogger;
 import android.util.Log;
 import android.os.Environment;
+import android.widget.Button;
 
 import java.io.File;
 import java.io.IOException;
@@ -153,8 +157,20 @@ public class SystemUiJankTests extends JankTestBase {
         mDevice.waitForIdle();
     }
 
-    public void prepareNotifications() throws IOException {
+    public void prepareNotifications() throws Exception {
         goHome();
+        mDevice.openNotification();
+        SystemClock.sleep(100);
+        mDevice.waitForIdle();
+
+        // CLEAR ALL might not be visible in case we don't have any clearable notifications.
+        UiObject clearAll =
+                mDevice.findObject(new UiSelector().className(Button.class).text("CLEAR ALL"));
+        if (clearAll.exists()) {
+            clearAll.click();
+        }
+        mDevice.pressHome();
+        mDevice.waitForIdle();
         Builder builder = new Builder(getInstrumentation().getTargetContext())
                 .setContentTitle(NOTIFICATION_TEXT);
         NotificationManager nm = (NotificationManager) getInstrumentation().getTargetContext()
