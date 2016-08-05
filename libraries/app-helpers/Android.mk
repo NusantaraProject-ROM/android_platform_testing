@@ -17,7 +17,7 @@ LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := app-helpers
-LOCAL_STATIC_JAVA_LIBRARIES := launcher-helper-lib base-app-helpers google-camera-app-helper-prebuilt \
+LOCAL_STATIC_JAVA_LIBRARIES := launcher-helper-lib base-app-helpers google-camera-app-helper \
                                youtube-app-helper photos-app-helper play-music-app-helper \
                                chrome-app-helper play-store-app-helper play-movies-app-helper \
                                gmail-app-helper maps-app-helper recents-app-helper \
