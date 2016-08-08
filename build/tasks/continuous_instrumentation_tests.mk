@@ -17,7 +17,7 @@
 
 LOCAL_PATH := $(call my-dir)
 include $(LOCAL_PATH)/tests/instrumentation_test_list.mk
--include $(wildcard vendor/*/build/tasks/test-list/instrumentation_test_list.mk)
+-include $(wildcard vendor/*/build/tasks/tests/instrumentation_test_list.mk)
 
 my_modules := \
     $(instrumentation_tests)
