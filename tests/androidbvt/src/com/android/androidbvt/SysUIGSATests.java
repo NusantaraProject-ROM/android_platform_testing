@@ -54,6 +54,7 @@ public class SysUIGSATests extends TestCase {
         mIsMr1Device = mABvtHelper.isMr1Device();
         mDevice.pressMenu();
         mDevice.pressHome();
+        dismissInitialDialog();
     }
 
     @Override
@@ -70,9 +71,9 @@ public class SysUIGSATests extends TestCase {
     @LargeTest
     public void testGoogleQuickSearchBar() throws InterruptedException {
         String container = "search_suggestions_container";
-        if (mIsMr1Device){
+        if (mIsMr1Device) {
             mDevice.wait(Until.findObject(By.res(NEXUS_LAUNCHER_PKG, "g_icon")),
-                    mABvtHelper.SHORT_TIMEOUT).click();
+                    mABvtHelper.LONG_TIMEOUT).click();
             container = "cards_view";
         }
         final String TextToSearch = "co";
@@ -111,10 +112,10 @@ public class SysUIGSATests extends TestCase {
         // Search again and ensure last searched item showed as top suggestion
         mDevice.pressHome();
         Thread.sleep(mABvtHelper.SHORT_TIMEOUT);
-        if (mIsMr1Device){
+        if (mIsMr1Device) {
             mDevice.wait(Until.findObject(By.res(NEXUS_LAUNCHER_PKG, "g_icon")),
                     mABvtHelper.LONG_TIMEOUT).click();
-        }else{
+        } else {
             mDevice.pressSearch();
         }
         String currentTopSuggestion = mDevice.wait(Until.findObjects(By.res(QSB_PKG, "text_1")),
@@ -128,34 +129,21 @@ public class SysUIGSATests extends TestCase {
      */
     @LargeTest
     public void testGoogleAssist() throws InterruptedException {
-        if (mIsMr1Device){
-            mDevice.pressKeyCode(KeyEvent.KEYCODE_ASSIST);
-            Thread.sleep(1000);
-            mDevice.pressHome();
+        mDevice.pressHome();
+        Thread.sleep(mABvtHelper.LONG_TIMEOUT);
+        if (mIsMr1Device) {
             mDevice.wait(Until.findObject(By.res(NEXUS_LAUNCHER_PKG, "g_icon")),
-                    mABvtHelper.SHORT_TIMEOUT).click();
+                    mABvtHelper.LONG_TIMEOUT).click();
             Thread.sleep(2000);
             mDevice.wait(Until.findObject(By.res(QSB_PKG, "navigation_viewport")),
-                    mABvtHelper.SHORT_TIMEOUT).click();
-        }else{
+                    mABvtHelper.LONG_TIMEOUT).click();
+        } else {
             mDevice.wait(Until.findObject(By.res(QSB_PKG, "search_plate")),
-                mABvtHelper.LONG_TIMEOUT).click();
+                    mABvtHelper.LONG_TIMEOUT).click();
         }
-        Thread.sleep(mABvtHelper.SHORT_TIMEOUT);
-        UiObject2 getStarted = mDevice.wait(Until.findObject(By.text("GET STARTED")),
-                mABvtHelper.SHORT_TIMEOUT);
-        if (getStarted != null) {
-            getStarted.clickAndWait(Until.newWindow(), mABvtHelper.SHORT_TIMEOUT);
-            mDevice.wait(Until.findObject(By.res(QSB_PKG, "text_container")),
-                    mABvtHelper.SHORT_TIMEOUT).swipe(Direction.UP, 1.0f);
-            mDevice.wait(Until.findObject(By.text("YES, I’M IN")),
-                    mABvtHelper.SHORT_TIMEOUT)
-                    .clickAndWait(Until.newWindow(), mABvtHelper.SHORT_TIMEOUT);
-        }
-        Thread.sleep(mABvtHelper.LONG_TIMEOUT);
         // Search for Paris and click on first suggested text
         mDevice.wait(Until.findObject(By.res(QSB_PKG, "text_container")),
-                mABvtHelper.SHORT_TIMEOUT).click();
+                mABvtHelper.LONG_TIMEOUT).click();
         mDevice.wait(Until.findObject(By.res(QSB_PKG, "search_box")),
                 mABvtHelper.LONG_TIMEOUT).setText("Paris");
         Thread.sleep(mABvtHelper.LONG_TIMEOUT);
@@ -177,12 +165,7 @@ public class SysUIGSATests extends TestCase {
         Thread.sleep(mABvtHelper.LONG_TIMEOUT);
         // Now long press home to load assist layer
         mDevice.pressKeyCode(KeyEvent.KEYCODE_ASSIST);
-        UiObject2 optInYes = mDevice.wait(
-                Until.findObject(By.res(QSB_PKG, "screen_assist_opt_in_yes")),
-                mABvtHelper.SHORT_TIMEOUT);
-        if (optInYes != null) {
-            optInYes.clickAndWait(Until.newWindow(), mABvtHelper.SHORT_TIMEOUT);
-        }
+
         // Ensure some cards are loaded
         // Note card's content isn't verified
         counter = 5;
@@ -193,5 +176,49 @@ public class SysUIGSATests extends TestCase {
             Thread.sleep(mABvtHelper.SHORT_TIMEOUT);
         }
         assertNotNull("Some cards should be loaded", cardContainer);
+    }
+
+    public void dismissInitialDialog() throws InterruptedException {
+        if (mIsMr1Device) {
+            mDevice.pressHome();
+            mDevice.wait(Until.findObject(By.res(NEXUS_LAUNCHER_PKG, "g_icon")),
+                    mABvtHelper.SHORT_TIMEOUT).click();
+            Thread.sleep(2000);
+            mDevice.wait(Until.findObject(By.res(QSB_PKG, "navigation_viewport")),
+                    mABvtHelper.SHORT_TIMEOUT).click();
+        } else {
+            mDevice.wait(Until.findObject(By.res(QSB_PKG, "search_plate")),
+                    mABvtHelper.LONG_TIMEOUT).click();
+        }
+        Thread.sleep(mABvtHelper.SHORT_TIMEOUT);
+        UiObject2 getStarted = mDevice.wait(Until.findObject(By.text("GET STARTED")),
+                mABvtHelper.SHORT_TIMEOUT);
+        if (getStarted != null) {
+            getStarted.clickAndWait(Until.newWindow(), mABvtHelper.SHORT_TIMEOUT);
+            mDevice.wait(Until.findObject(By.res(QSB_PKG, "text_container")),
+                    mABvtHelper.SHORT_TIMEOUT).swipe(Direction.UP, 1.0f);
+            mDevice.wait(Until.findObject(By.text("YES, I’M IN")),
+                    mABvtHelper.SHORT_TIMEOUT)
+                    .clickAndWait(Until.newWindow(), mABvtHelper.SHORT_TIMEOUT);
+        }
+        // Now long press home to load assist layer
+        mDevice.pressKeyCode(KeyEvent.KEYCODE_ASSIST);
+        if (mIsMr1Device) {
+            UiObject2 optInYes = mDevice.wait(
+                    Until.findObject(By.res(QSB_PKG, "opa_error_cancel_button")),
+                    mABvtHelper.SHORT_TIMEOUT);
+            if (optInYes != null) {
+                optInYes.clickAndWait(Until.newWindow(), mABvtHelper.SHORT_TIMEOUT);
+            }
+        } else {
+            UiObject2 optInYes = mDevice.wait(
+                    Until.findObject(By.res(QSB_PKG, "screen_assist_opt_in_yes")),
+                    mABvtHelper.SHORT_TIMEOUT);
+            if (optInYes != null) {
+                optInYes.clickAndWait(Until.newWindow(), mABvtHelper.SHORT_TIMEOUT);
+            }
+        }
+        mDevice.pressHome();
+        Thread.sleep(mABvtHelper.LONG_TIMEOUT);
     }
 }
