@@ -17,7 +17,7 @@
 
 LOCAL_PATH := $(call my-dir)
 include $(LOCAL_PATH)/tests/native_metric_test_list.mk
--include $(wildcard vendor/*/build/tasks/test-list/native_metric_test_list.mk)
+-include $(wildcard vendor/*/build/tasks/tests/native_metric_test_list.mk)
 
 my_modules := \
     $(native_metric_tests)
