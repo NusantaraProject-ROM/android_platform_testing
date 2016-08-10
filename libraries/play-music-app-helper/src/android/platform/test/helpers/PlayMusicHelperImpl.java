@@ -83,7 +83,7 @@ public class PlayMusicHelperImpl extends AbstractPlayMusicHelper {
         if (isLibraryTabSelected(tabTitle)) {
             return;
         } else {
-            navigateToDrawerItem("Library");
+            navigateToDrawerItem("Music library");
 
             for (int retries = 3; retries > 0; retries--) {
                 UiObject2 title = getLibraryTab(tabTitle);
@@ -294,17 +294,22 @@ public class PlayMusicHelperImpl extends AbstractPlayMusicHelper {
 
     private void navigateToDrawerItem(String itemName) {
         Pattern pattern = Pattern.compile(itemName, Pattern.CASE_INSENSITIVE);
-        BySelector textSelector = By.text(pattern);
 
         // Select for title.
-        if (mDevice.findObject(textSelector.clickable(false)) != null) {
+        if (mDevice.findObject(By.text(pattern).clickable(false)) != null) {
             return;
         }
 
         openNavigationBar();
 
+        UiObject2 button = mDevice.findObject(By.text(pattern).clickable(true));
+        if (button == null){
+            String message = String.format("Couldn't find button with text: %s", itemName);
+            throw new UnknownUiException(message);
+        }
+
         // Select for button.
-        mDevice.findObject(textSelector.clickable(true)).click();
+        button.click();
         mDevice.wait(Until.gone(By.res(UI_PACKAGE, "play_drawer_root")), NAV_BAR_WAIT);
     }
 
