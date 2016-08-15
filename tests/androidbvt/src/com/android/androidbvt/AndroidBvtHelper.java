@@ -19,6 +19,7 @@ package com.android.androidbvt;
 import android.app.DownloadManager;
 import android.app.UiAutomation;
 import android.content.Context;
+import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.wifi.WifiManager;
 import android.os.ParcelFileDescriptor;
@@ -137,5 +138,18 @@ public class AndroidBvtHelper {
            return true;
         }
         return false;
+    }
+
+    public void launchIntent(String intentName) throws Exception {
+        mDevice.pressHome();
+        Intent intent = new Intent(intentName);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        mContext.startActivity(intent);
+        Thread.sleep(LONG_TIMEOUT * 2);
+    }
+
+    public void removeDir(String dir) {
+        String cmd = " rm -rf " + dir;
+        executeShellCommand(cmd);
     }
 }
