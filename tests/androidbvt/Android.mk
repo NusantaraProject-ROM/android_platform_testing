@@ -24,6 +24,7 @@ LOCAL_JAVA_LIBRARIES := android.test.runner
 LOCAL_STATIC_JAVA_LIBRARIES := android-support-test \
     first-party-app-helpers \
     launcher-helper-lib \
+    settings-app-helper \
     platform-test-annotations \
     ub-uiautomator
 

@@ -90,6 +90,12 @@ public class PlayStoreDownloadTests extends TestCase {
         mDevice.wait(Until.findObject(By.res(PLAYSTORE_PKG, "buy_button").text("INSTALL")),
                 mABvtHelper.LONG_TIMEOUT)
                 .clickAndWait(Until.newWindow(), 2 * mABvtHelper.LONG_TIMEOUT);
+        UiObject2 continueBtn = mDevice.wait(
+                Until.findObject(By.res(PLAYSTORE_PKG, "positive_button")),
+                mABvtHelper.LONG_TIMEOUT);
+        if (continueBtn != null) {
+            continueBtn.click();
+        }
     }
 
     public void uninstallFromPlayStore(String pkgName) throws Exception {
