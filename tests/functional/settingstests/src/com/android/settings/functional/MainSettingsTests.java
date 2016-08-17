@@ -120,16 +120,6 @@ public class MainSettingsTests extends InstrumentationTestCase {
         }
     }
 
-    @MediumTest
-    public void testOverflowSetting() throws Exception {
-        launchMainSettings(Settings.ACTION_SETTINGS);
-        mDevice.wait(Until.findObject(By.desc("More options")), TIMEOUT).click();
-        mDevice.wait(Until.findObject(By.text("Help & feedback")), TIMEOUT).click();
-        UiObject2 help = mDevice.wait(Until.findObject(By.text("Help")),
-                TIMEOUT);
-        assertNotNull("Overflow setting has not loaded correctly", help);
-    }
-
     private void launchMainSettings(String mainSetting) throws Exception {
         mDevice.pressHome();
         Intent settingIntent = new Intent(mainSetting);
