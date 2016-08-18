@@ -33,6 +33,10 @@ public class PlayStoreHelperImpl extends AbstractPlayStoreHelper {
     private static final String LOG_TAG = PlayStoreHelperImpl.class.getSimpleName();
     private static final String UI_PACKAGE = "com.android.vending";
 
+    private static final long LONG_TOS_DIALOG_WAIT = 20000;
+    private static final long LOAD_RESULT_TRANSITION = 10000;
+    private static final long INSTALL_DELAY = 5000;
+
     public PlayStoreHelperImpl(Instrumentation instr) {
         super(instr);
     }
@@ -58,9 +62,19 @@ public class PlayStoreHelperImpl extends AbstractPlayStoreHelper {
      */
     @Override
     public void dismissInitialDialogs() {
-        UiObject2 tos = mDevice.findObject(By.res(UI_PACKAGE, "positive_button"));
-        if (tos != null) {
-            tos.clickAndWait(Until.newWindow(), 5000);
+        if (!isAppInForeground()) {
+            throw new IllegalStateException("The Play Store app is not in the foreground.");
+        }
+        // Dismiss the ToS dialog by pressing accept
+        if (mDevice.wait(Until.hasObject(
+                By.textContains("Google Play Terms of Service")), LONG_TOS_DIALOG_WAIT)) {
+            mDevice.findObject(getPositiveButtonSelector()).click();
+            boolean home = mDevice.wait(Until.hasObject(getSearchBoxSelector()), 10000);
+            if (!home) {
+                throw new UnknownUiException("Failed to reach the home screen.");
+            }
+        } else {
+            throw new UnknownUiException("Unable to find ToS");
         }
     }
 
@@ -69,39 +83,42 @@ public class PlayStoreHelperImpl extends AbstractPlayStoreHelper {
      */
     @Override
     public void doSearch(String query) {
-        // Back up and scroll up until search is visible
-        for (int retries = 3; retries > 0; retries--) {
-            if (getSearchBox() != null) {
+        if (!isAppInForeground()) {
+            throw new IllegalStateException("The Play Store app is not in the foreground.");
+        }
+        // Scroll up or press back until searching is available, or fail
+        UiObject2 search = null;
+        for (int retries = 5; retries > 0; retries--) {
+            // Search for the search box
+            search = mDevice.findObject(getSearchBoxSelector());
+            if (search != null) {
                 break;
-            } else {
-                UiObject2 scroller = getScrollContainer();
-                if (scroller != null) {
-                    scroller.scroll(Direction.UP, 100.0f);
-                } else {
-                    mDevice.pressBack();
-                }
+            }
+            // Search for the search button
+            search = mDevice.findObject(getSearchButtonSelector());
+            if (search != null) {
+                break;
+            }
+            // Scroll up or back out
+            if (!scrollPage(Direction.UP, 100.0f)) {
+                mDevice.pressBack();
             }
         }
-
-        //Interact with the search box
-        UiObject2 searchBox = getSearchBox();
-        if (searchBox == null) {
-            throw new UnknownUiException("Unable to select the search box.");
+        if (search == null) {
+            throw new UnknownUiException("Failed to find a search method.");
         }
-        searchBox.click();
+        search.click();
+        // After pressing, the search element becomes the edit text box
         UiObject2 edit = mDevice.wait(
                 Until.findObject(By.clazz(EditText.class)), 5000);
         if (edit == null) {
-            throw new UnknownUiException("Could not find edit text box.");
+            throw new UnknownUiException("Failed to find an edit text.");
         }
         edit.setText(query);
         mDevice.pressEnter();
-
-        // Wait until the search results container is open
-        boolean success = mDevice.wait(Until.hasObject(
-                By.res(UI_PACKAGE, "search_results_list")), 5000);
-        if (!success) {
-            throw new UnknownUiException("Could not find search results");
+        // Validate the end criteria that the search list is visible
+        if (!mDevice.wait(Until.hasObject(getSearchResultSelector()), 5000)) {
+            throw new UnknownUiException("Failed to find the search results.");
         }
     }
 
@@ -110,50 +127,103 @@ public class PlayStoreHelperImpl extends AbstractPlayStoreHelper {
      */
     @Override
     public void selectFirstResult() {
-        try {
-            if (getVersion().startsWith("5.")) {
-                expandSection("Apps");
-            }
-        } catch (NameNotFoundException e) {
-            Log.e(LOG_TAG, "Unable to find version for package: " + UI_PACKAGE);
+        if (!mDevice.hasObject(getSearchResultSelector())) {
+            throw new IllegalStateException("No available search result list.");
         }
         UiObject2 result = mDevice.findObject(By.res(UI_PACKAGE, "play_card"));
         if (result == null) {
-            throw new UnknownUiException("Failed to find a result card");
+            throw new UnknownUiException("Failed to find a search result card.");
         }
         result.click();
+        if (!mDevice.wait(Until.hasObject(getAppTitleSelector()), LOAD_RESULT_TRANSITION)) {
+            throw new UnknownUiException("Failed to find the app page open.");
+        }
     }
 
-    private void expandSection(String header) {
-        for (int retries = 3; retries > 0; retries--) {
-            BySelector section = By.res(UI_PACKAGE, "header_title_main").text(header);
-            UiObject2 title = mDevice.findObject(section);
-            if (title != null) {
-                title.click();
-                mDevice.wait(Until.gone(section), 5000);
-                return;
-            } else {
-                UiObject2 container = mDevice.findObject(By.res(UI_PACKAGE, "search_results_list"));
-                container.scroll(Direction.DOWN, 1.0f);
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void installApp() {
+        // #isAppInstalled also verifies that this is an app page
+        if (isAppInstalled()) {
+            throw new IllegalStateException("This app is already installed.");
+        }
+
+        UiObject2 install = mDevice.findObject(getInstallButtonSelector());
+        if (install == null) {
+            throw new UnknownUiException("Could not find an install button.");
+        }
+        install.click();
+
+        // Search for the Android 6.0 permission dialog
+        if (mDevice.wait(Until.hasObject(getAndroid6DialogSelector()), 2500)) {
+            mDevice.findObject(getPositiveButtonSelector()).click();
+            mDevice.waitForIdle();
+        } else {
+            // If the install button is present, then downloading failed
+            if (mDevice.wait(Until.findObject(
+                    getInstallButtonSelector()), INSTALL_DELAY) != null) {
+                throw new UnknownUiException("Did not detect that the installation started.");
             }
         }
-        throw new UnknownUiException("Failed to find section header.");
     }
 
-    private UiObject2 getSearchBox() {
-        UiObject2 searchBox = mDevice.findObject(By.res(UI_PACKAGE, "search_box_idle_text"));
-        if (searchBox == null) {
-            searchBox = mDevice.findObject(By.res(UI_PACKAGE, "search_button"));
-        }
-        return searchBox;
-    }
-
-    private UiObject2 getScrollContainer() {
+    private boolean scrollPage(Direction dir, float value) {
         UiObject2 scroller = mDevice.findObject(By.res(UI_PACKAGE, "recycler_view"));
         if (scroller == null) {
             scroller = mDevice.findObject(By.res(UI_PACKAGE, "viewpager"));
         }
-        return scroller;
+
+        if (scroller != null) {
+            return scroller.scroll(dir, value);
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isAppInstalled() {
+        if (!isAppPage()) {
+            throw new IllegalStateException("Play Store was not on the app's install page.");
+        }
+        return (mDevice.findObject(getInstallButtonSelector()) == null);
+    }
+
+    private boolean isAppPage () {
+        // Warning: this can fail if the page is scrolled down
+        return mDevice.hasObject(getAppTitleSelector());
+    }
+
+    private BySelector getPositiveButtonSelector() {
+        return By.res(UI_PACKAGE, "positive_button");
+    }
+
+    private BySelector getSearchBoxSelector() {
+        return By.res(UI_PACKAGE, "search_box_idle_text");
+    }
+
+    private BySelector getSearchButtonSelector() {
+        return By.res(UI_PACKAGE, "search_button");
+    }
+
+    private BySelector getSearchResultSelector() {
+        return By.res(UI_PACKAGE, "search_results_list");
+    }
+
+    private BySelector getAppTitleSelector() {
+        return By.res(UI_PACKAGE, "title_background");
+    }
+
+    private BySelector getInstallButtonSelector() {
+        return By.res(UI_PACKAGE, "buy_button");
+    }
+
+    private BySelector getAndroid6DialogSelector() {
+        return By.res(UI_PACKAGE, "optional_permissions_help_screen");
     }
 }
 
