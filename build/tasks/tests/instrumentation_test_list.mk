@@ -39,4 +39,6 @@ instrumentation_tests := \
     DownloadProviderTests \
     EmergencyInfoTests \
     CalendarProviderTests \
+    SettingsLibTests \
+    RetailDemoTests \
     RSTest
