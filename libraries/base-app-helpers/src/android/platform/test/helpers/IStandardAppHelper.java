@@ -66,4 +66,11 @@ public interface IStandardAppHelper {
      * @return the version as a String
      */
     abstract String getVersion() throws NameNotFoundException;
+
+    /**
+     * Setup expectations: None
+     *
+     * @return true, if this app's package is the root (depth 0), and false otherwise
+     */
+    abstract boolean isAppInForeground();
 }

@@ -85,6 +85,14 @@ public abstract class AbstractStandardAppHelper implements IStandardAppHelper {
         return version;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isAppInForeground() {
+        return mDevice.hasObject(By.pkg(getPackage()).depth(0));
+    }
+
     protected int getOrientation() {
         return mInstrumentation.getContext().getResources().getConfiguration().orientation;
     }
