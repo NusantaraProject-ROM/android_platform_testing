@@ -21,4 +21,5 @@ instrumentation_metric_tests := \
     SurfaceComposition \
     GraphicsPerfTests \
     RsBlasBenchmark \
-    ImageProcessingJB
+    ImageProcessingJB \
+    MultiUserPerfTests
