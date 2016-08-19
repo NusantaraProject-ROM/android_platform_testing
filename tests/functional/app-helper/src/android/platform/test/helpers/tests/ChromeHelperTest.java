@@ -16,9 +16,10 @@
 
 package android.platform.test.helpers.tests;
 
-import android.platform.test.helpers.MapsHelperImpl;
+import android.platform.test.helpers.ChromeHelperImpl;
 import android.platform.test.helpers.IStandardAppHelper;
 import android.support.test.InstrumentationRegistry;
+import android.support.test.uiautomator.Direction;
 
 import org.junit.After;
 import org.junit.Before;
@@ -26,11 +27,11 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-public class MapsHelperTest extends BaseHelperTest {
-    private MapsHelperImpl mHelper;
+public class ChromeHelperTest extends BaseHelperTest {
+    private ChromeHelperImpl mHelper;
 
-    public MapsHelperTest () {
-        mHelper = new MapsHelperImpl(InstrumentationRegistry.getInstrumentation());
+    public ChromeHelperTest () {
+        mHelper = new ChromeHelperImpl(InstrumentationRegistry.getInstrumentation());
     }
 
     @Override
@@ -54,35 +55,40 @@ public class MapsHelperTest extends BaseHelperTest {
     }
 
     @Test
-    public void testDoSearch() {
+    public void testOpenUrl() {
         mHelper.dismissInitialDialogs();
-        mHelper.doSearch("golden gate bridge");
+        mHelper.openUrl("news.google.com");
     }
 
     @Test
-    @Ignore("Not supported for all devices.")
-    public void testGetDirections() {
+    public void testFlingPage() {
         mHelper.dismissInitialDialogs();
-        mHelper.doSearch("golden gate bridge");
-        mHelper.getDirections();
+        mHelper.openUrl("news.google.com");
+        mHelper.flingPage(Direction.DOWN);
     }
 
     @Test
-    @Ignore("Not supported for all devices.")
-    public void testStartNavigation() {
+    @Ignore("Not critical for testing.")
+    public void testOpenMenu() {
         mHelper.dismissInitialDialogs();
-        mHelper.doSearch("golden gate bridge");
-        mHelper.getDirections();
-        mHelper.startNavigation();
+        mHelper.openUrl("news.google.com");
+        mHelper.openMenu();
     }
 
     @Test
-    @Ignore("Not supported for all devices.")
-    public void testStopNavigation() {
+    @Ignore("Not critical for testing.")
+    public void testMergeTabs() {
         mHelper.dismissInitialDialogs();
-        mHelper.doSearch("golden gate bridge");
-        mHelper.getDirections();
-        mHelper.startNavigation();
-        mHelper.stopNavigation();
+        mHelper.openUrl("news.google.com");
+        mHelper.mergeTabs();
+    }
+
+    @Test
+    @Ignore("Not critical for testing.")
+    public void testUnmergeTabs() {
+        mHelper.dismissInitialDialogs();
+        mHelper.openUrl("news.google.com");
+        mHelper.mergeTabs();
+        mHelper.unmergeTabs();
     }
 }
