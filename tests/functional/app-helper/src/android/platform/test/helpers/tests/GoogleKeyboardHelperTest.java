@@ -16,7 +16,7 @@
 
 package android.platform.test.helpers.tests;
 
-import android.platform.test.helpers.MapsHelperImpl;
+import android.platform.test.helpers.GoogleKeyboardHelperImpl;
 import android.platform.test.helpers.IStandardAppHelper;
 import android.support.test.InstrumentationRegistry;
 
@@ -26,11 +26,13 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-public class MapsHelperTest extends BaseHelperTest {
-    private MapsHelperImpl mHelper;
+import junit.framework.Assert;
 
-    public MapsHelperTest () {
-        mHelper = new MapsHelperImpl(InstrumentationRegistry.getInstrumentation());
+public class GoogleKeyboardHelperTest extends BaseHelperTest {
+    private GoogleKeyboardHelperImpl mHelper;
+
+    public GoogleKeyboardHelperTest () {
+        mHelper = new GoogleKeyboardHelperImpl(InstrumentationRegistry.getInstrumentation());
     }
 
     @Override
@@ -54,35 +56,27 @@ public class MapsHelperTest extends BaseHelperTest {
     }
 
     @Test
-    public void testDoSearch() {
+    @Ignore("Not critical test functionality.")
+    public void testWaitForKeyboard_False() {
         mHelper.dismissInitialDialogs();
-        mHelper.doSearch("golden gate bridge");
+        mHelper.exit();
+        Assert.assertFalse("Method didn't return false waiting for the keyboard",
+                mHelper.waitForKeyboard(2500));
     }
 
     @Test
-    @Ignore("Not supported for all devices.")
-    public void testGetDirections() {
+    @Ignore("Not critical test functionality.")
+    public void testWaitForKeyboard_True() {
         mHelper.dismissInitialDialogs();
-        mHelper.doSearch("golden gate bridge");
-        mHelper.getDirections();
+        Assert.assertTrue("Method didn't return true waiting for the keyboard",
+                mHelper.waitForKeyboard(2500));
     }
 
     @Test
-    @Ignore("Not supported for all devices.")
-    public void testStartNavigation() {
+    @Ignore("Not critical test functionality.")
+    public void testTypeText() {
         mHelper.dismissInitialDialogs();
-        mHelper.doSearch("golden gate bridge");
-        mHelper.getDirections();
-        mHelper.startNavigation();
-    }
-
-    @Test
-    @Ignore("Not supported for all devices.")
-    public void testStopNavigation() {
-        mHelper.dismissInitialDialogs();
-        mHelper.doSearch("golden gate bridge");
-        mHelper.getDirections();
-        mHelper.startNavigation();
-        mHelper.stopNavigation();
+        mHelper.waitForKeyboard(2500);
+        mHelper.typeText("abcd efgh", 250);
     }
 }
