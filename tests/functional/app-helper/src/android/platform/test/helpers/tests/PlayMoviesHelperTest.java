@@ -16,21 +16,20 @@
 
 package android.platform.test.helpers.tests;
 
-import android.platform.test.helpers.MapsHelperImpl;
+import android.platform.test.helpers.PlayMoviesHelperImpl;
 import android.platform.test.helpers.IStandardAppHelper;
 import android.support.test.InstrumentationRegistry;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
-public class MapsHelperTest extends BaseHelperTest {
-    private MapsHelperImpl mHelper;
+public class PlayMoviesHelperTest extends BaseHelperTest {
+    private PlayMoviesHelperImpl mHelper;
 
-    public MapsHelperTest () {
-        mHelper = new MapsHelperImpl(InstrumentationRegistry.getInstrumentation());
+    public PlayMoviesHelperTest () {
+        mHelper = new PlayMoviesHelperImpl(InstrumentationRegistry.getInstrumentation());
     }
 
     @Override
@@ -54,35 +53,15 @@ public class MapsHelperTest extends BaseHelperTest {
     }
 
     @Test
-    public void testDoSearch() {
+    public void testOpenMoviesTab() {
         mHelper.dismissInitialDialogs();
-        mHelper.doSearch("golden gate bridge");
+        mHelper.openMoviesTab();
     }
 
     @Test
-    @Ignore("Not supported for all devices.")
-    public void testGetDirections() {
+    public void testPlayMovie() {
         mHelper.dismissInitialDialogs();
-        mHelper.doSearch("golden gate bridge");
-        mHelper.getDirections();
-    }
-
-    @Test
-    @Ignore("Not supported for all devices.")
-    public void testStartNavigation() {
-        mHelper.dismissInitialDialogs();
-        mHelper.doSearch("golden gate bridge");
-        mHelper.getDirections();
-        mHelper.startNavigation();
-    }
-
-    @Test
-    @Ignore("Not supported for all devices.")
-    public void testStopNavigation() {
-        mHelper.dismissInitialDialogs();
-        mHelper.doSearch("golden gate bridge");
-        mHelper.getDirections();
-        mHelper.startNavigation();
-        mHelper.stopNavigation();
+        mHelper.openMoviesTab();
+        mHelper.playMovie("Dangerous");
     }
 }
