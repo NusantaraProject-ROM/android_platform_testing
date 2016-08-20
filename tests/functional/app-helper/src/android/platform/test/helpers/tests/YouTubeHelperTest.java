@@ -16,21 +16,20 @@
 
 package android.platform.test.helpers.tests;
 
-import android.platform.test.helpers.MapsHelperImpl;
+import android.platform.test.helpers.YouTubeHelperImpl;
 import android.platform.test.helpers.IStandardAppHelper;
 import android.support.test.InstrumentationRegistry;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
-public class MapsHelperTest extends BaseHelperTest {
-    private MapsHelperImpl mHelper;
+public class YouTubeHelperTest extends BaseHelperTest {
+    private YouTubeHelperImpl mHelper;
 
-    public MapsHelperTest () {
-        mHelper = new MapsHelperImpl(InstrumentationRegistry.getInstrumentation());
+    public YouTubeHelperTest () {
+        mHelper = new YouTubeHelperImpl(InstrumentationRegistry.getInstrumentation());
     }
 
     @Override
@@ -54,35 +53,15 @@ public class MapsHelperTest extends BaseHelperTest {
     }
 
     @Test
-    public void testDoSearch() {
+    public void testGoToHomePage() {
         mHelper.dismissInitialDialogs();
-        mHelper.doSearch("golden gate bridge");
+        mHelper.goToHomePage();
     }
 
     @Test
-    @Ignore("Not supported for all devices.")
-    public void testGetDirections() {
+    public void testPlayHomePageVideo() {
         mHelper.dismissInitialDialogs();
-        mHelper.doSearch("golden gate bridge");
-        mHelper.getDirections();
-    }
-
-    @Test
-    @Ignore("Not supported for all devices.")
-    public void testStartNavigation() {
-        mHelper.dismissInitialDialogs();
-        mHelper.doSearch("golden gate bridge");
-        mHelper.getDirections();
-        mHelper.startNavigation();
-    }
-
-    @Test
-    @Ignore("Not supported for all devices.")
-    public void testStopNavigation() {
-        mHelper.dismissInitialDialogs();
-        mHelper.doSearch("golden gate bridge");
-        mHelper.getDirections();
-        mHelper.startNavigation();
-        mHelper.stopNavigation();
+        mHelper.goToHomePage();
+        mHelper.playHomePageVideo();
     }
 }
