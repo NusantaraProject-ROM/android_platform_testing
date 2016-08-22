@@ -1,12 +1,21 @@
 package com.android.functional.otatests;
 
-import android.test.InstrumentationTestCase;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
+import android.os.Bundle;
+import android.support.test.InstrumentationRegistry;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Arrays;
+import org.junit.Before;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
-public class VersionCheckingTest extends InstrumentationTestCase {
+@RunWith(Parameterized.class)
+public class VersionCheckingTest {
 
     protected static final String OLD_VERSION = "/sdcard/otatest/version.old";
     protected static final String NEW_VERSION = "/sdcard/otatest/version.new";
@@ -14,11 +23,18 @@ public class VersionCheckingTest extends InstrumentationTestCase {
     protected static final String KEY_BOOTLOADER = "ro.bootloader";
     protected static final String KEY_BASEBAND = "ro.build.expect.baseband";
     protected static final String KEY_BASEBAND_GSM = "gsm.version.baseband";
+    protected static final String PATH_NAME = "path_name";
 
     protected VersionInfo mOldVersion;
     protected VersionInfo mNewVersion;
 
-    @Override
+    protected String mTestPath;
+
+    public VersionCheckingTest(String testPath) {
+        mTestPath = testPath;
+    }
+
+    @Before
     public void setUp() throws Exception {
         try {
             mOldVersion = VersionInfo.parseFromFile(OLD_VERSION);
@@ -27,6 +43,15 @@ public class VersionCheckingTest extends InstrumentationTestCase {
             throw new RuntimeException(
                     "Couldn't find version file; was this test run with VersionCachePreparer?", e);
         }
+    }
+
+    @Parameters(name = "{0}")
+    public static Iterable<? extends Object> getOtaPathName() {
+        Bundle args = InstrumentationRegistry.getArguments();
+        if (args.containsKey(PATH_NAME)) {
+            return Arrays.asList(args.getString(PATH_NAME));
+        }
+        return Arrays.asList("unnamed path");
     }
 
     protected void assertNotUpdated() throws IOException {
