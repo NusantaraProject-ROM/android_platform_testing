@@ -75,7 +75,9 @@ public class SysBugReportTests extends TestCase{
         Thread.sleep(mABvtHelper.LONG_TIMEOUT);
         mDevice.pressBack();
         mABvtHelper.removeDir(BUGREPORTS_DIR);
-        mABvtHelper.launchIntent(DEVELOPER_OPTION_PAGE);
+        //launch developer options page
+        String cmd = " am start -n com.android.settings/.DevelopmentSettings ";
+        mABvtHelper.executeShellCommand(cmd);
         Thread.sleep(mABvtHelper.LONG_TIMEOUT);
         UiObject2 bugReportBtn = mDevice
                 .wait(Until.findObject(By.text(BUGREPORT_BUTTON)), mABvtHelper.LONG_TIMEOUT);
