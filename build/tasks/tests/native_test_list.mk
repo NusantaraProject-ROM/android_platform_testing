@@ -35,6 +35,7 @@ native_tests := \
     libgui_test \
     libjavacore-unit-tests \
     liblog-unit-tests \
+    libminijail_unittest_gtest \
     libwifi-system_tests \
     linker-unit-tests \
     logcat-unit-tests \
@@ -56,6 +57,7 @@ native_tests := \
     recovery_component_test \
     simpleperf_cpu_hotplug_test \
     simpleperf_unit_test \
+    syscall_filter_unittest_gtest \
     time-unit-tests \
     wificond_unit_test \
     ziparchive-tests
