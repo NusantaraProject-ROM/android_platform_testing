@@ -53,7 +53,6 @@ public class PlayMusicHelperImpl extends AbstractPlayMusicHelper {
         return "com.google.android.music";
     }
 
-
     /**
      * {@inheritDoc}
      */
@@ -66,13 +65,30 @@ public class PlayMusicHelperImpl extends AbstractPlayMusicHelper {
      * {@inheritDoc}
      */
     @Override
-    public void dismissInitialDialogs() {
-        // Dismiss "Add account" Dialog
-        UiObject2 skipButton = mDevice.wait(Until.findObject(By.res(UI_PACKAGE, "skip_button")),
-                APP_LOAD_WAIT);
-        if (skipButton != null) {
-            skipButton.clickAndWait(Until.newWindow(), APP_INIT_WAIT);
+    public void open() {
+        super.open();
+        // Additional wait to combat asynchronous loading
+        boolean ready = mDevice.wait(Until.hasObject(
+                By.res("android", "content").hasDescendant(By.focusable(true))), 5000);
+        if (!ready) {
+            throw new UnknownUiException("Failed to find that the app was open.");
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void dismissInitialDialogs() {
+        if (!mDevice.hasObject(getDialogScreenRootSelector())) {
+            throw new IllegalStateException("Not called from the dialog dismissal screen.");
+        }
+        // Dismiss the "add account" dialog
+        UiObject2 noThanks = mDevice.findObject(getNoThanksButtonSelector());
+        if (noThanks == null) {
+            throw new UnknownUiException("Failed to find the 'NO THANKS' button.");
+        }
+        noThanks.clickAndWait(Until.newWindow(), APP_INIT_WAIT);
     }
 
     /**
@@ -333,6 +349,14 @@ public class PlayMusicHelperImpl extends AbstractPlayMusicHelper {
 
     private UiObject2 getLibraryTab(String tabTitle) {
         return mDevice.findObject(getLibraryTabSelector(tabTitle));
+    }
+
+    private BySelector getDialogScreenRootSelector() {
+        return By.res(UI_PACKAGE, "try_nautilus_root");
+    }
+
+    private BySelector getNoThanksButtonSelector() {
+        return By.res(UI_PACKAGE, "btn_decline");
     }
 
     private BySelector getLibraryTabSelector(String tabTitle) {
