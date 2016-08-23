@@ -16,9 +16,12 @@
 
 package android.platform.test.helpers.tests;
 
+import android.app.Instrumentation;
+import android.os.SystemClock;
 import android.platform.test.helpers.GoogleKeyboardHelperImpl;
 import android.platform.test.helpers.IStandardAppHelper;
 import android.support.test.InstrumentationRegistry;
+import android.support.test.uiautomator.UiDevice;
 
 import org.junit.After;
 import org.junit.Before;
@@ -30,9 +33,12 @@ import junit.framework.Assert;
 
 public class GoogleKeyboardHelperTest extends BaseHelperTest {
     private GoogleKeyboardHelperImpl mHelper;
+    private UiDevice mDevice;
 
     public GoogleKeyboardHelperTest () {
-        mHelper = new GoogleKeyboardHelperImpl(InstrumentationRegistry.getInstrumentation());
+        Instrumentation instr = InstrumentationRegistry.getInstrumentation();
+        mHelper = new GoogleKeyboardHelperImpl(instr);
+        mDevice = UiDevice.getInstance(instr);
     }
 
     @Override
@@ -40,24 +46,23 @@ public class GoogleKeyboardHelperTest extends BaseHelperTest {
         return mHelper;
     }
 
-    @Before
-    public void before() {
-        mHelper.open();
-    }
-
     @After
     public void after() {
-        mHelper.exit();
+        mDevice.pressHome();
     }
 
     @Test
     public void testDismissInitialDialogs() {
+        // Sleep reduces flakiness after clearing state
+        SystemClock.sleep(5000);
         mHelper.dismissInitialDialogs();
     }
 
     @Test
-    @Ignore("Not critical test functionality.")
+    @Ignore("Flaky, and not critical test functionality.")
     public void testWaitForKeyboard_False() {
+        // Sleep reduces flakiness after clearing state
+        SystemClock.sleep(5000);
         mHelper.dismissInitialDialogs();
         mHelper.exit();
         Assert.assertFalse("Method didn't return false waiting for the keyboard",
@@ -65,16 +70,20 @@ public class GoogleKeyboardHelperTest extends BaseHelperTest {
     }
 
     @Test
-    @Ignore("Not critical test functionality.")
+    @Ignore("Flaky, and not critical test functionality.")
     public void testWaitForKeyboard_True() {
+        // Sleep reduces flakiness after clearing state
+        SystemClock.sleep(5000);
         mHelper.dismissInitialDialogs();
         Assert.assertTrue("Method didn't return true waiting for the keyboard",
                 mHelper.waitForKeyboard(2500));
     }
 
     @Test
-    @Ignore("Not critical test functionality.")
+    @Ignore("Flaky, and not critical test functionality.")
     public void testTypeText() {
+        // Sleep reduces flakiness after clearing state
+        SystemClock.sleep(5000);
         mHelper.dismissInitialDialogs();
         mHelper.waitForKeyboard(2500);
         mHelper.typeText("abcd efgh", 250);
