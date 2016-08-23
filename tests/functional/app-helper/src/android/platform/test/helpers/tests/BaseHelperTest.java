@@ -38,7 +38,11 @@ public abstract class BaseHelperTest {
 
     @Before
     public void clearAppData() {
-        getActivityManager().clearApplicationUserData(getHelper().getPackage(), null);
+        try {
+            getActivityManager().clearApplicationUserData(getHelper().getPackage(), null);
+        } catch (UnsupportedOperationException e) {
+            // ignore
+        }
     }
 
     @After
