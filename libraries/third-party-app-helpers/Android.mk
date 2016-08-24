@@ -16,26 +16,12 @@
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE := first-party-app-helpers
-LOCAL_STATIC_JAVA_LIBRARIES := launcher-helper-lib base-app-helpers google-camera-app-helper \
-                               youtube-app-helper photos-app-helper play-music-app-helper \
-                               chrome-app-helper play-store-app-helper play-movies-app-helper \
-                               gmail-app-helper maps-app-helper recents-app-helper \
-                               google-keyboard-app-helper google-messenger-app-helper \
-                               play-books-app-helper google-docs-app-helper
-include $(BUILD_STATIC_JAVA_LIBRARY)
-
-######################################
-
-include $(CLEAR_VARS)
 LOCAL_MODULE := third-party-app-helpers
 LOCAL_STATIC_JAVA_LIBRARIES := launcher-helper-lib base-app-helpers facebook-app-helper \
                                reddit-app-helper flightdemo-app-helper tunein-app-helper
+
 include $(BUILD_STATIC_JAVA_LIBRARY)
 
 ######################################
 
-include $(CLEAR_VARS)
-LOCAL_MODULE := leanback-app-helpers
-LOCAL_STATIC_JAVA_LIBRARIES := launcher-helper-lib base-app-helpers
-include $(BUILD_STATIC_JAVA_LIBRARY)
+include $(call all-makefiles-under, $(LOCAL_PATH))
