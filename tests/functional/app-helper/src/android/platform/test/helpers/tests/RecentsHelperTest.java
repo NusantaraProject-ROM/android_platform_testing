@@ -17,8 +17,10 @@
 package android.platform.test.helpers.tests;
 
 import android.app.Instrumentation;
-import android.platform.test.helpers.RecentsHelperImpl;
+import android.platform.test.helpers.ChromeHelperImpl;
+import android.platform.test.helpers.GoogleCameraHelperImpl;
 import android.platform.test.helpers.IStandardAppHelper;
+import android.platform.test.helpers.RecentsHelperImpl;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
@@ -36,6 +38,14 @@ public class RecentsHelperTest extends BaseHelperTest {
         Instrumentation instr = InstrumentationRegistry.getInstrumentation();
         mHelper = new RecentsHelperImpl(instr);
         mDevice = UiDevice.getInstance(instr);
+
+        GoogleCameraHelperImpl cameraHelper = new GoogleCameraHelperImpl(instr);
+        ChromeHelperImpl chromeHelper = new ChromeHelperImpl(instr);
+        // Populate the recent apps screen
+        cameraHelper.open();
+        mDevice.pressHome();
+        chromeHelper.open();
+        mDevice.pressHome();
     }
 
     @Override
