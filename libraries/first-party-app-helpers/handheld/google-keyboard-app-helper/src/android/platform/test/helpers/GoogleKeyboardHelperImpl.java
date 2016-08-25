@@ -94,7 +94,17 @@ public class GoogleKeyboardHelperImpl extends AbstractGoogleKeyboardHelper {
      */
     @Override
     public void open() {
-        Log.w(TAG, "No method defined to open Google Keyboard. (no-op)");
+        throw new UnsupportedOperationException(
+                "There is no explicit open method for the Google Keyboard");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void exit() {
+        throw new UnsupportedOperationException(
+                "There is no explicit close method for the Google Keyboard");
     }
 
     /**
@@ -102,7 +112,7 @@ public class GoogleKeyboardHelperImpl extends AbstractGoogleKeyboardHelper {
      */
     @Override
     public String getPackage() {
-        return UI_PACKAGE_NAME;
+        return "com.google.android.inputmethod.latin";
     }
 
     /**
