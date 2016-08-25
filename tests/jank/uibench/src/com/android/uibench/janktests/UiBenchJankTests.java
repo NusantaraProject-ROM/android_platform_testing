@@ -122,11 +122,7 @@ public class UiBenchJankTests extends JankTestBase {
 
     // Open Trivial listview from General
     public void openTrivialListView() {
-        mHelper.launchActivity("TrivialListActivity",
-                "General/Trivial ListView");
-        mHelper.mContents = mDevice.wait(Until.findObject(
-                By.res("android", "content")), mHelper.TIMEOUT);
-        Assert.assertNotNull("Trivial ListView isn't found in General", mHelper.mContents);
+        mHelper.launchActivityAndAssert("TrivialListActivity", "General/Trivial ListView");
     }
 
     // Test trivialListView fling
@@ -138,12 +134,8 @@ public class UiBenchJankTests extends JankTestBase {
 
     // Open Trivial Recycler List View from General
     public void openTrivialRecyclerListView() {
-        mHelper.launchActivity("TrivialRecyclerViewActivity",
+        mHelper.launchActivityAndAssert("TrivialRecyclerViewActivity",
                 "General/Trivial Recycler ListView");
-        mHelper.mContents = mDevice.wait(Until.findObject(
-                By.res("android", "content")), mHelper.TIMEOUT);
-        Assert.assertNotNull("Trivial Recycler ListView isn't found in General",
-                mHelper.mContents);
     }
 
     // Test trivialRecyclerListView fling
@@ -155,12 +147,8 @@ public class UiBenchJankTests extends JankTestBase {
 
     // Open Inflation Listview contents
     public void openInflatingListView() {
-        mHelper.launchActivity("InflatingListActivity",
+        mHelper.launchActivityAndAssert("InflatingListActivity",
                 "Inflation/Inflating ListView");
-        mHelper.mContents = mDevice.wait(Until.findObject(
-                By.res("android", "content")), mHelper.TIMEOUT);
-        Assert.assertNotNull("Inflating ListView isn't found in Inflation",
-                mHelper.mContents);
     }
 
     // Test Inflating List View fling
@@ -169,5 +157,4 @@ public class UiBenchJankTests extends JankTestBase {
     public void testInflatingListViewFling() {
         mHelper.flingUpDown(mHelper.mContents, mHelper.SHORT_TIMEOUT, 2);
     }
-
 }
