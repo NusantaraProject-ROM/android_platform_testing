@@ -4,6 +4,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
 LOCAL_SDK_VERSION := current
+LOCAL_DEX_PREOPT := false
 
 LOCAL_RESOURCE_DIR := $(LOCAL_PATH)/res
 
