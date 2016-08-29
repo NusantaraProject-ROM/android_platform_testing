@@ -18,17 +18,16 @@ package com.android.androidbvt;
 
 import android.content.ContentResolver;
 import android.content.Context;
-import android.os.Environment;
 import android.provider.Settings;
 import android.support.test.InstrumentationRegistry;
+import android.support.test.uiautomator.By;
+import android.support.test.uiautomator.UiDevice;
+import android.support.test.uiautomator.Until;
 import android.test.suitebuilder.annotation.MediumTest;
-
-import junit.framework.TestCase;
-
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import junit.framework.TestCase;
 
 /*
  * Basic test for checking setting are set to default values
@@ -37,6 +36,7 @@ public class SysSettingTests extends TestCase {
     private Context mContext = null;
     private AndroidBvtHelper mABvtHelper = null;
     private ContentResolver mResolver = null;
+    private UiDevice mDevice;
 
     private static enum mSettingType {
         SYSTEM, SECURE, GLOBAL
@@ -44,31 +44,31 @@ public class SysSettingTests extends TestCase {
 
     private static HashMap<String, String> mGlobalSettings = new HashMap<String, String>();
     {
-        //Bluetooth is by default OFF.
+        // Bluetooth is by default OFF.
         mGlobalSettings.put("bluetooth_on", "0");
-        //Airplane mode is by default OFF
+        // Airplane mode is by default OFF
         mGlobalSettings.put("airplane_mode_on", "0");
-        //Wifi is by default on for testing
+        // Wifi is by default on for testing
         mGlobalSettings.put("wifi_on", "1");
-        //Data roaming is by default OFF
+        // Data roaming is by default OFF
         mGlobalSettings.put("data_roaming", "0");
-        //Do not Disturb mode is by default OFF
+        // Do not Disturb mode is by default OFF
         mGlobalSettings.put("zen_mode", "0");
     }
 
     private static HashMap<String, String> mSystemSettings = new HashMap<String, String>();
     {
-        //Automatic Brightness mode is by default on
+        // Automatic Brightness mode is by default on
         mSystemSettings.put("screen_brightness_mode", "1");
-        //By default 30sec before the device goes to sleep after inactivity
+        // By default 30sec before the device goes to sleep after inactivity
         mSystemSettings.put("screen_off_timeout", "30000");
-        //By default Font is 1.0
+        // By default Font is 1.0
         mSystemSettings.put("font_scale", "1.0");
     }
 
     private static HashMap<String, String> mSecureSettings = new HashMap<String, String>();
     {
-        //By default screensaver is enabled
+        // By default screensaver is enabled
         mSecureSettings.put("screensaver_enabled", "1");
     }
 
@@ -84,17 +84,24 @@ public class SysSettingTests extends TestCase {
     public void setUp() throws Exception {
         super.setUp();
         mContext = InstrumentationRegistry.getTargetContext();
+        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+        mDevice.freezeRotation();
         mResolver = mContext.getContentResolver();
+        mABvtHelper = AndroidBvtHelper.getInstance(mDevice, mContext,
+                InstrumentationRegistry.getInstrumentation().getUiAutomation());
+
     }
 
     @Override
     public void tearDown() throws Exception {
+        mDevice.pressHome();
+        mDevice.waitForIdle();
         super.tearDown();
     }
 
     @MediumTest
-    public void testSettingDefaultValues(){
-        for(Entry<mSettingType, HashMap<String, String>> settingsByType : mSettings.entrySet()){
+    public void testSettingDefaultValues() {
+        for (Entry<mSettingType, HashMap<String, String>> settingsByType : mSettings.entrySet()) {
             mSettingType settingType = settingsByType.getKey();
             HashMap<String, String> settings = settingsByType.getValue();
             for (Entry<String, String> settingPair : settings.entrySet()) {
@@ -105,6 +112,18 @@ public class SysSettingTests extends TestCase {
                                 .equals(settingPair.getValue()));
             }
         }
+    }
+
+    @MediumTest
+    public void testNavigationToNOESettings() {
+        mABvtHelper.launchApp("com.android.settings", "Settings");
+        mDevice.wait(Until.findObject(By.text("SUPPORT")), mABvtHelper.LONG_TIMEOUT).click();
+        assertTrue("", mDevice.wait(Until.hasObject(By.text("We're here to help")),
+                mABvtHelper.LONG_TIMEOUT));
+        assertTrue("", mDevice.wait(Until.hasObject(By.text("Search help & send feedback")),
+                mABvtHelper.LONG_TIMEOUT));
+        assertTrue("", mDevice.wait(Until.hasObject(By.text("Explore tips & tricks")),
+                mABvtHelper.LONG_TIMEOUT));
     }
 
     private String getStringSetting(mSettingType type, String sName) {

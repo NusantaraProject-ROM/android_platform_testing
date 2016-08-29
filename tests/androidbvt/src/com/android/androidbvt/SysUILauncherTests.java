@@ -57,8 +57,9 @@ public class SysUILauncherTests extends TestCase {
         mContext = InstrumentationRegistry.getTargetContext();
         mDevice.setOrientationNatural();
         mLauncherStrategy = LauncherStrategyFactory.getInstance(mDevice).getLauncherStrategy();
-        mABvtHelper = AndroidBvtHelper.getInstance(mDevice, mContext,  InstrumentationRegistry.getInstrumentation().getUiAutomation());
-        mIsMr1Device = mABvtHelper.isMr1Device();
+        mABvtHelper = AndroidBvtHelper.getInstance(mDevice, mContext, 
+                InstrumentationRegistry.getInstrumentation().getUiAutomation());
+        mIsMr1Device = mABvtHelper.isNexusExperienceDevice();
     }
 
     @Override
