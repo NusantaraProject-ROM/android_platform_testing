@@ -22,9 +22,14 @@ import android.content.Intent;
 import android.os.RemoteException;
 import android.platform.test.annotations.HermeticTest;
 import android.support.test.InstrumentationRegistry;
+import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
+import android.support.test.uiautomator.UiObject2;
+import android.support.test.uiautomator.Until;
 import android.test.suitebuilder.annotation.LargeTest;
+import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityWindowInfo;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -32,11 +37,6 @@ import junit.framework.TestCase;
 
 @HermeticTest
 public class SysUIMultiWindowTests extends TestCase {
-    private static final String CALCULATOR_PACKAGE = "com.google.android.calculator";
-    private static final String CALCULATOR_ACTIVITY = "com.android.calculator2.Calculator";
-    private static final String SETTINGS_PACKAGE = "com.android.settings";
-    private static final int FULLSCREEN = 1;
-    private static final int SPLITSCREEN = 3;
     private UiAutomation mUiAutomation = null;
     private UiDevice mDevice;
     private Context mContext = null;
@@ -46,15 +46,18 @@ public class SysUIMultiWindowTests extends TestCase {
     public void setUp() throws Exception {
         super.setUp();
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-        mDevice.setOrientationNatural();
         mContext = InstrumentationRegistry.getTargetContext();
         mUiAutomation = InstrumentationRegistry.getInstrumentation().getUiAutomation();
         mABvtHelper = AndroidBvtHelper.getInstance(mDevice, mContext, mUiAutomation);
+        mDevice.setOrientationNatural();
+        mDevice.pressMenu();
     }
 
     @Override
     public void tearDown() throws Exception {
         mDevice.unfreezeRotation();
+        mDevice.pressHome();
+        mDevice.waitForIdle();
         super.tearDown();
     }
 
@@ -64,52 +67,121 @@ public class SysUIMultiWindowTests extends TestCase {
      */
     @LargeTest
     public void testLaunchInMultiwindow() throws InterruptedException, RemoteException {
-        // Launch calculator in full screen
-        Intent launchIntent = mContext.getPackageManager()
-                .getLaunchIntentForPackage(CALCULATOR_PACKAGE);
-        mContext.startActivity(launchIntent);
-        Thread.sleep(mABvtHelper.SHORT_TIMEOUT);
-        int taskId = -1;
-        // Find task id for launched Calculator package
-        List<String> cmdOut = mABvtHelper.executeShellCommand("am stack list");
-        for (String line : cmdOut) {
-            Pattern pattern = Pattern.compile(String.format(".*taskId=([0-9]+): %s/%s.*",CALCULATOR_PACKAGE, CALCULATOR_ACTIVITY));
-            Matcher matcher = pattern.matcher(line);
-            if (matcher.find()) {
-                taskId = Integer.parseInt(matcher.group(1));
-                break;
+        mABvtHelper.launchPackage(mABvtHelper.CALCULATOR_PACKAGE);
+        int taskId = mABvtHelper.getTaskIdForActivity(mABvtHelper.CALCULATOR_PACKAGE,
+                mABvtHelper.CALCULATOR_ACTIVITY);
+        try {
+            // Convert calculator to multiwindow mode
+            mABvtHelper.changeWindowMode(taskId, mABvtHelper.SPLITSCREEN);
+            // Launch settings and ensure it is active window
+            mABvtHelper.launchPackage(mABvtHelper.SETTINGS_PACKAGE);
+            List<AccessibilityWindowInfo> windows = mUiAutomation.getWindows();
+            AccessibilityWindowInfo window = windows.get(windows.size() - 1);
+            assertTrue("Settings isn't active window",
+                    window.getRoot().getPackageName().equals(mABvtHelper.SETTINGS_PACKAGE));
+
+            // Calculate midpoint for Calculator window, click, ensure Calculator is in other half
+            // of window
+            mDevice.click(mDevice.getDisplayHeight() / 4, mDevice.getDisplayWidth() / 2);
+            Thread.sleep(mABvtHelper.SHORT_TIMEOUT * 2);
+            windows = mUiAutomation.getWindows();
+            window = windows.get(windows.size() - 2);
+            assertTrue("Calcualtor isn't active window",
+                    window.getRoot().getPackageName().equals(mABvtHelper.CALCULATOR_PACKAGE));
+
+            // Make Calculator FullWindow again and ensure Settings package isn't found on window
+            mABvtHelper.changeWindowMode(taskId, mABvtHelper.FULLSCREEN);
+            windows = mUiAutomation.getWindows();
+            for (int i = 0; i < windows.size() && windows.get(i).getRoot() != null; ++i) {
+                assertFalse("Settings have been found",
+                        windows.get(i).getRoot().getPackageName()
+                                .equals(mABvtHelper.SETTINGS_PACKAGE));
             }
+        } finally {
+            mABvtHelper.changeWindowMode(taskId, mABvtHelper.FULLSCREEN);
+            mDevice.pressHome();
         }
-        assertTrue("Taskid hasn't been found", taskId != -1);
-        // Convert calculator to multiwindow mode
-        mUiAutomation.executeShellCommand(
-                String.format("am stack movetask %d %d true", taskId, SPLITSCREEN));
-        Thread.sleep(mABvtHelper.LONG_TIMEOUT * 2);
-        // Launch Settings
-        launchIntent = mContext.getPackageManager().getLaunchIntentForPackage(SETTINGS_PACKAGE);
-        mContext.startActivity(launchIntent);
-        Thread.sleep(mABvtHelper.LONG_TIMEOUT * 2);
-        // Ensure settings is active window
-        List<AccessibilityWindowInfo> windows = mUiAutomation.getWindows();
-        AccessibilityWindowInfo window = windows.get(windows.size() - 1);
-        assertTrue("Settings isn't active window",
-                window.getRoot().getPackageName().equals(SETTINGS_PACKAGE));
-        // Calculate midpoint for Calculator window and click
-        mDevice.click(mDevice.getDisplayHeight() / 4, mDevice.getDisplayWidth() / 2);
-        Thread.sleep(mABvtHelper.SHORT_TIMEOUT * 2);
-        windows = mUiAutomation.getWindows();
-        window = windows.get(windows.size() - 2);
-        assertTrue("Calcualtor isn't active window",
-                window.getRoot().getPackageName().equals(CALCULATOR_PACKAGE));
-        // Make Calculator FullWindow again and ensure Settings package isn't found on window
-        mUiAutomation.executeShellCommand(
-                String.format("am stack movetask %d %d true", taskId, FULLSCREEN));
-        Thread.sleep(mABvtHelper.SHORT_TIMEOUT * 2);
-        windows = mUiAutomation.getWindows();
-        for(int i = 0; i < windows.size() && windows.get(i).getRoot() != null; ++i) {
-            assertFalse("Settings have been found",
-                    windows.get(i).getRoot().getPackageName().equals(SETTINGS_PACKAGE));
+    }
+
+    /**
+     * Tests apps do not loose focus and are still visible when apps are launched in MW and
+     * landscape mode,
+     */
+    @LargeTest
+    public void testMultiwindowInLandscapeMode() throws InterruptedException, RemoteException {
+        // Launch calculator in full screen
+        mABvtHelper.launchPackage(mABvtHelper.CALCULATOR_PACKAGE);
+        int taskId = mABvtHelper.getTaskIdForActivity(mABvtHelper.CALCULATOR_PACKAGE,
+                mABvtHelper.CALCULATOR_ACTIVITY);
+        try {
+            // Convert calculator to multiwindow mode
+            mABvtHelper.changeWindowMode(taskId, mABvtHelper.SPLITSCREEN);
+            // Launch Settings
+            mABvtHelper.launchPackage(mABvtHelper.SETTINGS_PACKAGE);
+            mDevice.setOrientationLeft();
+            // Ensure calculator on left
+            mDevice.click(mDevice.getDisplayHeight() / 4, mDevice.getDisplayWidth() / 2);
+            Thread.sleep(mABvtHelper.SHORT_TIMEOUT * 2);
+            List<AccessibilityWindowInfo> windows = mUiAutomation.getWindows();
+            AccessibilityWindowInfo window = windows.get(windows.size() - 2);
+            assertTrue("Calcualtor isn't left active window",
+                    window.getRoot().getPackageName().equals(mABvtHelper.CALCULATOR_PACKAGE));
+
+            // Ensure Settings on right
+            mDevice.click((3 * mDevice.getDisplayHeight()) / 4, mDevice.getDisplayWidth() / 2);
+            Thread.sleep(mABvtHelper.SHORT_TIMEOUT * 2);
+            windows = mUiAutomation.getWindows();
+            window = windows.get(windows.size() - 1);
+            assertTrue("Settings isn't right active window",
+                    window.getRoot().getPackageName().equals(mABvtHelper.SETTINGS_PACKAGE));
+        } finally {
+            mABvtHelper.changeWindowMode(taskId, mABvtHelper.FULLSCREEN);
+            mDevice.pressHome();
         }
-        mDevice.pressHome();
+    }
+
+    /**
+     * Ensure recents show up in MW mode
+     */
+    @LargeTest
+    public void testRecentsInMultiWindowMode() throws InterruptedException, RemoteException {
+        mABvtHelper.clearRecents();
+        // Launch few packages to populate recents
+        mABvtHelper.launchPackage(mABvtHelper.SETTINGS_PACKAGE);
+        mABvtHelper.launchPackage(mABvtHelper.DESKCLOCK_PACKAGE);
+        mABvtHelper.launchPackage(mABvtHelper.CALCULATOR_PACKAGE);
+        int taskId = mABvtHelper.getTaskIdForActivity(mABvtHelper.CALCULATOR_PACKAGE,
+                mABvtHelper.CALCULATOR_ACTIVITY);
+        try {
+            // Convert calculator to multiwindow mode
+            mABvtHelper.changeWindowMode(taskId, mABvtHelper.SPLITSCREEN);
+            assertTrue("Recents view not loaded after sending foreground calc app to split screen",
+                    mDevice.wait(
+                            Until.hasObject(By.res(mABvtHelper.SYSTEMUI_PACKAGE, "recents_view")),
+                            mABvtHelper.LONG_TIMEOUT));
+            // Verify recents has Settings and clock
+            List<String> expectedAppsInRecents = new ArrayList<String>();
+            expectedAppsInRecents.add("Clock");
+            expectedAppsInRecents.add("Settings");
+            List<String> actualAppsInRecents = new ArrayList<String>();
+            List<UiObject2> recentsObjects = mDevice.wait(
+                    Until.findObjects(By.res(mABvtHelper.SYSTEMUI_PACKAGE, "title")),
+                    mABvtHelper.LONG_TIMEOUT);
+            for (UiObject2 recent : recentsObjects) {
+                actualAppsInRecents.add(
+                        recent.getText());
+            }
+            assertTrue("Recents shouldn't have more than 2 apps", actualAppsInRecents.size() == 2);
+            actualAppsInRecents.removeAll(expectedAppsInRecents);
+            assertTrue("Actual recents apps doesn't match with expected",
+                    actualAppsInRecents.size() == 0);
+            // Change window mode to full screen
+            mABvtHelper.changeWindowMode(taskId, mABvtHelper.FULLSCREEN);
+            mDevice.waitForIdle();
+        } finally {
+            // Ensure nothing in recents
+            mABvtHelper.clearRecents();
+            mDevice.pressHome();
+        }
     }
 }
