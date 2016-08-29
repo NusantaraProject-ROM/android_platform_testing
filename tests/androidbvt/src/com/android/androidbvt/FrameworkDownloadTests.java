@@ -28,20 +28,24 @@ import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.ParcelFileDescriptor;
 import android.support.test.InstrumentationRegistry;
+import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
+import android.support.test.uiautomator.Until;
 import android.test.suitebuilder.annotation.LargeTest;
 import android.util.Log;
-
-import junit.framework.TestCase;
-
 import java.io.IOException;
 import java.util.HashSet;
+import junit.framework.TestCase;
 
 public class FrameworkDownloadTests extends TestCase {
     private static final String TEST_TAG = "AndroidBVT";
-    private final String TEST_HOST = "209.119.80.137:10090/new_ui/all_content/photos";
+    private final String TEST_HOST = "209.119.80.137:10090/";
+    private final String PHOTOS_PATH = "new_ui/all_content/photos";
+    private final String APPS_PATH = "new_ui/all_content/apps";
     private final String TEST_FILE = "android_apps.jpeg";
+    private final String APP_FILE = "Auto1kb.apk";
     private final int TEST_FILE_SIZE = 159709;
+    private final int TEST_APK_SIZE = 16384;
     private DownloadManager mDownloadManager = null;
     private WifiManager mWifiManager = null;
     private AndroidBvtHelper mABvtHelper = null;
@@ -63,7 +67,7 @@ public class FrameworkDownloadTests extends TestCase {
     @Override
     public void tearDown() throws Exception {
         mDevice.unfreezeRotation();
-        mDevice.pressMenu();
+        mDevice.pressHome();
         mDevice.waitForIdle();
         super.tearDown();
     }
@@ -75,19 +79,49 @@ public class FrameworkDownloadTests extends TestCase {
      */
     @LargeTest
     public void testPhotoDownloadSucceed() throws InterruptedException, IOException {
-        // Device already connected to wifi as part of tradefed setup
-        if (!mWifiManager.isWifiEnabled()) {
-            mWifiManager.enableNetwork(mWifiManager.getConnectionInfo().getNetworkId(), true);
-            int counter = 5;
-            while (--counter > 0 && mWifiManager.isWifiEnabled()) {
-                Thread.sleep(mABvtHelper.LONG_TIMEOUT);
-            }
-        }
-        assertTrue("Wifi should be enabled by now", mWifiManager.isWifiEnabled());
+        mABvtHelper.ensureWifiEnabled();
         removeAllCurrentDownloads(); // if there are any in progress
-        Uri downloadUri = Uri.parse(String.format("http://%s/%s", TEST_HOST, TEST_FILE));
+        long downloadId = -1;
+        try {
+            downloadId = downloadItem(PHOTOS_PATH, TEST_FILE, TEST_FILE_SIZE);
+        } finally {
+            mDownloadManager.remove(downloadId);
+        }
+    }
+
+    /**
+     * Test to verify that user gets security message when it tries to install an apk downloaded
+     * from unreliable source
+     * @throws InterruptedException
+     * @throws IOException
+     */
+    @LargeTest
+    public void testInstallDownloadedAppFromUnreliableSource()
+            throws InterruptedException, IOException {
+        mABvtHelper.ensureWifiEnabled();
+        removeAllCurrentDownloads(); // if there are any in progress
+        long dlId = -1;
+        try {
+            dlId = downloadItem(APPS_PATH, APP_FILE, TEST_APK_SIZE);
+            mABvtHelper.launchApp("com.android.documentsui", "Downloads");
+            mDevice.wait(Until.findObject(By.text(APP_FILE)), mABvtHelper.LONG_TIMEOUT).click();
+            assertTrue("Security message isn't shown on installing an apk downloaded from "
+                    + "unreliable source",
+                    mDevice.wait(Until.hasObject(By.textStartsWith("For security")),
+                            mABvtHelper.LONG_TIMEOUT));
+            mDevice.wait(Until.findObject(By.text("CANCEL")), mABvtHelper.LONG_TIMEOUT)
+                    .clickAndWait(Until.newWindow(), mABvtHelper.LONG_TIMEOUT);
+        } finally {
+            mDownloadManager.remove(dlId);
+        }
+    }
+
+    private long downloadItem(String path, String file, int size)
+            throws InterruptedException, IOException {
+        Uri downloadUri = Uri.parse(String.format("http://%s/%s/%s", TEST_HOST, path, file));
         Request request = new Request(downloadUri);
-        long dlRequest = mDownloadManager.enqueue(request);
+        // on enqueuing an item for download, dlMgr returns a unique id for future ref
+        long dlId = mDownloadManager.enqueue(request);
 
         // Register receiver to listen to DownloadComplete Broadcase message
         // Wait for download to finish
@@ -96,22 +130,22 @@ public class FrameworkDownloadTests extends TestCase {
             IntentFilter intentFilter = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
             mContext.registerReceiver(receiver, intentFilter);
             Thread.sleep(mABvtHelper.LONG_TIMEOUT);
-            assertTrue("download not finished", receiver.isDownloadCompleted(dlRequest));
+            assertTrue("download not finished", receiver.isDownloadCompleted(dlId));
             // Verify Download file size
             ParcelFileDescriptor pfd = null;
             try {
-                pfd = mDownloadManager.openDownloadedFile(dlRequest);
+                pfd = mDownloadManager.openDownloadedFile(dlId);
                 assertTrue("File size should be same as mentioned in server",
-                        pfd.getStatSize() == TEST_FILE_SIZE);
+                        pfd.getStatSize() == size);
             } finally {
                 if (pfd != null) {
                     pfd.close();
                 }
-                mDownloadManager.remove(dlRequest);
             }
         } finally {
             mContext.unregisterReceiver(receiver);
         }
+        return dlId;
     }
 
     /**
