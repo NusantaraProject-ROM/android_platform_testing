@@ -51,7 +51,7 @@ public class SysUIGSATests extends TestCase {
         mContext = InstrumentationRegistry.getTargetContext();
         mUiAutomation = InstrumentationRegistry.getInstrumentation().getUiAutomation();
         mABvtHelper = AndroidBvtHelper.getInstance(mDevice, mContext, mUiAutomation);
-        mIsMr1Device = mABvtHelper.isMr1Device();
+        mIsMr1Device = mABvtHelper.isNexusExperienceDevice();
         mDevice.pressMenu();
         mDevice.pressHome();
         dismissInitialDialog();
