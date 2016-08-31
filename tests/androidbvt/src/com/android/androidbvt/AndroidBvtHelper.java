@@ -24,6 +24,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
 import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
@@ -36,6 +37,7 @@ import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
 import android.telecom.TelecomManager;
+import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -428,9 +430,10 @@ public class AndroidBvtHelper {
      * Wifi helper methods
      */
     /**
-     * Checks if wifi connection is active by sending an HTTP request, check for HTTP_OK
+     * Checks if device connection is active either through wifi or mobile data by sending an HTTP
+     * request, check for HTTP_OK
      */
-    public boolean isWifiConnected() throws InterruptedException {
+    public boolean isConnected() throws InterruptedException {
         int counter = 10;
         while (--counter > 0) {
             try {
@@ -457,10 +460,12 @@ public class AndroidBvtHelper {
     /**
      * Disconnects and disables network
      */
-    public void disconnectWifi() {
+    public int disconnectWifi() {
         Assert.assertTrue("Wifi not disconnected", getWifiManager().disconnect());
-        getWifiManager().disableNetwork(getWifiManager().getConnectionInfo().getNetworkId());
+        int netId = getWifiManager().getConnectionInfo().getNetworkId();
+        getWifiManager().disableNetwork(netId);
         getWifiManager().saveConfiguration();
+        return netId;
     }
 
     /**
@@ -478,5 +483,23 @@ public class AndroidBvtHelper {
             }
         }
         Assert.assertTrue("Wifi should be enabled by now", getWifiManager().isWifiEnabled());
+    }
+
+    public boolean hasWifiData() {
+        NetworkInfo netInfo = getConnectivityManager().getActiveNetworkInfo();
+        Assert.assertNotNull(netInfo);
+        return (netInfo.getType() == ConnectivityManager.TYPE_WIFI);
+    }
+
+    public boolean hasMobileData() {
+        NetworkInfo netInfo = getConnectivityManager().getActiveNetworkInfo();
+        Assert.assertNotNull(netInfo);
+        return (netInfo.getType() == ConnectivityManager.TYPE_MOBILE);
+    }
+
+    public boolean hasDeviceSim() {
+        TelephonyManager telMgr = (TelephonyManager) mContext
+                .getSystemService(mContext.TELEPHONY_SERVICE);
+        return (telMgr.getSimState() == TelephonyManager.SIM_STATE_READY);
     }
 }
