@@ -74,6 +74,7 @@ public class AppTransitionTests {
     private static final String COLD_LAUNCH = "cold_launch";
     private static final String HOT_LAUNCH = "hot_launch";
     private static final String NOT_SURE = "not_sure";
+    private static final String ACTIVITY = "Activity";
     private static final String NOT_SUCCESSFUL_MESSAGE = "App launch not successful";
     private static final String KEY_TRACE_DIRECTORY = "trace_directory";
     private static final String KEY_TRACE_CATEGORY = "trace_categories";
@@ -104,6 +105,7 @@ public class AppTransitionTests {
     private int mTraceDumpInterval = 0;
     private Set<String> mTraceCategoriesSet = null;
     private AtraceLogger mAtraceLogger = null;
+    private String mComponentName = null;
 
     @Before
     public void setUp() throws Exception {
@@ -144,6 +146,7 @@ public class AppTransitionTests {
                 }
             }
         }
+        mDevice.setOrientationNatural();
         cleanTestApps();
     }
 
@@ -456,6 +459,7 @@ public class AppTransitionTests {
         } catch (InterruptedException e) {
             // ignore
         }
+        mComponentName = runnable.getCmpName();
         return runnable.getResult();
     }
 
@@ -463,6 +467,7 @@ public class AppTransitionTests {
         private Intent mLaunchIntent;
         private String mLaunchMode;
         private Long mResult = -1L;
+        private String mCmpName;
 
         public AppLaunchRunnable(Intent intent, String launchMode) {
             mLaunchIntent = intent;
@@ -471,6 +476,10 @@ public class AppTransitionTests {
 
         public Long getResult() {
             return mResult;
+        }
+
+        public String getCmpName() {
+            return mCmpName;
         }
 
         @Override
@@ -491,6 +500,7 @@ public class AppTransitionTests {
         private String parseLaunchTime(ParcelFileDescriptor parcelDesc) {
             String launchTime = "-1";
             boolean launchSuccess = false;
+            mCmpName = null;
             try {
                 InputStream inputStream = new FileInputStream(parcelDesc.getFileDescriptor());
                 StringBuilder appLaunchOuput = new StringBuilder();
@@ -514,6 +524,15 @@ public class AppTransitionTests {
                                     mLaunchMode.contains(NOT_SURE)) && lineCount == 5)) {
                         String launchSplit[] = line.split(":");
                         launchTime = launchSplit[1].trim();
+                    }
+                    // Needed to update the component name if the very first launch activity
+                    // is different from hot launch activity (i.e YouTube)
+                    if ((launchSuccess && (mLaunchMode.contains(HOT_LAUNCH) ||
+                            mLaunchMode.contains(NOT_SURE)) && lineCount == 4)) {
+                        String activitySplit[] = line.split(":");
+                        if (activitySplit[0].contains(ACTIVITY)) {
+                            mCmpName = activitySplit[1].trim();
+                        }
                     }
                     lineCount++;
                 }
@@ -555,11 +574,16 @@ public class AppTransitionTests {
      * @param appName
      * @param appLaunchTime
      */
-    private void updateResult(String appName,long appLaunchTime){
+    private void updateResult(String appName, long appLaunchTime) {
         if (appLaunchTime != ILauncherStrategy.LAUNCH_FAILED_TIMESTAMP) {
             // Component name needed for parsing the events log
-            mResult.putString(appName, mAppLaunchIntentsMapping.get(appName).
-                    getComponent().flattenToShortString());
+            if (null != mComponentName) {
+                mResult.putString(appName, mComponentName);
+            } else {
+                // Component name needed for parsing the events log
+                mResult.putString(appName, mAppLaunchIntentsMapping.get(appName).
+                        getComponent().flattenToShortString());
+            }
         } else {
             mResult.putString(appName, NOT_SUCCESSFUL_MESSAGE);
         }
