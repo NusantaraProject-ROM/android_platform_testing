@@ -104,11 +104,10 @@ public class QuickSettingsTest extends InstrumentationTestCase {
 
         // Verify that the brightness slider which is only visible on full expansion
         // isn't visible in the collapsed state
-        UiObject2 quicksettingsExpandedShade = mDevice.wait(
-                Until.findObject(By.descContains(QuickSettingTiles.BRIGHTNESS.getName())),
-                LONG_TIMEOUT);
-        assertNotNull("Quick settings shade did not collapse correctly",
-                quicksettingsExpandedShade);
+        assertTrue("Quick settings shade did not collapse correctly",
+            mDevice.wait(
+                Until.gone(By.descContains(QuickSettingTiles.BRIGHTNESS.getName())),
+                LONG_TIMEOUT));
     }
 
     @MediumTest
