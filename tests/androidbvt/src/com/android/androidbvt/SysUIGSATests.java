@@ -135,16 +135,12 @@ public class SysUIGSATests extends TestCase {
             mDevice.wait(Until.findObject(By.res(NEXUS_LAUNCHER_PKG, "g_icon")),
                     mABvtHelper.LONG_TIMEOUT).click();
             Thread.sleep(2000);
-            mDevice.wait(Until.findObject(By.res(QSB_PKG, "navigation_viewport")),
-                    mABvtHelper.LONG_TIMEOUT).click();
         } else {
             mDevice.wait(Until.findObject(By.res(QSB_PKG, "search_plate")),
                     mABvtHelper.LONG_TIMEOUT).click();
         }
         // Search for Paris and click on first suggested text
-        mDevice.wait(Until.findObject(By.res(QSB_PKG, "text_container")),
-                mABvtHelper.LONG_TIMEOUT).click();
-        mDevice.wait(Until.findObject(By.res(QSB_PKG, "search_box")),
+        mDevice.wait(Until.findObject(By.clazz("android.widget.EditText")),
                 mABvtHelper.LONG_TIMEOUT).setText("Paris");
         Thread.sleep(mABvtHelper.LONG_TIMEOUT);
         List<UiObject2> suggestedTexts = null;
@@ -165,7 +161,6 @@ public class SysUIGSATests extends TestCase {
         Thread.sleep(mABvtHelper.LONG_TIMEOUT);
         // Now long press home to load assist layer
         mDevice.pressKeyCode(KeyEvent.KEYCODE_ASSIST);
-
         // Ensure some cards are loaded
         // Note card's content isn't verified
         counter = 5;

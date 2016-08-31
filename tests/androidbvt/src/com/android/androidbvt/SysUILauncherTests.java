@@ -17,10 +17,15 @@
 package com.android.androidbvt;
 
 import android.app.WallpaperManager;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 import android.platform.test.annotations.HermeticTest;
+import android.platform.test.helpers.SettingsHelperImpl;
+import android.provider.Settings;
+import android.provider.Telephony.Threads;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.launcherhelper.ILauncherStrategy;
 import android.support.test.launcherhelper.LauncherStrategyFactory;
@@ -37,17 +42,19 @@ import junit.framework.TestCase;
 @HermeticTest
 public class SysUILauncherTests extends TestCase {
     private static final int LONG_TIMEOUT = 5000;
-    private static final String APP_NAME = "Calendar";
+    private static final String APP_NAME = "Calculator";
     private static final String PKG_NAME = "com.google.android.deskclock";
     private static final String WIDGET_PREVIEW = "widget_preview";
     private static final String APP_WIDGET_VIEW = "android.appwidget.AppWidgetHostView";
     private static final String WIDGET_TEXT_VIEW = "android.widget.TextView";
     private static final String WALLPAPER_PKG = "com.google.android.apps.wallpaper";
     private static final String GOOGLE_SEARCH_PKG = "com.google.android.googlequicksearchbox";
+    private static final String GOOGLE_NOW_HEADER = "now_header_hamburger";
     private UiDevice mDevice = null;
     private Context mContext;
     private ILauncherStrategy mLauncherStrategy = null;
     private AndroidBvtHelper mABvtHelper = null;
+    private SettingsHelperImpl mHelper;
     private boolean mIsMr1Device = false;
 
     @Override
@@ -57,9 +64,10 @@ public class SysUILauncherTests extends TestCase {
         mContext = InstrumentationRegistry.getTargetContext();
         mDevice.setOrientationNatural();
         mLauncherStrategy = LauncherStrategyFactory.getInstance(mDevice).getLauncherStrategy();
-        mABvtHelper = AndroidBvtHelper.getInstance(mDevice, mContext, 
+        mABvtHelper = AndroidBvtHelper.getInstance(mDevice, mContext,
                 InstrumentationRegistry.getInstrumentation().getUiAutomation());
         mIsMr1Device = mABvtHelper.isNexusExperienceDevice();
+        mHelper =  new SettingsHelperImpl(InstrumentationRegistry.getInstrumentation());
     }
 
     @Override
@@ -179,5 +187,76 @@ public class SysUILauncherTests extends TestCase {
         if (homeScreen != null) {
             homeScreen.click();
         }
+    }
+
+    public void testGoogleNowShowInGel() throws Exception {
+        mDevice.pressHome();
+        swipeToLeftScreen();
+        // Enable Now cards if GEL is not enabled.
+        if (!isOnGoogleNowPage()) {
+            // enable Now Cards
+            enableNowCardsSetting();
+            // swipe left to Screen -1
+            swipeToLeftScreen();
+        }
+        // verify GoogleNow shows up in Screen -1
+        assertTrue("Not on Google now page!", isOnGoogleNowPage());
+    }
+
+    private void enableNowCardsSetting()  throws Exception {
+        mABvtHelper.launchIntent(Settings.ACTION_SETTINGS);
+        UiObject2 obj = launchSettingItems("Google");
+        obj.click();
+        obj = launchSettingItems("Search & Now");
+        obj.click();
+        obj = launchSettingItems("Now cards");
+        obj.click();
+        obj = (mDevice.wait(Until.findObject(By.res("android","list")), mABvtHelper.LONG_TIMEOUT)).getChildren().get(0);
+        if (obj.hasObject(By.text("OFF"))){
+            obj.click();
+            //click setup
+            UiObject2 setUp = mDevice.wait(Until.findObject(By.res(GOOGLE_SEARCH_PKG,"accept_button")),
+                    mABvtHelper.SHORT_TIMEOUT);
+            if (setUp != null) {
+                setUp.clickAndWait(Until.newWindow(), mABvtHelper.SHORT_TIMEOUT);
+                mDevice.wait(Until.findObject(By.res(GOOGLE_SEARCH_PKG, "text_container")),
+                        mABvtHelper.SHORT_TIMEOUT).swipe(Direction.UP, 1.0f);
+                mDevice.wait(Until.findObject(By.res(GOOGLE_SEARCH_PKG,"accept_button")),
+                        mABvtHelper.SHORT_TIMEOUT)
+                        .clickAndWait(Until.newWindow(), mABvtHelper.SHORT_TIMEOUT);
+            }
+        }
+        Thread.sleep(mABvtHelper.LONG_TIMEOUT);
+        mDevice.pressHome();
+        Thread.sleep( mABvtHelper.SHORT_TIMEOUT);
+    }
+
+    private UiObject2 launchSettingItems(String title) throws Exception {
+        int maxAttempt = 5;
+        UiObject2 item = null;
+        UiObject2 view = null;
+        while (maxAttempt-- > 0) {
+            item = mDevice.wait(Until.findObject(By.res("android:id/title").text(title)),
+                    mABvtHelper.LONG_TIMEOUT);
+            if (item == null) {
+                mHelper.scrollVert(false);
+            } else {
+                return item;
+            }
+        }
+        assertNotNull(String.format("Can't find %s", title), item);
+        return null;
+    }
+
+    private boolean isOnGoogleNowPage(){
+        return mDevice.wait(Until.findObject(By.res(GOOGLE_SEARCH_PKG, GOOGLE_NOW_HEADER)),
+                mABvtHelper.LONG_TIMEOUT) != null;
+    }
+
+    //swipe to left screen
+    private void swipeToLeftScreen() throws Exception{
+        mDevice.swipe(0, mDevice.getDisplayHeight() / 2, mDevice.getDisplayWidth() - 50,
+                mDevice.getDisplayHeight() / 2, 30);
+        Thread.sleep(mABvtHelper.SHORT_TIMEOUT);
     }
 }
