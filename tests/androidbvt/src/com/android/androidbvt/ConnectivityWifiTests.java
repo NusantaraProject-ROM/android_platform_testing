@@ -67,7 +67,7 @@ public class ConnectivityWifiTests extends TestCase {
     @LargeTest
     public void testWifiConnection() throws InterruptedException {
         // Wifi is already connected as part of tradefed device setup, assert that
-        assertTrue("Wifi should be connected", mABvtHelper.isWifiConnected());
+        assertTrue("Wifi should be connected", mABvtHelper.isConnected());
         assertNotNull("Wifi manager is null", mWifiManager);
         assertTrue("Wifi isn't enabled", mWifiManager.isWifiEnabled());
         // Disconnect wifi and disable network, save NetId to be used for re-enabling network
@@ -76,12 +76,12 @@ public class ConnectivityWifiTests extends TestCase {
         Log.d("MyTestTag", "before sleep");
         Thread.sleep(mABvtHelper.LONG_TIMEOUT);
         Log.d("MyTestTag", "after sleep");
-        assertFalse("Wifi shouldn't be connected", mABvtHelper.isWifiConnected());
+        assertFalse("Wifi shouldn't be connected", mABvtHelper.isConnected());
         // Network enabled successfully
         assertTrue("Network isn't enabled", mWifiManager.enableNetwork(netId, true));
         // Allow time to settle down
         Thread.sleep(mABvtHelper.LONG_TIMEOUT * 2);
-        assertTrue("Wifi should be connected", mABvtHelper.isWifiConnected());
+        assertTrue("Wifi should be connected", mABvtHelper.isConnected());
     }
 
     /**

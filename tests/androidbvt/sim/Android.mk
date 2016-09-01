@@ -18,8 +18,8 @@ include $(CLEAR_VARS)
 LOCAL_MODULE_TAGS := tests
 
 LOCAL_SDK_VERSION := system_current
-media_framework_app_base := frameworks/base/media/tests/MediaFrameworkTest/src/com/android/mediaframeworktest
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
+LOCAL_SRC_FILES += ../src/com/android/androidbvt/AndroidBvtHelper.java
 LOCAL_JAVA_LIBRARIES := android.test.runner
 LOCAL_STATIC_JAVA_LIBRARIES := android-support-test \
     first-party-app-helpers \
@@ -28,12 +28,6 @@ LOCAL_STATIC_JAVA_LIBRARIES := android-support-test \
     platform-test-annotations \
     ub-uiautomator
 
-LOCAL_PACKAGE_NAME := AndroidBvtTests
+LOCAL_PACKAGE_NAME := AndroidBvtSimTests
 LOCAL_CERTIFICATE := platform
-
 include $(BUILD_PACKAGE)
-
-include \
-    $(LOCAL_PATH)/apps/Android.mk \
-    $(LOCAL_PATH)/hermetic/Android.mk \
-    $(LOCAL_PATH)/sim/Android.mk \
