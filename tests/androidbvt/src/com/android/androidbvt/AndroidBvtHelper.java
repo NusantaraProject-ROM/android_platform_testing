@@ -20,6 +20,7 @@ import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.DownloadManager;
 import android.app.UiAutomation;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
@@ -40,6 +41,8 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
+import junit.framework.Assert;
+
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -83,11 +86,13 @@ public class AndroidBvtHelper {
     private Context mContext = null;
     private UiDevice mDevice = null;
     private UiAutomation mUiAutomation = null;
+    private ContentResolver mResolver = null;
 
     public AndroidBvtHelper(UiDevice device, Context context, UiAutomation uiAutomation) {
         mContext = context;
         mDevice = device;
         mUiAutomation = uiAutomation;
+        mResolver = mContext.getContentResolver();
     }
 
     public static AndroidBvtHelper getInstance(UiDevice device, Context context,
@@ -209,6 +214,23 @@ public class AndroidBvtHelper {
     public void removeDir(String dir) {
         String cmd = " rm -rf " + dir;
         executeShellCommand(cmd);
+    }
+
+    public String getStringSetting(SettingType type, String sName) {
+        switch (type) {
+            case SYSTEM:
+                return Settings.System.getString(mResolver, sName);
+            case GLOBAL:
+                return Settings.Global.getString(mResolver, sName);
+            case SECURE:
+                return Settings.Secure.getString(mResolver, sName);
+        }
+        return null;
+    }
+
+    public void launchQuickSettingsAndWait()throws Exception {
+        mDevice.openQuickSettings();
+        Thread.sleep(SHORT_TIMEOUT);
     }
 
     /**
