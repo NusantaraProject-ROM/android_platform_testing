@@ -21,6 +21,7 @@
     <uses-sdk android:minSdkVersion="23"
               android:targetSdkVersion="23" />
     <uses-permission android:name="android.permission.CLEAR_APP_USER_DATA" />
+    <uses-permission android:name="android.permission.GET_ACCOUNTS_PRIVILEGED" />
 
     <application>
         <uses-library android:name="android.test.runner" />
