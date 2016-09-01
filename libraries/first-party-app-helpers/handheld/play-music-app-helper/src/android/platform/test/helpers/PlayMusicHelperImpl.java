@@ -80,15 +80,14 @@ public class PlayMusicHelperImpl extends AbstractPlayMusicHelper {
      */
     @Override
     public void dismissInitialDialogs() {
-        if (!mDevice.hasObject(getDialogScreenRootSelector())) {
-            throw new IllegalStateException("Not called from the dialog dismissal screen.");
+        if(!hasRegisteredGoogleAccount()) {
+            UiObject2 skip = mDevice.findObject(getSkipButtonSelector());
+            if (skip != null) {
+                skip.clickAndWait(Until.newWindow(), APP_INIT_WAIT);
+            }
+        } else {
+            // There are no dialogs to dismiss.
         }
-        // Dismiss the "add account" dialog
-        UiObject2 noThanks = mDevice.findObject(getNoThanksButtonSelector());
-        if (noThanks == null) {
-            throw new UnknownUiException("Failed to find the 'NO THANKS' button.");
-        }
-        noThanks.clickAndWait(Until.newWindow(), APP_INIT_WAIT);
     }
 
     /**
@@ -351,12 +350,8 @@ public class PlayMusicHelperImpl extends AbstractPlayMusicHelper {
         return mDevice.findObject(getLibraryTabSelector(tabTitle));
     }
 
-    private BySelector getDialogScreenRootSelector() {
-        return By.res(UI_PACKAGE, "try_nautilus_root");
-    }
-
-    private BySelector getNoThanksButtonSelector() {
-        return By.res(UI_PACKAGE, "btn_decline");
+    private BySelector getSkipButtonSelector() {
+        return By.res(UI_PACKAGE, "skip_button");
     }
 
     private BySelector getLibraryTabSelector(String tabTitle) {
