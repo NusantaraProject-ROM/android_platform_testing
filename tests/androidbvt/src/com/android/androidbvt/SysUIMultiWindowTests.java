@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import junit.framework.TestCase;
+import android.util.Log;
 
 @HermeticTest
 public class SysUIMultiWindowTests extends TestCase {
@@ -168,13 +169,13 @@ public class SysUIMultiWindowTests extends TestCase {
                     Until.findObjects(By.res(mABvtHelper.SYSTEMUI_PACKAGE, "title")),
                     mABvtHelper.LONG_TIMEOUT);
             for (UiObject2 recent : recentsObjects) {
-                actualAppsInRecents.add(
-                        recent.getText());
+                String appName = recent.getText();
+                Log.i(mABvtHelper.TEST_TAG, "Apps in Recents" + appName);
+                actualAppsInRecents.add(appName);
             }
-            assertTrue("Recents shouldn't have more than 2 apps", actualAppsInRecents.size() == 2);
-            actualAppsInRecents.removeAll(expectedAppsInRecents);
-            assertTrue("Actual recents apps doesn't match with expected",
-                    actualAppsInRecents.size() == 0);
+            expectedAppsInRecents.removeAll(actualAppsInRecents);
+            assertTrue("Expected recents apps doesn't match with actual",
+                    expectedAppsInRecents.size() == 0);
             // Change window mode to full screen
             mABvtHelper.changeWindowMode(taskId, mABvtHelper.FULLSCREEN);
             mDevice.waitForIdle();

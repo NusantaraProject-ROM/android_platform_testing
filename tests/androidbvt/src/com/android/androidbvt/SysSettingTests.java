@@ -16,12 +16,11 @@
 
 package com.android.androidbvt;
 
-import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.net.wifi.WifiManager;
-import android.os.Environment;
 import android.provider.Settings;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.By;
@@ -31,17 +30,13 @@ import android.support.test.uiautomator.Until;
 import android.test.suitebuilder.annotation.LargeTest;
 import android.test.suitebuilder.annotation.MediumTest;
 import com.android.androidbvt.AndroidBvtHelper.SettingType;
-
-import junit.framework.TestCase;
-
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Pattern;
 import junit.framework.TestCase;
-
 /**
  * Contain following tests for setting tests:
  * -Verify that common settings are set to default value
@@ -165,7 +160,8 @@ public class SysSettingTests extends TestCase {
     @MediumTest
     public void testNavigationToNOESettings() {
         mABvtHelper.launchApp("com.android.settings", "Settings");
-        mDevice.wait(Until.findObject(By.text("SUPPORT")), mABvtHelper.LONG_TIMEOUT).click();
+        Pattern pattern = Pattern.compile("Support", Pattern.CASE_INSENSITIVE);
+        mDevice.wait(Until.findObject(By.text(pattern)), mABvtHelper.LONG_TIMEOUT).click();
         assertTrue("", mDevice.wait(Until.hasObject(By.text("We're here to help")),
                 mABvtHelper.LONG_TIMEOUT));
         assertTrue("", mDevice.wait(Until.hasObject(By.text("Search help & send feedback")),
