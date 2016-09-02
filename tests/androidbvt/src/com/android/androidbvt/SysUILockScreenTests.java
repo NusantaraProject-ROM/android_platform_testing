@@ -217,7 +217,8 @@ public class SysUILockScreenTests extends TestCase {
             mCameraHelper.capturePhoto();
             Thread.sleep(mABvtHelper.LONG_TIMEOUT * 2);
             // Find Photo/Video viewer in bottom control panel and click to view photo taken
-            mDevice.wait(Until.findObject(By.res(mABvtHelper.CAMERA2_PACKAGE, "rounded_thumbnail_view")),
+            mDevice.wait(
+                    Until.findObject(By.res(mABvtHelper.CAMERA2_PACKAGE, "rounded_thumbnail_view")),
                     mABvtHelper.LONG_TIMEOUT).click();
             Thread.sleep(mABvtHelper.LONG_TIMEOUT);
             // Ensure image view loaded and image detail icon is present
@@ -231,7 +232,8 @@ public class SysUILockScreenTests extends TestCase {
             // Hence, Image_Detail icon should be absent
             assertFalse("Photos taken from lockscreen can't be viewed",
                     mDevice.wait(Until.hasObject(
-                            By.res(mABvtHelper.CAMERA2_PACKAGE, "filmstrip_bottom_control_details")),
+                            By.res(mABvtHelper.CAMERA2_PACKAGE,
+                                    "filmstrip_bottom_control_details")),
                             mABvtHelper.LONG_TIMEOUT));
         } finally {
             mDevice.pressHome();
@@ -257,19 +259,22 @@ public class SysUILockScreenTests extends TestCase {
             // Capture video for time equal to LONG_TIMEOUT
             mCameraHelper.captureVideo((long) mABvtHelper.LONG_TIMEOUT);
             Thread.sleep(mABvtHelper.LONG_TIMEOUT);
-            mDevice.wait(Until.findObject(By.res(mABvtHelper.CAMERA2_PACKAGE, "rounded_thumbnail_view")),
+            mDevice.wait(
+                    Until.findObject(By.res(mABvtHelper.CAMERA2_PACKAGE, "rounded_thumbnail_view")),
                     mABvtHelper.LONG_TIMEOUT).click();
             Thread.sleep(mABvtHelper.LONG_TIMEOUT);
             // Ensure video_play_button is present
             assertTrue("Video taken from lockscreen can't be viewed",
-                    mDevice.wait(Until.hasObject(By.res(mABvtHelper.CAMERA2_PACKAGE, "play_button")),
+                    mDevice.wait(
+                            Until.hasObject(By.res(mABvtHelper.CAMERA2_PACKAGE, "play_button")),
                             mABvtHelper.LONG_TIMEOUT));
             swipePhotoVideoLeft();
             // As only videos taken in lock screen are visible
             // After swiping left there shouldn't be any video
             // Hence, video_play_button should be absent
             assertFalse("",
-                    mDevice.wait(Until.hasObject(By.res(mABvtHelper.CAMERA2_PACKAGE, "play_button")),
+                    mDevice.wait(
+                            Until.hasObject(By.res(mABvtHelper.CAMERA2_PACKAGE, "play_button")),
                             mABvtHelper.LONG_TIMEOUT));
         } finally {
             mDevice.pressHome();
@@ -292,7 +297,8 @@ public class SysUILockScreenTests extends TestCase {
             launchCameraOnLockScreen();
             mCameraHelper.goToCameraMode();
             Thread.sleep(mABvtHelper.LONG_TIMEOUT);
-            mDevice.wait(Until.findObject(By.res(mABvtHelper.CAMERA2_PACKAGE, "rounded_thumbnail_view")),
+            mDevice.wait(
+                    Until.findObject(By.res(mABvtHelper.CAMERA2_PACKAGE, "rounded_thumbnail_view")),
                     mABvtHelper.LONG_TIMEOUT).click();
             mDevice.wait(
                     Until.hasObject(By.res("com.android.systemui:id/keyguard_security_container")),
@@ -333,9 +339,11 @@ public class SysUILockScreenTests extends TestCase {
         File cameraFolder = new File(String.format("%s/Camera", path));
         File[] files = cameraFolder.listFiles();
         int count = 0;
-        for (File f : files) {
-            if (f.isFile() && f.getName().endsWith(String.format("%s", ext))) {
-                count++;
+        if (files != null) {
+            for (File f : files) {
+                if (f.isFile() && f.getName().endsWith(String.format("%s", ext))) {
+                    count++;
+                }
             }
         }
         return count;
