@@ -55,7 +55,7 @@ public class SysUILauncherTests extends TestCase {
     private ILauncherStrategy mLauncherStrategy = null;
     private AndroidBvtHelper mABvtHelper = null;
     private SettingsHelperImpl mHelper;
-    private boolean mIsMr1Device = false;
+    private boolean mIsNexusDevice = false;
 
     @Override
     public void setUp() throws Exception {
@@ -66,7 +66,7 @@ public class SysUILauncherTests extends TestCase {
         mLauncherStrategy = LauncherStrategyFactory.getInstance(mDevice).getLauncherStrategy();
         mABvtHelper = AndroidBvtHelper.getInstance(mDevice, mContext,
                 InstrumentationRegistry.getInstrumentation().getUiAutomation());
-        mIsMr1Device = mABvtHelper.isNexusExperienceDevice();
+        mIsNexusDevice = mABvtHelper.isNexusExperienceDevice();
         mHelper =  new SettingsHelperImpl(InstrumentationRegistry.getInstrumentation());
     }
 
@@ -120,7 +120,7 @@ public class SysUILauncherTests extends TestCase {
             mDevice.wait(Until.findObject(By.clazz(WIDGET_TEXT_VIEW)
                     .text("WALLPAPERS")), LONG_TIMEOUT).click();
             Thread.sleep(LONG_TIMEOUT);
-            testWallPaper(mIsMr1Device);
+            testWallPaper(mIsNexusDevice);
             Thread.sleep(LONG_TIMEOUT);
             WallpaperManager wallpaperManagerPost = WallpaperManager.getInstance(mContext);
             Drawable wallPaperPost = wallpaperManagerPost.getDrawable().getCurrent();
@@ -155,15 +155,20 @@ public class SysUILauncherTests extends TestCase {
      */
     private void removeObject(UiObject2 app) throws InterruptedException {
         // Drag shortcut/widget icon to Remove button which behinds Google Search bar
-        String remove = mIsMr1Device ? "Search" : "Google Search";
+        String remove = mIsNexusDevice ? "Search" : "Google Search";
         UiObject2 removeButton = mDevice.wait(Until.findObject(By.desc(remove)),
                 LONG_TIMEOUT);
-        app.drag(new Point(mDevice.getDisplayWidth() / 2, removeButton.getVisibleCenter().y),
-                1000);
+        if (mIsNexusDevice){
+            app.drag(new Point(removeButton.getVisibleCenter().x, removeButton.getVisibleCenter().y),
+                    1000);
+        }else{
+            app.drag(new Point(mDevice.getDisplayWidth() / 2, removeButton.getVisibleCenter().y),
+                    1000);
+        }
     }
 
-    private void testWallPaper(boolean mIsMr1Device)  throws InterruptedException {
-        if (mIsMr1Device){ //test marlin and sailfish
+    private void testWallPaper(boolean mIsNexusDevice)  throws InterruptedException {
+        if (mIsNexusDevice){ //test marlin and sailfish
             UiObject2 viewScroll = mDevice.wait(Until.findObject(By.clazz("android.support.v7.widget.RecyclerView")), LONG_TIMEOUT);
             while(viewScroll.scroll(Direction.DOWN, 1.0f));
             UiObject2 wallpaperSets = mDevice.wait(Until.findObject(By.res(WALLPAPER_PKG,"tile")), LONG_TIMEOUT);
