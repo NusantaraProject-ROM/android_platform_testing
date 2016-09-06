@@ -48,7 +48,7 @@ public class SysUILockScreenTests extends TestCase {
     private AndroidBvtHelper mABvtHelper = null;
     private UiDevice mDevice = null;
     private Context mContext;
-    private boolean mIsMr1Device = false;
+    private boolean mIsNexusDevice = false;
     private GoogleCameraHelperImpl mCameraHelper;
 
     @Override
@@ -61,7 +61,7 @@ public class SysUILockScreenTests extends TestCase {
                 InstrumentationRegistry.getInstrumentation().getUiAutomation());
         mDevice.wakeUp();
         mDevice.pressHome();
-        mIsMr1Device = mABvtHelper.isNexusExperienceDevice();
+        mIsNexusDevice = mABvtHelper.isNexusExperienceDevice();
         mCameraHelper = new GoogleCameraHelperImpl(InstrumentationRegistry.getInstrumentation());
     }
 
@@ -378,7 +378,7 @@ public class SysUILockScreenTests extends TestCase {
         navigateToScreenLock();
         mDevice.wait(Until.findObject(By.text(mode)), mABvtHelper.LONG_TIMEOUT).click();
         // set up Secure start-up page
-        if (!mIsMr1Device) {
+        if (!mIsNexusDevice) {
             mDevice.wait(Until.findObject(By.text("No thanks")), mABvtHelper.LONG_TIMEOUT).click();
         }
         UiObject2 pinField = mDevice.wait(Until.findObject(By.clazz(EDIT_TEXT_CLASS_NAME)),

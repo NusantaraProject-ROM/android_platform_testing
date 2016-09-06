@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
+
 import junit.framework.TestCase;
 /**
  * Contain following tests for setting tests:
@@ -82,8 +83,8 @@ public class SysSettingTests extends TestCase {
 
     private HashMap<String, String> mSecureSettings = new HashMap<String, String>();
     {
-        // By default screensaver is enabled
-        mSecureSettings.put("screensaver_enabled", "1");
+        // By default screensaver is disabled
+        mSecureSettings.put("screensaver_enabled", "0");
     }
 
     private Map<SettingType, HashMap<String, String>> mSettings =
@@ -216,7 +217,8 @@ public class SysSettingTests extends TestCase {
         mABvtHelper.launchQuickSettingsAndWait();;
         mDevice.wait(Until.findObject(By.descContains("Open settings.")), mABvtHelper.LONG_TIMEOUT)
                 .click();
-        UiObject2 settingHeading = mDevice.wait(Until.findObject(By.text("Settings")),
+        Pattern pattern = Pattern.compile("Settings", Pattern.CASE_INSENSITIVE);
+        UiObject2 settingHeading = mDevice.wait(Until.findObject(By.text(pattern)),
                 mABvtHelper.LONG_TIMEOUT);
         assertNotNull("Setting menu has not loaded correctly", settingHeading);
     }
