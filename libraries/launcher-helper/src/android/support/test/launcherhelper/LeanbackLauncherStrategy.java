@@ -34,6 +34,7 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
     private static final int MAX_SCROLL_ATTEMPTS = 20;
     private static final int APP_LAUNCH_TIMEOUT = 10000;
     private static final int SHORT_WAIT_TIME = 5000;    // 5 sec
+    private static final int NOTIFICATION_WAIT_TIME = 30000;
 
     protected UiDevice mDevice;
 
@@ -143,8 +144,24 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
      */
     @Override
     public BySelector getSettingsRowSelector() {
-        return By.res(getSupportedLauncherPackage(), "list").desc("")
-                .hasDescendant(By.res("icon"));
+        return By.res(getSupportedLauncherPackage(), "list").desc("").hasDescendant(
+                By.res(getSupportedLauncherPackage(), "icon"), 3);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public BySelector getAppWidgetSelector() {
+        return By.clazz(getSupportedLauncherPackage(), "android.appwidget.AppWidgetHostView");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public BySelector getNowPlayingCardSelector() {
+        return By.res(getSupportedLauncherPackage(), "content_text").text("Now Playing");
     }
 
     /**
@@ -225,7 +242,7 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
             mDevice.pressHome();    // Home key to move to the first card in the Notification row
         }
         return mDevice.wait(Until.findObject(
-                getNotificationRowSelector().hasChild(By.focused(true))), SHORT_WAIT_TIME);
+                getNotificationRowSelector().hasDescendant(By.focused(true), 3)), SHORT_WAIT_TIME);
     }
 
     /**
@@ -247,12 +264,7 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
     @Override
     public UiObject2 selectAppsRow() {
         // Start finding Apps row from Notification row
-        if (!isAppsRowSelected()) {
-            selectNotificationRow();
-            mDevice.pressDPadDown();
-        }
-        return mDevice.wait(Until.findObject(
-                getAllAppsSelector().hasChild(By.focused(true))), SHORT_WAIT_TIME);
+        return findRow(getAppsRowSelector());
     }
 
     /**
@@ -260,17 +272,7 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
      */
     @Override
     public UiObject2 selectGamesRow() {
-        if (!isGamesRowSelected()) {
-            selectAppsRow();
-            mDevice.pressDPadDown();
-            // If more than or equal to 16 apps are installed, the app banner could be cut off
-            // into two rows at maximum. It needs to scroll down once more.
-            if (!isGamesRowSelected()) {
-                mDevice.pressDPadDown();
-            }
-        }
-        return mDevice.wait(Until.findObject(
-                getGamesRowSelector().hasChild(By.focused(true))), SHORT_WAIT_TIME);
+        return findRow(getGamesRowSelector());
     }
 
     /**
@@ -278,16 +280,28 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
      */
     @Override
     public UiObject2 selectSettingsRow() {
-        if (!isSettingsRowSelected()) {
-            open();
-            mDevice.pressHome();    // Home key to move to the first card in the Notification row
-            // The Settings row is at the last position
-            final int MAX_ROW_NUMS = 8;
-            for (int i = 0; i < MAX_ROW_NUMS; ++i) {
-                mDevice.pressDPadDown();
-            }
+        // Assume that the Settings row is at the lowest bottom
+        UiObject2 settings = findRow(getSettingsRowSelector(), Direction.DOWN);
+        if (settings != null && isSettingsRowSelected()) {
+            return settings;
         }
         return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasAppWidgetSelector() {
+        return mDevice.wait(Until.hasObject(getAppWidgetSelector()), SHORT_WAIT_TIME);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasNowPlayingCard() {
+        return mDevice.wait(Until.hasObject(getNowPlayingCardSelector()), SHORT_WAIT_TIME);
     }
 
     @SuppressWarnings("unused")
@@ -406,6 +420,10 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
         // The app icon is already found and focused.
         long ready = SystemClock.uptimeMillis();
         mDevice.pressDPadCenter();
+        if (!mDevice.wait(Until.hasObject(By.pkg(packageName).depth(0)), APP_LAUNCH_TIMEOUT)) {
+            Log.w(LOG_TAG, "no new window detected after app launch attempt.");
+            return ILauncherStrategy.LAUNCH_FAILED_TIMESTAMP;
+        }
         mDevice.waitForIdle();
         if (packageName != null) {
             Log.w(LOG_TAG, String.format(
@@ -420,6 +438,41 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
         } else {
             return ready;
         }
+    }
+
+    /**
+     * Launch the named notification
+     *
+     * @param appName - the name of the application to launch in the Notification row
+     * @return true if application is verified to be in foreground after launch; false otherwise.
+     */
+    public boolean launchNotification(String appName) {
+        // Wait until notification content is loaded
+        long currentTimeMs = System.currentTimeMillis();
+        while (isNotificationPreparing() &&
+                (System.currentTimeMillis() - currentTimeMs > NOTIFICATION_WAIT_TIME)) {
+            Log.d(LOG_TAG, "Preparing recommendation...");
+            SystemClock.sleep(SHORT_WAIT_TIME);
+        }
+
+        // Find a Notification that matches a given app name
+        UiObject2 card = findNotificationCard(
+                By.res(getSupportedLauncherPackage(), "card").descContains(appName));
+        if (card == null) {
+            throw new IllegalStateException(
+                    String.format("The Notification that matches %s not found", appName));
+        }
+        Log.d(LOG_TAG,
+                String.format("The application %s found in the Notification row. [content_desc]%s",
+                        appName, card.getContentDescription()));
+
+        // Click and wait until the Notification card opens
+        return mDevice.performActionAndWait(new Runnable() {
+            @Override
+            public void run() {
+                mDevice.pressDPadCenter();
+            }
+        }, Until.newWindow(), APP_LAUNCH_TIMEOUT);
     }
 
     protected boolean isSearchRowSelected() {
@@ -456,7 +509,9 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
 
     protected boolean isSettingsRowSelected() {
         // Settings label is only visible if the settings row is selected
-        return mDevice.hasObject(By.res(getSupportedLauncherPackage(), "label").text("Settings"));
+        UiObject2 row = mDevice.findObject(getSettingsRowSelector());
+        return (row != null && row.hasObject(
+                By.res(getSupportedLauncherPackage(), "label").text("Settings")));
     }
 
     protected boolean isAppOpen (String appPackage) {
@@ -472,6 +527,35 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
         } catch (RemoteException e) {
             Log.e(LOG_TAG, "Failed to unlock the screen-off device.", e);
         }
+    }
+
+    protected boolean isNotificationPreparing() {
+        // Ensure that the Notification row is visible on screen
+        if (!mDevice.hasObject(getNotificationRowSelector())) {
+            selectNotificationRow();
+        }
+        return mDevice.hasObject(By.res(getSupportedLauncherPackage(), "notification_preparing"));
+    }
+
+    protected UiObject2 findNotificationCard(BySelector selector) {
+        // Move to the first notification, Search to the right
+        mDevice.pressHome();
+
+        // Find if a focused card matches a given selector
+        UiObject2 currentFocus = mDevice.findObject(getNotificationRowSelector())
+                .findObject(By.res(getSupportedLauncherPackage(), "card").focused(true));
+        UiObject2 previousFocus = null;
+        while (!currentFocus.equals(previousFocus)) {
+            if (currentFocus.hasObject(selector)) {
+                return currentFocus;   // Found
+            }
+            mDevice.pressDPadRight();
+            previousFocus = currentFocus;
+            currentFocus = mDevice.findObject(getNotificationRowSelector())
+                    .findObject(By.res(getSupportedLauncherPackage(), "card").focused(true));
+        }
+        Log.d(LOG_TAG, "Failed to find the Notification card until it reaches the end.");
+        return null;
     }
 
     protected UiObject2 findApp(UiObject2 container, UiObject2 focusedIcon, BySelector app) {
@@ -502,6 +586,91 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
                     By.res(getSupportedLauncherPackage(),
                             "app_banner")).getContentDescription();
         } while (nextText != null && !nextText.equals(prevText));
+        return null;
+    }
+
+    /**
+     * Find the focused row that matches BySelector in a given direction.
+     * If the row is already selected, it returns regardless of the direction parameter.
+     * @param row
+     * @param direction
+     * @return
+     */
+    protected UiObject2 findRow(BySelector row, Direction direction) {
+        if (direction != Direction.DOWN && direction != Direction.UP) {
+            throw new IllegalArgumentException("Required to go either up or down to find rows");
+        }
+
+        UiObject2 currentFocused = mDevice.findObject(By.focused(true));
+        UiObject2 prevFocused = null;
+        while (!currentFocused.equals(prevFocused)) {
+            UiObject2 rowObject = mDevice.findObject(row);
+            if (rowObject != null && rowObject.hasObject(By.focused(true))) {
+                return rowObject;   // Found
+            }
+
+            if (direction == Direction.DOWN) {
+                mDevice.pressDPadDown();
+            } else if (direction == Direction.UP) {
+                mDevice.pressDPadUp();
+            }
+            prevFocused = currentFocused;
+            currentFocused = mDevice.findObject(By.focused(true));
+        }
+        Log.d(LOG_TAG, "Failed to find the row until it reaches the end.");
+        return null;
+    }
+
+    protected UiObject2 findRow(BySelector row) {
+        UiObject2 rowObject;
+        // Search by going down first until it finds the focused row.
+        if ((rowObject = findRow(row, Direction.DOWN)) != null) {
+            return rowObject;
+        }
+        // If we haven't found it yet, search by going up
+        if ((rowObject = findRow(row, Direction.UP)) != null) {
+            return rowObject;
+        }
+        return null;
+    }
+
+    public void selectRestrictedProfile() {
+        UiObject2 button = findSettingInRow(
+                By.res(getSupportedLauncherPackage(), "label").text("Restricted Profile"),
+                Direction.RIGHT);
+        if (button == null) {
+            throw new IllegalStateException("Restricted Profile not found on launcher");
+        }
+        mDevice.pressDPadCenter();
+        mDevice.wait(Until.gone(getWorkspaceSelector()), APP_LAUNCH_TIMEOUT);
+    }
+
+    protected UiObject2 findSettingInRow(BySelector selector, Direction direction) {
+        if (direction != Direction.RIGHT && direction != Direction.LEFT) {
+            throw new IllegalArgumentException("Either left or right is allowed");
+        }
+        if (!isSettingsRowSelected()) {
+            selectSettingsRow();
+        }
+
+        UiObject2 setting;
+        UiObject2 currentFocused = mDevice.findObject(By.focused(true));
+        UiObject2 prevFocused = null;
+        while (!currentFocused.equals(prevFocused)) {
+            if ((setting = currentFocused.findObject(selector)) != null) {
+                return setting;
+            }
+
+            if (direction == Direction.RIGHT) {
+                mDevice.pressDPadRight();
+            } else if (direction == Direction.LEFT) {
+                mDevice.pressDPadLeft();
+            }
+            mDevice.waitForIdle();
+            prevFocused = currentFocused;
+            currentFocused = mDevice.findObject(By.focused(true));
+        }
+        Log.d(LOG_TAG, "Failed to find the setting in Settings row.");
         return null;
     }
 }
