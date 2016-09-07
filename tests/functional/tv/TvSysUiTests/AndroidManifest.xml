@@ -15,14 +15,15 @@
 -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="android.test.functional.tv.sysui">
+    package="android.test.functional.tv.sysui"
+    android:sharedUserId="android.uid.system" >
+
+    <uses-sdk android:minSdkVersion="21"
+          android:targetSdkVersion="24"/>
 
     <application>
         <uses-library android:name="android.test.runner" />
     </application>
-
-    <uses-sdk android:minSdkVersion="21"
-          android:targetSdkVersion="24"/>
 
     <instrumentation
             android:name="android.support.test.runner.AndroidJUnitRunner"

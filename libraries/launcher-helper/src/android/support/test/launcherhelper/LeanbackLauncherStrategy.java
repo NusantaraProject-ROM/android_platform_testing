@@ -641,8 +641,12 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
         if (button == null) {
             throw new IllegalStateException("Restricted Profile not found on launcher");
         }
-        mDevice.pressDPadCenter();
-        mDevice.wait(Until.gone(getWorkspaceSelector()), APP_LAUNCH_TIMEOUT);
+        mDevice.performActionAndWait(new Runnable() {
+            @Override
+            public void run() {
+                mDevice.pressDPadCenter();
+            }
+        }, Until.newWindow(), APP_LAUNCH_TIMEOUT);
     }
 
     protected UiObject2 findSettingInRow(BySelector selector, Direction direction) {
