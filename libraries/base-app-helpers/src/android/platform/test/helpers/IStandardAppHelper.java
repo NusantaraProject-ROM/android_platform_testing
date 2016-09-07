@@ -61,9 +61,9 @@ public interface IStandardAppHelper {
      * Setup expectations: None
      * <p>
      * This method will return the version String from PackageManager.
-     * @param pkgName the application package
-     * @throws NameNotFoundException if the package is not found in PM
+     *
      * @return the version as a String
+     * @throws NameNotFoundException if the package is not found in PM
      */
     abstract String getVersion() throws NameNotFoundException;
 
