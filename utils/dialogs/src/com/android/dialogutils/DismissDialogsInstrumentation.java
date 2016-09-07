@@ -22,30 +22,29 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.RemoteException;
 import android.os.SystemClock;
-import android.support.test.aupt.UiWatchers;
-import android.support.test.uiautomator.UiDevice;
-import android.support.test.uiautomator.Until;
-import android.util.Log;
-
-import android.platform.test.helpers.IStandardAppHelper;
 import android.platform.test.helpers.ChromeHelperImpl;
+import android.platform.test.helpers.GmailHelperImpl;
 import android.platform.test.helpers.GoogleCameraHelperImpl;
 import android.platform.test.helpers.GoogleKeyboardHelperImpl;
-import android.platform.test.helpers.GmailHelperImpl;
+import android.platform.test.helpers.IStandardAppHelper;
 import android.platform.test.helpers.MapsHelperImpl;
 import android.platform.test.helpers.PhotosHelperImpl;
 import android.platform.test.helpers.PlayMoviesHelperImpl;
 import android.platform.test.helpers.PlayMusicHelperImpl;
 import android.platform.test.helpers.PlayStoreHelperImpl;
 import android.platform.test.helpers.YouTubeHelperImpl;
+import android.support.test.InstrumentationRegistry;
+import android.support.test.aupt.UiWatchers;
 import android.support.test.launcherhelper.ILauncherStrategy;
 import android.support.test.launcherhelper.LauncherStrategyFactory;
-
+import android.support.test.uiautomator.UiDevice;
+import android.support.test.uiautomator.Until;
+import android.util.Log;
 import java.io.File;
 import java.io.IOException;
-import java.lang.NoSuchMethodException;
-import java.lang.InstantiationException;
 import java.lang.IllegalAccessException;
+import java.lang.InstantiationException;
+import java.lang.NoSuchMethodException;
 import java.lang.ReflectiveOperationException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
@@ -123,6 +122,8 @@ public class DismissDialogsInstrumentation extends Instrumentation {
     @Override
     public void onStart() {
         super.onStart();
+
+        InstrumentationRegistry.registerInstance(this, new Bundle());
 
         mDevice = UiDevice.getInstance(this);
 
