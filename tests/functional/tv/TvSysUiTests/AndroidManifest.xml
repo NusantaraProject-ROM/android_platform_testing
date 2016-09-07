@@ -18,8 +18,7 @@
     package="android.test.functional.tv.sysui"
     android:sharedUserId="android.uid.system" >
 
-    <uses-sdk android:minSdkVersion="21"
-          android:targetSdkVersion="24"/>
+    <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="24"/>
 
     <application>
         <uses-library android:name="android.test.runner" />
@@ -29,4 +28,9 @@
             android:name="android.support.test.runner.AndroidJUnitRunner"
             android:targetPackage="android.test.functional.tv.sysui"
             android:label="TV Platform System UI Functional Tests" />
+
+    <instrumentation
+            android:name="android.test.functional.tv.common.TestSetupInstrumentation"
+            android:targetPackage="android.test.functional.tv.sysui"
+            android:label="TV test setup instrumentation" />
 </manifest>
