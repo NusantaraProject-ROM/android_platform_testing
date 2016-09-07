@@ -18,9 +18,19 @@ package android.test.functional.tv.common;
 
 import android.app.Instrumentation;
 import android.content.Context;
+import android.content.pm.UserInfo;
 import android.os.Bundle;
+import android.os.UserHandle;
+import android.os.UserManager;
 import android.platform.test.helpers.CommandHelper;
 import android.platform.test.helpers.DPadHelper;
+import android.platform.test.helpers.tv.LeanbackDemoHelperImpl;
+import android.platform.test.helpers.tv.NoTouchAuthHelperImpl;
+import android.platform.test.helpers.tv.SearchHelperImpl;
+import android.platform.test.helpers.tv.SysUiPipHelperImpl;
+import android.platform.test.helpers.tv.SysUiRecentsHelperImpl;
+import android.platform.test.helpers.tv.SysUiSettingsHelperImpl;
+import android.platform.test.helpers.tv.YouTubeHelperImpl;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.launcherhelper.ILeanbackLauncherStrategy;
 import android.support.test.launcherhelper.LauncherStrategyFactory;
@@ -46,7 +56,15 @@ public abstract class SysUiTestBase {
 
     protected CommandHelper mCmdHelper;
     protected DPadHelper mDPadHelper;
-    protected ILeanbackLauncherStrategy mLauncherStrategy;
+    protected LeanbackLauncherStrategy mLauncherStrategy;
+    protected LeanbackDemoHelperImpl mLeanbackDemoHelper;
+    protected NoTouchAuthHelperImpl mNoTouchAuthHelper;
+    protected SearchHelperImpl mSearchHelper;
+    protected SysUiPipHelperImpl mPipHelper;
+    protected SysUiRecentsHelperImpl mRecentsHelper;
+    protected SysUiSettingsHelperImpl mSettingsHelper;
+    protected YouTubeHelperImpl mYouTubeHelper;
+
 
     public SysUiTestBase() {
         initialize(InstrumentationRegistry.getInstrumentation());
@@ -71,6 +89,13 @@ public abstract class SysUiTestBase {
         }
         mCmdHelper = new CommandHelper(getInstrumentation());
         mDPadHelper = DPadHelper.getInstance(getInstrumentation());
+        mLeanbackDemoHelper = new LeanbackDemoHelperImpl(getInstrumentation());
+        mNoTouchAuthHelper = new NoTouchAuthHelperImpl(getInstrumentation());
+        mPipHelper = new SysUiPipHelperImpl(getInstrumentation());
+        mRecentsHelper = new SysUiRecentsHelperImpl(getInstrumentation());
+        mSearchHelper = new SearchHelperImpl(getInstrumentation());
+        mSettingsHelper = new SysUiSettingsHelperImpl(getInstrumentation());
+        mYouTubeHelper = new YouTubeHelperImpl(getInstrumentation());
     }
 
     protected Instrumentation getInstrumentation() {
@@ -101,5 +126,24 @@ public abstract class SysUiTestBase {
             }
         }
         return defaultValue;
+    }
+
+    protected static boolean isRestrictedUser(Context context) {
+        UserManager userManager = (UserManager) context.getSystemService(Context.USER_SERVICE);
+        UserInfo userInfo = userManager.getUserInfo(UserHandle.myUserId());
+        Log.d(TAG, "isRestrictedUser? " + (userInfo.isRestricted() ? "Y" : "N"));
+        return userInfo.isRestricted();
+    }
+
+    protected static boolean hasRestrictedUser(Context context) {
+        UserManager userManager = (UserManager) context.getSystemService(Context.USER_SERVICE);
+        for (UserInfo userInfo : userManager.getUsers()) {
+            if (userInfo.isRestricted()) {
+                Log.d(TAG, "hasRestrictedUser? Y");
+                return true;
+            }
+        }
+        Log.d(TAG, "hasRestrictedUser? N");
+        return false;
     }
 }
