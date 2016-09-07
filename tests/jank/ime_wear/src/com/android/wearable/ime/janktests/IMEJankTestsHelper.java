@@ -17,6 +17,7 @@
 package com.android.wearable.ime.janktests;
 
 import android.app.Instrumentation;
+import android.app.RemoteInput;
 import android.content.Context;
 import android.content.Intent;
 import android.os.SystemClock;
@@ -24,11 +25,10 @@ import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
+import android.support.wearable.input.RemoteInputIntent;
 import android.util.Log;
-
-import junit.framework.Assert;
-
 import java.io.IOException;
+import junit.framework.Assert;
 
 /**
  * Helpers for Wear IME Jank Tests
@@ -40,18 +40,18 @@ public class IMEJankTestsHelper {
     public static final int SHORT_TIMEOUT = 1500;
     public static final int WFM_EXPECTED_FRAMES = 10;
     public static final int GFX_EXPECTED_FRAMES = 10;
-    public static final String IME_PACKAGE_NAME = "com.google.android.inputmethod.latin";
+    public static final int KEYBOARD_CODE = 1;
+    public static final int HANDWRITING_CODE = 2;
+    public static final String KEYBOARD_PACKAGE_NAME = "com.google.android.inputmethod.latin";
+    public static final String HANDWRITING_PACKAGE_NAME = "com.google.android.apps.handwriting.ime";
     private static final String LOG_TAG = IMEJankTestsHelper.class.getSimpleName();
     private static final String HOME_INDICATOR = "charging_icon";
-    private static final String LAUNCHER_VIEW_NAME = "launcher_view";
-    private static final String CARD_TITLE_NAME = "title";
+    private static final String KEYBOARD_INDICATOR = "key_pos_del";
+    private static final String HANDWRITING_INDICATOR = "sengine_container";
     private static final String IME_BUTTON_NAME = "ime_choice";
-    private static final String REPLY_BUTTON_TEXT = "Reply";
+    private static final String KEY_QUICK_REPLY_TEXT = "quick_reply";
     private static final String REMOTE_INPUT_TEXT = "Quick reply";
-    private static final String REMOTE_INPUT_PACKAGE_NAME =
-            "com.google.android.wearable.app";
-    private static final String RELOAD_NOTIFICATION_CARD_INTENT = "com.google.android.wearable."
-            + "support.wearnotificationgenerator.SHOW_NOTIFICATION";
+    private static final String REMOTE_INPUT_PACKAGE_NAME = "com.google.android.wearable.app";
     private static final String KEYBOARD_ID =
             "com.google.android.inputmethod.latin/com.google.android.apps.inputmethod.wear.WearIME";
     private static final String HANDWRITING_ID = "com.google.android.apps.handwriting.ime/"
@@ -76,12 +76,6 @@ public class IMEJankTestsHelper {
         return mInstance;
     }
 
-    public void swipeUp() {
-        mDevice.swipe(mDevice.getDisplayWidth() / 2, mDevice.getDisplayHeight() / 2 + 50,
-                mDevice.getDisplayWidth() / 2, 0, 30); // slow speed
-        SystemClock.sleep(SHORT_TIMEOUT);
-    }
-
     public void swipeRight(int heightOffset) {
         mDevice.swipe(50,
                 mDevice.getDisplayHeight() / 2 + heightOffset, mDevice.getDisplayWidth() - 25,
@@ -96,44 +90,20 @@ public class IMEJankTestsHelper {
         int count = 0;
         while (homeScreen == null && count < 5) {
             mDevice.pressBack();
-            Log.d(LOG_TAG, "Pressed back");
             homeScreen = mDevice.findObject(By.res(launcherPackage, HOME_INDICATOR));
             count++;
         }
-
-        // TODO (yuanlang@) Delete the following hacky codes after charging icon issue fixed
-        // App launcher still draw changing icon. Make sure we're not in the launcher
-        homeScreen = mDevice.findObject(By.res(launcherPackage, LAUNCHER_VIEW_NAME));
-        if (homeScreen != null) {
-            mDevice.pressBack();
-        }
-
+        Assert.assertNotNull("Still cannot find home screen", homeScreen);
         SystemClock.sleep(SHORT_TIMEOUT);
     }
 
     public void launchRemoteInputActivity() {
-        String launcherPackage = mDevice.getLauncherPackageName();
-        // Swipe up 5 times to bring up demo cards
-        // in case there are some real cards on top
-        reloadDemoCards();
-        int i = 0;
-        UiObject2 cardTitle = null;
-        while (i < 5) {
-            swipeUp();
-            cardTitle = mDevice.wait(
-                    Until.findObject(By.text("Clockwork Notifications-10")), SHORT_TIMEOUT);
-            if (cardTitle != null) {
-                cardTitle.click();
-                break;
-            }
-            i ++;
-        }
-        Assert.assertNotNull("Cannot find demo card with remote input", cardTitle);
-        // Click on reply action button
-        UiObject2 replyButton = mDevice
-                .wait(Until.findObject(By.text(REPLY_BUTTON_TEXT)), LONG_TIMEOUT);
-        Assert.assertNotNull(replyButton);
-        replyButton.click();
+        RemoteInput[] remoteInputs = new RemoteInput[] {
+            new RemoteInput.Builder(KEY_QUICK_REPLY_TEXT).setLabel(REMOTE_INPUT_TEXT).build()
+        };
+        Intent intent = new Intent(RemoteInputIntent.ACTION_REMOTE_INPUT);
+        intent.putExtra(RemoteInputIntent.EXTRA_REMOTE_INPUTS, remoteInputs);
+        mInstrumentation.getContext().startActivity(intent);
 
         // Make sure remote input activity launched
         UiObject2 replyText = mDevice
@@ -152,22 +122,12 @@ public class IMEJankTestsHelper {
                         LONG_TIMEOUT));
     }
 
-    public void tapIMEButton() {
-        UiObject2 imeButton = mDevice.wait(
-                Until.findObject(By.res(REMOTE_INPUT_PACKAGE_NAME, IME_BUTTON_NAME)), LONG_TIMEOUT);
+    // Wait until keyboard or handwriting ui components show up
+    public void tapIMEButton(int imeType) {
+        UiObject2 imeButton = waitForSysAppUiObject2(REMOTE_INPUT_PACKAGE_NAME, IME_BUTTON_NAME);
         Assert.assertNotNull(imeButton);
         imeButton.click();
-        SystemClock.sleep(SHORT_TIMEOUT);
-    }
-
-    // This will ensure to reload notification cards by launching NotificationsGeneratorWear app
-    // when there are insufficient cards.
-    private void reloadDemoCards() {
-        Intent intent = new Intent();
-        intent.setAction(RELOAD_NOTIFICATION_CARD_INTENT);
-        mInstrumentation.getContext().sendBroadcast(intent);
-        Log.d(LOG_TAG, "Demo cards have been reloaded");
-        SystemClock.sleep(LONG_TIMEOUT);
+        waitForIMEOpen(imeType);
     }
 
     public void activateIMEKeyboard() {
@@ -195,20 +155,33 @@ public class IMEJankTestsHelper {
         SystemClock.sleep(SHORT_TIMEOUT);
     }
 
-    public void tapOnScreen() {
+    public void tapOnScreen(int imeType) {
         mDevice.click(mDevice.getDisplayHeight() / 2, mDevice.getDisplayWidth() / 2);
-        SystemClock.sleep(SHORT_TIMEOUT);
+        waitForIMEOpen(imeType);
     }
 
     public void clickSoftKey(String softKeyDescription) {
-        UiObject2 softKey = mDevice.wait(
-                Until.findObject(By.res(IME_PACKAGE_NAME, keyPosIdByDesc(softKeyDescription))),
-                SHORT_TIMEOUT);
+        UiObject2 softKey =
+                waitForSysAppUiObject2(KEYBOARD_PACKAGE_NAME, keyPosIdByDesc(softKeyDescription));
         Assert.assertNotNull("Soft Key " + softKeyDescription + " not found in UI", softKey);
         softKey.click();
     }
 
     private String keyPosIdByDesc(String desc) {
         return String.format("key_pos_%s", desc);
+    }
+
+    private void waitForIMEOpen(int imeType) {
+        if (imeType == KEYBOARD_CODE) {
+            Assert.assertNotNull("Cannot find keyboard",
+                    waitForSysAppUiObject2(KEYBOARD_PACKAGE_NAME, KEYBOARD_INDICATOR));
+        } else if (imeType == HANDWRITING_CODE) {
+            Assert.assertNotNull("Cannot find handwriting",
+                    waitForSysAppUiObject2(HANDWRITING_PACKAGE_NAME, HANDWRITING_INDICATOR));
+        }
+    }
+
+    private UiObject2 waitForSysAppUiObject2(String pkgName, String resourceId) {
+        return mDevice.wait(Until.findObject(By.res(pkgName, resourceId)), LONG_TIMEOUT);
     }
 }
