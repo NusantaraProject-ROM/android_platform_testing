@@ -60,7 +60,7 @@ public class HandwritingJankTests extends JankTestBase {
             expectedFrames = IMEJankTestsHelper.WFM_EXPECTED_FRAMES)
     @WindowAnimationFrameStatsMonitor
     public void testOpenHandwritingFromRemoteInput() {
-        mHelper.tapIMEButton();
+        mHelper.tapIMEButton(IMEJankTestsHelper.HANDWRITING_CODE);
     }
 
     // Measure handwriting jank when open from input box
@@ -70,7 +70,7 @@ public class HandwritingJankTests extends JankTestBase {
             expectedFrames = IMEJankTestsHelper.WFM_EXPECTED_FRAMES)
     @WindowAnimationFrameStatsMonitor
     public void testOpenHandwritingFromInputBox() {
-        mHelper.tapOnScreen();
+        mHelper.tapOnScreen(IMEJankTestsHelper.HANDWRITING_CODE);
     }
 
     public void pressBack() {
