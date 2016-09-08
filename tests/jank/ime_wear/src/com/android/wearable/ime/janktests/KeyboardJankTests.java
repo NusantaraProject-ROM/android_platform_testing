@@ -61,7 +61,7 @@ public class KeyboardJankTests extends JankTestBase {
             expectedFrames = IMEJankTestsHelper.WFM_EXPECTED_FRAMES)
     @WindowAnimationFrameStatsMonitor
     public void testOpenKeyboardFromRemoteInput() {
-        mHelper.tapIMEButton();
+        mHelper.tapIMEButton(IMEJankTestsHelper.KEYBOARD_CODE);
     }
 
     // Measure keyboard jank when opened from input box
@@ -71,7 +71,7 @@ public class KeyboardJankTests extends JankTestBase {
             expectedFrames = IMEJankTestsHelper.WFM_EXPECTED_FRAMES)
     @WindowAnimationFrameStatsMonitor
     public void testOpenKeyboardFromInputBox() {
-        mHelper.tapOnScreen();
+        mHelper.tapOnScreen(IMEJankTestsHelper.KEYBOARD_CODE);
     }
 
     // Measure keyboard jank when typing simple sequence of characters
@@ -79,9 +79,9 @@ public class KeyboardJankTests extends JankTestBase {
             afterLoop = "pressBack",
             afterTest = "goBackHome",
             expectedFrames = IMEJankTestsHelper.GFX_EXPECTED_FRAMES)
-    @GfxMonitor(processName = IMEJankTestsHelper.IME_PACKAGE_NAME)
+    @GfxMonitor(processName = IMEJankTestsHelper.KEYBOARD_PACKAGE_NAME)
     public void testKeyboardSimpleSequence() {
-        mHelper.tapOnScreen();
+        mHelper.tapOnScreen(IMEJankTestsHelper.KEYBOARD_CODE);
         for (int i = 1; i <= 9; i++) {
             mHelper.clickSoftKey(String.format("1_%d", i));
         }
@@ -92,9 +92,9 @@ public class KeyboardJankTests extends JankTestBase {
             afterLoop = "pressBack",
             afterTest = "goBackHome",
             expectedFrames = IMEJankTestsHelper.GFX_EXPECTED_FRAMES)
-    @GfxMonitor(processName = IMEJankTestsHelper.IME_PACKAGE_NAME)
+    @GfxMonitor(processName = IMEJankTestsHelper.KEYBOARD_PACKAGE_NAME)
     public void testKeyboardComplexSequence() {
-        mHelper.tapOnScreen();
+        mHelper.tapOnScreen(IMEJankTestsHelper.KEYBOARD_CODE);
         for (int i = 0; i < 50; i++) {
             mHelper.clickSoftKey(String.format("0_%d", i % 10));
             if (i % 7 == 0) {
@@ -112,7 +112,7 @@ public class KeyboardJankTests extends JankTestBase {
     @JankTest(beforeTest = "prepareToShowMoreCandidates",
             afterTest = "goBackHome",
             expectedFrames = IMEJankTestsHelper.GFX_EXPECTED_FRAMES)
-    @GfxMonitor(processName = IMEJankTestsHelper.IME_PACKAGE_NAME)
+    @GfxMonitor(processName = IMEJankTestsHelper.KEYBOARD_PACKAGE_NAME)
     public void testKeyboardToggleMoreCandidates() {
         for (int i = 0; i < 6; i++) {
             mHelper.clickSoftKey("show_more_candidates");
@@ -124,9 +124,9 @@ public class KeyboardJankTests extends JankTestBase {
             afterLoop = "pressBack",
             afterTest = "goBackHome",
             expectedFrames = IMEJankTestsHelper.GFX_EXPECTED_FRAMES)
-    @GfxMonitor(processName = IMEJankTestsHelper.IME_PACKAGE_NAME)
+    @GfxMonitor(processName = IMEJankTestsHelper.KEYBOARD_PACKAGE_NAME)
     public void testKeyboardGestureInput() {
-        mHelper.tapOnScreen();
+        mHelper.tapOnScreen(IMEJankTestsHelper.KEYBOARD_CODE);
         for (int i = 0; i < 2; i++) {
             // Swipe through first row on keyboard
             mHelper.swipeRight(0);
@@ -140,7 +140,7 @@ public class KeyboardJankTests extends JankTestBase {
     // Make sure more candidates icon shows up
     public void prepareToShowMoreCandidates() {
         launchInputBoxActivity();
-        mHelper.tapOnScreen();
+        mHelper.tapOnScreen(IMEJankTestsHelper.KEYBOARD_CODE);
         for (int i = 0; i < 5; i++) {
             mHelper.clickSoftKey(String.format("0_%d", i));
         }
