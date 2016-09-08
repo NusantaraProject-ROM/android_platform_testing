@@ -80,6 +80,22 @@ public class SystemUiJankTests extends JankTestBase {
     private static final String DISABLE_COMMAND = "pm disable-user ";
     private static final String ENABLE_COMMAND = "pm enable ";
 
+    /**
+     * Group mode: Let the system auto-group our notifications. This is required so we don't screw
+     * up jank numbers for our existing notification list pull test.
+     */
+    private static final int GROUP_MODE_LEGACY = 0;
+
+    /**
+     * Group mode: Group the notifications.
+     */
+    private static final int GROUP_MODE_GROUPED = 1;
+
+    /**
+     * Group mode: All notifications should be separate
+     */
+    private static final int GROUP_MODE_UNGROUPED = 2;
+
     private UiDevice mDevice;
     private List<String> mLaunchedPackages = new ArrayList<>();
 
@@ -118,9 +134,15 @@ public class SystemUiJankTests extends JankTestBase {
             intent.addCategory(Intent.CATEGORY_LAUNCHER);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             getInstrumentation().getTargetContext().startActivity(intent);
-            SystemClock.sleep(5000);
+
+            // Don't overload the system
+            SystemClock.sleep(500);
             mLaunchedPackages.add(pkg.packageName);
         }
+
+        // Give the apps some time to finish starting. Some apps start another activity while
+        // starting, and we don't want to happen when we are testing stuff.
+        SystemClock.sleep(3000);
 
         // Close any crash dialogs
         while (mDevice.hasObject(By.textContains("has stopped"))) {
@@ -160,7 +182,7 @@ public class SystemUiJankTests extends JankTestBase {
         mDevice.waitForIdle();
     }
 
-    public void prepareNotifications() throws Exception {
+    public void prepareNotifications(int groupMode) throws Exception {
         blockNotifications();
         goHome();
         mDevice.openNotification();
@@ -175,20 +197,36 @@ public class SystemUiJankTests extends JankTestBase {
         }
         mDevice.pressHome();
         mDevice.waitForIdle();
+        postNotifications(groupMode);
+        mDevice.waitForIdle();
+    }
+
+    private void postNotifications(int groupMode) {
         Builder builder = new Builder(getInstrumentation().getTargetContext())
                 .setContentTitle(NOTIFICATION_TEXT);
+        if (groupMode == GROUP_MODE_GROUPED) {
+            builder.setGroup("key");
+        }
         NotificationManager nm = (NotificationManager) getInstrumentation().getTargetContext()
                 .getSystemService(Context.NOTIFICATION_SERVICE);
+        boolean first = true;
         for (int icon : ICONS) {
+            if (first && groupMode == GROUP_MODE_GROUPED) {
+                builder.setGroupSummary(true);
+            } else {
+                builder.setGroupSummary(false);
+            }
+            if (groupMode == GROUP_MODE_UNGROUPED) {
+                builder.setGroup(Integer.toString(icon));
+            }
             builder.setContentText(Integer.toHexString(icon))
                     .setSmallIcon(icon);
             nm.notify(icon, builder.build());
             SystemClock.sleep(100);
+            first = false;
         }
-        mDevice.waitForIdle();
-        TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
-                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
     }
+
 
     public void blockNotifications() throws Exception {
         mDevice.executeShellCommand(DISABLE_COMMAND + GMAIL_PACKAGE_NAME);
@@ -198,16 +236,11 @@ public class SystemUiJankTests extends JankTestBase {
         mDevice.executeShellCommand(ENABLE_COMMAND + GMAIL_PACKAGE_NAME);
     }
 
-    public void cancelNotifications(Bundle metrics) throws Exception {
+    public void cancelNotifications() throws Exception {
         unblockNotifications();
-        TimeResultLogger.writeTimeStampLogEnd(String.format("%s-%s",
-                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
         NotificationManager nm = (NotificationManager) getInstrumentation().getTargetContext()
                 .getSystemService(Context.NOTIFICATION_SERVICE);
         nm.cancelAll();
-        TimeResultLogger.writeResultToFile(String.format("%s-%s",
-                getClass().getSimpleName(), getName()), RESULTS_FILE, metrics);
-        super.afterTest(metrics);
     }
 
     /** Starts from the bottom of the recent apps list and measures jank while flinging up. */
@@ -228,6 +261,28 @@ public class SystemUiJankTests extends JankTestBase {
         }
     }
 
+    /**
+     * Measures jank when dismissing a task in recents.
+     */
+    @JankTest(beforeTest = "populateRecentApps", beforeLoop = "resetRecentsToBottom",
+            afterTest = "forceStopPackages", expectedFrames = 10)
+    @GfxMonitor(processName = SYSTEMUI_PACKAGE)
+    public void testRecentAppsDismiss() {
+        // Wait until dismiss views are fully faded in.
+        mDevice.findObject(new UiSelector().resourceId("com.android.systemui:id/dismiss_task"))
+                .waitForExists(5000);
+        for (int i = 0; i < INNER_LOOP; i++) {
+            List<UiObject2> dismissViews = mDevice.findObjects(
+                    By.res(SYSTEMUI_PACKAGE, "dismiss_task"));
+            if (dismissViews.size() == 0) {
+                fail("Unable to find dismiss view");
+            }
+            dismissViews.get(dismissViews.size() - 1).click();
+            mDevice.waitForIdle();
+            SystemClock.sleep(500);
+        }
+    }
+
     private void swipeDown() {
         mDevice.swipe(mDevice.getDisplayWidth() / 2,
                 SWIPE_MARGIN, mDevice.getDisplayWidth() / 2,
@@ -243,9 +298,24 @@ public class SystemUiJankTests extends JankTestBase {
                 DEFAULT_SCROLL_STEPS);
     }
 
+    public void beforeNotificationListPull() throws Exception {
+        prepareNotifications(GROUP_MODE_LEGACY);
+        TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+    }
+
+    public void afterNotificationListPull(Bundle metrics) throws Exception {
+        TimeResultLogger.writeTimeStampLogEnd(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+        cancelNotifications();
+        TimeResultLogger.writeResultToFile(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), RESULTS_FILE, metrics);
+        super.afterTest(metrics);
+    }
+
     /** Measures jank while pulling down the notification list */
     @JankTest(expectedFrames = 100,
-            beforeTest = "prepareNotifications", afterTest = "cancelNotifications")
+            beforeTest = "beforeNotificationListPull", afterTest = "afterNotificationListPull")
     @GfxMonitor(processName = SYSTEMUI_PACKAGE)
     public void testNotificationListPull() {
         for (int i = 0; i < INNER_LOOP; i++) {
@@ -259,7 +329,7 @@ public class SystemUiJankTests extends JankTestBase {
     public void beforeQuickSettings() throws Exception {
 
         // Make sure we have some notifications.
-        prepareNotifications();
+        prepareNotifications(GROUP_MODE_UNGROUPED);
         mDevice.openNotification();
         SystemClock.sleep(100);
         mDevice.waitForIdle();
@@ -270,7 +340,7 @@ public class SystemUiJankTests extends JankTestBase {
     public void afterQuickSettings(Bundle metrics) throws Exception {
         TimeResultLogger.writeTimeStampLogEnd(String.format("%s-%s",
                 getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
-        cancelNotifications(metrics);
+        cancelNotifications();
         mDevice.pressHome();
         TimeResultLogger.writeResultToFile(String.format("%s-%s",
                 getClass().getSimpleName(), getName()), RESULTS_FILE, metrics);
@@ -291,6 +361,123 @@ public class SystemUiJankTests extends JankTestBase {
             quickSettingsButton.click();
             mDevice.waitForIdle();
         }
+    }
+
+    public void beforeUnlock() throws Exception {
+
+        // Make sure we have some notifications.
+        prepareNotifications(GROUP_MODE_UNGROUPED);
+        TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+    }
+
+    public void afterUnlock(Bundle metrics) throws Exception {
+        TimeResultLogger.writeTimeStampLogEnd(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+        cancelNotifications();
+        mDevice.pressHome();
+        TimeResultLogger.writeResultToFile(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), RESULTS_FILE, metrics);
+        super.afterTest(metrics);
+    }
+
+    /**
+     * Measure jank while unlocking the phone.
+     */
+    @JankTest(expectedFrames = 100,
+            beforeTest = "beforeUnlock", afterTest = "afterUnlock")
+    @GfxMonitor(processName = SYSTEMUI_PACKAGE)
+    public void testUnlock() throws Exception {
+        for (int i = 0; i < INNER_LOOP; i++) {
+            mDevice.sleep();
+            // Make sure we don't trigger the camera launch double-tap shortcut
+            SystemClock.sleep(300);
+            mDevice.wakeUp();
+            swipeUp();
+            mDevice.waitForIdle();
+        }
+    }
+
+    public void beforeExpand() throws Exception {
+        prepareNotifications(GROUP_MODE_GROUPED);
+        mDevice.openNotification();
+        SystemClock.sleep(100);
+        mDevice.waitForIdle();
+        TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+    }
+
+    public void afterExpand(Bundle metrics) throws Exception {
+        TimeResultLogger.writeTimeStampLogEnd(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+        cancelNotifications();
+        mDevice.pressHome();
+        TimeResultLogger.writeResultToFile(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), RESULTS_FILE, metrics);
+        super.afterTest(metrics);
+    }
+
+    /**
+     * Measures jank while expending a group notification.
+     */
+    @JankTest(expectedFrames = 100,
+            beforeTest = "beforeExpand", afterTest = "afterExpand")
+    @GfxMonitor(processName = SYSTEMUI_PACKAGE)
+    public void testExpandGroup() throws Exception {
+        UiObject expandButton = mDevice.findObject(
+                new UiSelector().description("Expand button"));
+        for (int i = 0; i < INNER_LOOP; i++) {
+            expandButton.click();
+            mDevice.waitForIdle();
+            expandButton.click();
+            mDevice.waitForIdle();
+        }
+    }
+
+    private void scrollDown() {
+        mDevice.swipe(mDevice.getDisplayWidth() / 2,
+                mDevice.getDisplayHeight() / 2,
+                mDevice.getDisplayWidth() / 2,
+                SWIPE_MARGIN,
+                DEFAULT_SCROLL_STEPS);
+    }
+
+    public void beforeClearAll() throws Exception {
+        TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+    }
+
+    public void beforeClearAllLoop() throws Exception {
+        postNotifications(GROUP_MODE_UNGROUPED);
+        mDevice.openNotification();
+        SystemClock.sleep(100);
+        mDevice.waitForIdle();
+    }
+
+    public void afterClearAll(Bundle metrics) throws Exception {
+        TimeResultLogger.writeTimeStampLogEnd(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+        TimeResultLogger.writeResultToFile(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), RESULTS_FILE, metrics);
+        super.afterTest(metrics);
+    }
+
+    /**
+     * Measures jank when clicking the "clear all" button in the notification shade.
+     */
+    @JankTest(expectedFrames = 10,
+            beforeTest = "beforeClearAll",
+            beforeLoop = "beforeClearAllLoop",
+            afterTest = "afterClearAll")
+    @GfxMonitor(processName = SYSTEMUI_PACKAGE)
+    public void testClearAll() throws Exception {
+        UiObject clearAll =
+                mDevice.findObject(new UiSelector().className(Button.class).text("CLEAR ALL"));
+        while (!clearAll.exists()) {
+            scrollDown();
+        }
+        clearAll.click();
+        mDevice.waitForIdle();
     }
 }
 
