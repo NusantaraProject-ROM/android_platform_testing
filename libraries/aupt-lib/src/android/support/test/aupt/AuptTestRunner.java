@@ -122,16 +122,13 @@ public class AuptTestRunner extends InstrumentationTestRunner {
             mProcessTracker = new ProcessStatusTracker(null);
         }
 
-        // Option: -e trackJank boolean
-        mTrackJank = parseBooleanParam("trackJank", false);
-        if (mTrackJank) {
+        // Option: -e jankInterval integer
+        long interval = parseLongParam("jankInterval", -1L);
+        if (interval != -1L) {
             mGraphicsStatsMonitor = new GraphicsStatsMonitor();
-
-            // Option: -e jankInterval long
-            long interval = parseLongParam("jankInterval",
-                    GraphicsStatsMonitor.DEFAULT_INTERVAL_RATE);
             mGraphicsStatsMonitor.setIntervalRate(interval);
         }
+
         mRunner.addTestListener(new PidChecker());
         mResultsDirectory = new File(Environment.getExternalStorageDirectory(),
                 parseStringParam("outputLocation", "aupt_results"));
