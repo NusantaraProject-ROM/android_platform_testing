@@ -61,9 +61,6 @@ public class JankStat {
         FRAME_TIME_99TH("percentile99",
                 Pattern.compile("\\s*99th percentile: (\\d+)ms"), 1),
 
-        SLOWEST_FRAMES_24H("slowestFramesToday",
-                Pattern.compile("\\s*Slowest frames over last 24h: (.*)"), 1),
-
         NUM_MISSED_VSYNC("missedVsyncCount",
                 Pattern.compile("\\s*Number Missed Vsync: (\\d+)"), 1),
 
@@ -108,6 +105,10 @@ public class JankStat {
             return ret;
         }
 
+        Pattern getPattern() {
+            return mParsePattern;
+        }
+
         String getName() {
             return mName;
         }
@@ -121,7 +122,6 @@ public class JankStat {
     public Integer frameTime90th;
     public Integer frameTime95th;
     public Integer frameTime99th;
-    public String slowestFrames24h;
     public Integer numMissedVsync;
     public Integer numHighLatency;
     public Integer numSlowUiThread;
@@ -130,7 +130,7 @@ public class JankStat {
     public Integer aggregateCount;
 
     public JankStat (String pkg, long since, int total, int janky, int ft50, int ft90, int ft95,
-            int ft99, String slow24h, int vsync, int latency, int slowUi, int slowBmp, int slowDraw,
+            int ft99, int vsync, int latency, int slowUi, int slowBmp, int slowDraw,
             int aggCount) {
         packageName = pkg;
         statsSince = since;
@@ -140,7 +140,6 @@ public class JankStat {
         frameTime90th = ft90;
         frameTime95th = ft95;
         frameTime99th = ft99;
-        slowestFrames24h = slow24h;
         numMissedVsync = vsync;
         numHighLatency = latency;
         numSlowUiThread = slowUi;
@@ -174,12 +173,11 @@ public class JankStat {
                 put(StatPattern.PACKAGE.getName(), packageName).
                 put(StatPattern.STATS_SINCE.getName(), statsSince).
                 put(StatPattern.TOTAL_FRAMES.getName(), totalFrames).
-                put(StatPattern.NUM_JANKY.getName(), new Float(getPercentJankyFrames())).
+                put(StatPattern.NUM_JANKY.getName(), jankyFrames).
                 put(StatPattern.FRAME_TIME_50TH.getName(), frameTime50th).
                 put(StatPattern.FRAME_TIME_90TH.getName(), frameTime90th).
                 put(StatPattern.FRAME_TIME_95TH.getName(), frameTime95th).
                 put(StatPattern.FRAME_TIME_99TH.getName(), frameTime99th).
-                put(StatPattern.SLOWEST_FRAMES_24H.getName(), slowestFrames24h).
                 put(StatPattern.NUM_MISSED_VSYNC.getName(), numMissedVsync).
                 put(StatPattern.NUM_HIGH_INPUT_LATENCY.getName(), numHighLatency).
                 put(StatPattern.NUM_SLOW_UI_THREAD.getName(), numSlowUiThread).
@@ -222,7 +220,6 @@ public class JankStat {
         int totalNumSlowUiThread = 0;
         int totalNumSlowBitmap = 0;
         int totalNumSlowDraw = 0;
-        String totalSlow24h = "";
 
         for (JankStat stat : statHistory) {
             totalTotalFrames += stat.totalFrames;
@@ -232,17 +229,17 @@ public class JankStat {
             totalNumSlowUiThread += stat.numSlowUiThread;
             totalNumSlowBitmap += stat.numSlowBitmap;
             totalNumSlowDraw += stat.numSlowDraw;
-            totalSlow24h += stat.slowestFrames24h;
         }
 
         float wgtAvgPercentile50 = 0f;
         float wgtAvgPercentile90 = 0f;
         float wgtAvgPercentile95 = 0f;
         float wgtAvgPercentile99 = 0f;
+
         for (JankStat stat : statHistory) {
             float weight = ((float)stat.totalFrames / totalTotalFrames);
             Log.v(TAG, String.format("Calculated weight is %f", weight));
-            wgtAvgPercentile90 += stat.frameTime50th * weight;
+            wgtAvgPercentile50 += stat.frameTime50th * weight;
             wgtAvgPercentile90 += stat.frameTime90th * weight;
             wgtAvgPercentile95 += stat.frameTime95th * weight;
             wgtAvgPercentile99 += stat.frameTime99th * weight;
@@ -254,7 +251,7 @@ public class JankStat {
         int perc99 = (int)Math.ceil(wgtAvgPercentile99);
 
         return new JankStat(pkg, totalStatsSince, totalTotalFrames,
-                totalJankyFrames, perc50, perc90, perc95, perc99, totalSlow24h,
+                totalJankyFrames, perc50, perc90, perc95, perc99,
                 totalNumMissedVsync, totalNumHighLatency, totalNumSlowUiThread, totalNumSlowBitmap,
                 totalNumSlowDraw, statHistory.size());
     }
