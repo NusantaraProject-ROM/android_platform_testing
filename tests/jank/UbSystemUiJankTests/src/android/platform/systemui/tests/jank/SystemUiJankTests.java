@@ -16,6 +16,7 @@
 
 package android.platform.systemui.tests.jank;
 
+import android.app.Notification;
 import android.app.Notification.Builder;
 import android.app.NotificationManager;
 import android.content.Context;
@@ -100,6 +101,7 @@ public class SystemUiJankTests extends JankTestBase {
 
     private UiDevice mDevice;
     private List<String> mLaunchedPackages = new ArrayList<>();
+    private NotificationManager mNotificationManager;
 
     public void setUp() {
         mDevice = UiDevice.getInstance(getInstrumentation());
@@ -108,6 +110,8 @@ public class SystemUiJankTests extends JankTestBase {
         } catch (RemoteException e) {
             throw new RuntimeException("failed to freeze device orientaion", e);
         }
+        mNotificationManager = getInstrumentation().getContext().getSystemService(
+                NotificationManager.class);
     }
 
     public void goHome() {
@@ -204,15 +208,21 @@ public class SystemUiJankTests extends JankTestBase {
     }
 
     private void postNotifications(int groupMode) {
+        postNotifications(groupMode, 100, -1);
+    }
+
+    private void postNotifications(int groupMode, int sleepBetweenDuration, int maxCount) {
         Builder builder = new Builder(getInstrumentation().getTargetContext())
                 .setContentTitle(NOTIFICATION_TEXT);
         if (groupMode == GROUP_MODE_GROUPED) {
             builder.setGroup("key");
         }
-        NotificationManager nm = (NotificationManager) getInstrumentation().getTargetContext()
-                .getSystemService(Context.NOTIFICATION_SERVICE);
         boolean first = true;
-        for (int icon : ICONS) {
+        for (int i = 0; i < ICONS.length; i++) {
+            if (maxCount != -1 && i >= maxCount) {
+                break;
+            }
+            int icon = ICONS[i];
             if (first && groupMode == GROUP_MODE_GROUPED) {
                 builder.setGroupSummary(true);
             } else {
@@ -223,12 +233,18 @@ public class SystemUiJankTests extends JankTestBase {
             }
             builder.setContentText(Integer.toHexString(icon))
                     .setSmallIcon(icon);
-            nm.notify(icon, builder.build());
-            SystemClock.sleep(100);
+            mNotificationManager.notify(icon, builder.build());
+            SystemClock.sleep(sleepBetweenDuration);
             first = false;
         }
     }
 
+    private void cancelNotifications(int sleepBetweenDuration) {
+        for (int icon : ICONS) {
+            mNotificationManager.cancel(icon);
+            SystemClock.sleep(sleepBetweenDuration);
+        }
+    }
 
     public void blockNotifications() throws Exception {
         mDevice.executeShellCommand(DISABLE_COMMAND + GMAIL_PACKAGE_NAME);
@@ -517,6 +533,41 @@ public class SystemUiJankTests extends JankTestBase {
 
             // Make sure animation is completing.
             SystemClock.sleep(500);
+            mDevice.waitForIdle();
+        }
+    }
+
+    public void beforeNotificationAppear() throws Exception {
+        mDevice.openNotification();
+
+        // Wait until animation is starting.
+        SystemClock.sleep(200);
+        mDevice.waitForIdle();
+        TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+    }
+
+    public void afterNotificationAppear(Bundle metrics) throws Exception {
+        TimeResultLogger.writeTimeStampLogEnd(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+        mDevice.pressHome();
+        TimeResultLogger.writeResultToFile(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), RESULTS_FILE, metrics);
+        super.afterTest(metrics);
+    }
+
+    /**
+     * Measures jank when a notification is appearing.
+     */
+    @JankTest(expectedFrames = 10,
+            beforeTest = "beforeNotificationAppear",
+            afterTest = "afterNotificationAppear")
+    @GfxMonitor(processName = SYSTEMUI_PACKAGE)
+    public void testNotificationAppear() throws Exception {
+        for (int i = 0; i < INNER_LOOP; i++) {
+            postNotifications(GROUP_MODE_UNGROUPED, 250, 5);
+            mDevice.waitForIdle();
+            cancelNotifications(250);
             mDevice.waitForIdle();
         }
     }
