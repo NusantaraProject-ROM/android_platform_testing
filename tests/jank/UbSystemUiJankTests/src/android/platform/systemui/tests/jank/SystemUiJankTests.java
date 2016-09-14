@@ -55,6 +55,8 @@ public class SystemUiJankTests extends JankTestBase {
     private static final int SWIPE_MARGIN = 5;
     private static final int DEFAULT_FLING_STEPS = 5;
     private static final int DEFAULT_SCROLL_STEPS = 15;
+    private static final int BRIGHTNESS_SCROLL_STEPS = 30;
+
     // short transitions should be repeated within the test function, otherwise frame stats
     // captured are not really meaningful in a statistical sense
     private static final int INNER_LOOP = 3;
@@ -478,6 +480,45 @@ public class SystemUiJankTests extends JankTestBase {
         }
         clearAll.click();
         mDevice.waitForIdle();
+    }
+
+    public void beforeChangeBrightness() throws Exception {
+        mDevice.openQuickSettings();
+
+        // Wait until animation is starting.
+        SystemClock.sleep(200);
+        mDevice.waitForIdle();
+        TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+    }
+
+    public void afterChangeBrightness(Bundle metrics) throws Exception {
+        TimeResultLogger.writeTimeStampLogEnd(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+        mDevice.pressHome();
+        TimeResultLogger.writeResultToFile(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), RESULTS_FILE, metrics);
+        super.afterTest(metrics);
+    }
+
+    /**
+     * Measures jank when changing screen brightness
+     */
+    @JankTest(expectedFrames = 10,
+            beforeTest = "beforeChangeBrightness",
+            afterTest = "afterChangeBrightness")
+    @GfxMonitor(processName = SYSTEMUI_PACKAGE)
+    public void testChangeBrightness() throws Exception {
+        UiObject2 brightness = mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "slider"));
+        Rect bounds = brightness.getVisibleBounds();
+        for (int i = 0; i < INNER_LOOP; i++) {
+            mDevice.swipe(bounds.left, bounds.centerY(),
+                    bounds.right, bounds.centerY(), BRIGHTNESS_SCROLL_STEPS);
+
+            // Make sure animation is completing.
+            SystemClock.sleep(500);
+            mDevice.waitForIdle();
+        }
     }
 }
 
