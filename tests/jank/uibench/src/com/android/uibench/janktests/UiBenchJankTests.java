@@ -145,16 +145,29 @@ public class UiBenchJankTests extends JankTestBase {
         mHelper.flingUpDown(mHelper.mContents, mHelper.SHORT_TIMEOUT, 2);
     }
 
-    // Open Trivial Recycler List View from General
-    public void openTrivialRecyclerListView() {
+    // Open Trivial RecyclerView from General
+    public void openTrivialRecyclerView() {
         mHelper.launchActivityAndAssert("TrivialRecyclerViewActivity",
-                "General/Trivial Recycler ListView");
+                "General/Trivial RecyclerView");
     }
 
-    // Test trivialRecyclerListView fling
-    @JankTest(beforeTest = "openTrivialRecyclerListView", expectedFrames = EXPECTED_FRAMES)
+    // Test trivialRecyclerView fling
+    @JankTest(beforeTest = "openTrivialRecyclerView", expectedFrames = EXPECTED_FRAMES)
     @GfxMonitor(processName = PACKAGE_NAME)
     public void testTrivialRecyclerListViewFling() {
+        mHelper.flingUpDown(mHelper.mContents, mHelper.SHORT_TIMEOUT, 2);
+    }
+
+    // Open Slow Bind RecyclerView from General
+    public void openSlowBindRecyclerView() {
+        mHelper.launchActivityAndAssert("SlowBindRecyclerViewActivity",
+                "General/Slow Bind RecyclerView");
+    }
+
+    // Test trivialRecyclerView fling
+    @JankTest(beforeTest = "openSlowBindRecyclerView", expectedFrames = EXPECTED_FRAMES)
+    @GfxMonitor(processName = PACKAGE_NAME)
+    public void testSlowBindRecyclerViewFling() {
         mHelper.flingUpDown(mHelper.mContents, mHelper.SHORT_TIMEOUT, 2);
     }
 
