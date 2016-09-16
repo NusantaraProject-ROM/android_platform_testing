@@ -21,6 +21,6 @@ LOCAL_MODULE_TAGS := tests
 
 LOCAL_STATIC_JAVA_LIBRARIES := ub-janktesthelper ub-uiautomator launcher-helper-lib timeresult-helper-lib
 
-LOCAL_SDK_VERSION := 21
+LOCAL_SDK_VERSION := current
 
 include $(BUILD_PACKAGE)
