@@ -19,6 +19,7 @@ package android.support.test.launcherhelper;
 import android.graphics.Point;
 import android.os.RemoteException;
 import android.os.SystemClock;
+import android.platform.test.utils.DPadUtil;
 import android.support.test.uiautomator.*;
 import android.util.Log;
 
@@ -37,6 +38,7 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
     private static final int NOTIFICATION_WAIT_TIME = 30000;
 
     protected UiDevice mDevice;
+    protected DPadUtil mDPadUtil = new DPadUtil();
 
 
     /**
@@ -62,7 +64,7 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
     public void open() {
         // if we see main list view, assume at home screen already
         if (!mDevice.hasObject(getWorkspaceSelector())) {
-            mDevice.pressHome();
+            mDPadUtil.pressHome();
             // ensure launcher is shown
             if (!mDevice.wait(Until.hasObject(getWorkspaceSelector()), SHORT_WAIT_TIME)) {
                 // HACK: dump hierarchy to logcat
@@ -205,12 +207,12 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
             throw new RuntimeException("Could not find keyboard orb.");
         }
         if (orbButton.isFocused()) {
-            mDevice.pressDPadCenter();
+            mDPadUtil.pressDPadCenter();
         } else {
             // Move the focus to keyboard orb by DPad button.
-            mDevice.pressDPadRight();
+            mDPadUtil.pressDPadRight();
             if (orbButton.isFocused()) {
-                mDevice.pressDPadCenter();
+                mDPadUtil.pressDPadCenter();
             }
         }
         mDevice.wait(Until.gone(keyboardOrb), SHORT_WAIT_TIME);
@@ -225,7 +227,7 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
         SystemClock.sleep(SHORT_WAIT_TIME);
 
         // Note that Enter key is pressed instead of DPad keys to dismiss leanback IME
-        mDevice.pressEnter();
+        mDPadUtil.pressEnter();
         mDevice.wait(Until.gone(searchEditor), SHORT_WAIT_TIME);
     }
 
@@ -239,7 +241,7 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
     public UiObject2 selectNotificationRow() {
         if (!isNotificationRowSelected()) {
             open();
-            mDevice.pressHome();    // Home key to move to the first card in the Notification row
+            mDPadUtil.pressHome();    // Home key to move to the first card in the Notification row
         }
         return mDevice.wait(Until.findObject(
                 getNotificationRowSelector().hasDescendant(By.focused(true), 3)), SHORT_WAIT_TIME);
@@ -252,7 +254,7 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
     public UiObject2 selectSearchRow() {
         if (!isSearchRowSelected()) {
             selectNotificationRow();
-            mDevice.pressDPadUp();
+            mDPadUtil.pressDPadUp();
         }
         return mDevice.wait(Until.findObject(
                 getSearchRowSelector().hasDescendant(By.focused(true))), SHORT_WAIT_TIME);
@@ -392,19 +394,19 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
                 // The sequence of moving should be kept in the following order so as not to
                 // be stuck in case that the apps row are not even.
                 if (dx < -MARGIN) {
-                    mDevice.pressDPadLeft();
+                    mDPadUtil.pressDPadLeft();
                     continue;
                 }
                 if (dy < -MARGIN) {
-                    mDevice.pressDPadUp();
+                    mDPadUtil.pressDPadUp();
                     continue;
                 }
                 if (dx > MARGIN) {
-                    mDevice.pressDPadRight();
+                    mDPadUtil.pressDPadRight();
                     continue;
                 }
                 if (dy > MARGIN) {
-                    mDevice.pressDPadDown();
+                    mDPadUtil.pressDPadDown();
                     continue;
                 }
                 throw new RuntimeException(
@@ -419,7 +421,7 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
 
         // The app icon is already found and focused.
         long ready = SystemClock.uptimeMillis();
-        mDevice.pressDPadCenter();
+        mDPadUtil.pressDPadCenter();
         if (!mDevice.wait(Until.hasObject(By.pkg(packageName).depth(0)), APP_LAUNCH_TIMEOUT)) {
             Log.w(LOG_TAG, "no new window detected after app launch attempt.");
             return ILauncherStrategy.LAUNCH_FAILED_TIMESTAMP;
@@ -467,12 +469,7 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
                         appName, card.getContentDescription()));
 
         // Click and wait until the Notification card opens
-        return mDevice.performActionAndWait(new Runnable() {
-            @Override
-            public void run() {
-                mDevice.pressDPadCenter();
-            }
-        }, Until.newWindow(), APP_LAUNCH_TIMEOUT);
+        return mDPadUtil.pressDPadCenterAndWait(Until.newWindow(), APP_LAUNCH_TIMEOUT);
     }
 
     protected boolean isSearchRowSelected() {
@@ -539,7 +536,7 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
 
     protected UiObject2 findNotificationCard(BySelector selector) {
         // Move to the first notification, Search to the right
-        mDevice.pressHome();
+        mDPadUtil.pressHome();
 
         // Find if a focused card matches a given selector
         UiObject2 currentFocus = mDevice.findObject(getNotificationRowSelector())
@@ -549,7 +546,7 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
             if (currentFocus.hasObject(selector)) {
                 return currentFocus;   // Found
             }
-            mDevice.pressDPadRight();
+            mDPadUtil.pressDPadRight();
             previousFocus = currentFocus;
             currentFocus = mDevice.findObject(getNotificationRowSelector())
                     .findObject(By.res(getSupportedLauncherPackage(), "card").focused(true));
@@ -565,7 +562,7 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
         String prevText = focusedIcon.getContentDescription();
         String nextText;
         do {
-            mDevice.pressDPadLeft();
+            mDPadUtil.pressDPadLeft();
             appIcon = container.findObject(app);
             if (appIcon != null) {
                 return appIcon;
@@ -577,7 +574,7 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
 
         // If we haven't found it yet, search by going right
         do {
-            mDevice.pressDPadRight();
+            mDPadUtil.pressDPadRight();
             appIcon = container.findObject(app);
             if (appIcon != null) {
                 return appIcon;
@@ -609,11 +606,7 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
                 return rowObject;   // Found
             }
 
-            if (direction == Direction.DOWN) {
-                mDevice.pressDPadDown();
-            } else if (direction == Direction.UP) {
-                mDevice.pressDPadUp();
-            }
+            mDPadUtil.pressDPad(direction);
             prevFocused = currentFocused;
             currentFocused = mDevice.findObject(By.focused(true));
         }
@@ -641,12 +634,7 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
         if (button == null) {
             throw new IllegalStateException("Restricted Profile not found on launcher");
         }
-        mDevice.performActionAndWait(new Runnable() {
-            @Override
-            public void run() {
-                mDevice.pressDPadCenter();
-            }
-        }, Until.newWindow(), APP_LAUNCH_TIMEOUT);
+        mDPadUtil.pressDPadCenterAndWait(Until.newWindow(), APP_LAUNCH_TIMEOUT);
     }
 
     protected UiObject2 findSettingInRow(BySelector selector, Direction direction) {
@@ -665,11 +653,7 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
                 return setting;
             }
 
-            if (direction == Direction.RIGHT) {
-                mDevice.pressDPadRight();
-            } else if (direction == Direction.LEFT) {
-                mDevice.pressDPadLeft();
-            }
+            mDPadUtil.pressDPad(direction);
             mDevice.waitForIdle();
             prevFocused = currentFocused;
             currentFocused = mDevice.findObject(By.focused(true));

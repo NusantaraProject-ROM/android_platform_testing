@@ -19,6 +19,7 @@ package android.platform.test.helpers;
 import android.app.Instrumentation;
 import android.platform.test.helpers.exceptions.UiTimeoutException;
 import android.platform.test.helpers.exceptions.UnknownUiException;
+import android.platform.test.utils.DPadUtil;
 import android.support.test.launcherhelper.ILeanbackLauncherStrategy;
 import android.support.test.launcherhelper.LauncherStrategyFactory;
 import android.support.test.uiautomator.By;
@@ -53,12 +54,16 @@ public abstract class AbstractLeanbackAppHelper extends AbstractStandardAppHelpe
         ERROR_FRAGMENT
     }
 
+    protected DPadUtil mDPadUtil;
+    // TODO: Delete DPadHelper once migrated to using DPadUtil
     protected DPadHelper mDPadHelper;
     public ILeanbackLauncherStrategy mLauncherStrategy;
 
 
     public AbstractLeanbackAppHelper(Instrumentation instr) {
         super(instr);
+        mDPadUtil = new DPadUtil(instr);
+        // TODO: Delete DPadHelper once migrated to using DPadUtil
         mDPadHelper = DPadHelper.getInstance(instr);
         mLauncherStrategy = LauncherStrategyFactory.getInstance(
                 mDevice).getLeanbackLauncherStrategy();
@@ -218,10 +223,10 @@ public abstract class AbstractLeanbackAppHelper extends AbstractStandardAppHelpe
         }
         while (!focus.hasObject(target)) {
             UiObject2 prev = focus;
-            mDPadHelper.pressDPad(direction);
+            mDPadUtil.pressDPad(direction);
             focus = container.findObject(By.focused(true));
             if (focus == null) {
-                mDPadHelper.pressDPad(Direction.reverse(direction));
+                mDPadUtil.pressDPad(Direction.reverse(direction));
                 focus = container.findObject(By.focused(true));
             }
             if (focus.equals(prev)) {
@@ -321,7 +326,7 @@ public abstract class AbstractLeanbackAppHelper extends AbstractStandardAppHelpe
                 throw new IllegalStateException("Failed to find a card in row content " + title);
             }
         }
-        mDPadHelper.pressDPadCenter();
+        mDPadUtil.pressDPadCenter();
         mDevice.wait(Until.gone(By.res(getPackage(), "title_text").text(title)),
                 SELECT_WAIT_TIME_MS);
     }
