@@ -326,7 +326,7 @@ public class AuptTestCase extends InstrumentationTestCase {
     public void dumpMemInfo(String notes) {
         if (mRecordMeminfo) {
             mDevice.waitForIdle();
-            mDataCollector.dumpMeminfo(notes);
+            LogGenerator.fsUtil().dumpMeminfo(getInstrumentation(), notes);
         }
         if (mProcsToTrack != null) {
             recordMemoryUsage();
@@ -494,7 +494,7 @@ public class AuptTestCase extends InstrumentationTestCase {
 
     public String getProcessOutput(String command) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        mDataCollector.saveProcessOutput(command, baos);
+        LogGenerator.fsUtil().saveProcessOutput(getInstrumentation(), command, baos);
         baos.close();
         return baos.toString();
     }

@@ -86,9 +86,6 @@ public class AuptTestRunner extends InstrumentationTestRunner {
 
     private Map<String, List<AuptTestCase.MemHealthRecord>> mMemHealthRecords;
 
-    private boolean mTrackJank;
-    private GraphicsStatsMonitor mGraphicsStatsMonitor;
-
     /**
      * {@inheritDoc}
      */
@@ -122,14 +119,6 @@ public class AuptTestRunner extends InstrumentationTestRunner {
             mProcessTracker = new ProcessStatusTracker(null);
         }
 
-        // Option: -e jankInterval integer
-        long interval = parseLongParam("jankInterval", -1L);
-        if (interval > 0) {
-            mTrackJank = true;
-            mGraphicsStatsMonitor = new GraphicsStatsMonitor();
-            mGraphicsStatsMonitor.setIntervalRate(interval);
-        }
-
         mRunner.addTestListener(new PidChecker());
         mResultsDirectory = new File(Environment.getExternalStorageDirectory(),
                 parseStringParam("outputLocation", "aupt_results"));
@@ -146,6 +135,7 @@ public class AuptTestRunner extends InstrumentationTestRunner {
 
         mDataCollector = new DataCollector(
                 TimeUnit.MINUTES.toMillis(parseLongParam("bugreportInterval", 0)),
+                TimeUnit.MINUTES.toMillis(parseLongParam("jankInterval", 0)),
                 TimeUnit.MINUTES.toMillis(parseLongParam("meminfoInterval", 0)),
                 TimeUnit.MINUTES.toMillis(parseLongParam("cpuinfoInterval", 0)),
                 TimeUnit.MINUTES.toMillis(parseLongParam("fragmentationInterval", 0)),
@@ -153,6 +143,7 @@ public class AuptTestRunner extends InstrumentationTestRunner {
                 TimeUnit.MINUTES.toMillis(parseLongParam("pagetypeinfoInterval", 0)),
                 TimeUnit.MINUTES.toMillis(parseLongParam("traceInterval", 0)),
                 mResultsDirectory, this);
+
         String jars = params.getString(PARAM_JARS);
         if (jars != null) {
             loadDexJars(jars);
@@ -258,40 +249,6 @@ public class AuptTestRunner extends InstrumentationTestRunner {
     }
 
     /**
-     * Sets up and starts monitoring jank metrics by clearing the currently existing data.
-     */
-    private void startJankMonitoring () {
-        if (mTrackJank) {
-            mGraphicsStatsMonitor.setUiAutomation(getUiAutomation());
-            mGraphicsStatsMonitor.startMonitoring();
-
-            // TODO: Clear graphics.txt file if extant
-        }
-    }
-
-    /**
-     * Stops future monitoring of jank metrics, but preserves current metrics intact.
-     */
-    private void stopJankMonitoring () {
-        if (mTrackJank) {
-            mGraphicsStatsMonitor.stopMonitoring();
-        }
-    }
-
-    /**
-     * Aggregates and merges jank metrics and writes them to the graphics file.
-     */
-    private void writeJankMetrics () {
-        if (mTrackJank) {
-            List<JankStat> mergedStats = mGraphicsStatsMonitor.aggregateStatsImages();
-            String mergedStatsString = JankStat.statsListToString(mergedStats);
-
-            Log.d(LOG_TAG, "Writing jank metrics to the graphics file");
-            writeGraphicsMessage(mergedStatsString);
-        }
-    }
-
-    /**
      * Determines which tests to run, configures the test class and then runs the test.
      */
     private class AuptPrivateTestRunner extends AndroidTestRunner {
@@ -328,7 +285,6 @@ public class AuptTestRunner extends InstrumentationTestRunner {
             ((ProcessStatusTracker)mProcessTracker).setUiAutomation(getUiAutomation());
 
             mDataCollector.start();
-            startJankMonitoring();
 
             for (TestListener testListener : mTestListeners) {
                 mTestResult.addListener(testListener);
@@ -402,10 +358,6 @@ public class AuptTestRunner extends InstrumentationTestRunner {
             } finally {
                 // Ensure the DataCollector ends all dangling Threads
                 mDataCollector.stop();
-                // Ensure the Timer in GraphicsStatsMonitor is canceled
-                stopJankMonitoring(); // However, it is daemon
-                // Ensure jank metrics are written to the graphics file
-                writeJankMetrics();
             }
         }
 
