@@ -124,7 +124,7 @@ public class AuptTestRunner extends InstrumentationTestRunner {
 
         // Option: -e jankInterval integer
         long interval = parseLongParam("jankInterval", -1L);
-        if (interval <= 0) {
+        if (interval > 0) {
             mTrackJank = true;
             mGraphicsStatsMonitor = new GraphicsStatsMonitor();
             mGraphicsStatsMonitor.setIntervalRate(interval);
