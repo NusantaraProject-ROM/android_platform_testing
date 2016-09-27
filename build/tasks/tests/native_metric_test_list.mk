@@ -21,4 +21,5 @@ native_metric_tests := \
     libjavacore-benchmarks \
     minikin_perftests \
     mmapPerf \
+    netd_benchmark \
     perf-setup.sh
