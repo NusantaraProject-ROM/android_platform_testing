@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2015 The Android Open Source Project
+# Copyright (C) 2016 The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,12 +15,13 @@
 #
 
 LOCAL_PATH := $(call my-dir)
+
+# -----------------------------------------------------------------------
+# The static library that platform/app helpers can link against
 include $(CLEAR_VARS)
 
-LOCAL_MODULE := launcher-helper-lib
-LOCAL_JAVA_LIBRARIES := ub-uiautomator
-LOCAL_STATIC_JAVA_LIBRARIES := dpad-util
-LOCAL_SDK_VERSION := 21
+LOCAL_MODULE := dpad-util
+LOCAL_JAVA_LIBRARIES := ub-uiautomator android-support-test
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
 include $(BUILD_STATIC_JAVA_LIBRARY)
