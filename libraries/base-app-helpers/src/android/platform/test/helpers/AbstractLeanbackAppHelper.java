@@ -55,16 +55,12 @@ public abstract class AbstractLeanbackAppHelper extends AbstractStandardAppHelpe
     }
 
     protected DPadUtil mDPadUtil;
-    // TODO: Delete DPadHelper once migrated to using DPadUtil
-    protected DPadHelper mDPadHelper;
     public ILeanbackLauncherStrategy mLauncherStrategy;
 
 
     public AbstractLeanbackAppHelper(Instrumentation instr) {
         super(instr);
         mDPadUtil = new DPadUtil(instr);
-        // TODO: Delete DPadHelper once migrated to using DPadUtil
-        mDPadHelper = DPadHelper.getInstance(instr);
         mLauncherStrategy = LauncherStrategyFactory.getInstance(
                 mDevice).getLeanbackLauncherStrategy();
     }
