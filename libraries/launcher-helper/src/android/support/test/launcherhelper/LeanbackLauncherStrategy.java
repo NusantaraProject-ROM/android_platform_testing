@@ -20,7 +20,12 @@ import android.graphics.Point;
 import android.os.RemoteException;
 import android.os.SystemClock;
 import android.platform.test.utils.DPadUtil;
-import android.support.test.uiautomator.*;
+import android.support.test.uiautomator.By;
+import android.support.test.uiautomator.BySelector;
+import android.support.test.uiautomator.Direction;
+import android.support.test.uiautomator.UiDevice;
+import android.support.test.uiautomator.UiObject2;
+import android.support.test.uiautomator.Until;
 import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
@@ -38,7 +43,7 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
     private static final int NOTIFICATION_WAIT_TIME = 30000;
 
     protected UiDevice mDevice;
-    protected DPadUtil mDPadUtil = new DPadUtil();
+    protected DPadUtil mDPadUtil;
 
 
     /**
@@ -55,6 +60,7 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
     @Override
     public void setUiDevice(UiDevice uiDevice) {
         mDevice = uiDevice;
+        mDPadUtil = new DPadUtil(mDevice);
     }
 
     /**
