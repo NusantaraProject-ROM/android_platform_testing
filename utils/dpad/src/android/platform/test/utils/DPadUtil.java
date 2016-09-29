@@ -18,7 +18,6 @@ package android.platform.test.utils;
 
 import android.app.Instrumentation;
 import android.os.SystemClock;
-import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.EventCondition;
 import android.support.test.uiautomator.UiDevice;
@@ -35,12 +34,16 @@ public class DPadUtil {
     private UiDevice mDevice;
 
 
-    public DPadUtil() {
-        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-    }
-
     public DPadUtil(Instrumentation instrumentation) {
         mDevice = UiDevice.getInstance(instrumentation);
+    }
+
+    public DPadUtil(UiDevice uiDevice) {
+        mDevice = uiDevice;
+    }
+
+    public void setUiDevice(UiDevice uiDevice) {
+        mDevice = uiDevice;
     }
 
     public boolean pressDPad(Direction direction) {
