@@ -23,19 +23,20 @@ import android.util.Log;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.HashMap;
 import java.util.Map;
 
 public class DataCollector {
     private static final String TAG = "AuptDataCollector";
 
+    private final AtomicBoolean mStopped = new AtomicBoolean(true);
     private final Map<LogGenerator, Long> generatorsWithIntervals = new HashMap<>();
     private final Map<LogGenerator, Long> mLastUpdate = new HashMap<>();
     private final Instrumentation instrumentation;
     private final String resultsDirectory;
     private final long mSleepInterval;
 
-    private boolean mStopped = true;
     private Thread mThread;
 
     /**
@@ -68,9 +69,7 @@ public class DataCollector {
     }
 
     public synchronized void start() {
-        if (mStopped) {
-            mStopped = false;
-
+        if (mStopped.getAndSet(false)) {
             /* Initialize the LastUpdates to the current time */
             for (Map.Entry<LogGenerator, Long> entry : generatorsWithIntervals.entrySet()) {
                 if (entry.getValue() > 0) {
@@ -94,8 +93,7 @@ public class DataCollector {
     }
 
     public synchronized void stop() {
-        if (!mStopped) {
-            mStopped = true;
+        if (!mStopped.getAndSet(true)) {
             mThread.interrupt();
 
             try {
@@ -113,7 +111,7 @@ public class DataCollector {
             return;
         }
 
-        while (!mStopped) {
+        while (!mStopped.get()) {
             try {
                 for (Map.Entry<LogGenerator, Long> entry : generatorsWithIntervals.entrySet()) {
                     Long t = SystemClock.uptimeMillis() - mLastUpdate.get(entry.getKey());

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package android.support.test.aupt;
 
-import android.app.Instrumentation;
 import android.app.Service;
 import android.content.Context;
 import android.content.ContextWrapper;
@@ -25,114 +24,152 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
+import android.os.SystemClock;
 import android.support.test.uiautomator.UiDevice;
 import android.test.AndroidTestRunner;
 import android.test.InstrumentationTestCase;
 import android.test.InstrumentationTestRunner;
 import android.util.Log;
 
-import dalvik.system.BaseDexClassLoader;
-
 import junit.framework.AssertionFailedError;
 import junit.framework.Test;
-import junit.framework.TestCase;
 import junit.framework.TestListener;
-import junit.framework.TestResult;
 
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+
+import java.util.concurrent.TimeUnit;
+
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.concurrent.TimeUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
 /**
- * Test runner to use when running AUPT tests.
- * <p>
- * Adds support for multiple iterations, randomizing the order of the tests,
- * terminating tests after UI errors, detecting when processes are getting killed,
- * collecting bugreports and procrank data while the test is running.
+ * Ultra-fancy TestRunner to use when running AUPT: supports
+ *
+ * - Picking up tests from dexed JARs
+ * - Running tests for multiple iterations or in a custom order
+ * - Terminating tests after UI errors, timeouts, or when dependent processes die
+ * - Injecting additional information into custom TestCase subclasses
+ * - Passing through continuous metric-collection to a DataCollector instance
+ * - Collecting bugreports and heapdumps
+ *
  */
 public class AuptTestRunner extends InstrumentationTestRunner {
-    private static final String DEFAULT_JAR_PATH = "/data/local/tmp/";
 
-    private static final String LOG_TAG = "AuptTestRunner";
-    private static final String DEX_OPT_PATH = "aupt-opt";
-    private static final String PARAM_JARS = "jars";
+    /* Constants */
+    private static final String LOG_TAG = AuptTestRunner.class.getSimpleName();
+    private static final Long ANR_DELAY = 30000L;
+
+    /* Keep a pointer to our argument bundle around for testing */
     private Bundle mParams;
 
-    private long mIterations;
-    private Random mRandom;
-    private boolean mShuffle;
-    private boolean mGenerateAnr;
-    private long mTestCaseTimeout = TimeUnit.MINUTES.toMillis(10);
-    private DataCollector mDataCollector;
-    private File mResultsDirectory;
-
+    /* Primitive Parameters */
     private boolean mDeleteOldFiles;
     private long mFileRetainCount;
+    private boolean mGenerateAnr;
+    private boolean mRecordMeminfo;
+    private long mIterations;
+    private long mSeed;
+    private long mTestCaseTimeout;
 
-    private AuptPrivateTestRunner mRunner = new AuptPrivateTestRunner();
-    private ClassLoader mLoader = null;
-    private Context mTargetContextWrapper;
+    /* Dumpheap Parameters */
+    private boolean mDumpheapEnabled;
+    private long mDumpheapInterval;
+    private long mDumpheapThreshold;
+    private long mMaxDumpheaps;
 
-    private IProcessStatusTracker mProcessTracker;
+    /* String Parameters */
+    private List<String> mJars = new ArrayList<>();
+    private List<String> mMemoryTrackedProcesses = new ArrayList<>();
 
-    private Map<String, List<AuptTestCase.MemHealthRecord>> mMemHealthRecords;
-    private List<String> mJars;
-    /**
-     * {@inheritDoc}
-     */
+    /* Other Parameters */
+    private File mResultsDirectory;
+
+    /* Helpers */
+    private Scheduler mScheduler;
+    private DataCollector mDataCollector;
+    private DexTestRunner mRunner;
+
+    /* Logging */
+    private ProcessStatusTracker mProcessTracker;
+    private List<MemHealthRecord> mMemHealthRecords = new ArrayList<>();
+    private Map<String, Long> mDumpheapCount = new HashMap<>();
+    private Map<String, Long> mLastDumpheap = new HashMap<>();
+
+    /* Test Initialization */
     @Override
     public void onCreate(Bundle params) {
-
         mParams = params;
 
-        mMemHealthRecords = new HashMap<String, List<AuptTestCase.MemHealthRecord>>();
-
+        // Parse out primitive parameters
         mIterations = parseLongParam("iterations", 1);
-        mShuffle = parseBooleanParam("shuffle", false);
-        long seed = parseLongParam("seed", (new Random()).nextLong());
-        Log.d(LOG_TAG, String.format("Using seed value: %s", seed));
-        mRandom = new Random(seed);
-        // set to 'generateANR to 'true' when more info required for debugging on test timeout'
-        mGenerateAnr = parseBooleanParam("generateANR", false);
-        if (parseBooleanParam("quitOnError", false)) {
-            mRunner.addTestListener(new QuitOnErrorListener());
+        mGenerateAnr = parseBoolParam("generateANR", false);
+        mRecordMeminfo = parseBoolParam("record_meminfo", false);
+        mDumpheapEnabled = parseBoolParam("enableDumpheap", false);
+        mDumpheapThreshold = parseLongParam("dumpheapThreshold", 200 * 1024 * 1024);
+        mDumpheapInterval = parseLongParam("dumpheapInterval", 60 * 60 * 1000);
+        mMaxDumpheaps = parseLongParam("maxDumpheaps", 5);
+        mTestCaseTimeout = parseLongParam("testCaseTimeout", TimeUnit.MINUTES.toMillis(10));
+        mSeed = parseLongParam("seed", new Random().nextLong());
+
+        // Option: -e shuffle true
+        mScheduler = parseBoolParam("shuffle", false)
+                ? Scheduler.shuffled(new Random(mSeed), mIterations)
+                : Scheduler.sequential(mIterations);
+
+        // Option: -e jars aupt-app-tests.jar:...
+        mJars.addAll(DexTestRunner.parseDexedJarPaths(parseStringParam("jars", "")));
+
+        // Option: -e trackMemory com.pkg1,com.pkg2,...
+        String memoryTrackedProcesses = parseStringParam("trackMemory", null);
+
+        if (memoryTrackedProcesses != null) {
+            mMemoryTrackedProcesses = Arrays.asList(memoryTrackedProcesses.split(","));
+        } else {
+            try {
+                // Deprecated approach: get tracked processes from a file.
+                String trackMemoryFileName =
+                        Environment.getExternalStorageDirectory() + "/track_memory.txt";
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(
+                        new FileInputStream(new File(trackMemoryFileName))));
+
+                mMemoryTrackedProcesses = Arrays.asList(reader.readLine().split(","));
+                reader.close();
+            } catch (NullPointerException | IOException ex) {
+                mMemoryTrackedProcesses = Arrays.asList();
+            }
         }
-        if (parseBooleanParam("checkBattery", false)) {
-            mRunner.addTestListener(new BatteryChecker());
-        }
-        mTestCaseTimeout = parseLongParam("testCaseTimeout", mTestCaseTimeout);
 
         // Option: -e detectKill com.pkg1,...,com.pkg8
         String processes = parseStringParam("detectKill", null);
+
         if (processes != null) {
             mProcessTracker = new ProcessStatusTracker(processes.split(","));
         } else {
-            mProcessTracker = new ProcessStatusTracker(null);
+            mProcessTracker = new ProcessStatusTracker(new String[] {});
         }
 
-        mRunner.addTestListener(new PidChecker());
+        // Option: -e outputLocation aupt_results
         mResultsDirectory = new File(Environment.getExternalStorageDirectory(),
                 parseStringParam("outputLocation", "aupt_results"));
         if (!mResultsDirectory.exists() && !mResultsDirectory.mkdirs()) {
-            Log.w(LOG_TAG, "Did not create output directory");
+            Log.w(LOG_TAG, "Could not find or create output directory " + mResultsDirectory);
         }
 
+        // Option: -e fileRetainCount 1
         mFileRetainCount = parseLongParam("fileRetainCount", -1);
-        if (mFileRetainCount == -1) {
-            mDeleteOldFiles = false;
-        } else {
-            mDeleteOldFiles = true;
-        }
+        mDeleteOldFiles = (mFileRetainCount != -1);
 
+        // Primary logging infrastructure
         mDataCollector = new DataCollector(
                 TimeUnit.MINUTES.toMillis(parseLongParam("bugreportInterval", 0)),
                 TimeUnit.MINUTES.toMillis(parseLongParam("jankInterval", 0)),
@@ -144,56 +181,49 @@ public class AuptTestRunner extends InstrumentationTestRunner {
                 TimeUnit.MINUTES.toMillis(parseLongParam("traceInterval", 0)),
                 mResultsDirectory, this);
 
-        String jars = params.getString(PARAM_JARS);
-        if (jars != null) {
-            loadDexJars(jars);
-        }
-        mTargetContextWrapper = new ClassLoaderContextWrapper();
+        // Make our TestRunner
+        mRunner = new DexTestRunner(this, mScheduler, mJars) {
+            @Override
+            void onTestStart(Test test) {
+                injectInstrumentation(test);
+                super.onTestStart(test);
+            }
+        };
+
+        // Aupt's TestListeners
+        mRunner.addTestListener(new PeriodicHeapDumper());
+        mRunner.addTestListener(new MemHealthRecorder());
+        mRunner.addTestListener(new DcimCleaner());
+        mRunner.addTestListener(new PidChecker());
+        mRunner.addTestListener(new TimeoutStackDumper());
+        mRunner.addTestListener(new TestTimeout());
+        mRunner.addTestListener(new MemInfoDumper());
+        mRunner.addTestListenerIf(parseBoolParam("quitOnError", false), new QuitOnErrorListener());
+        mRunner.addTestListenerIf(parseBoolParam("checkBattery", false), new BatteryChecker());
+
+        // Start our loggers
+        mDataCollector.start();
+
+        // Start the test
         super.onCreate(params);
     }
 
-    private void loadDexJars(String jars) {
-        // scan provided jar paths, translate relative to absolute paths, and check for existence
-        String[] jarsArray = jars.split(":");
-        StringBuilder classLoaderPath = new StringBuilder();
-        mJars = new ArrayList<String>();
-        for (int i = 0; i < jarsArray.length; i++) {
-            String jar = jarsArray[i];
-            if (!jar.startsWith("/")) {
-                jar = DEFAULT_JAR_PATH + jar;
-            }
-            File jarFile = new File(jar);
-            if (!jarFile.exists() || !jarFile.canRead()) {
-                throw new IllegalArgumentException("Jar file does not exist or not accessible: "
-                        + jar);
-            }
-            if (i != 0) {
-                classLoaderPath.append(File.pathSeparator);
-            }
-            classLoaderPath.append(jarFile.getAbsolutePath());
-            mJars.add(jarFile.getAbsolutePath());
-        }
-        // now load them
-        File optDir = new File(getContext().getCacheDir(), DEX_OPT_PATH);
-        if (!optDir.exists() && !optDir.mkdirs()) {
-            throw new RuntimeException(
-                    "Failed to create dex optimize directory: " + optDir.getAbsolutePath());
-        }
-        mLoader = new BaseDexClassLoader(classLoaderPath.toString(), optDir, null,
-                super.getTargetContext().getClassLoader());
-
+    @Override
+    public void onDestroy() {
+        mDataCollector.stop();
     }
+
+    /* Option-parsing helpers */
 
     private long parseLongParam(String key, long alternative) throws NumberFormatException {
         if (mParams.containsKey(key)) {
-            return Long.parseLong(
-                    mParams.getString(key));
+            return Long.parseLong(mParams.getString(key));
         } else {
             return alternative;
         }
     }
 
-    private boolean parseBooleanParam(String key, boolean alternative)
+    private boolean parseBoolParam(String key, boolean alternative)
             throws NumberFormatException {
         if (mParams.containsKey(key)) {
             return Boolean.parseBoolean(mParams.getString(key));
@@ -210,205 +240,284 @@ public class AuptTestRunner extends InstrumentationTestRunner {
         }
     }
 
-    private void writeProgressMessage(String msg) {
-        writeMessage("progress.txt", msg);
-    }
+    /* Utility methods */
 
-    private void writeGraphicsMessage(String msg) {
-        writeMessage("graphics.txt", msg);
-    }
+    /**
+     * Injects instrumentation into InstrumentationTestCase and AuptTestCase instances
+     */
+    private void injectInstrumentation(Test test) {
+        if (InstrumentationTestCase.class.isAssignableFrom(test.getClass())) {
+            InstrumentationTestCase instrTest = (InstrumentationTestCase) test;
 
-    private void writeMessage(String filename, String msg) {
-        try {
-            FileOutputStream fos = new FileOutputStream(
-                    new File(mResultsDirectory, filename));
-            fos.write(msg.getBytes());
-            fos.flush();
-            fos.close();
-        } catch (IOException ioe) {
-            Log.e(LOG_TAG, "error saving progress file", ioe);
+            instrTest.injectInstrumentation(AuptTestRunner.this);
         }
     }
 
-    /**
-     * Provide a wrapped context so that we can provide an alternative class loader
-     * @return
-     */
-    @Override
-    public Context getTargetContext() {
-        return mTargetContextWrapper;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
+    /* Passthrough to our DexTestRunner */
     @Override
     protected AndroidTestRunner getAndroidTestRunner() {
-        // AndroidTestRunner is what determines which tests get to run.
-        // Unfortunately there is no hooks into it, so most of
-        // the functionality has to be duplicated
         return mRunner;
     }
 
-    /**
-     * Determines which tests to run, configures the test class and then runs the test.
-     */
-    private class AuptPrivateTestRunner extends AndroidTestRunner {
-
-        private List<TestCase> mTestCases;
-        private List<TestListener> mTestListeners = new ArrayList<>();
-        private Instrumentation mInstrumentation;
-        private TestResult mTestResult;
-
-        @Override
-        public List<TestCase> getTestCases() {
-            if (mTestCases != null) {
-                return mTestCases;
-            }
-
-            List<TestCase> testCases = new ArrayList<TestCase>(super.getTestCases());
-            List<TestCase> completeList = new ArrayList<TestCase>();
-
-            for (int i = 0; i < mIterations; i++) {
-                if (mShuffle) {
-                    Collections.shuffle(testCases, mRandom);
+    @Override
+    public Context getTargetContext() {
+        return new ContextWrapper(super.getTargetContext()) {
+            @Override
+            public ClassLoader getClassLoader() {
+                if(mRunner != null) {
+                    return mRunner.getDexClassLoader();
+                } else {
+                    throw new RuntimeException("DexTestRunner not initialized!");
                 }
-                completeList.addAll(testCases);
+            }
+        };
+    }
+
+    /**
+     * A simple abstract instantiation of TestListener
+     *
+     * Primarily meant to work around Java 7's lack of interface-default methods.
+     */
+    private abstract class AuptListener implements TestListener {
+        /** Called when a test throws an exception */
+        public void addError(Test test, Throwable t) {}
+
+        /** Called when a test fails */
+        public void addFailure(Test test, AssertionFailedError t) {}
+
+        /** Called whenever a test ends */
+        public void endTest(Test test) {}
+
+        /** Called whenever a test begins */
+        public void startTest(Test test) {}
+    }
+
+    /**
+     * Periodically Heap-dump to assist with memory-leaks.
+     */
+    private class PeriodicHeapDumper extends AuptListener {
+        private Thread mHeapDumpThread;
+
+        private class InternalHeapDumper implements Runnable {
+            private void recordDumpheap(String proc, long pss) throws IOException {
+                if (!mDumpheapEnabled) {
+                    return;
+                }
+                Long count = mDumpheapCount.get(proc);
+                if (count == null) {
+                    count = 0L;
+                }
+                Long lastDumpheap = mLastDumpheap.get(proc);
+                if (lastDumpheap == null) {
+                    lastDumpheap = 0L;
+                }
+                long currentTime = SystemClock.uptimeMillis();
+                if (pss > mDumpheapThreshold && count < mMaxDumpheaps &&
+                        currentTime - lastDumpheap > mDumpheapInterval) {
+                    recordDumpheap(proc);
+                    mDumpheapCount.put(proc, count + 1);
+                    mLastDumpheap.put(proc, currentTime);
+                }
             }
 
-            mTestCases = completeList;
-            return mTestCases;
+            private void recordDumpheap(String proc) throws IOException {
+                long count = mDumpheapCount.get(proc);
+
+                String filename = String.format("dumpheap-%s-%d", proc, count);
+                String tempFilename = "/data/local/tmp/" + filename;
+                String finalFilename = mResultsDirectory + "/" + filename;
+
+                AuptTestRunner.this.getUiAutomation().executeShellCommand(
+                        String.format("am dumpheap %s %s", proc, tempFilename));
+
+                SystemClock.sleep(3000);
+
+                AuptTestRunner.this.getUiAutomation().executeShellCommand(
+                        String.format("cp %s %s", tempFilename, finalFilename));
+            }
+
+            public void run() {
+                try {
+                    while (true) {
+                        Thread.sleep(mDumpheapInterval);
+
+                        for(String proc : mMemoryTrackedProcesses) {
+                            recordDumpheap(proc);
+                        }
+                    }
+                } catch (InterruptedException iex) {
+                } catch (IOException ioex) {
+                    Log.e(LOG_TAG, "Failed to write heap dump!", ioex);
+                }
+            }
         }
 
         @Override
-        public void runTest(TestResult testResult) {
-            mTestResult = testResult;
+        public void startTest(Test test) {
+            mHeapDumpThread = new Thread(new InternalHeapDumper());
+            mHeapDumpThread.start();
+        }
 
-            ((ProcessStatusTracker)mProcessTracker).setUiAutomation(getUiAutomation());
+        @Override
+        public void endTest(Test test) {
+            try {
+                mHeapDumpThread.interrupt();
+                mHeapDumpThread.join();
+            } catch (InterruptedException iex) { }
+        }
+    }
 
-            mDataCollector.start();
-
-            for (TestListener testListener : mTestListeners) {
-                mTestResult.addListener(testListener);
+    /**
+     * Dump memory info on test start/stop
+     */
+    private class MemInfoDumper extends AuptListener {
+        private void dumpMemInfo() {
+            if (mRecordMeminfo) {
+                FilesystemUtil.dumpMeminfo(AuptTestRunner.this, "MemInfoDumper");
             }
+        }
 
-            Runnable timeBomb = new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        Thread.sleep(mTestCaseTimeout);
-                    } catch (InterruptedException e) {
-                        return;
-                    }
-                    // if we ever wake up, a timeout has occurred, set off the bomb,
-                    // but trigger a service ANR first
-                    if (mGenerateAnr) {
-                        Context ctx = getTargetContext();
-                        Log.d(LOG_TAG, "About to induce artificial ANR for debugging");
-                        ctx.startService(new Intent(ctx, BadService.class));
-                        // intentional delay to allow the service ANR to happen then resolve
-                        try {
-                            Thread.sleep(BadService.DELAY + BadService.DELAY / 4);
-                        } catch (InterruptedException e) {
-                            // ignore
-                            Log.d(LOG_TAG, "interrupted in wait on BadService");
-                            return;
-                        }
-                    } else {
-                        Log.d("THREAD_DUMP", getStackTraces());
-                    }
-                    throw new RuntimeException(String.format("max testcase timeout exceeded: %s ms",
-                            mTestCaseTimeout));
-                }
-            };
+        @Override
+        public void startTest(Test test) {
+            dumpMemInfo();
+        }
+
+        @Override
+        public void endTest(Test test) {
+            dumpMemInfo();
+        }
+    }
+
+    /**
+     * Record all of our MemHealthRecords
+     */
+    private class MemHealthRecorder extends AuptListener {
+        @Override
+        public void startTest(Test test) {
+            recordMemHealth();
+        }
+
+        @Override
+        public void endTest(Test test) {
+            recordMemHealth();
 
             try {
-                // Try to run all TestCases, but ensure the finally block is reached
-                for (TestCase testCase : mTestCases) {
-                    setInstrumentationIfInstrumentationTestCase(testCase, mInstrumentation);
-                    setupAuptIfAuptTestCase(testCase);
+                MemHealthRecord.saveVerbose(mMemHealthRecords,
+                    mResultsDirectory + "memory-health.txt");
 
-                    // Remove device storage as necessary
-                    removeOldImagesFromDcimCameraFolder();
+                MemHealthRecord.saveCsv(mMemHealthRecords,
+                    mResultsDirectory + "memory-health-details.txt");
 
-                    Thread timeBombThread = null;
-                    if (mTestCaseTimeout > 0) {
-                        timeBombThread = new Thread(timeBomb);
-                        timeBombThread.setName("Boom!");
-                        timeBombThread.setDaemon(true);
-                        timeBombThread.start();
-                    }
+                mMemHealthRecords.clear();
+            } catch (IOException ioex) {
+                Log.e(LOG_TAG, "Error writing MemHealthRecords", ioex);
+            }
+        }
 
-                    try {
-                        testCase.run(mTestResult);
-                    } catch (AuptTerminator ex) {
-                        // Write to progress.txt to pass the exception message to the dashboard
-                        writeProgressMessage("Exception: " + ex);
-                        // Throw the exception, because we want to discontinue running tests
-                        throw ex;
-                    }
+        private void recordMemHealth() {
+            try {
+                mMemHealthRecords.addAll(MemHealthRecord.get(
+                      AuptTestRunner.this,
+                      mMemoryTrackedProcesses,
+                      System.currentTimeMillis(),
+                      getForegroundProcs()));
+            } catch (IOException ioex) {
+                Log.e(LOG_TAG, "Error collecting MemHealthRecords", ioex);
+            }
+        }
 
-                    if (mTestCaseTimeout > 0) {
-                        timeBombThread.interrupt();
-                        try {
-                            timeBombThread.join();
-                        } catch (InterruptedException e) {
-                            // ignore
-                        }
+        private List<String> getForegroundProcs() {
+            List<String> foregroundProcs = new ArrayList<String>();
+            try {
+                String compactMeminfo = MemHealthRecord.getProcessOutput(AuptTestRunner.this,
+                        "dumpsys meminfo -c");
+
+                for (String line : compactMeminfo.split("\\r?\\n")) {
+                    if (line.contains("proc,fore")) {
+                        String proc = line.split(",")[2];
+                        foregroundProcs.add(proc);
                     }
                 }
+            } catch (IOException e) {
+                Log.e(LOG_TAG, "Error while getting foreground process", e);
             } finally {
-                // Ensure the DataCollector ends all dangling Threads
-                mDataCollector.stop();
+                return foregroundProcs;
             }
         }
+    }
 
-        /**
-         * Gets all thread stack traces.
-         *
-         * @return string of all thread stack traces
-         */
-        private String getStackTraces() {
-            StringBuilder sb = new StringBuilder();
-            Map<Thread, StackTraceElement[]> stacks = Thread.getAllStackTraces();
-            for (Thread t : stacks.keySet()) {
-                sb.append(t.toString()).append('\n');
-                for (StackTraceElement ste : t.getStackTrace()) {
-                    sb.append("\tat ").append(ste.toString()).append('\n');
+    /**
+     * Kills application and dumps UI Hierarchy on test error
+     */
+    private class QuitOnErrorListener extends AuptListener {
+        @Override
+        public void addError(Test test, Throwable t) {
+            Log.e(LOG_TAG, "Caught exception from a test", t);
+
+            if ((t instanceof AuptTerminator)) {
+                throw (AuptTerminator)t;
+            } else {
+
+                // Check if our exception is caused by process dependency
+                if (test instanceof AuptTestCase) {
+                    mProcessTracker.setUiAutomation(getUiAutomation());
+                    mProcessTracker.verifyRunningProcess();
                 }
-                sb.append('\n');
+
+                // If that didn't throw, then dump our hierarchy
+                Log.v(LOG_TAG, "Dumping UI hierarchy");
+                try {
+                    UiDevice.getInstance(AuptTestRunner.this).dumpWindowHierarchy(
+                            new File("/data/local/tmp/error_dump.xml"));
+                } catch (IOException e) {
+                    Log.w(LOG_TAG, "Failed to create UI hierarchy dump for UI error", e);
+                }
             }
-            return sb.toString();
+
+            // Quit on an error
+            throw new AuptTerminator(t.getMessage(), t);
         }
 
-        private void setInstrumentationIfInstrumentationTestCase(
-                Test test, Instrumentation instrumentation) {
-            if (InstrumentationTestCase.class.isAssignableFrom(test.getClass())) {
-                ((InstrumentationTestCase) test).injectInstrumentation(instrumentation);
-            }
+        @Override
+        public void addFailure(Test test, AssertionFailedError t) {
+            // Quit on an error
+            throw new AuptTerminator(t.getMessage(), t);
+        }
+    }
+
+    /**
+     * Makes sure the processes this test requires are all alive
+     */
+    private class PidChecker extends AuptListener {
+        @Override
+        public void startTest(Test test) {
+            mProcessTracker.setUiAutomation(getUiAutomation());
+            mProcessTracker.verifyRunningProcess();
         }
 
-        // Aupt specific set up.
-        private void setupAuptIfAuptTestCase(Test test) {
-            if (test instanceof AuptTestCase){
-                ((AuptTestCase)test).setProcessStatusTracker(mProcessTracker);
-                ((AuptTestCase)test).setMemHealthRecords(mMemHealthRecords);
-                ((AuptTestCase)test).setDataCollector(mDataCollector);
-                ((AuptTestCase)test).setDexedJarPaths(mJars);
-            }
+        @Override
+        public void endTest(Test test) {
+            mProcessTracker.verifyRunningProcess();
         }
+    }
 
-        private void removeOldImagesFromDcimCameraFolder() {
+    /**
+     * Initialization for tests that touch the camera
+     */
+    private class DcimCleaner extends AuptListener {
+        @Override
+        public void startTest(Test test) {
             if (!mDeleteOldFiles) {
                 return;
             }
 
             File dcimFolder = new File(Environment.getExternalStorageDirectory(), "DCIM");
-            if (dcimFolder != null) {
-                File cameraFolder = new File(dcimFolder, "Camera");
-                if (cameraFolder != null) {
+            File cameraFolder = new File(dcimFolder, "Camera");
+
+            if (dcimFolder.exists()) {
+                if (cameraFolder.exists()) {
                     File[] allMediaFiles = cameraFolder.listFiles();
-                    Arrays.sort(allMediaFiles, new Comparator<File> () {
+                    Arrays.sort(allMediaFiles, new Comparator<File>() {
                         public int compare(File f1, File f2) {
                             return Long.valueOf(f1.lastModified()).compareTo(f2.lastModified());
                         }
@@ -423,109 +532,12 @@ public class AuptTestRunner extends InstrumentationTestRunner {
                 Log.w(LOG_TAG, "No DCIM folder found to delete from.");
             }
         }
-
-        @Override
-        public void clearTestListeners() {
-            mTestListeners.clear();
-        }
-
-        @Override
-        public void addTestListener(TestListener testListener) {
-            if (testListener != null) {
-                mTestListeners.add(testListener);
-            }
-        }
-
-        @Override
-        public void setInstrumentation(Instrumentation instrumentation) {
-            mInstrumentation = instrumentation;
-        }
-
-        @Override
-        public TestResult getTestResult() {
-            return mTestResult;
-        }
-
-        @Override
-        protected TestResult createTestResult() {
-            return new TestResult();
-        }
     }
 
     /**
-     * Test listener that monitors the AUPT tests for any errors. If the option is set it will
-     * terminate the whole test run if it encounters an exception.
+     * Makes sure the battery hasn't died before and after each test.
      */
-    private class QuitOnErrorListener implements TestListener {
-
-        @Override
-        public void addError(Test test, Throwable t) {
-            Log.e(LOG_TAG, "Caught exception from a test", t);
-            if ((t instanceof AuptTerminator)) {
-                throw (AuptTerminator)t;
-            } else {
-                // check that if the UI exception is caused by process getting killed
-                if (test instanceof AuptTestCase) {
-                    ((AuptTestCase)test).getProcessStatusTracker().verifyRunningProcess();
-                }
-                // if previous line did not throw an exception, we are interested to know what
-                // caused the UI exception
-                Log.v(LOG_TAG, "Dumping UI hierarchy");
-                try {
-                    UiDevice.getInstance(AuptTestRunner.this).dumpWindowHierarchy(
-                            new File("/data/local/tmp/error_dump.xml"));
-                } catch (IOException e) {
-                    Log.w(LOG_TAG, "Failed to create UI hierarchy dump for UI error", e);
-                }
-            }
-
-            throw new AuptTerminator(t.getMessage(), t);
-        }
-
-        @Override
-        public void addFailure(Test test, AssertionFailedError t) {
-            throw new AuptTerminator(t.getMessage(), t);
-        }
-
-        @Override
-        public void endTest(Test test) {
-            // skip
-        }
-
-        @Override
-        public void startTest(Test test) {
-            // skip
-        }
-    }
-
-    /**
-     * A listener that checks that none of the monitored processes died during the test.
-     * If a process dies it will  terminate the test early.
-     */
-    private class PidChecker implements TestListener {
-
-        @Override
-        public void addError(Test test, Throwable t) {
-            // no-op
-        }
-
-        @Override
-        public void addFailure(Test test, AssertionFailedError t) {
-            // no-op
-        }
-
-        @Override
-        public void endTest(Test test) {
-            mProcessTracker.verifyRunningProcess();
-        }
-
-        @Override
-        public void startTest(Test test) {
-            mProcessTracker.verifyRunningProcess();
-        }
-    }
-
-    private class BatteryChecker implements TestListener {
+    private class BatteryChecker extends AuptListener {
         private static final double BATTERY_THRESHOLD = 0.05;
 
         private void checkBattery() {
@@ -547,62 +559,116 @@ public class AuptTestRunner extends InstrumentationTestRunner {
         }
 
         @Override
-        public void addError(Test test, Throwable t) {
-            // skip
-        }
-
-        @Override
-        public void addFailure(Test test, AssertionFailedError afe) {
-            // skip
-        }
-
-        @Override
-        public void endTest(Test test) {
-            // skip
-        }
-
-        @Override
         public void startTest(Test test) {
             checkBattery();
         }
     }
 
     /**
-     * A {@link ContextWrapper} that overrides {@link Context#getClassLoader()}
+     * Generates heap dumps when a test times out
      */
-    class ClassLoaderContextWrapper extends ContextWrapper {
-
-        public ClassLoaderContextWrapper() {
-            super(AuptTestRunner.super.getTargetContext());
+    private class TimeoutStackDumper extends AuptListener {
+        private String getStackTraces() {
+            StringBuilder sb = new StringBuilder();
+            Map<Thread, StackTraceElement[]> stacks = Thread.getAllStackTraces();
+            for (Thread t : stacks.keySet()) {
+                sb.append(t.toString()).append('\n');
+                for (StackTraceElement ste : t.getStackTrace()) {
+                    sb.append("\tat ").append(ste.toString()).append('\n');
+                }
+                sb.append('\n');
+            }
+            return sb.toString();
         }
 
-        /**
-         * Alternatively returns a custom class loader with classes loaded from additional jars
-         */
         @Override
-        public ClassLoader getClassLoader() {
-            if (mLoader != null) {
-                return mLoader;
-            } else {
-                return super.getClassLoader();
+        public void addError(Test test, Throwable t) {
+            if (t instanceof TestTimeout.TimeoutException) {
+                Log.d("THREAD_DUMP", getStackTraces());
             }
         }
     }
 
-    public static class BadService extends Service {
-        public static final long DELAY = 30000;
+    /**
+     * Generates TimeoutExceptions (and/or ANRs) when a test takes too long.
+     */
+    private class TestTimeout extends AuptListener {
+        private Thread mTimeBomb;
+
         @Override
-        public IBinder onBind(Intent intent) {
-            return null;
+        public void startTest(Test test) {
+            mTimeBomb = new Thread(new TimeBomb(test));
         }
 
         @Override
-        public int onStartCommand(Intent intent, int flags, int id) {
-            Log.i(LOG_TAG, "in service start -- about to hang");
-            try { Thread.sleep(DELAY); } catch (InterruptedException e) { Log.wtf(LOG_TAG, e); }
-            Log.i(LOG_TAG, "service hang finished -- stopping and returning");
-            stopSelf();
-            return START_NOT_STICKY;
+        public void endTest(Test test) {
+            try {
+                mTimeBomb.interrupt();
+                mTimeBomb.join();
+            } catch (InterruptedException ex) {
+                // Eat joining interruptions: if the runner got interrupted, our test is over
+            }
+        }
+
+        /* Supports for test timeout */
+
+        public class TimeoutException extends RuntimeException {}
+
+        private class AnrGenerator extends Service {
+            @Override
+            public IBinder onBind(Intent intent) {
+                return null;
+            }
+
+            @Override
+            public int onStartCommand(Intent intent, int flags, int id) {
+                Log.i(LOG_TAG, "in service start -- about to hang");
+                try {
+                    Thread.sleep(ANR_DELAY);
+                } catch (InterruptedException e) {
+                    Log.wtf(LOG_TAG, e);
+                }
+                Log.i(LOG_TAG, "service hang finished -- stopping and returning");
+                stopSelf();
+                return START_NOT_STICKY;
+            }
+
+            public void trigger() {
+                Context ctx = getTargetContext();
+
+                Log.d(LOG_TAG, "About to induce artificial ANR for debugging");
+                ctx.startService(new Intent(ctx, AnrGenerator.class));
+
+                try {
+                    Thread.sleep(ANR_DELAY);
+                } catch (InterruptedException e) {
+                    // ignore
+                    Log.d(LOG_TAG, "");
+                    throw new RuntimeException("Interrupted while waiting for AnrGenerator...");
+                }
+            }
+        }
+
+        private class TimeBomb implements Runnable {
+            private final Test mTest;
+
+            TimeBomb (Test test) {
+                mTest = test;
+            }
+
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(mTestCaseTimeout);
+
+                    if (mGenerateAnr) {
+                        new AnrGenerator().trigger();
+                    }
+
+                    Log.d(LOG_TAG, "AuptTestRunner timed out during test " + mTest.toString());
+                    throw new TimeoutException();
+                } catch (InterruptedException e) { /* Drop out -- this is what we want */}
+            }
         }
     }
 }
