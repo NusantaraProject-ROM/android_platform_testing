@@ -25,6 +25,7 @@ native_tests := \
     crashcollector \
     debuggerd_test \
     dumpstate_test \
+    dumpstate_test_fixture \
     dumpsys_test \
     hello_world_test \
     hwui_unit_tests \
