@@ -42,4 +42,5 @@ instrumentation_tests := \
     CalendarProviderTests \
     SettingsLibTests \
     RetailDemoTests \
-    RSTest
+    RSTest \
+    PrintSpoolerOutOfProcessTests
