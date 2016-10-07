@@ -43,7 +43,9 @@ public class LatencyTests {
     private static final String KEY_ITERATION_COUNT = "iteration_count";
     private static final long CLOCK_SETTLE_DELAY = 2000;
     private static final String FINGERPRINT_WAKE_FAKE_COMMAND = "am broadcast -a "
-            + "com.android.systemui.ACTION_FINGERPRINT_WAKE_FAKE";
+            + "com.android.systemui.latency.ACTION_FINGERPRINT_WAKE";
+    private static final String TURN_ON_SCREEN_COMMAND = "am broadcast -a "
+            + "com.android.systemui.latency.ACTION_TURN_ON_SCREEN";
     private static final String AM_START_COMMAND_TEMPLATE = "am start -a %s";
 
     private UiDevice mDevice;
@@ -106,6 +108,24 @@ public class LatencyTests {
             SystemClock.sleep(CLOCK_SETTLE_DELAY);
 
             mDevice.executeShellCommand(FINGERPRINT_WAKE_FAKE_COMMAND);
+            mDevice.waitForIdle();
+        }
+    }
+
+    /**
+     * Test how long it takes until the screen is fully turned on.
+     * <p>
+     * Every iteration will output a log in the form of "LatencyTracker/action=5 delay=x".
+     */
+    @Test
+    public void testScreenTurnOn() throws Exception {
+        for (int i = 0; i < mIterationCount; i++) {
+            mDevice.sleep();
+
+            // Wait for clocks to settle down
+            SystemClock.sleep(CLOCK_SETTLE_DELAY);
+
+            mDevice.executeShellCommand(TURN_ON_SCREEN_COMMAND);
             mDevice.waitForIdle();
         }
     }
