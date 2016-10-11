@@ -353,6 +353,27 @@ public class SystemUiJankTests extends JankTestBase {
         }
     }
 
+    public void beforeNotificationListPull_manyNotifications() throws Exception {
+        prepareNotifications(GROUP_MODE_UNGROUPED);
+        TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+    }
+
+    /** Measures jank while pulling down the notification list with many notifications */
+    @JankTest(expectedFrames = 100,
+            defaultIterationCount = 5,
+            beforeTest = "beforeNotificationListPull_manyNotifications",
+            afterTest = "afterNotificationListPull")
+    @GfxMonitor(processName = SYSTEMUI_PACKAGE)
+    public void testNotificationListPull_manyNotifications() {
+        for (int i = 0; i < INNER_LOOP; i++) {
+            swipeDown();
+            mDevice.waitForIdle();
+            swipeUp();
+            mDevice.waitForIdle();
+        }
+    }
+
     public void beforeQuickSettings() throws Exception {
 
         // Make sure we have some notifications.
