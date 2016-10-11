@@ -43,4 +43,5 @@ instrumentation_tests := \
     SettingsLibTests \
     RetailDemoTests \
     RSTest \
-    PrintSpoolerOutOfProcessTests
+    PrintSpoolerOutOfProcessTests \
+    CellBroadcastReceiverUnitTests
