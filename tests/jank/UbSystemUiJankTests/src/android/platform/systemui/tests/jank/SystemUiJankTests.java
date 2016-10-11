@@ -263,7 +263,7 @@ public class SystemUiJankTests extends JankTestBase {
 
     /** Starts from the bottom of the recent apps list and measures jank while flinging up. */
     @JankTest(beforeTest = "populateRecentApps", beforeLoop = "resetRecentsToBottom",
-            afterTest = "forceStopPackages", expectedFrames = 100)
+            afterTest = "forceStopPackages", expectedFrames = 100, defaultIterationCount = 5)
     @GfxMonitor(processName = SYSTEMUI_PACKAGE)
     public void testRecentAppsFling() {
         UiObject2 recents = mDevice.findObject(RECENTS);
@@ -283,7 +283,7 @@ public class SystemUiJankTests extends JankTestBase {
      * Measures jank when dismissing a task in recents.
      */
     @JankTest(beforeTest = "populateRecentApps", beforeLoop = "resetRecentsToBottom",
-            afterTest = "forceStopPackages", expectedFrames = 10)
+            afterTest = "forceStopPackages", expectedFrames = 10, defaultIterationCount = 5)
     @GfxMonitor(processName = SYSTEMUI_PACKAGE)
     public void testRecentAppsDismiss() {
         // Wait until dismiss views are fully faded in.
@@ -333,6 +333,7 @@ public class SystemUiJankTests extends JankTestBase {
 
     /** Measures jank while pulling down the notification list */
     @JankTest(expectedFrames = 100,
+            defaultIterationCount = 5,
             beforeTest = "beforeNotificationListPull", afterTest = "afterNotificationListPull")
     @GfxMonitor(processName = SYSTEMUI_PACKAGE)
     public void testNotificationListPull() {
@@ -367,6 +368,7 @@ public class SystemUiJankTests extends JankTestBase {
 
     /** Measures jank while pulling down the quick settings */
     @JankTest(expectedFrames = 100,
+            defaultIterationCount = 5,
             beforeTest = "beforeQuickSettings", afterTest = "afterQuickSettings")
     @GfxMonitor(processName = SYSTEMUI_PACKAGE)
     public void testQuickSettingsPull() throws Exception {
@@ -403,6 +405,7 @@ public class SystemUiJankTests extends JankTestBase {
      * Measure jank while unlocking the phone.
      */
     @JankTest(expectedFrames = 100,
+            defaultIterationCount = 5,
             beforeTest = "beforeUnlock", afterTest = "afterUnlock")
     @GfxMonitor(processName = SYSTEMUI_PACKAGE)
     public void testUnlock() throws Exception {
@@ -439,6 +442,7 @@ public class SystemUiJankTests extends JankTestBase {
      * Measures jank while expending a group notification.
      */
     @JankTest(expectedFrames = 100,
+            defaultIterationCount = 5,
             beforeTest = "beforeExpand", afterTest = "afterExpand")
     @GfxMonitor(processName = SYSTEMUI_PACKAGE)
     public void testExpandGroup() throws Exception {
@@ -484,6 +488,7 @@ public class SystemUiJankTests extends JankTestBase {
      * Measures jank when clicking the "clear all" button in the notification shade.
      */
     @JankTest(expectedFrames = 10,
+            defaultIterationCount = 5,
             beforeTest = "beforeClearAll",
             beforeLoop = "beforeClearAllLoop",
             afterTest = "afterClearAll")
@@ -521,6 +526,7 @@ public class SystemUiJankTests extends JankTestBase {
      * Measures jank when changing screen brightness
      */
     @JankTest(expectedFrames = 10,
+            defaultIterationCount = 5,
             beforeTest = "beforeChangeBrightness",
             afterTest = "afterChangeBrightness")
     @GfxMonitor(processName = SYSTEMUI_PACKAGE)
@@ -560,6 +566,7 @@ public class SystemUiJankTests extends JankTestBase {
      * Measures jank when a notification is appearing.
      */
     @JankTest(expectedFrames = 10,
+            defaultIterationCount = 5,
             beforeTest = "beforeNotificationAppear",
             afterTest = "afterNotificationAppear")
     @GfxMonitor(processName = SYSTEMUI_PACKAGE)
@@ -570,6 +577,46 @@ public class SystemUiJankTests extends JankTestBase {
             cancelNotifications(250);
             mDevice.waitForIdle();
         }
+    }
+
+    public void beforeCameraFromLockscreen() throws Exception {
+        TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+    }
+
+    public void beforeCameraFromLockscreenLoop() throws Exception {
+        mDevice.pressHome();
+        mDevice.sleep();
+        // Make sure we don't trigger the camera launch double-tap shortcut
+        SystemClock.sleep(300);
+        mDevice.wakeUp();
+        mDevice.waitForIdle();
+    }
+
+    public void afterCameraFromLockscreen(Bundle metrics) throws Exception {
+        TimeResultLogger.writeTimeStampLogEnd(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+        mDevice.pressHome();
+        TimeResultLogger.writeResultToFile(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), RESULTS_FILE, metrics);
+        super.afterTest(metrics);
+    }
+
+
+    /**
+     * Measures jank when launching the camera from lockscreen.
+     */
+    @JankTest(expectedFrames = 10,
+            defaultIterationCount = 5,
+            beforeTest = "beforeCameraFromLockscreen",
+            afterTest = "afterCameraFromLockscreen",
+            beforeLoop = "beforeCameraFromLockscreenLoop")
+    @GfxMonitor(processName = SYSTEMUI_PACKAGE)
+    public void testCameraFromLockscreen() throws Exception {
+        mDevice.swipe(mDevice.getDisplayWidth() - SWIPE_MARGIN,
+                mDevice.getDisplayHeight() - SWIPE_MARGIN, SWIPE_MARGIN, SWIPE_MARGIN,
+                DEFAULT_SCROLL_STEPS);
+        mDevice.waitForIdle();
     }
 }
 
