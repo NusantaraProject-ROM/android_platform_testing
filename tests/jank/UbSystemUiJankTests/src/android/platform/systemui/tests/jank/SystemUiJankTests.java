@@ -16,13 +16,12 @@
 
 package android.platform.systemui.tests.jank;
 
-import android.app.Notification;
 import android.app.Notification.Action;
 import android.app.Notification.Builder;
 import android.app.NotificationManager;
-import android.content.Context;
 import android.app.PendingIntent;
 import android.app.RemoteInput;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -32,9 +31,11 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.RemoteException;
 import android.os.SystemClock;
+import android.support.test.InstrumentationRegistry;
 import android.support.test.jank.GfxMonitor;
 import android.support.test.jank.JankTest;
 import android.support.test.jank.JankTestBase;
+import android.support.test.systemuihelper.LockscreenHelper;
 import android.support.test.timeresulthelper.TimeResultLogger;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
@@ -49,7 +50,6 @@ import android.widget.ImageView;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.SecurityException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -89,6 +89,7 @@ public class SystemUiJankTests extends JankTestBase {
     private static final String DISABLE_COMMAND = "pm disable-user ";
     private static final String ENABLE_COMMAND = "pm enable ";
     private static final String PULSE_COMMAND = "am broadcast -a com.android.systemui.doze.pulse";
+    private static final String PIN = "1234";
 
     /**
      * Group mode: Let the system auto-group our notifications. This is required so we don't screw
@@ -119,6 +120,7 @@ public class SystemUiJankTests extends JankTestBase {
         }
         mNotificationManager = getInstrumentation().getContext().getSystemService(
                 NotificationManager.class);
+        InstrumentationRegistry.registerInstance(getInstrumentation(), getArguments());
         blockNotifications();
     }
 
@@ -289,9 +291,7 @@ public class SystemUiJankTests extends JankTestBase {
     }
 
     public void cancelNotifications() throws Exception {
-        NotificationManager nm = (NotificationManager) getInstrumentation().getTargetContext()
-                .getSystemService(Context.NOTIFICATION_SERVICE);
-        nm.cancelAll();
+        mNotificationManager.cancelAll();
     }
 
     /** Starts from the bottom of the recent apps list and measures jank while flinging up. */
@@ -798,5 +798,49 @@ public class SystemUiJankTests extends JankTestBase {
             mDevice.waitForIdle();
         }
     }
-}
 
+    public void beforePinAppearance() throws Exception {
+        LockscreenHelper.getInstance().setScreenLock(PIN, "PIN");
+        goHome();
+        mDevice.sleep();
+        SystemClock.sleep(300);
+        mDevice.wakeUp();
+        TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+    }
+
+    public void afterPinAppearanceLoop() throws Exception {
+        mDevice.pressBack();
+        mDevice.waitForIdle();
+    }
+
+    public void afterPinAppearance(Bundle metrics) throws Exception {
+        TimeResultLogger.writeTimeStampLogEnd(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+        LockscreenHelper.getInstance().unlockScreen(PIN);
+        LockscreenHelper.getInstance().removeScreenLock(PIN);
+        mDevice.pressHome();
+        TimeResultLogger.writeResultToFile(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), RESULTS_FILE, metrics);
+        super.afterTest(metrics);
+    }
+
+    /**
+     * Measures jank when launching the camera from lockscreen.
+     */
+    @JankTest(expectedFrames = 30,
+            defaultIterationCount = 5,
+            beforeTest = "beforePinAppearance",
+            afterTest = "afterPinAppearance",
+            afterLoop = "afterPinAppearanceLoop")
+    @GfxMonitor(processName = SYSTEMUI_PACKAGE)
+    public void testPinAppearance() throws Exception {
+        mDevice.swipe(mDevice.getDisplayWidth() / 2, mDevice.getDisplayHeight() - SWIPE_MARGIN,
+                mDevice.getDisplayWidth() / 2, mDevice.getDisplayHeight() / 2,
+                DEFAULT_SCROLL_STEPS);
+        mDevice.waitForIdle();
+        String command = String.format("%s %s %s", "input", "text", PIN);
+        mDevice.executeShellCommand(command);
+        mDevice.waitForIdle();
+    }
+}
