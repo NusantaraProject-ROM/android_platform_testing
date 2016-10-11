@@ -45,6 +45,7 @@ import android.widget.ImageView;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.SecurityException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -139,7 +140,11 @@ public class SystemUiJankTests extends JankTestBase {
             }
             intent.addCategory(Intent.CATEGORY_LAUNCHER);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            getInstrumentation().getTargetContext().startActivity(intent);
+            try {
+                getInstrumentation().getTargetContext().startActivity(intent);
+            } catch (SecurityException e) {
+                Log.i(LOG_TAG, "Failed to start package " + pkg.packageName + ", exception: " + e);
+            }
 
             // Don't overload the system
             SystemClock.sleep(500);
@@ -152,7 +157,10 @@ public class SystemUiJankTests extends JankTestBase {
 
         // Close any crash dialogs
         while (mDevice.hasObject(By.textContains("has stopped"))) {
-            mDevice.findObject(By.text("Close")).clickAndWait(Until.newWindow(), 2000);
+            UiObject2 crashDialog = mDevice.findObject(By.text("Close"));
+            if (crashDialog != null) {
+                crashDialog.clickAndWait(Until.newWindow(), 2000);
+            }
         }
         TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
                 getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
