@@ -17,6 +17,7 @@ instrumentation_metric_tests := \
     CorePerfTests \
     DocumentsUIPerfTests \
     DocumentsUIAppPerfTests \
+    MtpDocumentsProviderPerfTests \
     perf-setup.sh \
     SurfaceComposition \
     RsBlasBenchmark \
