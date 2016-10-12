@@ -690,5 +690,47 @@ public class SystemUiJankTests extends JankTestBase {
             mDevice.waitForIdle();
         }
     }
+
+    public void beforeGoToFullShade() throws Exception {
+        postNotifications(GROUP_MODE_UNGROUPED);
+        mDevice.sleep();
+
+        // Don't trigger camera launch gesture
+        SystemClock.sleep(300);
+        mDevice.wakeUp();
+        mDevice.waitForIdle();
+        TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+    }
+
+    public void afterGoToFullShade(Bundle metrics) throws Exception {
+        TimeResultLogger.writeTimeStampLogEnd(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+        mDevice.pressMenu();
+        mDevice.waitForIdle();
+        cancelNotifications();
+        TimeResultLogger.writeResultToFile(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), RESULTS_FILE, metrics);
+        super.afterTest(metrics);
+    }
+
+    /**
+     * Measures jank when tragging down on a notification on the lockscreen to go to the full shade.
+     */
+    @JankTest(expectedFrames = 100,
+            defaultIterationCount = 5,
+            beforeTest = "beforeGoToFullShade",
+            afterTest = "afterGoToFullShade")
+    @GfxMonitor(processName = SYSTEMUI_PACKAGE)
+    public void testGoToFullShade() throws Exception {
+        for (int i = 0; i < INNER_LOOP; i++) {
+            mDevice.swipe(mDevice.getDisplayWidth() / 2, mDevice.getDisplayHeight() / 2,
+                    mDevice.getDisplayWidth() / 2, mDevice.getDisplayHeight() - SWIPE_MARGIN,
+                    DEFAULT_SCROLL_STEPS);
+            mDevice.waitForIdle();
+            mDevice.click(mDevice.getDisplayWidth() / 2, mDevice.getDisplayHeight() - SWIPE_MARGIN);
+            mDevice.waitForIdle();
+        }
+    }
 }
 
