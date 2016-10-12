@@ -128,6 +128,10 @@ public class LatencyTests {
             mDevice.executeShellCommand(TURN_ON_SCREEN_COMMAND);
             mDevice.waitForIdle();
         }
+
+        // Put device to home screen.
+        mDevice.pressMenu();
+        mDevice.waitForIdle();
     }
 
     /**
