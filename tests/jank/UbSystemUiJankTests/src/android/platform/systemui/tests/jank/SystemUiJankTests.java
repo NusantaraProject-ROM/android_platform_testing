@@ -83,6 +83,7 @@ public class SystemUiJankTests extends JankTestBase {
     private static final String GMAIL_PACKAGE_NAME = "com.google.android.gm";
     private static final String DISABLE_COMMAND = "pm disable-user ";
     private static final String ENABLE_COMMAND = "pm enable ";
+    private static final String PULSE_COMMAND = "am broadcast -a com.android.systemui.doze.pulse";
 
     /**
      * Group mode: Let the system auto-group our notifications. This is required so we don't screw
@@ -104,7 +105,7 @@ public class SystemUiJankTests extends JankTestBase {
     private List<String> mLaunchedPackages = new ArrayList<>();
     private NotificationManager mNotificationManager;
 
-    public void setUp() {
+    public void setUp() throws Exception {
         mDevice = UiDevice.getInstance(getInstrumentation());
         try {
             mDevice.setOrientationNatural();
@@ -113,6 +114,7 @@ public class SystemUiJankTests extends JankTestBase {
         }
         mNotificationManager = getInstrumentation().getContext().getSystemService(
                 NotificationManager.class);
+        blockNotifications();
     }
 
     public void goHome() {
@@ -123,6 +125,7 @@ public class SystemUiJankTests extends JankTestBase {
     @Override
     protected void tearDown() throws Exception {
         mDevice.unfreezeRotation();
+        unblockNotifications();
         super.tearDown();
     }
 
@@ -197,7 +200,6 @@ public class SystemUiJankTests extends JankTestBase {
     }
 
     public void prepareNotifications(int groupMode) throws Exception {
-        blockNotifications();
         goHome();
         mDevice.openNotification();
         SystemClock.sleep(100);
@@ -263,7 +265,6 @@ public class SystemUiJankTests extends JankTestBase {
     }
 
     public void cancelNotifications() throws Exception {
-        unblockNotifications();
         NotificationManager nm = (NotificationManager) getInstrumentation().getTargetContext()
                 .getSystemService(Context.NOTIFICATION_SERVICE);
         nm.cancelAll();
@@ -631,7 +632,6 @@ public class SystemUiJankTests extends JankTestBase {
         super.afterTest(metrics);
     }
 
-
     /**
      * Measures jank when launching the camera from lockscreen.
      */
@@ -646,6 +646,49 @@ public class SystemUiJankTests extends JankTestBase {
                 mDevice.getDisplayHeight() - SWIPE_MARGIN, SWIPE_MARGIN, SWIPE_MARGIN,
                 DEFAULT_SCROLL_STEPS);
         mDevice.waitForIdle();
+    }
+
+    public void beforeAmbientWakeUp() throws Exception {
+        postNotifications(GROUP_MODE_UNGROUPED);
+        mDevice.sleep();
+        SystemClock.sleep(1000);
+        mDevice.waitForIdle();
+        TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+    }
+
+    public void afterAmbientWakeUp(Bundle metrics) throws Exception {
+        TimeResultLogger.writeTimeStampLogEnd(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+        cancelNotifications();
+        mDevice.wakeUp();
+        mDevice.waitForIdle();
+        mDevice.pressMenu();
+        mDevice.waitForIdle();
+        TimeResultLogger.writeResultToFile(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), RESULTS_FILE, metrics);
+        super.afterTest(metrics);
+    }
+
+    /**
+     * Measures jank when waking up from ambient (doze) display.
+     */
+    @JankTest(expectedFrames = 30,
+            defaultIterationCount = 5,
+            beforeTest = "beforeAmbientWakeUp",
+            afterTest = "afterAmbientWakeUp")
+    @GfxMonitor(processName = SYSTEMUI_PACKAGE)
+    public void testAmbientWakeUp() throws Exception {
+        for (int i = 0; i < INNER_LOOP; i++) {
+            mDevice.executeShellCommand(PULSE_COMMAND);
+            SystemClock.sleep(100);
+            mDevice.waitForIdle();
+            mDevice.wakeUp();
+            mDevice.waitForIdle();
+            mDevice.sleep();
+            SystemClock.sleep(1000);
+            mDevice.waitForIdle();
+        }
     }
 }
 
