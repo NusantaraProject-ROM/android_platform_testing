@@ -17,13 +17,17 @@
 package android.platform.systemui.tests.jank;
 
 import android.app.Notification;
+import android.app.Notification.Action;
 import android.app.Notification.Builder;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.app.PendingIntent;
+import android.app.RemoteInput;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Rect;
+import android.graphics.drawable.Icon;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.RemoteException;
@@ -76,6 +80,7 @@ public class SystemUiJankTests extends JankTestBase {
             android.R.drawable.stat_notify_voicemail,
     };
     private static final String NOTIFICATION_TEXT = "Lorem ipsum dolor sit amet";
+    private static final String REPLY_TEXT = "REPLY";
     private static final File TIMESTAMP_FILE = new File(Environment.getExternalStorageDirectory()
             .getAbsolutePath(), "autotester.log");
     private static final File RESULTS_FILE = new File(Environment.getExternalStorageDirectory()
@@ -247,6 +252,25 @@ public class SystemUiJankTests extends JankTestBase {
             SystemClock.sleep(sleepBetweenDuration);
             first = false;
         }
+    }
+
+    private void postInlineReplyNotification() {
+        RemoteInput remoteInput = new RemoteInput.Builder("reply")
+                .setLabel(NOTIFICATION_TEXT)
+                .build();
+        Context context = getInstrumentation().getTargetContext();
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0 , new Intent(),
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        Icon icon = Icon.createWithResource(context, ICONS[0]);
+        Action action = new Action.Builder(icon, REPLY_TEXT, pendingIntent)
+                .addRemoteInput(remoteInput)
+                .build();
+        Builder builder = new Builder(getInstrumentation().getTargetContext())
+                .setContentTitle(NOTIFICATION_TEXT)
+                .setContentText(NOTIFICATION_TEXT)
+                .setSmallIcon(ICONS[0])
+                .addAction(action);
+        mNotificationManager.notify(0, builder.build());
     }
 
     private void cancelNotifications(int sleepBetweenDuration) {
@@ -729,6 +753,48 @@ public class SystemUiJankTests extends JankTestBase {
                     DEFAULT_SCROLL_STEPS);
             mDevice.waitForIdle();
             mDevice.click(mDevice.getDisplayWidth() / 2, mDevice.getDisplayHeight() - SWIPE_MARGIN);
+            mDevice.waitForIdle();
+        }
+    }
+
+    public void beforeInlineReply() throws Exception {
+        postInlineReplyNotification();
+        mDevice.openNotification();
+
+        // Wait until animation kicks in
+        SystemClock.sleep(100);
+        mDevice.waitForIdle();
+        TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+    }
+
+    public void afterInlineReply(Bundle metrics) throws Exception {
+        TimeResultLogger.writeTimeStampLogEnd(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+        cancelNotifications();
+        goHome();
+        TimeResultLogger.writeResultToFile(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), RESULTS_FILE, metrics);
+        super.afterTest(metrics);
+    }
+
+    /**
+     * Measures jank when clicking "reply" on a notification that supports inline reply.
+     */
+    @JankTest(expectedFrames = 50,
+            defaultIterationCount = 5,
+            beforeTest = "beforeInlineReply",
+            afterTest = "afterInlineReply")
+    @GfxMonitor(processName = SYSTEMUI_PACKAGE)
+    public void testInlineReply() throws Exception {
+        UiObject2 replyButton = mDevice.findObject(By.clazz(Button.class).text(REPLY_TEXT));
+        for (int i = 0; i < INNER_LOOP; i++) {
+            replyButton.click();
+            mDevice.waitForIdle();
+            Thread.sleep(1000);
+            mDevice.pressBack();
+            mDevice.waitForIdle();
+            mDevice.pressBack();
             mDevice.waitForIdle();
         }
     }
