@@ -52,4 +52,5 @@ native_tests := \
     simpleperf_unit_test \
     time-unit-tests \
     wificond_unit_test \
+    wifilogd_unit_test \
     ziparchive-tests
