@@ -6,10 +6,12 @@ set -e
 # hypothetically possible, and any tests that fail here should be tracked and fixed.
 
 # Pre-reqs: envsetup.sh and lunch, run from top-level branch directory.
+# Tests are generally ordered from fastest-to-slowest
 
 for RUNTEST_ARGS in \
     "systemui" \
-    "--path frameworks/base/services/tests/servicestests/src/com/android/server/notification"
+    "--path frameworks/base/services/tests/servicestests/src/com/android/server/notification" \
+    "systemui-jank"
 do
     echo "Running runtest $RUNTEST_ARGS ..."
     RESULT=$(development/testrunner/runtest.py $RUNTEST_ARGS | tee /dev/tty)
