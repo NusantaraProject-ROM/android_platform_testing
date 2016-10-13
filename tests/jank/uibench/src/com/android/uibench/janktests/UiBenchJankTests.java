@@ -18,6 +18,7 @@ package com.android.uibench.janktests;
 
 import static com.android.uibench.janktests.UiBenchJankTestsHelper.EXPECTED_FRAMES;
 import static com.android.uibench.janktests.UiBenchJankTestsHelper.PACKAGE_NAME;
+import static com.android.uibench.janktests.UiBenchJankTestsHelper.SHORT_EXPECTED_FRAMES;
 
 import android.os.SystemClock;
 import android.support.test.jank.GfxMonitor;
@@ -27,6 +28,7 @@ import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.Until;
 import android.widget.ListView;
+
 import junit.framework.Assert;
 
 /**
@@ -162,6 +164,13 @@ public class UiBenchJankTests extends JankTestBase {
     @GfxMonitor(processName = PACKAGE_NAME)
     public void testSlowNestedRecyclerViewFling() {
         mHelper.flingUpDown(mHelper.mContents, 2);
+    }
+
+    @JankTest(/* NOTE: relaunch between loops */ beforeLoop = "openSlowNestedRecyclerView",
+            expectedFrames = SHORT_EXPECTED_FRAMES)
+    @GfxMonitor(processName = PACKAGE_NAME)
+    public void testSlowNestedRecyclerViewInitialFling() {
+        mHelper.slowSingleFlingDown(mHelper.mContents);
     }
 
     public void openInflatingListView() {
