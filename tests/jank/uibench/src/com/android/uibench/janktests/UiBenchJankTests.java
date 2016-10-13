@@ -164,10 +164,23 @@ public class UiBenchJankTests extends JankTestBase {
                 "General/Slow Bind RecyclerView");
     }
 
-    // Test trivialRecyclerView fling
+    // Test slowBindRecyclerView fling
     @JankTest(beforeTest = "openSlowBindRecyclerView", expectedFrames = EXPECTED_FRAMES)
     @GfxMonitor(processName = PACKAGE_NAME)
     public void testSlowBindRecyclerViewFling() {
+        mHelper.flingUpDown(mHelper.mContents, mHelper.SHORT_TIMEOUT, 2);
+    }
+
+    // Open SlowNestedRecyclerView from General
+    public void openSlowNestedRecyclerView() {
+        mHelper.launchActivityAndAssert("SlowNestedRecyclerViewActivity",
+                "General/Slow Nested RecyclerView");
+    }
+
+    // Test slowNestedRecyclerView fling
+    @JankTest(beforeTest = "openSlowNestedRecyclerView", expectedFrames = EXPECTED_FRAMES)
+    @GfxMonitor(processName = PACKAGE_NAME)
+    public void testSlowNestedRecyclerViewFling() {
         mHelper.flingUpDown(mHelper.mContents, mHelper.SHORT_TIMEOUT, 2);
     }
 
