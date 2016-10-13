@@ -25,6 +25,8 @@ import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
+import android.util.DisplayMetrics;
+
 import junit.framework.Assert;
 
 /**
@@ -32,6 +34,7 @@ import junit.framework.Assert;
  */
 public class UiBenchJankTestsHelper {
     public static final int LONG_TIMEOUT = 5000;
+    public static final int FULL_TEST_DURATION = 25000;
     public static final int TIMEOUT = 250;
     public static final int SHORT_TIMEOUT = 2000;
     public static final int EXPECTED_FRAMES = 100;
@@ -83,15 +86,15 @@ public class UiBenchJankTestsHelper {
      * To perform the fling down and up on given content for flingCount number
      * of times
      */
-    public void flingUpDown(UiObject2 content, long timeout, int flingCount) {
-        flingUpDown(content, timeout, flingCount, false);
+    public void flingUpDown(UiObject2 content, int flingCount) {
+        flingUpDown(content, flingCount, false);
     }
 
-    public void flingUpDown(UiObject2 content, long timeout, int flingCount, boolean reverse) {
+    public void flingUpDown(UiObject2 content, int flingCount, boolean reverse) {
         for (int count = 0; count < flingCount; count++) {
-            SystemClock.sleep(timeout);
+            SystemClock.sleep(SHORT_TIMEOUT);
             content.fling(reverse ? Direction.UP : Direction.DOWN);
-            SystemClock.sleep(timeout);
+            SystemClock.sleep(SHORT_TIMEOUT);
             content.fling(reverse ? Direction.DOWN : Direction.UP);
         }
     }
@@ -100,13 +103,12 @@ public class UiBenchJankTestsHelper {
      * To perform the swipe right and left on given content for swipeCount number
      * of times
      */
-    public void swipeRightLeft(UiObject2 content, long timeout, int swipeCount) {
+    public void swipeRightLeft(UiObject2 content, int swipeCount) {
         for (int count = 0; count < swipeCount; count++) {
-            SystemClock.sleep(timeout);
+            SystemClock.sleep(SHORT_TIMEOUT);
             content.swipe(Direction.RIGHT, 1);
-            SystemClock.sleep(timeout);
+            SystemClock.sleep(SHORT_TIMEOUT);
             content.swipe(Direction.LEFT, 1);
         }
     }
-
 }
