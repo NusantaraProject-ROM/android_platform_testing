@@ -63,7 +63,7 @@ public class UiBenchTextJankTests extends JankTestBase {
     @JankTest(beforeTest = "openEditTextTyping", expectedFrames = EXPECTED_FRAMES)
     @GfxMonitor(processName = PACKAGE_NAME)
     public void testEditTextTyping() {
-        SystemClock.sleep(mHelper.LONG_TIMEOUT * 2);
+        SystemClock.sleep(UiBenchJankTestsHelper.FULL_TEST_DURATION);
     }
 
     // Open Layout Cache High Hitrate
@@ -80,7 +80,7 @@ public class UiBenchTextJankTests extends JankTestBase {
     @JankTest(beforeTest = "openLayoutCacheHighHitrate", expectedFrames = EXPECTED_FRAMES)
     @GfxMonitor(processName = PACKAGE_NAME)
     public void testLayoutCacheHighHitrateFling() {
-        mHelper.flingUpDown(mHelper.mContents, mHelper.SHORT_TIMEOUT, 3);
+        mHelper.flingUpDown(mHelper.mContents, 3);
     }
 
     // Open Layout Cache Low Hitrate
@@ -97,7 +97,7 @@ public class UiBenchTextJankTests extends JankTestBase {
     @JankTest(beforeTest = "openLayoutCacheLowHitrate", expectedFrames = EXPECTED_FRAMES)
     @GfxMonitor(processName = PACKAGE_NAME)
     public void testLayoutCacheLowHitrateFling() {
-        mHelper.flingUpDown(mHelper.mContents, mHelper.SHORT_TIMEOUT, 3);
+        mHelper.flingUpDown(mHelper.mContents, 3);
     }
 
 }

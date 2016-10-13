@@ -53,173 +53,147 @@ public class UiBenchJankTests extends JankTestBase {
         super.tearDown();
     }
 
-    // Open dialog list from General
     public void openDialogList() {
         mHelper.launchActivity("DialogListActivity", "Dialog");
         mHelper.mContents = mDevice.wait(Until.findObject(
-                By.clazz(ListView.class)), mHelper.TIMEOUT);
+                By.clazz(ListView.class)), UiBenchJankTestsHelper.TIMEOUT);
         Assert.assertNotNull("Dialog List View isn't found", mHelper.mContents);
     }
 
-    // Test dialoglist fling
     @JankTest(beforeTest = "openDialogList", expectedFrames = EXPECTED_FRAMES)
     @GfxMonitor(processName = PACKAGE_NAME)
     public void testDialogListFling() {
-        mHelper.flingUpDown(mHelper.mContents, mHelper.SHORT_TIMEOUT, 1);
+        mHelper.flingUpDown(mHelper.mContents, 1);
     }
 
-    // Open Fullscreen Overdraw from General
     public void openFullscreenOverdraw() {
         mHelper.launchActivity("FullscreenOverdrawActivity",
                 "General/Fullscreen Overdraw");
     }
 
-    // Measure fullscreen overdraw jank
     @JankTest(beforeTest = "openFullscreenOverdraw", expectedFrames = EXPECTED_FRAMES)
     @GfxMonitor(processName = PACKAGE_NAME)
     public void testFullscreenOverdraw() {
-        SystemClock.sleep(mHelper.LONG_TIMEOUT * 5);
+        SystemClock.sleep(UiBenchJankTestsHelper.FULL_TEST_DURATION);
     }
 
-    // Open GL TextureView from General
     public void openGLTextureView() {
         mHelper.launchActivity("GlTextureViewActivity",
                 "General/GL TextureView");
     }
 
-    // Measure GL TextureView jank metrics
     @JankTest(beforeTest = "openGLTextureView", expectedFrames = EXPECTED_FRAMES)
     @GfxMonitor(processName = PACKAGE_NAME)
     public void testGLTextureView() {
-        SystemClock.sleep(mHelper.LONG_TIMEOUT * 5);
+        SystemClock.sleep(UiBenchJankTestsHelper.FULL_TEST_DURATION);
     }
 
-    // Open Invalidate from General
     public void openInvalidate() {
         mHelper.launchActivity("InvalidateActivity",
                 "General/Invalidate");
     }
 
-    // Measure Invalidate jank metrics
     @JankTest(beforeTest = "openInvalidate", expectedFrames = EXPECTED_FRAMES)
     @GfxMonitor(processName = PACKAGE_NAME)
     public void testInvalidate() {
-        SystemClock.sleep(mHelper.LONG_TIMEOUT * 5);
+        SystemClock.sleep(UiBenchJankTestsHelper.FULL_TEST_DURATION);
     }
 
-    // Open InvalidateTree from General
     public void openInvalidateTree() {
         mHelper.launchActivity("InvalidateTreeActivity",
                 "General/Invalidate Tree");
     }
 
-    // Measure InvalidateTree jank metrics
     @JankTest(beforeTest = "openInvalidateTree", expectedFrames = EXPECTED_FRAMES)
     @GfxMonitor(processName = PACKAGE_NAME)
     public void testInvalidateTree() {
-        SystemClock.sleep(mHelper.LONG_TIMEOUT * 5);
+        SystemClock.sleep(UiBenchJankTestsHelper.FULL_TEST_DURATION);
     }
 
-    // Open Trivial Animation from General
     public void openTrivialAnimation() {
         mHelper.launchActivity("TrivialAnimationActivity",
                 "General/Trivial Animation");
     }
 
-    // Measure TrivialAnimation jank metrics
     @JankTest(beforeTest = "openTrivialAnimation", expectedFrames = EXPECTED_FRAMES)
     @GfxMonitor(processName = PACKAGE_NAME)
     public void testTrivialAnimation() {
-        SystemClock.sleep(mHelper.LONG_TIMEOUT * 5);
+        SystemClock.sleep(UiBenchJankTestsHelper.FULL_TEST_DURATION);
     }
 
-    // Open Trivial listview from General
     public void openTrivialListView() {
         mHelper.launchActivityAndAssert("TrivialListActivity", "General/Trivial ListView");
     }
 
-    // Test trivialListView fling
     @JankTest(beforeTest = "openTrivialListView", expectedFrames = EXPECTED_FRAMES)
     @GfxMonitor(processName = PACKAGE_NAME)
     public void testTrivialListViewFling() {
-        mHelper.flingUpDown(mHelper.mContents, mHelper.SHORT_TIMEOUT, 2);
+        mHelper.flingUpDown(mHelper.mContents, 2);
     }
 
-    // Open Trivial RecyclerView from General
     public void openTrivialRecyclerView() {
         mHelper.launchActivityAndAssert("TrivialRecyclerViewActivity",
                 "General/Trivial RecyclerView");
     }
 
-    // Test trivialRecyclerView fling
     @JankTest(beforeTest = "openTrivialRecyclerView", expectedFrames = EXPECTED_FRAMES)
     @GfxMonitor(processName = PACKAGE_NAME)
     public void testTrivialRecyclerListViewFling() {
-        mHelper.flingUpDown(mHelper.mContents, mHelper.SHORT_TIMEOUT, 2);
+        mHelper.flingUpDown(mHelper.mContents, 2);
     }
 
-    // Open Slow Bind RecyclerView from General
     public void openSlowBindRecyclerView() {
         mHelper.launchActivityAndAssert("SlowBindRecyclerViewActivity",
                 "General/Slow Bind RecyclerView");
     }
 
-    // Test slowBindRecyclerView fling
     @JankTest(beforeTest = "openSlowBindRecyclerView", expectedFrames = EXPECTED_FRAMES)
     @GfxMonitor(processName = PACKAGE_NAME)
     public void testSlowBindRecyclerViewFling() {
-        mHelper.flingUpDown(mHelper.mContents, mHelper.SHORT_TIMEOUT, 2);
+        mHelper.flingUpDown(mHelper.mContents, 2);
     }
 
-    // Open SlowNestedRecyclerView from General
     public void openSlowNestedRecyclerView() {
         mHelper.launchActivityAndAssert("SlowNestedRecyclerViewActivity",
                 "General/Slow Nested RecyclerView");
     }
 
-    // Test slowNestedRecyclerView fling
     @JankTest(beforeTest = "openSlowNestedRecyclerView", expectedFrames = EXPECTED_FRAMES)
     @GfxMonitor(processName = PACKAGE_NAME)
     public void testSlowNestedRecyclerViewFling() {
-        mHelper.flingUpDown(mHelper.mContents, mHelper.SHORT_TIMEOUT, 2);
+        mHelper.flingUpDown(mHelper.mContents, 2);
     }
 
-    // Open Inflation Listview contents
     public void openInflatingListView() {
         mHelper.launchActivityAndAssert("InflatingListActivity",
                 "Inflation/Inflating ListView");
     }
 
-    // Test Inflating List View fling
     @JankTest(beforeTest = "openInflatingListView", expectedFrames = EXPECTED_FRAMES)
     @GfxMonitor(processName = PACKAGE_NAME)
     public void testInflatingListViewFling() {
-        mHelper.flingUpDown(mHelper.mContents, mHelper.SHORT_TIMEOUT, 2);
+        mHelper.flingUpDown(mHelper.mContents, 2);
     }
 
-    // Open Navigation Drawer Activity
     public void openNavigationDrawerActivity() {
         mHelper.launchActivityAndAssert("NavigationDrawerActivity", "Navigation Drawer Activity");
         mHelper.mContents.setGestureMargins(0, 0, 10, 0);
     }
 
-    // Test Navigation Drawer
     @JankTest(beforeTest = "openNavigationDrawerActivity", expectedFrames = EXPECTED_FRAMES)
     @GfxMonitor(processName = PACKAGE_NAME)
     public void testOpenNavigationDrawer() {
-        mHelper.swipeRightLeft(mHelper.mContents, mHelper.SHORT_TIMEOUT, 4);
+        mHelper.swipeRightLeft(mHelper.mContents, 4);
     }
 
-    // Open Notification Shade Activity
     public void openNotificationShade() {
         mHelper.launchActivityAndAssert("NotificationShadeActivity", "Notification Shade");
     }
 
-    // Test Notification Shade
     @JankTest(beforeTest = "openNotificationShade", expectedFrames = EXPECTED_FRAMES)
     @GfxMonitor(processName = PACKAGE_NAME)
     public void testOpenNotificationShade() {
-        mHelper.flingUpDown(mHelper.mContents, mHelper.SHORT_TIMEOUT, 2, true);
+        mHelper.flingUpDown(mHelper.mContents, 2, true);
     }
 
 }
