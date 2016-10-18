@@ -39,16 +39,26 @@ public class UiBenchJankTestsHelper {
     public static final int SHORT_TIMEOUT = 2000;
     public static final int EXPECTED_FRAMES = 100;
 
+    /**
+     * Only to be used for initial-fling tests, or similar cases
+     * where perf during brief experience is important.
+     */
+    public static final int SHORT_EXPECTED_FRAMES = 30;
+
     public static final String PACKAGE_NAME = "com.android.test.uibench";
+
+    private static final int SLOW_FLING_SPEED = 3000; // compare to UiObject2#DEFAULT_FLING_SPEED
 
     private static UiBenchJankTestsHelper sInstance;
     private UiDevice mDevice;
     private Context mContext;
+    private DisplayMetrics mDisplayMetrics;
     protected UiObject2 mContents;
 
     private UiBenchJankTestsHelper(Context context, UiDevice device) {
         mContext = context;
         mDevice = device;
+        mDisplayMetrics = context.getResources().getDisplayMetrics();
     }
 
     public static UiBenchJankTestsHelper getInstance(Context context, UiDevice device) {
@@ -110,5 +120,10 @@ public class UiBenchJankTestsHelper {
             SystemClock.sleep(SHORT_TIMEOUT);
             content.swipe(Direction.LEFT, 1);
         }
+    }
+
+    public void slowSingleFlingDown(UiObject2 content) {
+        SystemClock.sleep(SHORT_TIMEOUT);
+        content.fling(Direction.DOWN, (int)(SLOW_FLING_SPEED * mDisplayMetrics.density));
     }
 }
