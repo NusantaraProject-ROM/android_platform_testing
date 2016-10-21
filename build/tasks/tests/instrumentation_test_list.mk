@@ -47,4 +47,6 @@ instrumentation_tests := \
     RetailDemoTests \
     RSTest \
     PrintSpoolerOutOfProcessTests \
-    CellBroadcastReceiverUnitTests
+    CellBroadcastReceiverUnitTests \
+    TelephonyProviderTests \
+    CarrierConfigTests
