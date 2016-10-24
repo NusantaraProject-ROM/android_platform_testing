@@ -19,6 +19,7 @@ package com.android.notification.functional;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.service.notification.StatusBarNotification;
+import android.support.test.metricshelper.MetricsAsserts;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
@@ -28,6 +29,10 @@ import android.test.InstrumentationTestCase;
 import android.test.suitebuilder.annotation.MediumTest;
 import android.util.Log;
 
+import com.android.internal.logging.MetricsReader;
+import com.android.internal.logging.nano.MetricsProto.MetricsEvent;
+
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,6 +46,7 @@ public class NotificationInteractionTests extends InstrumentationTestCase {
     private NotificationHelper mHelper;
     private static final int CUSTOM_NOTIFICATION_ID = 1;
     private static final int NOTIFICATIONS_COUNT = 3;
+    private MetricsReader mMetricsReader;
 
     @Override
     public void setUp() throws Exception {
@@ -52,6 +58,8 @@ public class NotificationInteractionTests extends InstrumentationTestCase {
         mHelper = new NotificationHelper(mDevice, getInstrumentation(), mNotificationManager);
         mDevice.setOrientationNatural();
         mNotificationManager.cancelAll();
+        mMetricsReader = new MetricsReader();
+        mMetricsReader.checkpoint(); // clear out old logs
     }
 
     @Override
@@ -104,6 +112,9 @@ public class NotificationInteractionTests extends InstrumentationTestCase {
         sbns = mNotificationManager.getActiveNotifications();
         assertTrue(String.format("%s notifications have not been cleared", sbns.length),
                 sbns.length == currentSbns);
+
+        MetricsAsserts.assertHasActionLog("there was no dismissal log", mMetricsReader,
+                MetricsEvent.ACTION_DISMISS_ALL_NOTES);
     }
 
     private UiObject2 findByText(String text) throws Exception {

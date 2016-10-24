@@ -1,3 +1,4 @@
+#
 # Copyright (C) 2016 The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,20 +12,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
 
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
-LOCAL_PACKAGE_NAME := NotificationFunctionalTests
+LOCAL_MODULE := metrics-helper-lib
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
-LOCAL_MODULE_TAGS := tests
-LOCAL_STATIC_JAVA_LIBRARIES := \
-    android-support-test \
-    launcher-helper-lib \
-    metrics-helper-lib \
-    ub-uiautomator \
-    services.core
+LOCAL_STATIC_JAVA_LIBRARIES := services.core
 
-#LOCAL_SDK_VERSION := current
-
-include $(BUILD_PACKAGE)
+include $(BUILD_STATIC_JAVA_LIBRARY)
