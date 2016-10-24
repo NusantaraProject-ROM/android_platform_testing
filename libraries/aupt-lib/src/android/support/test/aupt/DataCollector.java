@@ -30,11 +30,13 @@ public class DataCollector {
     private static final String TAG = "AuptDataCollector";
 
     private final Map<LogGenerator, Long> generatorsWithIntervals = new HashMap<>();
-    private final Logger mLogger = new Logger();
+    private final Map<LogGenerator, Long> mLastUpdate = new HashMap<>();
     private final Instrumentation instrumentation;
     private final String resultsDirectory;
+    private final long mSleepInterval;
 
-    private Thread mLoggerThread;
+    private boolean mStopped = true;
+    private Thread mThread;
 
     /**
      * Add a generator iff the interval is valid (i.e. > 0).
@@ -61,106 +63,109 @@ public class DataCollector {
         put(LogGenerator.MEM_INFO, meminfoInterval);
         put(LogGenerator.PAGETYPE_INFO, pagetypeinfoInterval);
         put(LogGenerator.TRACE, traceInterval);
+
+        mSleepInterval = gcd(generatorsWithIntervals.values());
     }
 
     public void start() {
-        mLoggerThread = new Thread(mLogger);
-        mLoggerThread.start();
+        synchronized (this) {
+            if (mStopped) {
+                mStopped = false;
+
+                /* Initialize the LastUpdates to the current time */
+                for (Map.Entry<LogGenerator, Long> entry : generatorsWithIntervals.entrySet()) {
+                    if (entry.getValue() > 0) {
+                        Log.d(TAG, "Collecting " + entry.getKey() + " logs every " +
+                            entry.getValue() + " milliseconds");
+
+                        mLastUpdate.put(entry.getKey(), SystemClock.uptimeMillis());
+                    }
+                }
+
+                mThread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        loop();
+                    }
+                });
+                mThread.start();
+            } else {
+                Log.e(TAG, "Tried to start a started DataCollector!");
+            }
+        }
     }
 
     public void stop() {
-        mLogger.stop();
-        try {
-            mLoggerThread.join();
-        } catch (InterruptedException e) {
-            // ignore
+        synchronized(this) {
+            if(!mStopped) {
+                mThread.interrupt();
+                mStopped = true;
+
+                try {
+                    mThread.join();
+                } catch (InterruptedException e) {
+                    // ignore
+                }
+            } else {
+                Log.e(TAG, "Tried to stop a stoppped DataCollector!");
+            }
         }
     }
 
-    protected class Logger implements Runnable {
-        private final Map<LogGenerator, Long> mLastUpdate = new HashMap<>();
-        private final long mSleepInterval;
-        private boolean mStopped = false;
-
-        public Logger() {
-            for (Map.Entry<LogGenerator, Long> entry : generatorsWithIntervals.entrySet()) {
-                if (entry.getValue() > 0) {
-                    try {
-                        entry.getKey().save(instrumentation, resultsDirectory);
-                    } catch (InterruptedException ex) {
-                        /* Ignore interruptions */
-                    } catch (IOException ex) {
-                        Log.e(TAG, "Error writing results in " + resultsDirectory +
-                                ": " + ex.toString());
-                    }
-
-                    mLastUpdate.put(entry.getKey(), SystemClock.uptimeMillis());
-                }
-            }
-
-            mSleepInterval = gcd(generatorsWithIntervals.values());
+    private void loop() {
+        if (mSleepInterval <= 0) {
+            return;
         }
 
-        public void stop() {
-            synchronized(this) {
-                mStopped = true;
-                notifyAll();
-            }
-        }
+        synchronized(this) {
+            while (!mStopped) {
+                try {
+                    for (Map.Entry<LogGenerator, Long> entry : generatorsWithIntervals.entrySet()) {
+                        Long t = SystemClock.uptimeMillis() - mLastUpdate.get(entry.getKey());
 
-        private long gcd(Collection<Long> values) {
-            if (values.size() < 2)
-                return 0;
-
-            long gcdSoFar = values.iterator().next();
-
-            for (Long value : values) {
-                gcdSoFar = gcd(gcdSoFar, value);
-            }
-
-            return gcdSoFar;
-        }
-
-        private long gcd(long a, long b) {
-            if (a == 0)
-                return b;
-            if (b == 0)
-                return a;
-            if (a > b)
-                return gcd(b, a % b);
-            else
-                return gcd(a, b % a);
-        }
-
-        @Override
-        public void run() {
-            if (mSleepInterval <= 0) {
-                return;
-            }
-
-            synchronized(this) {
-                while (!mStopped) {
-                    try {
-                        for (Map.Entry<LogGenerator, Long> entry : generatorsWithIntervals.entrySet()) {
-                            Long t = SystemClock.uptimeMillis() - mLastUpdate.get(entry.getKey());
-
-                            if (entry.getValue() > 0 && t > entry.getValue()) {
-                                try {
-                                    entry.getKey().save(instrumentation, resultsDirectory);
-                                } catch (IOException ex) {
-                                    Log.e(TAG, "Error writing results in " + resultsDirectory +
-                                            ": " + ex.toString());
-                                }
-
-                                mLastUpdate.put(entry.getKey(), SystemClock.uptimeMillis());
+                        if (entry.getValue() > 0 && t >= entry.getValue()) {
+                            try {
+                                entry.getKey().save(instrumentation, resultsDirectory);
+                            } catch (IOException ex) {
+                                Log.e(TAG, "Error writing results in " + resultsDirectory +
+                                        ": " + ex.toString());
                             }
+
+                            mLastUpdate.put(entry.getKey(), SystemClock.uptimeMillis());
                         }
-                        wait(mSleepInterval);
-                    } catch (InterruptedException e) {
-                        // Ignore.
                     }
+
+                    Thread.sleep(mSleepInterval);
+                } catch (InterruptedException e) {
+                    // Ignore.
                 }
             }
+        }
+    }
+
+    private long gcd(Collection<Long> values) {
+        if (values.size() < 1) {
+            return 0;
+        }
+
+        long gcdSoFar = values.iterator().next();
+
+        for (Long value : values) {
+            gcdSoFar = gcd(gcdSoFar, value);
+        }
+
+        return gcdSoFar;
+    }
+
+    private long gcd(long a, long b) {
+        if (a == 0) {
+            return b;
+        } else if (b == 0) {
+            return a;
+        } else if (a > b) {
+            return gcd(b, a % b);
+        } else {
+            return gcd(a, b % a);
         }
     }
 }
