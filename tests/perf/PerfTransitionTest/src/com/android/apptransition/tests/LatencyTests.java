@@ -24,6 +24,7 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.provider.Settings;
 import android.support.test.InstrumentationRegistry;
+import android.support.test.systemuihelper.LockscreenHelper;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.Until;
@@ -47,6 +48,7 @@ public class LatencyTests {
     private static final String TURN_ON_SCREEN_COMMAND = "am broadcast -a "
             + "com.android.systemui.latency.ACTION_TURN_ON_SCREEN";
     private static final String AM_START_COMMAND_TEMPLATE = "am start -a %s";
+    private static final String PIN = "1234";
 
     private UiDevice mDevice;
     private int mIterationCount;
@@ -132,6 +134,27 @@ public class LatencyTests {
         // Put device to home screen.
         mDevice.pressMenu();
         mDevice.waitForIdle();
+    }
+
+    /**
+     * Test how long it takes until the credential (PIN) is checked.
+     * <p>
+     * Every iteration will output a log in the form of "LatencyTracker/action=3 delay=x".
+     */
+    @Test
+    public void testPinCheckDelay() throws Exception {
+        LockscreenHelper.getInstance().setScreenLock(PIN, LockscreenHelper.MODE_PIN);
+        for (int i = 0; i < mIterationCount; i++) {
+            mDevice.sleep();
+
+            // Make sure not to launch camera with "double-tap".
+            Thread.sleep(300);
+            mDevice.wakeUp();
+            LockscreenHelper.getInstance().unlockScreen(PIN);
+            mDevice.waitForIdle();
+        }
+        LockscreenHelper.getInstance().removeScreenLock(PIN);
+        mDevice.pressHome();
     }
 
     /**
