@@ -20,6 +20,22 @@ import android.app.Instrumentation;
 import android.support.test.uiautomator.Direction;
 
 public abstract class AbstractGoogleCameraHelper extends AbstractStandardAppHelper {
+    public static final int HDR_MODE_AUTO = -1;
+    public static final int HDR_MODE_OFF  =  0;
+    public static final int HDR_MODE_ON   =  1;
+
+    public static final int VIDEO_SD_480     = -2;
+    public static final int VIDEO_HD_720     = -1;
+    public static final int VIDEO_HD_1080    =  0;
+    public static final int VIDEO_4K_MODE_ON =  1;
+
+    public static final int VIDEO_30FPS = 0;
+    public static final int VIDEO_60FPS = 1;
+
+    public static final int HFR_MODE_OFF     = 0;
+    public static final int HFR_MODE_120_FPS = 1;
+    public static final int HFR_MODE_240_FPS = 2;
+
 
     public AbstractGoogleCameraHelper(Instrumentation instr) {
         super(instr);
