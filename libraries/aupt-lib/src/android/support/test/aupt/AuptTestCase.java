@@ -71,6 +71,7 @@ public class AuptTestCase extends InstrumentationTestCase {
     private UiWatchers mWatchers;
     private IProcessStatusTracker mProcessStatusTracker;
     private DataCollector mDataCollector;
+    private List<String> mPaths;
 
     // We want to periodically collect dumpheap output if the process grows to large to proactivelly
     // help with catching memory leaks, but don't want to do it too often so it does not disturb the
@@ -803,6 +804,14 @@ public class AuptTestCase extends InstrumentationTestCase {
 
     public void setDataCollector(DataCollector collector) {
         mDataCollector = collector;
+    }
+
+    public void setDexedJarPaths(List<String> paths) {
+        mPaths = paths;
+    }
+
+    public List<String> getDexedJarPaths() {
+        return mPaths;
     }
 
     public String getPackageVersion(String packageName) throws NameNotFoundException {
