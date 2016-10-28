@@ -30,6 +30,7 @@ import java.lang.NoSuchMethodException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
@@ -44,10 +45,9 @@ import java.util.List;
  * <ol>
  * <li> Static inclusion - if all the code is included in the final APK, the Context can be used to
  * generate a HelperManager and to instantiate implementations.
- * <li> Dexed file inclusion - if this and the helper implementations are bundled into a dexed
- * file, such as a dexed JAR, that gets added after compilation, e.g. how the automated user
- * profile test suites are built, the path can be used to generate a HelperManager and to
- * instantiate implementations.
+ * <li> Dexed file inclusion - if this manager and the helper implementations are bundled into dex
+ * files and loaded from a single class loader, then the files can be used to generate a
+ * HelperManager and to instantiate implementations.
  * </ol>
  * <p>
  * Including and using this strategy will prune the explicit dependency tree for the App Helper
@@ -76,33 +76,36 @@ public class HelperManager {
                         String.format("Cannot pass in null instrumentation."));
             }
             // Instantiation
-            sInstance = new HelperManager(context.getPackageCodePath(), instr);
+            List<String> paths = Arrays.asList(context.getPackageCodePath());
+            sInstance = new HelperManager(paths, instr);
         }
         return sInstance;
     }
 
     /**
-     * Returns an instance of the HelperManager that searches the supplied location for classes to
+     * Returns an instance of the HelperManager that searches the supplied locations for classes to
      * instantiate to helper implementations.
      *
-     * @param path the dexed file where the classes are included
+     * @param paths the dex files where the classes are included
      * @param instr the active instrumentation
      * @throws IllegalArgumentException if the path is not a valid file
      * @return a new instance of the HelperManager class
      */
-    public static HelperManager getInstance(String path, Instrumentation instr) {
+    public static HelperManager getInstance(List<String> paths, Instrumentation instr) {
         if (sInstance == null) {
             // Input checks
-            if (!(new File(path)).exists()) {
-                throw new IllegalArgumentException(
-                        String.format("No file found at path: %s.", path));
+            for (String path : paths) {
+                if (!(new File(path)).exists()) {
+                    throw new IllegalArgumentException(
+                            String.format("No file found at path: %s.", path));
+                }
             }
             if (instr == null) {
                 throw new NullPointerException(
                         String.format("Cannot pass in null instrumentation."));
             }
             // Instantiation
-            sInstance = new HelperManager(path, instr);
+            sInstance = new HelperManager(paths, instr);
         }
         return sInstance;
     }
@@ -110,12 +113,15 @@ public class HelperManager {
     private Instrumentation mInstrumentation;
     private List<String> mClasses;
 
-    private HelperManager(String path, Instrumentation instr) {
+    private HelperManager(List<String> paths, Instrumentation instr) {
         mInstrumentation = instr;
         // Collect all of the available classes
+        mClasses = new ArrayList<String>();
         try {
-            DexFile dex = new DexFile(path);
-            mClasses = Collections.list(dex.entries());
+            for (String path : paths) {
+                DexFile dex = new DexFile(path);
+                mClasses.addAll(Collections.list(dex.entries()));
+            }
         } catch (IOException e) {
             throw new RuntimeException("Failed to retrieve the dex file.");
         }
