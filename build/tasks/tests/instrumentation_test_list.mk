@@ -17,6 +17,7 @@ instrumentation_tests := \
     crashcollector \
     ManagedProvisioningTests \
     FrameworksCoreTests \
+    FrameworksNetTests \
     FrameworksServicesTests \
     FrameworksUtilsTests \
     MtpDocumentsProviderTests \
