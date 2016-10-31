@@ -38,6 +38,7 @@ public class SysAppTestHelper {
 
     public static final int EXPECTED_FRAMES_CARDS_TEST = 20;
     public static final int EXPECTED_FRAMES_WATCHFACE_PICKER_TEST = 20;
+    public static final int EXPECTED_FRAMES_WATCHFACE_PICKER_TEST_ADD_FAVORITE = 5;
     public static final int EXPECTED_FRAMES = 100;
     public static final int LONG_TIMEOUT = 5000;
     public static final int SHORT_TIMEOUT = 500;
@@ -47,10 +48,6 @@ public class SysAppTestHelper {
     private static final String RELOAD_NOTIFICATION_CARD_INTENT = "com.google.android.wearable."
             + "support.wearnotificationgenerator.SHOW_NOTIFICATION";
     private static final String HOME_INDICATOR = "charging_icon";
-    private static final String LAUNCHER_VIEW_NAME = "launcher_view";
-    private static final String CARD_VIEW_NAME = "activity_view";
-    private static final String QUICKSETTING_VIEW_NAME = "settings_icon";
-    private static final String WATCHFACE_PREVIEW_NAME = "preview_image";
 
     // Demo card selectors
     private static final UiSelector CARD_SELECTOR = new UiSelector()
@@ -159,23 +156,6 @@ public class SysAppTestHelper {
             count++;
         } while (count < 5);
 
-        // TODO (yuanlang@) Delete the following hacky codes after charging icon issue fixed
-        // Make sure we're not in the launcher
-        if (waitForSysAppUiObject2(LAUNCHER_VIEW_NAME) != null) {
-            mDevice.pressBack();
-        }
-        // Make sure we're not in cards view
-        if (waitForSysAppUiObject2(CARD_VIEW_NAME) != null) {
-            mDevice.pressBack();
-        }
-        // Make sure we're not in the quick settings
-        if (waitForSysAppUiObject2(QUICKSETTING_VIEW_NAME) != null) {
-            mDevice.pressBack();
-        }
-        // Make sure we're not in watch face picker
-        if (waitForSysAppUiObject2(WATCHFACE_PREVIEW_NAME) != null) {
-            mDevice.pressBack();
-        }
         SystemClock.sleep(LONG_TIMEOUT);
     }
 
