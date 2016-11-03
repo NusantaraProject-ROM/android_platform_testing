@@ -16,22 +16,8 @@
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
-
-LOCAL_MODULE := system-helpers
-LOCAL_STATIC_JAVA_LIBRARIES := account-helper \
-    activity-helper \
-    commands-helper \
-    connectivity-helper \
-    device-helper \
-    permission-helper \
-    settings-helper \
-    sysui-helper \
-    user-helper \
-    package-helper
-LOCAL_SDK_VERSION := current
+LOCAL_MODULE := package-helper
+LOCAL_JAVA_LIBRARIES := commands-helper
+LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
 include $(BUILD_STATIC_JAVA_LIBRARY)
-
-######################################
-
-include $(call all-makefiles-under, $(LOCAL_PATH))
