@@ -61,4 +61,12 @@ public abstract class AbstractChromeHelper extends AbstractStandardAppHelper {
      * is open on the original tab.
      */
     public abstract void unmergeTabs();
+
+    /**
+     * Setup expectations: Chrome is open on a page.
+     *
+     * This method will reload the page by clicking the refresh button, and block until the page
+     * is reopened.
+     */
+    public abstract void reloadPage();
 }
