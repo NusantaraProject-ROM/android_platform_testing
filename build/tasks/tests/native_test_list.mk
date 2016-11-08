@@ -57,6 +57,7 @@ native_tests := \
     pagemap_test \
     perfprofd_test \
     recovery_component_test \
+    recovery_unit_test \
     simpleperf_cpu_hotplug_test \
     simpleperf_unit_test \
     syscall_filter_unittest_gtest \
