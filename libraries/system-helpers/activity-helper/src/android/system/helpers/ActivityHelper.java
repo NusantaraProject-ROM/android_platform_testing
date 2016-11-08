@@ -89,7 +89,7 @@ public class ActivityHelper {
      */
     public void changeWindowMode(int taskId, int mode) throws InterruptedException {
         CommandsHelper.execute(
-                String.format("am stack movetask %d %d true", taskId, mode));
+                String.format("am stack move-task %d %d true", taskId, mode));
         Thread.sleep(TIMEOUT);
     }
 
