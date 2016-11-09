@@ -502,9 +502,9 @@ public class SettingsHelper {
         boolean verifyOn = false;
         launchQuickSettingsAndWait();
         UiObject2 flashLight = mDevice.wait(
-                Until.findObject(By.descContains(FLASHLIGHT)),
+                Until.findObject(By.desc(FLASHLIGHT)),
                 TIMEOUT * 3);
-        if (flashLight.getText().equals(lightOn)) {
+        if (flashLight != null && flashLight.getText().equals(lightOn)) {
             verifyOn = true;
         }
         mDevice.wait(Until.findObject(By.textContains(FLASHLIGHT)),
@@ -539,6 +539,6 @@ public class SettingsHelper {
 
     public void launchQuickSettingsAndWait() throws Exception {
         mDevice.openQuickSettings();
-        Thread.sleep(TIMEOUT);
+        Thread.sleep(TIMEOUT * 2);
     }
 }
