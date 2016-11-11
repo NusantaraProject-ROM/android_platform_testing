@@ -17,8 +17,12 @@
 package android.system.helpers;
 
 import android.app.Instrumentation;
+import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.os.SystemClock;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
@@ -26,26 +30,34 @@ import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.Until;
 import android.system.helpers.ActivityHelper;
+import android.util.Log;
 
 import org.junit.Assert;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Implement common helper methods for Overview.
  */
 public class OverviewHelper {
 
+    private static final String TAG = OverviewHelper.class.getSimpleName();
     private static final int TIMEOUT = 3000;
     private static final String RECENTS = "com.android.systemui:id/recents_view";
 
     private UiDevice mDevice = null;
     private Instrumentation mInstrumentation = null;
     private ActivityHelper mActHelper = null;
+    private final CommandsHelper mCommandsHelper;
     public static OverviewHelper sInstance = null;
 
     public OverviewHelper() {
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
         mInstrumentation = InstrumentationRegistry.getInstrumentation();
         mActHelper = ActivityHelper.getInstance();
+        mCommandsHelper = CommandsHelper.getInstance(mInstrumentation);
     }
 
     public static OverviewHelper getInstance() {
@@ -79,6 +91,51 @@ public class OverviewHelper {
                 "com.google.android.apps.maps"};
         for (String appPackage : appPackages) {
             mActHelper.launchPackage(appPackage);
+        }
+    }
+
+    public ArrayList<String> populateManyRecentApps() throws IOException {
+        PackageManager pm = mInstrumentation.getContext().getPackageManager();
+        List<PackageInfo> packages = pm.getInstalledPackages(0);
+        ArrayList<String> launchedPackages = new ArrayList<>();
+        for (PackageInfo pkg : packages) {
+            if (pkg.packageName.equals(mInstrumentation.getTargetContext().getPackageName())) {
+                continue;
+            }
+            Intent intent = pm.getLaunchIntentForPackage(pkg.packageName);
+            if (intent == null) {
+                continue;
+            }
+            intent.addCategory(Intent.CATEGORY_LAUNCHER);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            try {
+                mInstrumentation.getTargetContext().startActivity(intent);
+            } catch (SecurityException e) {
+                Log.i(TAG, "Failed to start package " + pkg.packageName + ", exception: " + e);
+            }
+
+            // Don't overload the system
+            SystemClock.sleep(500);
+            launchedPackages.add(pkg.packageName);
+        }
+
+        // Give the apps some time to finish starting. Some apps start another activity while
+        // starting, and we don't want to happen when we are testing stuff.
+        SystemClock.sleep(3000);
+
+        // Close any crash dialogs
+        while (mDevice.hasObject(By.textContains("has stopped"))) {
+            UiObject2 crashDialog = mDevice.findObject(By.text("Close"));
+            if (crashDialog != null) {
+                crashDialog.clickAndWait(Until.newWindow(), 2000);
+            }
+        }
+        return launchedPackages;
+    }
+
+    public void forceStopPackages(ArrayList<String> packages) {
+        for (String pkg : packages) {
+            mCommandsHelper.executeShellCommand("am force-stop " + pkg);
         }
     }
 

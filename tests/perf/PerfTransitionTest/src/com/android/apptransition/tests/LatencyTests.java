@@ -17,23 +17,17 @@ package com.android.apptransition.tests;
 
 import static android.support.test.InstrumentationRegistry.getInstrumentation;
 
-import android.content.Intent;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.provider.Settings;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.systemuihelper.LockscreenHelper;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
-import android.support.test.uiautomator.Until;
+import android.system.helpers.LockscreenHelper;
+import android.system.helpers.OverviewHelper;
 
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.List;
 
 /**
  * Tests to test various latencies in the system.
@@ -143,7 +137,7 @@ public class LatencyTests {
      */
     @Test
     public void testPinCheckDelay() throws Exception {
-        LockscreenHelper.getInstance().setScreenLock(PIN, LockscreenHelper.MODE_PIN);
+        LockscreenHelper.getInstance().setScreenLockViaShell(PIN, LockscreenHelper.MODE_PIN);
         for (int i = 0; i < mIterationCount; i++) {
             mDevice.sleep();
 
@@ -153,7 +147,7 @@ public class LatencyTests {
             LockscreenHelper.getInstance().unlockScreen(PIN);
             mDevice.waitForIdle();
         }
-        LockscreenHelper.getInstance().removeScreenLock(PIN);
+        LockscreenHelper.getInstance().removeScreenLockViaShell(PIN);
         mDevice.pressHome();
     }
 
@@ -168,7 +162,7 @@ public class LatencyTests {
      */
     @Test
     public void testAppToRecents() throws Exception {
-        populateRecentApps();
+        OverviewHelper.getInstance().populateManyRecentApps();
         for (int i = 0; i < mIterationCount; i++) {
             mDevice.executeShellCommand(String.format(AM_START_COMMAND_TEMPLATE,
                     Settings.ACTION_SETTINGS));
@@ -186,35 +180,5 @@ public class LatencyTests {
 
     private void pressUiRecentApps() throws Exception {
         mDevice.findObject(By.res("com.android.systemui", "recent_apps")).click();
-    }
-
-    // TODO: Share this code with the jank tests.
-    private void populateRecentApps() throws IOException {
-        PackageManager pm = getInstrumentation().getContext().getPackageManager();
-        List<PackageInfo> packages = pm.getInstalledPackages(0);
-        for (PackageInfo pkg : packages) {
-            if (pkg.packageName.equals(getInstrumentation().getTargetContext().getPackageName())) {
-                continue;
-            }
-            Intent intent = pm.getLaunchIntentForPackage(pkg.packageName);
-            if (intent == null) {
-                continue;
-            }
-            intent.addCategory(Intent.CATEGORY_LAUNCHER);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            getInstrumentation().getTargetContext().startActivity(intent);
-
-            // Don't overload the system
-            SystemClock.sleep(500);
-        }
-
-        // Give the apps some time to finish starting. Some apps start another activity while
-        // starting, and we don't want to happen when we are testing stuff.
-        SystemClock.sleep(3000);
-
-        // Close any crash dialogs
-        while (mDevice.hasObject(By.textContains("has stopped"))) {
-            mDevice.performActionAndWait(() -> mDevice.pressBack(), Until.newWindow(), 2000);
-        }
     }
 }

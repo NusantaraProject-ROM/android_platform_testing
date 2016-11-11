@@ -23,8 +23,6 @@ import android.app.PendingIntent;
 import android.app.RemoteInput;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.graphics.Rect;
 import android.graphics.drawable.Icon;
 import android.os.Bundle;
@@ -35,7 +33,6 @@ import android.support.test.InstrumentationRegistry;
 import android.support.test.jank.GfxMonitor;
 import android.support.test.jank.JankTest;
 import android.support.test.jank.JankTestBase;
-import android.support.test.systemuihelper.LockscreenHelper;
 import android.support.test.timeresulthelper.TimeResultLogger;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
@@ -44,7 +41,8 @@ import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.Until;
-import android.util.Log;
+import android.system.helpers.LockscreenHelper;
+import android.system.helpers.OverviewHelper;
 import android.widget.Button;
 import android.widget.ImageView;
 
@@ -108,7 +106,7 @@ public class SystemUiJankTests extends JankTestBase {
     private static final int GROUP_MODE_UNGROUPED = 2;
 
     private UiDevice mDevice;
-    private List<String> mLaunchedPackages = new ArrayList<>();
+    private ArrayList<String> mLaunchedPackages;
     private NotificationManager mNotificationManager;
 
     public void setUp() throws Exception {
@@ -137,41 +135,7 @@ public class SystemUiJankTests extends JankTestBase {
     }
 
     public void populateRecentApps() throws IOException {
-        PackageManager pm = getInstrumentation().getContext().getPackageManager();
-        List<PackageInfo> packages = pm.getInstalledPackages(0);
-        mLaunchedPackages.clear();
-        for (PackageInfo pkg : packages) {
-            if (pkg.packageName.equals(getInstrumentation().getTargetContext().getPackageName())) {
-                continue;
-            }
-            Intent intent = pm.getLaunchIntentForPackage(pkg.packageName);
-            if (intent == null) {
-                continue;
-            }
-            intent.addCategory(Intent.CATEGORY_LAUNCHER);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            try {
-                getInstrumentation().getTargetContext().startActivity(intent);
-            } catch (SecurityException e) {
-                Log.i(LOG_TAG, "Failed to start package " + pkg.packageName + ", exception: " + e);
-            }
-
-            // Don't overload the system
-            SystemClock.sleep(500);
-            mLaunchedPackages.add(pkg.packageName);
-        }
-
-        // Give the apps some time to finish starting. Some apps start another activity while
-        // starting, and we don't want to happen when we are testing stuff.
-        SystemClock.sleep(3000);
-
-        // Close any crash dialogs
-        while (mDevice.hasObject(By.textContains("has stopped"))) {
-            UiObject2 crashDialog = mDevice.findObject(By.text("Close"));
-            if (crashDialog != null) {
-                crashDialog.clickAndWait(Until.newWindow(), 2000);
-            }
-        }
+        mLaunchedPackages = OverviewHelper.getInstance().populateManyRecentApps();
         TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
                 getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
     }
@@ -179,13 +143,7 @@ public class SystemUiJankTests extends JankTestBase {
     public void forceStopPackages(Bundle metrics) throws IOException {
         TimeResultLogger.writeTimeStampLogEnd(String.format("%s-%s",
                 getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
-        for (String pkg : mLaunchedPackages) {
-            try {
-                mDevice.executeShellCommand("am force-stop " + pkg);
-            } catch (IOException e) {
-                Log.w(LOG_TAG, "exeception while force stopping package " + pkg, e);
-            }
-        }
+        OverviewHelper.getInstance().forceStopPackages(mLaunchedPackages);
         goHome();
         TimeResultLogger.writeResultToFile(String.format("%s-%s",
                 getClass().getSimpleName(), getName()), RESULTS_FILE, metrics);
@@ -800,7 +758,7 @@ public class SystemUiJankTests extends JankTestBase {
     }
 
     public void beforePinAppearance() throws Exception {
-        LockscreenHelper.getInstance().setScreenLock(PIN, "PIN");
+        LockscreenHelper.getInstance().setScreenLockViaShell(PIN, LockscreenHelper.MODE_PIN);
         goHome();
         mDevice.sleep();
         SystemClock.sleep(300);
@@ -818,7 +776,7 @@ public class SystemUiJankTests extends JankTestBase {
         TimeResultLogger.writeTimeStampLogEnd(String.format("%s-%s",
                 getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
         LockscreenHelper.getInstance().unlockScreen(PIN);
-        LockscreenHelper.getInstance().removeScreenLock(PIN);
+        LockscreenHelper.getInstance().removeScreenLockViaShell(PIN);
         mDevice.pressHome();
         TimeResultLogger.writeResultToFile(String.format("%s-%s",
                 getClass().getSimpleName(), getName()), RESULTS_FILE, metrics);

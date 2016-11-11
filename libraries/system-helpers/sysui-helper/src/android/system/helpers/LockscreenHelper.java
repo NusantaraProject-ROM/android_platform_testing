@@ -44,15 +44,22 @@ public class LockscreenHelper {
     public static final int LONG_TIMEOUT = 2000;
     public static final String EDIT_TEXT_CLASS_NAME = "android.widget.EditText";
     public static final String CAMERA2_PACKAGE = "com.android.camera2";
+    public static final String MODE_PIN = "PIN";
+
+    private static final String SET_PIN_COMMAND = "locksettings set-pin %s";
+    private static final String CLEAR_COMMAND = "locksettings clear --old %s";
+
     private static LockscreenHelper sInstance = null;
     private Context mContext = null;
     private UiDevice mDevice = null;
-    private ActivityHelper mActivityHelper = null;
+    private final ActivityHelper mActivityHelper;
+    private final CommandsHelper mCommandsHelper;
 
     public LockscreenHelper() {
         mContext = InstrumentationRegistry.getTargetContext();
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
         mActivityHelper = ActivityHelper.getInstance();
+        mCommandsHelper = CommandsHelper.getInstance(InstrumentationRegistry.getInstrumentation());
     }
 
     public static LockscreenHelper getInstance() {
@@ -164,5 +171,25 @@ public class LockscreenHelper {
     public boolean isLockScreenEnabled() {
         KeyguardManager km = (KeyguardManager) mContext.getSystemService(Context.KEYGUARD_SERVICE);
         return km.isKeyguardSecure();
+    }
+
+    /**
+     * Sets a screen lock via shell.
+     */
+    public void setScreenLockViaShell(String pwd, String mode) throws Exception {
+        switch (mode) {
+            case MODE_PIN:
+                mCommandsHelper.executeShellCommand(String.format(SET_PIN_COMMAND, pwd));
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported mode: " + mode);
+        }
+    }
+
+    /**
+     * Removes the screen lock via shell.
+     */
+    public void removeScreenLockViaShell(String pwd) throws Exception {
+        mCommandsHelper.executeShellCommand(String.format(CLEAR_COMMAND, pwd));
     }
 }
