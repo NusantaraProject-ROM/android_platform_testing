@@ -16,7 +16,7 @@
 
 package android.test.appsmoke;
 
-import android.app.ActivityManagerNative;
+import android.app.ActivityManager;
 import android.app.IActivityController;
 import android.app.Instrumentation;
 import android.content.Context;
@@ -202,7 +202,7 @@ public class AppSmokeTest {
 
     @Before
     public void before() throws RemoteException {
-        ActivityManagerNative.getDefault().setActivityController(mActivityController, false);
+        ActivityManager.getService().setActivityController(mActivityController, false);
         mLauncherStrategy = LauncherStrategyFactory.getInstance(sDevice).getLauncherStrategy();
         mAppHasError = false;
         mLaunchIntentDetected = false;
@@ -217,9 +217,9 @@ public class AppSmokeTest {
     @After
     public void after() throws RemoteException {
         sDevice.pressHome();
-        ActivityManagerNative.getDefault().forceStopPackage(
+        ActivityManager.getService().forceStopPackage(
                 mAppInfo.packageName, UserHandle.USER_ALL);
-        ActivityManagerNative.getDefault().setActivityController(null, false);
+        ActivityManager.getService().setActivityController(null, false);
     }
 
     @AfterClass

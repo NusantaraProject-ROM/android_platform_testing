@@ -16,7 +16,7 @@
 
 package com.android.apptransition.tests;
 
-import android.app.ActivityManagerNative;
+import android.app.ActivityManager;
 import android.app.IActivityManager;
 import android.app.Instrumentation;
 import android.content.Context;
@@ -110,7 +110,7 @@ public class AppTransitionTests {
         mPackageManager = getInstrumentation().getContext().getPackageManager();
         mContext = getInstrumentation().getContext();
         mArgs = InstrumentationRegistry.getArguments();
-        mActivityManager = ActivityManagerNative.getDefault();
+        mActivityManager = ActivityManager.getService();
         mDevice = UiDevice.getInstance(getInstrumentation());
         mLauncherStrategy = LauncherStrategyFactory.getInstance(mDevice).getLauncherStrategy();
         createLaunchIntentMappings();
