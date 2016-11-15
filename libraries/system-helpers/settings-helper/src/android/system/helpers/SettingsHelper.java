@@ -511,14 +511,17 @@ public class SettingsHelper {
                 TIMEOUT * 3).click();
         Thread.sleep(TIMEOUT * 3);
         flashLight = mDevice.wait(
-                Until.findObject(By.descContains(FLASHLIGHT)),
+                Until.findObject(By.desc(FLASHLIGHT)),
                 TIMEOUT * 3);
-        if (verifyOn) {
-            Assert.assertTrue(flashLight.getText().equals(lightOff));
-        } else {
-            Assert.assertTrue(flashLight.getText().equals(lightOn));
-            mDevice.wait(Until.findObject(By.textContains(FLASHLIGHT)),
-                    TIMEOUT * 3).click();
+        if (flashLight != null) {
+            String txt = flashLight.getText();
+            if (verifyOn) {
+                Assert.assertTrue(txt.equals(lightOff));
+            } else {
+                Assert.assertTrue(txt.equals(lightOn));
+                mDevice.wait(Until.findObject(By.textContains(FLASHLIGHT)),
+                        TIMEOUT * 3).click();
+            }
         }
         mDevice.pressHome();
         Thread.sleep(TIMEOUT * 3);
