@@ -24,6 +24,7 @@ native_tests := \
     hwui_unit_tests \
     init_tests \
     JniInvocation_test \
+    libappfuse_test \
     libbase_test \
     libcutils_test \
     libcutils_test_static \
