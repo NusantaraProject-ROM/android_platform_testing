@@ -16,6 +16,9 @@
 
 package android.support.test.launcherhelper;
 
+import android.app.Instrumentation;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Point;
 import android.os.RemoteException;
 import android.os.SystemClock;
@@ -44,6 +47,7 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
 
     protected UiDevice mDevice;
     protected DPadUtil mDPadUtil;
+    private Instrumentation mInstrumentation;
 
 
     /**
@@ -195,7 +199,15 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
     @Override
     public long launch(String appName, String packageName) {
         BySelector app = By.res(getSupportedLauncherPackage(), "app_banner").desc(appName);
-        return launchApp(this, app, packageName);
+        return launchApp(this, app, packageName, isGame(packageName));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setInstrumentation(Instrumentation instrumentation) {
+        mInstrumentation = instrumentation;
     }
 
     /**
@@ -355,12 +367,12 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
     }
 
     protected long launchApp(ILauncherStrategy launcherStrategy, BySelector app,
-            String packageName) {
-        return launchApp(launcherStrategy, app, packageName, MAX_SCROLL_ATTEMPTS);
+            String packageName, boolean isGame) {
+        return launchApp(launcherStrategy, app, packageName, isGame, MAX_SCROLL_ATTEMPTS);
     }
 
     protected long launchApp(ILauncherStrategy launcherStrategy, BySelector app,
-            String packageName, int maxScrollAttempts) {
+            String packageName, boolean isGame, int maxScrollAttempts) {
         unlockDeviceIfAsleep();
 
         if (isAppOpen(packageName)) {
@@ -370,8 +382,14 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
 
         // Go to the home page
         launcherStrategy.open();
-        // attempt to find the app icon if it's not already on the screen
-        UiObject2 container = launcherStrategy.openAllApps(false);
+
+        // attempt to find the app/game icon if it's not already on the screen
+        UiObject2 container;
+        if (isGame) {
+            container = selectGamesRow();
+        } else {
+            container = launcherStrategy.openAllApps(false);
+        }
         UiObject2 appIcon = container.findObject(app);
         int attempts = 0;
         while (attempts++ < maxScrollAttempts) {
@@ -666,5 +684,26 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
         }
         Log.d(LOG_TAG, "Failed to find the setting in Settings row.");
         return null;
+    }
+
+    private boolean isGame(String packageName) {
+        boolean isGame = false;
+        if (mInstrumentation != null) {
+            try {
+                ApplicationInfo appInfo =
+                        mInstrumentation.getTargetContext().getPackageManager().getApplicationInfo(
+                                packageName, 0);
+                // TV game apps should use the "isGame" tag added since the L release. They are
+                // listed on the Games row on the Leanback Launcher.
+                isGame = ((appInfo.flags & ApplicationInfo.FLAG_IS_GAME) != 0) ||
+                        (appInfo.metaData != null && appInfo.metaData.getBoolean("isGame", false));
+                Log.i(LOG_TAG, String.format("The package %s isGame: %b", packageName, isGame));
+            } catch (PackageManager.NameNotFoundException e) {
+                Log.w(LOG_TAG,
+                        String.format("No package found: %s, error:%s", packageName, e.toString()));
+                return false;
+            }
+        }
+        return isGame;
     }
 }

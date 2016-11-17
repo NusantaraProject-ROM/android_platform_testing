@@ -15,6 +15,7 @@
  */
 package android.support.test.launcherhelper;
 
+import android.app.Instrumentation;
 import android.support.test.uiautomator.UiDevice;
 import android.util.Log;
 
