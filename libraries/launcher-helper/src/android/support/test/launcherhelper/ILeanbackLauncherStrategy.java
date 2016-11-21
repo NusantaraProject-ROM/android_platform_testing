@@ -16,6 +16,7 @@
 
 package android.support.test.launcherhelper;
 
+import android.app.Instrumentation;
 import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
@@ -27,6 +28,11 @@ import android.support.test.uiautomator.UiObject2;
  * method.
  */
 public interface ILeanbackLauncherStrategy extends ILauncherStrategy {
+
+    /**
+     * Sets an instance of instrumentation
+     */
+    public void setInstrumentation(Instrumentation instrumentation);
 
     /**
      * Searches for a given query on leanback launcher

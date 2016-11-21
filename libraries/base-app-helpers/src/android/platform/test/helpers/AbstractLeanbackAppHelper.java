@@ -63,6 +63,7 @@ public abstract class AbstractLeanbackAppHelper extends AbstractStandardAppHelpe
         mDPadUtil = new DPadUtil(instr);
         mLauncherStrategy = LauncherStrategyFactory.getInstance(
                 mDevice).getLeanbackLauncherStrategy();
+        mLauncherStrategy.setInstrumentation(instr);
     }
 
     /**
