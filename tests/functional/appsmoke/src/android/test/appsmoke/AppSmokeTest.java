@@ -23,6 +23,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.LauncherActivityInfo;
 import android.content.pm.LauncherApps;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.os.SystemClock;
@@ -203,7 +204,14 @@ public class AppSmokeTest {
     @Before
     public void before() throws RemoteException {
         ActivityManager.getService().setActivityController(mActivityController, false);
-        mLauncherStrategy = LauncherStrategyFactory.getInstance(sDevice).getLauncherStrategy();
+        LauncherStrategyFactory factory = LauncherStrategyFactory.getInstance(sDevice);
+        mLauncherStrategy = factory.getLauncherStrategy();
+        // Inject an instance of instrumentation only if leanback. This enables to launch any app
+        // in the Apps and Games row on leanback launcher.
+        Instrumentation instr = InstrumentationRegistry.getInstrumentation();
+        if (hasLeanback(instr.getTargetContext())) {
+            factory.getLeanbackLauncherStrategy().setInstrumentation(instr);
+        }
         mAppHasError = false;
         mLaunchIntentDetected = false;
     }
@@ -255,5 +263,9 @@ public class AppSmokeTest {
         if (!ret) {
             Log.w(TAG, "Failed while attempting to poke front end window with swipe");
         }
+    }
+
+    private boolean hasLeanback(Context context) {
+        return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_LEANBACK);
     }
 }
