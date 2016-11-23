@@ -88,6 +88,7 @@ public class AuptTestRunner extends InstrumentationTestRunner {
 
     private boolean mTrackJank;
     private GraphicsStatsMonitor mGraphicsStatsMonitor;
+    private List<String> mJars;
 
     /**
      * {@inheritDoc}
@@ -164,7 +165,8 @@ public class AuptTestRunner extends InstrumentationTestRunner {
     private void loadDexJars(String jars) {
         // scan provided jar paths, translate relative to absolute paths, and check for existence
         String[] jarsArray = jars.split(":");
-        StringBuilder jarFiles = new StringBuilder();
+        StringBuilder classLoaderPath = new StringBuilder();
+        mJars = new ArrayList<String>();
         for (int i = 0; i < jarsArray.length; i++) {
             String jar = jarsArray[i];
             if (!jar.startsWith("/")) {
@@ -176,9 +178,10 @@ public class AuptTestRunner extends InstrumentationTestRunner {
                         + jar);
             }
             if (i != 0) {
-                jarFiles.append(File.pathSeparator);
+                classLoaderPath.append(File.pathSeparator);
             }
-            jarFiles.append(jarFile.getAbsolutePath());
+            classLoaderPath.append(jarFile.getAbsolutePath());
+            mJars.add(jarFile.getAbsolutePath());
         }
         // now load them
         File optDir = new File(getContext().getCacheDir(), DEX_OPT_PATH);
@@ -186,7 +189,7 @@ public class AuptTestRunner extends InstrumentationTestRunner {
             throw new RuntimeException(
                     "Failed to create dex optimize directory: " + optDir.getAbsolutePath());
         }
-        mLoader = new BaseDexClassLoader(jarFiles.toString(), optDir, null,
+        mLoader = new BaseDexClassLoader(classLoaderPath.toString(), optDir, null,
                 super.getTargetContext().getClassLoader());
 
     }
@@ -220,7 +223,7 @@ public class AuptTestRunner extends InstrumentationTestRunner {
     private void writeProgressMessage(String msg) {
         writeMessage("progress.txt", msg);
     }
-    
+
     private void writeGraphicsMessage(String msg) {
         writeMessage("graphics.txt", msg);
     }
@@ -440,6 +443,7 @@ public class AuptTestRunner extends InstrumentationTestRunner {
                 ((AuptTestCase)test).setProcessStatusTracker(mProcessTracker);
                 ((AuptTestCase)test).setMemHealthRecords(mMemHealthRecords);
                 ((AuptTestCase)test).setDataCollector(mDataCollector);
+                ((AuptTestCase)test).setDexedJarPaths(mJars);
             }
         }
 
