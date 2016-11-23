@@ -16,6 +16,8 @@
 
 package android.platform.test.helpers;
 
+import java.io.IOException;
+
 import android.app.Instrumentation;
 import android.support.test.uiautomator.Direction;
 
@@ -65,15 +67,16 @@ public abstract class AbstractGoogleFitHelper extends AbstractStandardAppHelper 
      * @param steps value of Steps
      * @param distance value of Distance in mile
      */
-    public abstract void addActivity(String activity, int duration,
-                                     int calories, int steps, int distance);
+    public abstract void addActivity(String activity, int duration, int calories,
+                                     int steps, int distance);
     /**
      * Setup expectations: Google Fit is open and idle on the home page or timeline page.
      *
      * This method will select an activity type and start an activity session
      * @param activity case-insensitive activity types, like: running, biking, walking
      */
-    public abstract void startActivity(String activity);
+    public abstract void startActivity(String activity) throws IOException;
+
     /**
      * Setup expectations: An activity session is started.
      *
@@ -94,4 +97,12 @@ public abstract class AbstractGoogleFitHelper extends AbstractStandardAppHelper 
      * This method will terminate and save the current activity and end on the activity summary page
      */
     public abstract void saveActivity();
+
+    /**
+     * Setup expectations: An activity session is started.
+     *
+     * This method will stop the current activity and end on the activity page.
+     */
+    public abstract void stopActivity() throws IOException;
+
 }
