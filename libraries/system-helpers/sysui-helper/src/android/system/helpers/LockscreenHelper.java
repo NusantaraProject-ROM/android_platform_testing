@@ -45,6 +45,9 @@ public class LockscreenHelper {
     public static final String EDIT_TEXT_CLASS_NAME = "android.widget.EditText";
     public static final String CAMERA2_PACKAGE = "com.android.camera2";
     public static final String MODE_PIN = "PIN";
+    private static final int SWIPE_MARGIN = 5;
+    private static final int DEFAULT_FLING_STEPS = 5;
+    private static final int DEFAULT_SCROLL_STEPS = 15;
 
     private static final String SET_PIN_COMMAND = "locksettings set-pin %s";
     private static final String CLEAR_COMMAND = "locksettings clear --old %s";
@@ -81,7 +84,7 @@ public class LockscreenHelper {
         mDevice.waitForIdle();
         return mDevice.wait(Until.hasObject(
                 By.res(CAMERA2_PACKAGE, "activity_root_view")),
-                LONG_TIMEOUT);
+                LONG_TIMEOUT * 2);
     }
 
      /**
@@ -191,5 +194,19 @@ public class LockscreenHelper {
      */
     public void removeScreenLockViaShell(String pwd) throws Exception {
         mCommandsHelper.executeShellCommand(String.format(CLEAR_COMMAND, pwd));
+    }
+
+    /**
+     * swipe up to unlock the screen
+     */
+    public void unlockScreenSwipeUp() throws Exception {
+        mDevice.wakeUp();
+        mDevice.waitForIdle();
+        mDevice.swipe(mDevice.getDisplayWidth() / 2,
+                mDevice.getDisplayHeight() - SWIPE_MARGIN,
+                mDevice.getDisplayWidth() / 2,
+                SWIPE_MARGIN,
+                DEFAULT_SCROLL_STEPS);
+        mDevice.waitForIdle();
     }
 }
