@@ -25,7 +25,6 @@ LOCAL_STATIC_JAVA_LIBRARIES := launcher-helper-lib base-app-helpers google-camer
                                google-messenger-app-helper reddit-app-helper \
                                play-books-app-helper tunein-app-helper \
                                google-docs-app-helper flightdemo-app-helper
-LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
 include $(BUILD_STATIC_JAVA_LIBRARY)
 
@@ -34,6 +33,5 @@ include $(BUILD_STATIC_JAVA_LIBRARY)
 include $(CLEAR_VARS)
 LOCAL_MODULE := leanback-app-helpers
 LOCAL_STATIC_JAVA_LIBRARIES := launcher-helper-lib base-app-helpers
-LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
 include $(BUILD_STATIC_JAVA_LIBRARY)
