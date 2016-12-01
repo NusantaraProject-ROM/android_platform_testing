@@ -72,11 +72,11 @@ public class DispatchActivity extends Activity {
         try {
             mPid = android.os.Process.myPid();
             ProcessBuilder simpleperf =
-                    new ProcessBuilder(mSimpleperfBin, "stat", "--group",
+                    new ProcessBuilder(mSimpleperfBin, "stat",
                             mSimpleperfEvt, "-p", String.valueOf(mPid));
 
-            simpleperf.redirectOutput(new File(String.format("%s/%s.%s",
-                    mSimpleperfDir, "perf.data", String.valueOf(mPid))));
+            simpleperf.redirectOutput(new File(String.format("%s/%s-%s",
+                    mSimpleperfDir, mActivityName, String.valueOf(mPid))));
             simpleperf.start();
 
         } catch (Exception e) {
