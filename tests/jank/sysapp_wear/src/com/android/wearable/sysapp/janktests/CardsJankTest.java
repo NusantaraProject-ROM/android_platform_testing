@@ -82,6 +82,20 @@ public class CardsJankTest extends JankTestBase {
         super.afterTest(metrics);
     }
 
+    // Measure jank when dismissing on an expanded card
+    @JankTest(beforeLoop = "openSwipeExpandedCard", afterTest = "goBackHome",
+            expectedFrames = SysAppTestHelper.EXPECTED_FRAMES_CARDS_TEST)
+    @GfxMonitor(processName = "com.google.android.wearable.app")
+    public void testSwipeExpandedCard() {
+        mHelper.swipeRight();
+    }
+
+    // Preparing the expanded card
+    public void openSwipeExpandedCard() throws Exception {
+        openSwipeCard();
+        mHelper.clickScreenCenter();
+    }
+
     /*
      * (non-Javadoc)
      * @see android.test.InstrumentationTestCase#tearDown()
