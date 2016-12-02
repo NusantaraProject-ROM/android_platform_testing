@@ -38,6 +38,7 @@ public class SysAppTestHelper {
 
     public static final int EXPECTED_FRAMES_CARDS_TEST = 20;
     public static final int EXPECTED_FRAMES_WATCHFACE_PICKER_TEST = 20;
+    public static final int EXPECTED_FRAMES_SWIPERIGHT_TO_DISMISS_TEST = 20;
     public static final int EXPECTED_FRAMES_WATCHFACE_PICKER_TEST_ADD_FAVORITE = 5;
     public static final int EXPECTED_FRAMES = 100;
     public static final int LONG_TIMEOUT = 5000;
@@ -141,6 +142,11 @@ public class SysAppTestHelper {
     public void flingDown() {
         mDevice.swipe(mDevice.getDisplayWidth() / 2, 0, mDevice.getDisplayWidth() / 2,
                 mDevice.getDisplayHeight() / 2 + 50, 5); // fast speed
+        SystemClock.sleep(SHORT_TIMEOUT);
+    }
+
+    public void clickScreenCenter() {
+        mDevice.click(mDevice.getDisplayWidth() / 2, mDevice.getDisplayHeight() / 2);
         SystemClock.sleep(SHORT_TIMEOUT);
     }
 
