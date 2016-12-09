@@ -223,7 +223,7 @@ public abstract class AbstractLeanbackAppHelper extends AbstractStandardAppHelpe
             mDPadUtil.pressDPad(direction);
             focus = container.findObject(By.focused(true));
             if (focus == null) {
-                mDPadUtil.pressDPad(Direction.reverse(direction));
+                mDPadUtil.pressDPad(direction);
                 focus = container.findObject(By.focused(true));
             }
             if (focus.equals(prev)) {
@@ -389,24 +389,42 @@ public abstract class AbstractLeanbackAppHelper extends AbstractStandardAppHelpe
         return mDevice.wait(Until.hasObject(getBrowseHeadersSelector()), timeoutMs);
     }
 
+    /**
+     * Attempts to select a given header text three times with the backoff timeout each retry.
+     * The timeout needs to be long enough if it runs under low bandwidth environments.
+     */
     protected UiObject2 selectHeader(String headerName) {
+        long waitMs = 10 * 1000;    // 10 sec
+        int maxAttempts = 3;
+        UiObject2 header;
+        while (maxAttempts-- > 0) {
+            header = selectHeader(headerName, waitMs);
+            if (header != null) {
+                return header;
+            }
+            waitMs = 2 * waitMs;
+        }
+        throw new UnknownUiException("Failed to select header : " + headerName);
+    }
+
+    protected UiObject2 selectHeader(String headerName, long waitMs) {
         UiObject2 container = mDevice.wait(
                 Until.findObject(getBrowseHeadersSelector()), OPEN_HEADER_WAIT_TIME_MS);
         BySelector header = By.clazz(".TextView").text(headerName);
 
-        // Wait until the row header text appears at runtime. This needs to be long enough to run
-        // under low bandwidth environments in the test lab.
-        mDevice.wait(Until.findObject(header), 60 * 1000);
+        // Wait until the row header text appears on screen at runtime.
+        mDevice.wait(Until.findObject(header), waitMs);
 
-        // Search up, then down
-        UiObject2 focused = select(container, header, Direction.UP);
+        // Search down, then up to select the header
+        UiObject2 focused = select(container, header, Direction.DOWN);
         if (focused != null) {
             return focused;
         }
-        focused = select(container, header, Direction.DOWN);
+        focused = select(container, header, Direction.UP);
         if (focused != null) {
             return focused;
         }
-        throw new UnknownUiException("Failed to select header");
+        return null;
     }
+
 }
