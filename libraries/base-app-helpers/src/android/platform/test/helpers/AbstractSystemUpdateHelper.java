@@ -80,6 +80,7 @@ public abstract class AbstractSystemUpdateHelper extends AbstractStandardAppHelp
      * Install an OTA. This will cause the device to power off.
      * Precondition: A system update is ready to install.
      * Postcondition: The device will reboot.
+     * @return true if the "Install" button was successfully clicked, false otherwise
      */
-    public abstract void installOta();
+    public abstract boolean installOta();
 }
