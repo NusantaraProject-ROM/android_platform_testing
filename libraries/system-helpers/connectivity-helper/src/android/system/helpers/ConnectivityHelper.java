@@ -36,7 +36,7 @@ import junit.framework.Assert;
  */
 public class ConnectivityHelper {
     private static final String TAG = ConnectivityHelper.class.getSimpleName();
-    private final static String DEFAULT_PING_SITE = "www.google.com";
+    private final static String DEFAULT_PING_SITE = "http://www.google.com";
 
     public static final int TIMEOUT = 1000;
     private static ConnectivityHelper sInstance = null;
@@ -73,31 +73,38 @@ public class ConnectivityHelper {
                 .getSystemService(Context.DOWNLOAD_SERVICE);
     }
 
-    /**
+   /**
      * Checks if device connection is active either through wifi or mobile data by sending an HTTP
      * request, check for HTTP_OK
      */
     public boolean isConnected() throws InterruptedException {
         int counter = 10;
+        long TIMEOUT_MS = TIMEOUT;
+        HttpURLConnection conn = null;
         while (--counter > 0) {
-            try {
-                String mPingSite = String.format("http://%s", DEFAULT_PING_SITE);
-                URL url = new URL(mPingSite);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            try{
+                URL url = new URL(DEFAULT_PING_SITE);
+                conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
                 conn.setConnectTimeout(TIMEOUT * 60); // 1 minute
                 conn.setReadTimeout(TIMEOUT * 60); // 1 minute
-                if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
-                    return true;
-                }
-                Thread.sleep(TIMEOUT);
+                Log.i(TAG, "connection response code is " + conn.getResponseCode());
+                Log.i(TAG, " counter = " + counter);
+                return true;
             } catch (IOException ex) {
                 // Wifi being flaky in the lab, test retries 10 times to connect to google.com
                 // as IOException is throws connection isn't made and response stream is null
                 // so for retrying purpose, exception hasn't been rethrown
                 Log.i(TAG, ex.getMessage());
+            } finally {
+                if (conn != null) {
+                    conn.disconnect();
+                }
             }
+            Thread.sleep(TIMEOUT_MS);
+            TIMEOUT_MS = 2 * TIMEOUT_MS;
         }
+        Log.i(TAG, " counter = " + counter);
         return false;
     }
 
