@@ -85,11 +85,17 @@ public class LauncherStrategyFactory {
      * {@link ILauncherStrategy} maybe registered via
      * {@link LauncherStrategyFactory#registerLauncherStrategy(Class)} by identifying the
      * launcher package name supported
+     * @throw RuntimeException if no valid launcher strategy is found
      * @return
      */
     public ILauncherStrategy getLauncherStrategy() {
         String launcherPkg = mUiDevice.getLauncherPackageName();
-        return mInstanceMap.get(launcherPkg);
+        if (mInstanceMap.containsKey(launcherPkg)) {
+            return mInstanceMap.get(launcherPkg);
+        } else {
+            throw new RuntimeException(String.format(
+                    "Could not find a launcher strategy for package, %s", launcherPkg));
+        }
     }
 
     /**
