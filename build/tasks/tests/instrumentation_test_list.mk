@@ -49,4 +49,5 @@ instrumentation_tests := \
     PrintSpoolerOutOfProcessTests \
     CellBroadcastReceiverUnitTests \
     TelephonyProviderTests \
-    CarrierConfigTests
+    CarrierConfigTests \
+    TeleServiceTests
