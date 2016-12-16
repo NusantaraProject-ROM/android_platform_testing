@@ -37,6 +37,7 @@ import junit.framework.Assert;
 public class SysAppTestHelper {
 
     public static final int EXPECTED_FRAMES_CARDS_TEST = 20;
+    public static final int EXPECTED_FRAMES_DISMISS_EXPANDED_CARDS_TEST = 15;
     public static final int EXPECTED_FRAMES_WATCHFACE_PICKER_TEST = 20;
     public static final int EXPECTED_FRAMES_SWIPERIGHT_TO_DISMISS_TEST = 20;
     public static final int EXPECTED_FRAMES_WATCHFACE_PICKER_TEST_ADD_FAVORITE = 5;
