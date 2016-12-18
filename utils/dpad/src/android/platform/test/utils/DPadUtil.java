@@ -87,19 +87,46 @@ public class DPadUtil {
     }
 
     public boolean pressDPadLeft() {
-        return mDevice.pressDPadLeft();
+        return pressKeyCodeAndWait(KeyEvent.KEYCODE_DPAD_LEFT);
     }
 
     public boolean pressDPadRight() {
-        return mDevice.pressDPadRight();
+        return pressKeyCodeAndWait(KeyEvent.KEYCODE_DPAD_RIGHT);
     }
 
     public boolean pressDPadUp() {
-        return mDevice.pressDPadUp();
+        return pressKeyCodeAndWait(KeyEvent.KEYCODE_DPAD_UP);
     }
 
     public boolean pressDPadDown() {
-        return mDevice.pressDPadDown();
+        return pressKeyCodeAndWait(KeyEvent.KEYCODE_DPAD_DOWN);
+    }
+
+    public boolean pressDPadCenter() {
+        return pressKeyCodeAndWait(KeyEvent.KEYCODE_DPAD_CENTER);
+    }
+
+    public boolean pressEnter() {
+        return pressKeyCodeAndWait(KeyEvent.KEYCODE_ENTER);
+    }
+
+    public boolean pressPipKey() {
+        return pressKeyCodeAndWait(KeyEvent.KEYCODE_WINDOW);
+    }
+
+    public boolean pressSearch() {
+        return pressKeyCodeAndWait(KeyEvent.KEYCODE_SEARCH);
+    }
+
+    public boolean pressKeyCode(int keyCode) {
+        return pressKeyCodeAndWait(keyCode);
+    }
+    public boolean pressKeyCodeAndWait(int keyCode) {
+        boolean retVal = mDevice.pressKeyCode(keyCode);
+        // Dpad key presses will cause some UI change to occur.
+        // Wait for the accessibility event stream to become idle.
+        mDevice.waitForIdle();
+        return retVal;
     }
 
     public boolean pressHome() {
@@ -108,22 +135,6 @@ public class DPadUtil {
 
     public boolean pressBack() {
         return mDevice.pressBack();
-    }
-
-    public boolean pressDPadCenter() {
-        return mDevice.pressDPadCenter();
-    }
-
-    public boolean pressEnter() {
-        return mDevice.pressEnter();
-    }
-
-    public boolean pressPipKey() {
-        return mDevice.pressKeyCode(KeyEvent.KEYCODE_WINDOW);
-    }
-
-    public boolean pressKeyCode(int keyCode) {
-        return mDevice.pressKeyCode(keyCode);
     }
 
     public boolean longPressKeyCode(int keyCode) {
