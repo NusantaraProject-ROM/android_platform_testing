@@ -61,6 +61,7 @@ native_tests := \
     perfprofd_test \
     recovery_component_test \
     recovery_unit_test \
+    scrape_mmap_addr \
     simpleperf_cpu_hotplug_test \
     simpleperf_unit_test \
     syscall_filter_unittest_gtest \
