@@ -86,7 +86,7 @@ public class QuickSettingsHelper {
         quickSettingEdit.click();
         // Scroll down to bottom to see all QS options on Edit
         swipeDown();
-        // Drag and drop QS iteam onto existing QS tile to replace it
+        // Drag and drop QS item onto existing QS tile to replace it
         // This is because we need specific coordinates on which to
         // drop the quick setting tile.
         UiObject2 quickSettingTileObject = mDevice.wait(Until.findObject
@@ -94,7 +94,14 @@ public class QuickSettingsHelper {
         Point destination = mDevice.wait(Until.findObject
                 (By.descContains(quickSettingTileToReplace)), LONG_TIMEOUT)
                 .getVisibleCenter();
-        quickSettingTileObject.drag(destination);
+        Assert.assertNotNull(quickSettingTile + " in Edit menu can't be found",
+                quickSettingTileObject);
+        Assert.assertNotNull(quickSettingTileToReplace + " in QS menu can't be found",
+                destination);
+        // Long press the icon, then drag it to the destination slowly.
+        // Without the long press, it ends up scrolling down quick settings.
+        quickSettingTileObject.click(2000);
+        quickSettingTileObject.drag(destination, 1000);
         // Hit the back button in the QS menu to go back to quick settings.
         mDevice.wait(Until.findObject(By.descContains("Navigate up")), LONG_TIMEOUT);
         // Retrieve the quick settings CSV string and verify that the newly
