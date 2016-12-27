@@ -33,51 +33,57 @@ public abstract class AbstractDownloadsHelper extends AbstractStandardAppHelper 
 
     /**
      * Setup expectation: Downloads app's Navigation Drawer is open
-     *
+     * <p>
      * This method will select an item from the navigation drawer's list
+     *
      * @param category - menu item to select (click)
      */
     public abstract void selectMenuCategory(Category category);
 
     /**
-     *  Setup expectation: Item has been selected from Navigation Drawer's list
+     * Setup expectation: Item has been selected from Navigation Drawer's list
+     * <p>
+     * This method opens a directory from the directories list
      *
-     *  This method opens a directory from the directories list
      * @param directoryName - name of directory to open
      */
     public abstract void selectDirectory(String directoryName);
 
     /**
      * Setup expectation: Navigated to the right folder
-     *
+     * <p>
      * This method clicks a specific file with name 'filename'
+     *
      * @param filename - name of file to open
      */
     public abstract void openFile(String filename);
 
     /**
      * Setup expectation: Video is playing
-     *
+     * <p>
      * This method will wait for the video to stop playing or until timeoutInSeconds occur,
      * whichever comes first. Function will just exit, no test failure in either case.
+     *
      * @param timeoutInSeconds - timeout value in seconds the test will wait for video to end
      */
-    public abstract void waitForVideoToStopPlaying(int timeoutInSeconds);
+    public abstract void waitForVideoToStopPlaying(long timeoutInSeconds);
 
     /**
      * Setup expectation: Audio is playing
-     *
+     * <p>
      * This method will wait for the audio to stop playing or until timeoutInSeconds occur,
      * whichever comes first. Function will just exit, no test failure in either case.
+     *
      * @param timeoutInSeconds - timeout value in seconds the test will wait for audio to end
      */
-    public abstract void waitForAudioToStopPlaying(int timeoutInSeconds);
+    public abstract void waitForAudioToStopPlaying(long timeoutInSeconds);
 
     /**
      * Setup expectation: Video is playing
-     *
+     * <p>
      * This method will enable or disable video looping. It will bring up the options menu and
      * check the "Loop video" option
+     *
      * @param enableVideoLooping - true for continuous looping video, false for not looping video
      */
     public abstract void enableVideoLooping(boolean enableVideoLooping);
