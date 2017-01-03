@@ -33,6 +33,7 @@ import android.system.helpers.ActivityHelper;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import android.util.Log;
 import junit.framework.Assert;
 
 /**
@@ -44,6 +45,7 @@ public class LockscreenHelper {
     public static final int LONG_TIMEOUT = 2000;
     public static final String EDIT_TEXT_CLASS_NAME = "android.widget.EditText";
     public static final String CAMERA2_PACKAGE = "com.android.camera2";
+    public static final String CAMERA_PACKAGE = "com.google.android.GoogleCamera";
     public static final String MODE_PIN = "PIN";
     private static final int SWIPE_MARGIN = 5;
     private static final int DEFAULT_FLING_STEPS = 5;
@@ -82,8 +84,9 @@ public class LockscreenHelper {
         // Load camera on LockScreen and take a photo
         mDevice.drag((w - 25), (h - 25), (int) (w * 0.5), (int) (w * 0.5), 40);
         mDevice.waitForIdle();
+        Log.i(LOG_TAG, "Camer_package:" + CAMERA_PACKAGE);
         return mDevice.wait(Until.hasObject(
-                By.res(CAMERA2_PACKAGE, "activity_root_view")),
+                By.res(CAMERA_PACKAGE, "activity_root_view")),
                 LONG_TIMEOUT * 2);
     }
 

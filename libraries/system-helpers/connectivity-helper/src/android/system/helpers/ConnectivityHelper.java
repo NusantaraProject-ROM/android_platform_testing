@@ -78,7 +78,7 @@ public class ConnectivityHelper {
      * request, check for HTTP_OK
      */
     public boolean isConnected() throws InterruptedException {
-        int counter = 10;
+        int counter = 7;
         long TIMEOUT_MS = TIMEOUT;
         HttpURLConnection conn = null;
         while (--counter > 0) {
