@@ -50,4 +50,5 @@ instrumentation_tests := \
     CellBroadcastReceiverUnitTests \
     TelephonyProviderTests \
     CarrierConfigTests \
-    TeleServiceTests
+    TeleServiceTests \
+    NetworkRecommendationTests
