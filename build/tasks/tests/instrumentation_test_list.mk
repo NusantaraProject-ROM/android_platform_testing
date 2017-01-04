@@ -39,4 +39,5 @@ instrumentation_tests := \
     DownloadProviderTests \
     EmergencyInfoTests \
     CalendarProviderTests \
-    TelephonyProviderTests
+    TelephonyProviderTests \
+    NetworkRecommendationTests
