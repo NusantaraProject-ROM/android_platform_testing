@@ -43,7 +43,7 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
     private static final int MAX_SCROLL_ATTEMPTS = 20;
     private static final int APP_LAUNCH_TIMEOUT = 10000;
     private static final int SHORT_WAIT_TIME = 5000;    // 5 sec
-    private static final int NOTIFICATION_WAIT_TIME = 30000;
+    private static final int NOTIFICATION_WAIT_TIME = 60000;
 
     protected UiDevice mDevice;
     protected DPadUtil mDPadUtil;
@@ -393,9 +393,15 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
         UiObject2 appIcon = container.findObject(app);
         int attempts = 0;
         while (attempts++ < maxScrollAttempts) {
+            UiObject2 focused = container.wait(Until.findObject(By.focused(true)), SHORT_WAIT_TIME);
+            if (focused == null) {
+                throw new IllegalStateException(
+                        "The App/Game row may have lost focus while activity is in transition");
+            }
+
             // Compare the focused icon and the app icon to search for.
-            UiObject2 focusedIcon = container.findObject(By.focused(true))
-                    .findObject(By.res(getSupportedLauncherPackage(), "app_banner"));
+            UiObject2 focusedIcon = focused.findObject(
+                    By.res(getSupportedLauncherPackage(), "app_banner"));
 
             if (appIcon == null) {
                 appIcon = findApp(container, focusedIcon, app);
@@ -559,21 +565,54 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
     }
 
     protected UiObject2 findNotificationCard(BySelector selector) {
-        // Move to the first notification, Search to the right
+        // Move to the first notification row, start searching to the right, then to the left
         mDPadUtil.pressHome();
+        UiObject2 card;
+        if ((card = findNotificationCard(selector, Direction.RIGHT)) != null) {
+            return card;
+        }
+        if ((card = findNotificationCard(selector, Direction.LEFT)) != null) {
+            return card;
+        }
+        return null;
+    }
 
-        // Find if a focused card matches a given selector
-        UiObject2 currentFocus = mDevice.findObject(getNotificationRowSelector())
-                .findObject(By.res(getSupportedLauncherPackage(), "card").focused(true));
+    /**
+     * Find the card in the Notification row that matches BySelector in a given direction.
+     * If a card is already selected, it returns regardless of the direction parameter.
+     * @param selector
+     * @param direction
+     * @return
+     */
+    protected UiObject2 findNotificationCard(BySelector selector, Direction direction) {
+        if (direction != Direction.RIGHT && direction != Direction.LEFT) {
+            throw new IllegalArgumentException("Required to go either left or right to find a card"
+                    + "in the Notification row");
+        }
+
+        // Find the Notification row
+        UiObject2 notification = mDevice.findObject(getNotificationRowSelector());
+        if (notification == null) {
+            mDPadUtil.pressHome();
+            notification = mDevice.wait(Until.findObject(getNotificationRowSelector()),
+                    SHORT_WAIT_TIME);
+            if (notification == null) {
+                throw new IllegalStateException("The Notification row is not found");
+            }
+        }
+
+        // Find a focused card in the Notification row that matches a given selector
+        UiObject2 currentFocus = notification.findObject(
+                By.res(getSupportedLauncherPackage(), "card").focused(true));
         UiObject2 previousFocus = null;
         while (!currentFocus.equals(previousFocus)) {
             if (currentFocus.hasObject(selector)) {
                 return currentFocus;   // Found
             }
-            mDPadUtil.pressDPadRight();
+            mDPadUtil.pressDPad(direction);
             previousFocus = currentFocus;
-            currentFocus = mDevice.findObject(getNotificationRowSelector())
-                    .findObject(By.res(getSupportedLauncherPackage(), "card").focused(true));
+            currentFocus = notification.findObject(
+                    By.res(getSupportedLauncherPackage(), "card").focused(true));
         }
         Log.d(LOG_TAG, "Failed to find the Notification card until it reaches the end.");
         return null;
