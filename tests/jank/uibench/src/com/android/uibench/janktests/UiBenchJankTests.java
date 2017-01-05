@@ -205,4 +205,13 @@ public class UiBenchJankTests extends JankTestBase {
         mHelper.flingUpDown(mHelper.mContents, 2, true);
     }
 
+    public void openResizeHWLayer() {
+        mHelper.launchActivity("ResizeHWLayerActivity", "General/Resize HW Layer");
+    }
+
+    @JankTest(beforeTest = "openResizeHWLayer", expectedFrames = EXPECTED_FRAMES)
+    @GfxMonitor(processName = PACKAGE_NAME)
+    public void testResizeHWLayer() {
+        SystemClock.sleep(UiBenchJankTestsHelper.FULL_TEST_DURATION);
+    }
 }
