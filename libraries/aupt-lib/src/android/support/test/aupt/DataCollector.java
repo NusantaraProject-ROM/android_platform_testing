@@ -67,48 +67,44 @@ public class DataCollector {
         mSleepInterval = gcd(generatorsWithIntervals.values());
     }
 
-    public void start() {
-        synchronized (this) {
-            if (mStopped) {
-                mStopped = false;
+    public synchronized void start() {
+        if (mStopped) {
+            mStopped = false;
 
-                /* Initialize the LastUpdates to the current time */
-                for (Map.Entry<LogGenerator, Long> entry : generatorsWithIntervals.entrySet()) {
-                    if (entry.getValue() > 0) {
-                        Log.d(TAG, "Collecting " + entry.getKey() + " logs every " +
-                            entry.getValue() + " milliseconds");
+            /* Initialize the LastUpdates to the current time */
+            for (Map.Entry<LogGenerator, Long> entry : generatorsWithIntervals.entrySet()) {
+                if (entry.getValue() > 0) {
+                    Log.d(TAG, "Collecting " + entry.getKey() + " logs every " +
+                        entry.getValue() + " milliseconds");
 
-                        mLastUpdate.put(entry.getKey(), SystemClock.uptimeMillis());
-                    }
+                    mLastUpdate.put(entry.getKey(), SystemClock.uptimeMillis());
                 }
-
-                mThread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        loop();
-                    }
-                });
-                mThread.start();
-            } else {
-                Log.e(TAG, "Tried to start a started DataCollector!");
             }
+
+            mThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    loop();
+                }
+            });
+            mThread.start();
+        } else {
+            Log.e(TAG, "Tried to start a started DataCollector!");
         }
     }
 
-    public void stop() {
-        synchronized(this) {
-            if(!mStopped) {
-                mThread.interrupt();
-                mStopped = true;
+    public synchronized void stop() {
+        if (!mStopped) {
+            mStopped = true;
+            mThread.interrupt();
 
-                try {
-                    mThread.join();
-                } catch (InterruptedException e) {
-                    // ignore
-                }
-            } else {
-                Log.e(TAG, "Tried to stop a stoppped DataCollector!");
+            try {
+                mThread.join();
+            } catch (InterruptedException e) {
+                // ignore
             }
+        } else {
+            Log.e(TAG, "Tried to stop a stoppped DataCollector!");
         }
     }
 
@@ -117,28 +113,26 @@ public class DataCollector {
             return;
         }
 
-        synchronized(this) {
-            while (!mStopped) {
-                try {
-                    for (Map.Entry<LogGenerator, Long> entry : generatorsWithIntervals.entrySet()) {
-                        Long t = SystemClock.uptimeMillis() - mLastUpdate.get(entry.getKey());
+        while (!mStopped) {
+            try {
+                for (Map.Entry<LogGenerator, Long> entry : generatorsWithIntervals.entrySet()) {
+                    Long t = SystemClock.uptimeMillis() - mLastUpdate.get(entry.getKey());
 
-                        if (entry.getValue() > 0 && t >= entry.getValue()) {
-                            try {
-                                entry.getKey().save(instrumentation, resultsDirectory);
-                            } catch (IOException ex) {
-                                Log.e(TAG, "Error writing results in " + resultsDirectory +
-                                        ": " + ex.toString());
-                            }
-
-                            mLastUpdate.put(entry.getKey(), SystemClock.uptimeMillis());
+                    if (entry.getValue() > 0 && t >= entry.getValue()) {
+                        try {
+                            entry.getKey().save(instrumentation, resultsDirectory);
+                        } catch (IOException ex) {
+                            Log.e(TAG, "Error writing results in " + resultsDirectory +
+                                    ": " + ex.toString());
                         }
-                    }
 
-                    Thread.sleep(mSleepInterval);
-                } catch (InterruptedException e) {
-                    // Ignore.
+                        mLastUpdate.put(entry.getKey(), SystemClock.uptimeMillis());
+                    }
                 }
+
+                Thread.sleep(mSleepInterval);
+            } catch (InterruptedException e) {
+                // Ignore.
             }
         }
     }
