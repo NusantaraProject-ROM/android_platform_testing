@@ -164,6 +164,7 @@ public class HelperManager {
                 clazz = loader.loadClass(className);
             } catch (ClassNotFoundException e) {
                 Log.w(LOG_TAG, String.format("Class not found: %s", className));
+                continue;
             }
             if (base.isAssignableFrom(clazz) &&
                     !clazz.equals(base) &&
