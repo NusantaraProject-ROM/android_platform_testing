@@ -16,6 +16,8 @@
 
 package android.platform.test.helpers;
 
+import static java.lang.reflect.Modifier.isAbstract;
+
 import android.app.Instrumentation;
 import android.content.Context;
 import android.util.Log;
@@ -135,7 +137,26 @@ public class HelperManager {
      * @return a concrete implementation of base
      */
     public <T extends AbstractStandardAppHelper> T get(Class<T> base) {
+        List<T> implementations = getAll(base);
+
+        if (implementations.size() > 0) {
+            return implementations.get(0);
+        } else {
+            throw new RuntimeException(
+                    String.format("Failed to find an implementation for %s", base.toString()));
+        }
+    }
+
+    /**
+     * Returns all concrete implementations of the helper interface supplied.
+     *
+     * @param base the interface base class to find an implementation for
+     * @return a list of all concrete implementations we could find
+     */
+    public <T extends AbstractStandardAppHelper> List<T> getAll(Class<T> base) {
         ClassLoader loader = HelperManager.class.getClassLoader();
+        List<T> implementations = new ArrayList<>();
+
         // Iterate and search for the implementation
         for (String className : mClasses) {
             Class<?> clazz = null;
@@ -144,11 +165,14 @@ public class HelperManager {
             } catch (ClassNotFoundException e) {
                 Log.w(LOG_TAG, String.format("Class not found: %s", className));
             }
-            if (base.isAssignableFrom(clazz) && !clazz.equals(base)) {
+            if (base.isAssignableFrom(clazz) &&
+                    !clazz.equals(base) &&
+                    !isAbstract(clazz.getModifiers())) {
+
                 // Instantiate the implementation class and return
                 try {
                     Constructor<?> constructor = clazz.getConstructor(Instrumentation.class);
-                    return (T)constructor.newInstance(mInstrumentation);
+                    implementations.add((T)constructor.newInstance(mInstrumentation));
                 } catch (NoSuchMethodException e) {
                     Log.w(LOG_TAG, String.format("Failed to find a matching constructor for %s",
                             className), e);
@@ -164,7 +188,7 @@ public class HelperManager {
                 }
             }
         }
-        throw new RuntimeException(
-                String.format("Failed to find an implementation for %s", base.toString()));
+
+        return implementations;
     }
 }
