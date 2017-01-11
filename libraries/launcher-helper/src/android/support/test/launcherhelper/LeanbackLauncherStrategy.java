@@ -661,7 +661,8 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
             throw new IllegalArgumentException("Required to go either up or down to find rows");
         }
 
-        UiObject2 currentFocused = mDevice.findObject(By.focused(true));
+        UiObject2 currentFocused = mDevice.wait(Until.findObject(By.focused(true)),
+                SHORT_WAIT_TIME);
         UiObject2 prevFocused = null;
         while (!currentFocused.equals(prevFocused)) {
             UiObject2 rowObject = mDevice.findObject(row);
@@ -671,7 +672,7 @@ public class LeanbackLauncherStrategy implements ILeanbackLauncherStrategy {
 
             mDPadUtil.pressDPad(direction);
             prevFocused = currentFocused;
-            currentFocused = mDevice.findObject(By.focused(true));
+            currentFocused = mDevice.wait(Until.findObject(By.focused(true)), SHORT_WAIT_TIME);
         }
         Log.d(LOG_TAG, "Failed to find the row until it reaches the end.");
         return null;
