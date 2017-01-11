@@ -41,6 +41,7 @@ public abstract class AbstractLeanbackAppHelper extends AbstractStandardAppHelpe
     private static final int OPEN_SIDE_PANEL_MAX_ATTEMPTS = 5;
     private static final long MAIN_ACTIVITY_WAIT_TIME_MS = 250;
     private static final long SELECT_WAIT_TIME_MS = 5000;
+    private static final long FOCUS_WAIT_TIME_MS = 100;
 
     // The notable widget classes in Leanback Library
     public enum Widget {
@@ -214,10 +215,7 @@ public abstract class AbstractLeanbackAppHelper extends AbstractStandardAppHelpe
         if (container == null) {
             throw new IllegalArgumentException("The container should not be null.");
         }
-        UiObject2 focus = container.findObject(By.focused(true));
-        if (focus == null) {
-            throw new UnknownUiException("The container should have a focused descendant.");
-        }
+        UiObject2 focus = waitForFocus(container, FOCUS_WAIT_TIME_MS, true);
         while (!focus.hasObject(target)) {
             UiObject2 prev = focus;
             mDPadUtil.pressDPad(direction);
@@ -232,6 +230,33 @@ public abstract class AbstractLeanbackAppHelper extends AbstractStandardAppHelpe
             }
         }
         return focus;
+    }
+
+    public UiObject2 waitForFocus(UiObject2 object) {
+        // By default this method returns immediately and throws an Exception if no focus is found
+        return waitForFocus(object, 0, true);
+    }
+
+    /**
+     * Wait for given object to have an element that is focused.
+     * @param object {@link UiObject2} under which it searches for an element that is focused.
+     *               Null if it searches through the entire hierarchy of accessibility nodes
+     * @param timeoutMs Maximum amount of time to wait in milliseconds
+     * @param throwIfFail Throw {@link IllegalStateException} if no element under the object is
+     *                    focused in a given timeout
+     * @return The {@link UiObject2} that has a focused element, or null if no focus
+     */
+    public UiObject2 waitForFocus(UiObject2 object, long timeoutMs, boolean throwIfFail) {
+        UiObject2 focused;
+        if (object == null) {
+            focused = mDevice.wait(Until.findObject(By.focused(true)), timeoutMs);
+        } else {
+            focused = object.wait(Until.findObject(By.focused(true)), timeoutMs);
+        }
+        if (throwIfFail && focused == null) {
+            throw new IllegalStateException("The object should have a focused descendant.");
+        }
+        return focused;
     }
 
     /**
