@@ -45,6 +45,7 @@ public class LauncherStrategyFactory {
         registerLauncherStrategy(Launcher3Strategy.class);
         registerLauncherStrategy(NexusLauncherStrategy.class);
         registerLauncherStrategy(LeanbackLauncherStrategy.class);
+        registerLauncherStrategy(WearLauncherStrategy.class);
     }
 
     /**
