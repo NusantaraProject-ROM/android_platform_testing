@@ -23,7 +23,10 @@ LOCAL_SRC_FILES := $(call all-java-files-under, src)
 LOCAL_PACKAGE_NAME := AppTransitionTests
 LOCAL_CERTIFICATE := platform
 LOCAL_JAVA_LIBRARIES := android.test.runner
-LOCAL_STATIC_JAVA_LIBRARIES := android-support-test ub-uiautomator launcher-helper-lib \
+LOCAL_STATIC_JAVA_LIBRARIES := \
+    android-support-test \
+    legacy-android-test \
+    ub-uiautomator \
+    launcher-helper-lib \
     sysui-helper
 include $(BUILD_PACKAGE)
-
