@@ -17,7 +17,7 @@ include $(CLEAR_VARS)
 
 LOCAL_PACKAGE_NAME := PowerPerfTest
 LOCAL_MODULE_TAGS := tests
-LOCAL_STATIC_JAVA_LIBRARIES := PowerTestHelper-src ub-uiautomator
+LOCAL_STATIC_JAVA_LIBRARIES := PowerTestHelper-src ub-uiautomator junit
 LOCAL_CERTIFICATE := platform
 LOCAL_SRC_FILES := $(call all-subdir-java-files)
 
