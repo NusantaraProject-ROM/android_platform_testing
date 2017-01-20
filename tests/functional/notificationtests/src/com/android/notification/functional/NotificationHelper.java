@@ -22,6 +22,7 @@ import android.app.IntentService;
 import android.app.KeyguardManager;
 import android.app.Notification;
 import android.app.Notification.Builder;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.RemoteInput;
@@ -335,6 +336,10 @@ public class NotificationHelper {
                     .setDefaults(Notification.DEFAULT_VIBRATE);
         }
         mNotificationManager.notify(notificationId, n.build());
+    }
+
+    public NotificationChannel getDefaultChannel() {
+        return mNotificationManager.getNotificationChannel(NotificationChannel.DEFAULT_CHANNEL_ID);
     }
 
     public static class ToastService extends IntentService {

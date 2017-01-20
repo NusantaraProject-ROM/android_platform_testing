@@ -2,6 +2,7 @@
 package com.android.notification.functional;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -99,7 +100,7 @@ public class NotificationDNDTests extends InstrumentationTestCase {
             mHelper.sendNotificationsWithInLineReply(NOTIFICATION_ID, true);
             Thread.sleep(LONG_TIMEOUT);
             NotificationRecord nr = new NotificationRecord(mContext,
-                    mHelper.getStatusBarNotification(NOTIFICATION_ID));
+                    mHelper.getStatusBarNotification(NOTIFICATION_ID), mHelper.getDefaultChannel());
             ZenModeConfig mConfig = mZenHelper.getConfig();
             ZenModeFiltering zF = new ZenModeFiltering(mContext);
             assertTrue(zF.shouldIntercept(mNotificationManager.getZenMode(), mConfig, nr));
@@ -127,7 +128,7 @@ public class NotificationDNDTests extends InstrumentationTestCase {
             mHelper.sendNotificationsWithInLineReply(NOTIFICATION_ID, true);
             Thread.sleep(LONG_TIMEOUT);
             NotificationRecord nr = new NotificationRecord(mContext,
-                    mHelper.getStatusBarNotification(NOTIFICATION_ID));
+                    mHelper.getStatusBarNotification(NOTIFICATION_ID), mHelper.getDefaultChannel());
             ZenModeConfig mConfig = mZenHelper.getConfig();
             ZenModeFiltering zF = new ZenModeFiltering(mContext);
             assertFalse(zF.shouldIntercept(mZenHelper.getZenMode(), mConfig, nr));
