@@ -22,11 +22,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Marks a test or test class that should run as part of a project scoped presubmit suite
+ * Marks a test that should run as part of the global presubmit suite for platform development.
  *
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD, ElementType.TYPE})
-public @interface Presubmit {
+public @interface GlobalPresubmit {
 
 }
