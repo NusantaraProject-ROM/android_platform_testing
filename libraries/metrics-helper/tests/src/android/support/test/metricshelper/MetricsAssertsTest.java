@@ -15,8 +15,8 @@
  */
 package android.support.test.metricshelper;
 
-import com.android.internal.logging.LogBuilder;
-import com.android.internal.logging.MetricsReader;
+import android.metrics.LogMaker;
+import android.metrics.MetricsReader;
 import com.android.internal.logging.nano.MetricsProto.MetricsEvent;
 
 import android.test.suitebuilder.annotation.SmallTest;
@@ -39,10 +39,10 @@ import static org.junit.Assert.fail;
 public class MetricsAssertsTest {
     @Mock MetricsReader mReader;
 
-    private LogBuilder a;
-    private LogBuilder b;
-    private LogBuilder c;
-    private LogBuilder d;
+    private LogMaker a;
+    private LogMaker b;
+    private LogMaker c;
+    private LogMaker d;
 
     private int mActionView = MetricsEvent.ACTION_WIFI_ON;
     private int mOpenView = MetricsEvent.MAIN_SETTINGS;
@@ -51,16 +51,16 @@ public class MetricsAssertsTest {
     public void setUp() {
         MockitoAnnotations.initMocks(this);
 
-        a = new LogBuilder(MetricsEvent.SCREEN)
+        a = new LogMaker(MetricsEvent.SCREEN)
                 .setType(MetricsEvent.TYPE_OPEN)
                 .setTimestamp(1000);
-        b = new LogBuilder(mOpenView)
+        b = new LogMaker(mOpenView)
                 .setType(MetricsEvent.TYPE_OPEN)
                 .setTimestamp(2000);
-        c = new LogBuilder(mActionView)
+        c = new LogMaker(mActionView)
                 .setType(MetricsEvent.TYPE_ACTION)
                 .setTimestamp(3000);
-        d = new LogBuilder(MetricsEvent.SCREEN)
+        d = new LogMaker(MetricsEvent.SCREEN)
                 .setType(MetricsEvent.TYPE_CLOSE)
                 .setTimestamp(4000);
 
