@@ -17,6 +17,7 @@
 package android.system.helpers;
 
 import android.app.Instrumentation;
+import android.content.pm.PackageManager;
 import android.os.SystemClock;
 import android.system.helpers.CommandsHelper;
 
@@ -29,10 +30,12 @@ public class PackageHelper {
     public static PackageHelper sInstance = null;
     private Instrumentation mInstrumentation = null;
     private CommandsHelper cmdHelper = null;
+    private PackageManager mPackageManager = null;
 
     public PackageHelper(Instrumentation instrumentation) {
         mInstrumentation = instrumentation;
         cmdHelper = CommandsHelper.getInstance(instrumentation);
+        mPackageManager = instrumentation.getTargetContext().getPackageManager();
     }
 
     public static PackageHelper getInstance(Instrumentation instrumentation) {
@@ -49,5 +52,19 @@ public class PackageHelper {
     public void cleanPackage(String packageName) {
         cmdHelper.executeShellCommand(String.format("pm clear %s", packageName));
         SystemClock.sleep(2 * TIMEOUT);
+    }
+
+    /**
+     * Check if certain package is installed on the device.
+     * @param packageName package name
+     * @return true/false
+     */
+    public Boolean isPackageInstalled(String packageName) {
+        try {
+            mPackageManager.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES);
+            return true;
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
+        }
     }
 }
