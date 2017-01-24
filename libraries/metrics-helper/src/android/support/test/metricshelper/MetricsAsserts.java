@@ -15,11 +15,8 @@
  */
 package android.support.test.metricshelper;
 
-import android.os.Bundle;
-
-import com.android.internal.logging.LogBuilder;
-import com.android.internal.logging.MetricsReader;
-import com.android.internal.logging.legacy.LegacyConversionLogger;
+import android.metrics.LogMaker;
+import android.metrics.MetricsReader;
 import com.android.internal.logging.nano.MetricsProto.MetricsEvent;
 
 import static junit.framework.Assert.assertTrue;
@@ -33,7 +30,7 @@ public class MetricsAsserts {
         reader.reset();
         boolean found = false;
         while(reader.hasNext()) {
-            LogBuilder b = reader.next();
+            LogMaker b = reader.next();
             if (b.getType() == MetricsEvent.TYPE_ACTION && b.getCategory() == view) {
                 found = true;
             }

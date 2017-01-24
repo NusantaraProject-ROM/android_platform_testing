@@ -29,10 +29,9 @@ import android.test.InstrumentationTestCase;
 import android.test.suitebuilder.annotation.MediumTest;
 import android.util.Log;
 
-import com.android.internal.logging.MetricsReader;
+import android.metrics.MetricsReader;
 import com.android.internal.logging.nano.MetricsProto.MetricsEvent;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
