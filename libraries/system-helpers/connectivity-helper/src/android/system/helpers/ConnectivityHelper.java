@@ -17,9 +17,12 @@
 package android.system.helpers;
 
 import android.app.DownloadManager;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.net.ConnectivityManager;
+import android.net.Network;
 import android.net.NetworkInfo;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.support.test.InstrumentationRegistry;
 import android.system.helpers.CommandsHelper;
@@ -71,6 +74,10 @@ public class ConnectivityHelper {
     public DownloadManager getDownloadManager() {
         return (DownloadManager) (DownloadManager) mContext
                 .getSystemService(Context.DOWNLOAD_SERVICE);
+    }
+
+    public BluetoothAdapter getBluetoothAdapter() {
+        return BluetoothAdapter.getDefaultAdapter();
     }
 
    /**
@@ -165,5 +172,46 @@ public class ConnectivityHelper {
         TelephonyManager telMgr = (TelephonyManager) mContext
                 .getSystemService(mContext.TELEPHONY_SERVICE);
         return (telMgr.getSimState() == TelephonyManager.SIM_STATE_READY);
+    }
+
+    /**
+     * Get connected wifi SSID.
+     * @return connected wifi SSID
+     */
+    public String getCurrentWifiSSID() {
+        WifiInfo connectionInfo = getWifiManager().getConnectionInfo();
+        if (connectionInfo != null) {
+            return connectionInfo.getSSID();
+        }
+        return null;
+    }
+
+    /**
+     * Ensure bluetooth is enabled on device.
+     * @throws InterruptedException
+     */
+    public void ensureBluetoothEnabled() throws InterruptedException {
+        if (!getBluetoothAdapter().isEnabled()) {
+            getBluetoothAdapter().enable();
+        }
+        int counter = 5;
+        while (--counter > 0 && !getBluetoothAdapter().isEnabled()) {
+            Thread.sleep(TIMEOUT * 2);
+        }
+    }
+
+    /**
+     * Check whether device has mobile data available.
+     * @return true/false
+     */
+    public boolean mobileDataAvailable() {
+        Network[] networkArray = getConnectivityManager().getAllNetworks();
+        for (Network net: networkArray) {
+            if (getConnectivityManager().getNetworkInfo(net).getType()
+                    == ConnectivityManager.TYPE_MOBILE) {
+                return true;
+            }
+        }
+        return false;
     }
 }
