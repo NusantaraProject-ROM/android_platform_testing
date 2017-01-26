@@ -214,4 +214,14 @@ public class UiBenchJankTests extends JankTestBase {
     public void testResizeHWLayer() {
         SystemClock.sleep(UiBenchJankTestsHelper.FULL_TEST_DURATION);
     }
+
+    public void openClippedListView() {
+        mHelper.launchActivityAndAssert("ClippedListActivity", "General/Clipped ListView");
+    }
+
+    @JankTest(beforeTest = "openClippedListView", expectedFrames = EXPECTED_FRAMES)
+    @GfxMonitor(processName = PACKAGE_NAME)
+    public void testClippedListView() {
+        mHelper.swipeRightLeft(mHelper.mContents, 4);
+    }
 }
