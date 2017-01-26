@@ -23,13 +23,22 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.os.Environment;
 import android.platform.test.helpers.exceptions.AccountException;
 import android.support.test.launcherhelper.ILauncherStrategy;
 import android.support.test.launcherhelper.LauncherStrategyFactory;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
+import android.util.Log;
+
+import java.io.File;
+import java.io.IOException;
 
 public abstract class AbstractStandardAppHelper implements IStandardAppHelper {
+    private static final String SCREENSHOT_DIR = "apphelper-screenshots";
+
+    private static File sScreenshotDirectory;
+
     public UiDevice mDevice;
     public Instrumentation mInstrumentation;
     public ILauncherStrategy mLauncherStrategy;
@@ -122,5 +131,25 @@ public abstract class AbstractStandardAppHelper implements IStandardAppHelper {
             }
         }
         return false;
+    }
+
+    @Override
+    public void captureScreenshot(String name) throws IOException {
+        File out = File.createTempFile(name, ".png", getScreenshotDirectory());
+        mDevice.takeScreenshot(out);
+    }
+
+    private static File getScreenshotDirectory() {
+        if (sScreenshotDirectory == null) {
+            File storage = Environment.getExternalStorageDirectory();
+            sScreenshotDirectory = new File(storage, SCREENSHOT_DIR);
+            if (!sScreenshotDirectory.exists()) {
+                if (!sScreenshotDirectory.mkdirs()) {
+                    throw new RuntimeException(
+                            "Failed to create a screenshot directory.");
+                }
+            }
+        }
+        return sScreenshotDirectory;
     }
 }

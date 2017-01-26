@@ -18,6 +18,8 @@ package android.platform.test.helpers;
 
 import android.content.pm.PackageManager.NameNotFoundException;
 
+import java.io.IOException;
+
 public interface IStandardAppHelper {
 
     /**
@@ -38,14 +40,14 @@ public interface IStandardAppHelper {
     /**
      * Setup expectations: This application is on the initial launch screen.
      * <p>
-     * This method will dismiss all visible relevant dialogs and block until this process is
-     * complete.
+     * Dismiss all visible relevant dialogs and block until this process is complete.
      */
     abstract void dismissInitialDialogs();
 
     /**
      * Setup expectations: None
      * <p>
+     * Get the target application's component package.
      * @return the package name for this helper's application.
      */
     abstract String getPackage();
@@ -53,24 +55,33 @@ public interface IStandardAppHelper {
     /**
      * Setup expectations: None.
      * <p>
-     * @return the name for this application in the launcher.
+     * Get the target application's launcher name.
+     * @return the name of this application's launcher.
      */
     abstract String getLauncherName();
 
     /**
      * Setup expectations: None
      * <p>
-     * This method will return the version String from PackageManager.
-     *
-     * @return the version as a String
-     * @throws NameNotFoundException if the package is not found in PM
+     * Get the target application's version String.
+     * @return the version code
+     * @throws NameNotFoundException if {@code getPackage} is not found
      */
     abstract String getVersion() throws NameNotFoundException;
 
     /**
      * Setup expectations: None
-     * <p>
      * @return true, if this app's package is the root (depth 0), and false otherwise
      */
     abstract boolean isAppInForeground();
+
+    /**
+     * Setup expectations: None
+     * <p>
+     * Captures a screenshot with the supplied name.
+     * @param name the screenshot prefix
+     * @throws IOException if there is a capture failure
+     * @throws RuntimeException if creating the screenshot directory fails.
+     */
+    abstract void captureScreenshot(String name) throws IOException;
 }
