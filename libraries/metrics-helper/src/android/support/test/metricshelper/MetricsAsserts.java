@@ -17,7 +17,11 @@ package android.support.test.metricshelper;
 
 import android.metrics.LogMaker;
 import android.metrics.MetricsReader;
+
 import com.android.internal.logging.nano.MetricsProto.MetricsEvent;
+
+import java.util.LinkedList;
+import java.util.Queue;
 
 import static junit.framework.Assert.assertTrue;
 
@@ -26,6 +30,9 @@ import static junit.framework.Assert.assertTrue;
  */
 public class MetricsAsserts {
 
+    /**
+     * Assert unless there is a log with the matching category and with ACTION type.
+     */
     public static void assertHasActionLog(String message, MetricsReader reader, int view) {
         reader.reset();
         boolean found = false;
@@ -36,5 +43,47 @@ public class MetricsAsserts {
             }
         }
         assertTrue(message, found);
+    }
+
+    /**
+     * Assert unless there is a log with the matching category and with visibility type.
+     */
+    public static void assertHasVisibilityLog(String message, MetricsReader reader,
+            int view, boolean visible) {
+        int type = visible ? MetricsEvent.TYPE_OPEN : MetricsEvent.TYPE_CLOSE;
+        reader.reset();
+        boolean found = false;
+        while(reader.hasNext()) {
+            LogMaker b = reader.next();
+            if (b.getType() == type && b.getCategory() == view) {
+                found = true;
+            }
+        }
+        assertTrue(message, found);
+    }
+
+    /**
+     * @returns logs that have at least all the matching fields in the template.
+     */
+    public static Queue<LogMaker> findMatchinLog(MetricsReader reader, LogMaker template) {
+        LinkedList<LogMaker> logs = new LinkedList<>();
+        if (template == null) {
+            return logs;
+        }
+        reader.reset();
+        while(reader.hasNext()) {
+            LogMaker b = reader.next();
+            if (template.isSubsetOf(b)) {
+                logs.push(b);
+            }
+        }
+        return logs;
+    }
+
+    /**
+     * Assert unless there is at least one  log that matches the template.
+     */
+    public static void assertHasLog(String message, MetricsReader reader, LogMaker expected) {
+        assertTrue(message, !findMatchinLog(reader, expected).isEmpty());
     }
 }
