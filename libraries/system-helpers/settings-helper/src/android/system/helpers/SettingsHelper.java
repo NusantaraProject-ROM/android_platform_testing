@@ -507,7 +507,7 @@ public class SettingsHelper {
         if (flashLight != null && flashLight.getText().equals(lightOn)) {
             verifyOn = true;
         }
-        mDevice.wait(Until.findObject(By.textContains(FLASHLIGHT)),
+        mDevice.wait(Until.findObject(By.desc(FLASHLIGHT)),
                 TIMEOUT * 3).click();
         Thread.sleep(TIMEOUT * 3);
         flashLight = mDevice.wait(
