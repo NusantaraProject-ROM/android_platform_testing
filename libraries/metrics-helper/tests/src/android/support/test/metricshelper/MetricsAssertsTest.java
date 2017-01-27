@@ -46,6 +46,7 @@ public class MetricsAssertsTest {
 
     private int mActionView = MetricsEvent.ACTION_WIFI_ON;
     private int mOpenView = MetricsEvent.MAIN_SETTINGS;
+    private int mCloseView = MetricsEvent.NOTIFICATION_PANEL;
 
     @Before
     public void setUp() {
@@ -60,7 +61,7 @@ public class MetricsAssertsTest {
         c = new LogMaker(mActionView)
                 .setType(MetricsEvent.TYPE_ACTION)
                 .setTimestamp(3000);
-        d = new LogMaker(MetricsEvent.SCREEN)
+        d = new LogMaker(mCloseView)
                 .setType(MetricsEvent.TYPE_CLOSE)
                 .setTimestamp(4000);
 
@@ -94,4 +95,35 @@ public class MetricsAssertsTest {
         }
     }
 
+    @Test
+    public void testHasVisibileLogTrue() {
+        MetricsAsserts.assertHasVisibilityLog("foo", mReader, mOpenView, true);
+    }
+
+    @Test
+    public void testHasVisibleLogFalse() {
+        final String message = "foo";
+        try {
+            MetricsAsserts.assertHasVisibilityLog(message, mReader, mActionView, true);
+        } catch (AssertionError e) {
+            assertEquals(message, e.getMessage());
+            return; // success!
+        }
+    }
+
+    @Test
+    public void testHasHiddenLogTrue() {
+        MetricsAsserts.assertHasVisibilityLog("foo", mReader, mCloseView, false);
+    }
+
+    @Test
+    public void testHasHiddenLogFalse() {
+        final String message = "foo";
+        try {
+            MetricsAsserts.assertHasVisibilityLog(message, mReader, mOpenView, false);
+        } catch (AssertionError e) {
+            assertEquals(message, e.getMessage());
+            return; // success!
+        }
+    }
 }
