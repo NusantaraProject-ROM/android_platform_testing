@@ -47,6 +47,7 @@ public class MetricsAssertsTest {
     private int mActionView = MetricsEvent.ACTION_WIFI_ON;
     private int mOpenView = MetricsEvent.MAIN_SETTINGS;
     private int mCloseView = MetricsEvent.NOTIFICATION_PANEL;
+    private int mSubtype = 4;
 
     @Before
     public void setUp() {
@@ -60,6 +61,7 @@ public class MetricsAssertsTest {
                 .setTimestamp(2000);
         c = new LogMaker(mActionView)
                 .setType(MetricsEvent.TYPE_ACTION)
+                .setSubtype(mSubtype)
                 .setTimestamp(3000);
         d = new LogMaker(mCloseView)
                 .setType(MetricsEvent.TYPE_CLOSE)
@@ -125,5 +127,41 @@ public class MetricsAssertsTest {
             assertEquals(message, e.getMessage());
             return; // success!
         }
+    }
+
+    @Test
+    public void testHasTemplateLogCategoryOnly() {
+        MetricsAsserts.assertHasLog("didn't find existing log", mReader,
+                new LogMaker(mActionView));
+    }
+
+    @Test
+    public void testHasTemplateLogCategoryAndType() {
+        MetricsAsserts.assertHasLog("didn't find existing log", mReader,
+                new LogMaker(mActionView)
+                        .setType(MetricsEvent.TYPE_ACTION));
+    }
+
+    @Test
+    public void testHasTemplateLogCategoryTypeAndSubtype() {
+        MetricsAsserts.assertHasLog("didn't find existing log", mReader,
+                new LogMaker(mActionView)
+                        .setType(MetricsEvent.TYPE_ACTION)
+                        .setSubtype(mSubtype));
+    }
+
+    @Test
+    public void testDoesNotHaveTemplateLog() {
+        final String message = "foo";
+        try {
+            MetricsAsserts.assertHasLog(message, mReader,
+                    new LogMaker(mActionView)
+                            .setType(MetricsEvent.TYPE_ACTION)
+                            .setSubtype(mSubtype));
+        } catch (AssertionError e) {
+            assertEquals(message, e.getMessage());
+            return; // success!
+        }
+
     }
 }
