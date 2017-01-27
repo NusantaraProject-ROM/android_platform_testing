@@ -133,6 +133,26 @@ public class UiBenchJankTests extends JankTestBase {
         mHelper.flingUpDown(mHelper.mContents, 2);
     }
 
+    public void openFadingEdgeListView() {
+        mHelper.launchActivityAndAssert("FadingEdgeListActivity", "General/Fading Edge ListView");
+    }
+
+    @JankTest(beforeTest = "openFadingEdgeListView", expectedFrames = EXPECTED_FRAMES)
+    @GfxMonitor(processName = PACKAGE_NAME)
+    public void testFadingEdgeListViewFling() {
+        mHelper.flingUpDown(mHelper.mContents, 2);
+    }
+
+    public void openSaveLayerInterleaveActivity() {
+        mHelper.launchActivityAndAssert("SaveLayerInterleaveActivity", "General/SaveLayer Animation");
+    }
+
+    @JankTest(beforeTest = "openSaveLayerInterleaveActivity", expectedFrames = EXPECTED_FRAMES)
+    @GfxMonitor(processName = PACKAGE_NAME)
+    public void testSaveLayerAnimation() {
+        SystemClock.sleep(UiBenchJankTestsHelper.FULL_TEST_DURATION);
+    }
+
     public void openTrivialRecyclerView() {
         mHelper.launchActivityAndAssert("TrivialRecyclerViewActivity",
                 "General/Trivial RecyclerView");
