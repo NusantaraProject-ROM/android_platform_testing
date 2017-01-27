@@ -33,7 +33,9 @@ import android.util.Log;
 
 import junit.framework.AssertionFailedError;
 import junit.framework.Test;
+import junit.framework.TestCase;
 import junit.framework.TestListener;
+import junit.framework.TestSuite;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -200,6 +202,7 @@ public class AuptTestRunner extends InstrumentationTestRunner {
         mRunner.addTestListener(new MemInfoDumper());
         mRunner.addTestListenerIf(parseBoolParam("quitOnError", false), new QuitOnErrorListener());
         mRunner.addTestListenerIf(parseBoolParam("checkBattery", false), new BatteryChecker());
+        mRunner.addTestListenerIf(parseBoolParam("screenshots", false), new Screenshotter());
 
         // Start our loggers
         mDataCollector.start();
@@ -669,6 +672,42 @@ public class AuptTestRunner extends InstrumentationTestRunner {
                     throw new TimeoutException();
                 } catch (InterruptedException e) { /* Drop out -- this is what we want */}
             }
+        }
+    }
+
+    /**
+     * Dump memory info on test start/stop
+     */
+    private class Screenshotter extends AuptListener {
+        private void collectScreenshot(Test test, String suffix) {
+            UiDevice device = UiDevice.getInstance(AuptTestRunner.this);
+
+            if (device == null) {
+                Log.w(LOG_TAG, "Couldn't collect screenshot on test failure");
+                return;
+            }
+
+            if (test instanceof TestCase) {
+                device.takeScreenshot(new File(mResultsDirectory.getPath() + "/screenshot-" +
+                        ((TestCase) test).getName().replaceAll("#", "_") + suffix + ".png"));
+            } else if (test instanceof TestSuite) {
+                device.takeScreenshot(new File(mResultsDirectory.getPath() + "/screenshot-" +
+                        ((TestSuite) test).getName().replaceAll("#", "_") + suffix + ".png"));
+            } else {
+                Log.e(LOG_TAG, "Got something other than a TestCase or TestSuite in AuptListener");
+                device.takeScreenshot(new File(mResultsDirectory.getPath() +
+                    "/screenshot-" + test.toString() + suffix + ".png"));
+            }
+        }
+
+        @Override
+        public void addError(Test test, Throwable t) {
+            collectScreenshot(test, "-pre");
+        }
+
+        @Override
+        public void addFailure(Test test, AssertionFailedError t) {
+            collectScreenshot(test, "-post");
         }
     }
 }
