@@ -57,7 +57,7 @@ import java.util.Map;
 public class NotificationHelper {
 
     private static final String LOG_TAG = NotificationHelper.class.getSimpleName();
-    private static final int LONG_TIMEOUT = 2000;
+    private static final int LONG_TIMEOUT = 2500;
     private static final int SHORT_TIMEOUT = 200;
     private static final String KEY_QUICK_REPLY_TEXT = "quick_reply";
     private static final UiSelector LIST_VIEW = new UiSelector().className(ListView.class);
