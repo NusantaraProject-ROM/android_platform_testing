@@ -478,7 +478,7 @@ public class SettingsHelper {
             int onSetting = Settings.Global.getInt(mResolver, ZEN_MODE);
             launchQuickSettingsAndWait();
             mDevice.wait(Until.findObject(By.descContains(DND)),
-                    TIMEOUT * 3).click();
+                    TIMEOUT * 3).getChildren().get(0).click();
             Thread.sleep(TIMEOUT * 3);
             int changedSetting = Settings.Global.getInt(mResolver, ZEN_MODE);
             Assert.assertFalse(onSetting == changedSetting);
@@ -489,9 +489,8 @@ public class SettingsHelper {
             int setting = Settings.Global.getInt(mResolver, ZEN_MODE);
             if (setting > 0) {
                 launchQuickSettingsAndWait();
-                ;
                 mDevice.wait(Until.findObject(By.descContains(DND)),
-                        TIMEOUT * 3).click();
+                        TIMEOUT * 3).getChildren().get(0).click();
                 Thread.sleep(TIMEOUT * 3);
             }
         }
