@@ -299,15 +299,11 @@ public class NotificationHelper {
         }
     }
 
-    public void showInstalledAppDetails(Context context, String packageName) throws Exception {
-        Intent intent = new Intent();
+    public void showAppNotificationSettings(Context context) throws Exception {
+        Intent intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        Uri uri = Uri.fromParts("package", packageName, null);
-        intent.setData(uri);
-        intent.setClassName("com.android.settings",
-                "com.android.settings.Settings$AppNotificationSettingsActivity");
-        intent.putExtra("app_package", mContext.getPackageName());
-        intent.putExtra("app_uid", mContext.getApplicationInfo().uid);
+        intent.putExtra(Settings.EXTRA_APP_PACKAGE, mContext.getPackageName());
+        intent.putExtra(Settings.EXTRA_APP_UID, mContext.getApplicationInfo().uid);
         context.startActivity(intent);
         Thread.sleep(LONG_TIMEOUT * 2);
     }
