@@ -121,7 +121,9 @@ public class NotificationDNDTests extends InstrumentationTestCase {
         mNotificationManager
                 .setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_PRIORITY);
         try {
-            mHelper.showInstalledAppDetails(mContext, "com.android.notification.functional");
+            mHelper.showAppNotificationSettings(mContext);
+            mDevice.wait(Until.findObject(By.textContains("Miscellaneous")), LONG_TIMEOUT)
+                    .click();
             mDevice.wait(Until.findObject(By.textContains("Override Do Not Disturb")), LONG_TIMEOUT)
                     .click();
             Thread.sleep(LONG_TIMEOUT);
@@ -133,7 +135,9 @@ public class NotificationDNDTests extends InstrumentationTestCase {
             ZenModeFiltering zF = new ZenModeFiltering(mContext);
             assertFalse(zF.shouldIntercept(mZenHelper.getZenMode(), mConfig, nr));
         } finally {
-            mHelper.showInstalledAppDetails(mContext, "com.android.notification.functional");
+            mHelper.showAppNotificationSettings(mContext);
+            mDevice.wait(Until.findObject(By.textContains("Miscellaneous")), LONG_TIMEOUT)
+                    .click();
             mDevice.wait(Until.findObject(By.textContains("Override Do Not Disturb")), LONG_TIMEOUT)
                     .click();
             mNotificationManager.setInterruptionFilter(setting);
@@ -146,16 +150,16 @@ public class NotificationDNDTests extends InstrumentationTestCase {
     @LargeTest
     public void testBlockNotification() throws Exception {
         try {
-            mHelper.showInstalledAppDetails(mContext, "com.android.notification.functional");
+            mHelper.showAppNotificationSettings(mContext);
             mDevice.wait(Until.findObject(By.textContains("Block all")), LONG_TIMEOUT).click();
             Thread.sleep(LONG_TIMEOUT);
             mHelper.sendNotificationsWithInLineReply(NOTIFICATION_ID, true);
             Thread.sleep(LONG_TIMEOUT);
             if (mHelper.checkNotificationExistence(NOTIFICATION_ID, true)) {
-                fail(String.format("Notification %s has not benn blocked", NOTIFICATION_ID));
+                fail(String.format("Notification %s has not been blocked", NOTIFICATION_ID));
             }
         } finally {
-            mHelper.showInstalledAppDetails(mContext, "com.android.notification.functional");
+            mHelper.showAppNotificationSettings(mContext);
             mDevice.wait(Until.findObject(By.textContains("Block all")), LONG_TIMEOUT).click();
         }
     }
