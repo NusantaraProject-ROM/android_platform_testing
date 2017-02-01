@@ -107,7 +107,11 @@ public class NotificationHelper {
                 mDevice.pressEnter();
             }
             new UiObject(new UiSelector().text("PIN")).click();
-            clickText("No thanks");
+            // If there's an option to set 'require PIN to start device'
+            // choose 'No thanks', otherwise just skip ahead.
+            if (new UiObject(new UiSelector().text("No thanks")).exists()) {
+                clickText("No thanks");
+            }
             UiObject pinField = new UiObject(new UiSelector().className(EditText.class.getName()));
             pinField.setText(String.format("%04d", pin));
             mDevice.pressEnter();
