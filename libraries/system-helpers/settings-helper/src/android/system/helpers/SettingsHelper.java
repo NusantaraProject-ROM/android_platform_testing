@@ -164,6 +164,11 @@ public class SettingsHelper {
      * @throws InterruptedException
      */
     public void clickSetting(String settingName) throws InterruptedException {
+        int count = 5;
+        while (count > 0 && mDevice.wait(Until.findObject(By.text(settingName)), TIMEOUT) == null) {
+            scrollVert(false);
+            count--;
+        }
         mDevice.wait(Until.findObject(By.text(settingName)), TIMEOUT).click();
         Thread.sleep(TIMEOUT);
     }
@@ -328,7 +333,7 @@ public class SettingsHelper {
         }
         clickSetting(settingName);
         Log.d(TAG, "Clicked setting : " + settingName);
-        Thread.sleep(1000);
+        Thread.sleep(5000);
         String changedSetting = getStringSetting(type, internalName);
         Log.d(TAG, "Changed Setting value is : " + changedSetting);
         if (changedSetting == null) {
