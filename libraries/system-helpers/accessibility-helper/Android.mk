@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2016 The Android Open Source Project
+# Copyright (C) 2017 The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,23 +16,12 @@
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
-
-LOCAL_MODULE := system-helpers
-LOCAL_STATIC_JAVA_LIBRARIES := account-helper \
-    activity-helper \
-    commands-helper \
-    connectivity-helper \
-    device-helper \
-    permission-helper \
+LOCAL_MODULE := accessibility-helper
+LOCAL_JAVA_LIBRARIES := android-support-test \
+    ub-uiautomator \
     settings-helper \
-    sysui-helper \
-    user-helper \
     package-helper \
-    accessibility-helper
-LOCAL_SDK_VERSION := current
+    activity-helper
+LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
 include $(BUILD_STATIC_JAVA_LIBRARY)
-
-######################################
-
-include $(call all-makefiles-under, $(LOCAL_PATH))
