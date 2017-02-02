@@ -40,7 +40,7 @@ import java.util.Queue;
 
 public class NotificationInteractionTests extends InstrumentationTestCase {
     private static final String LOG_TAG = NotificationInteractionTests.class.getSimpleName();
-    private static final int LONG_TIMEOUT = 2000;
+    private static final int LONG_TIMEOUT = 3000;
     private static final int SHORT_TIMEOUT = 200;
     private final boolean DEBUG = false;
     private NotificationManager mNotificationManager;
@@ -98,6 +98,7 @@ public class NotificationInteractionTests extends InstrumentationTestCase {
             lists.put(CUSTOM_NOTIFICATION_ID + i, Integer.toString(CUSTOM_NOTIFICATION_ID + i));
         }
         mHelper.sendNotifications(lists, false);
+
         if (DEBUG) {
             Log.d(LOG_TAG,
                     String.format("posted %s notifications, here they are: ", NOTIFICATIONS_COUNT));
@@ -109,6 +110,7 @@ public class NotificationInteractionTests extends InstrumentationTestCase {
         if (mDevice.openNotification()) {
             Thread.sleep(LONG_TIMEOUT);
             UiObject2 clearAll = findByText(text);
+            assertNotNull("could not find clear all target", clearAll);
             clearAll.click();
         }
         Thread.sleep(LONG_TIMEOUT);
@@ -215,9 +217,14 @@ public class NotificationInteractionTests extends InstrumentationTestCase {
         int id = CUSTOM_NOTIFICATION_ID;
         mHelper.sendNotification(id, Notification.VISIBILITY_PUBLIC,
                 NotificationHelper.CONTENT_TITLE, true);
+
+        UiObject2 target = null;
         if (mDevice.openNotification()) {
-            mDevice.wait(Until.findObject(By.text(NotificationHelper.FIRST_ACTION)),
-                    LONG_TIMEOUT).click();
+            target = mDevice.wait(
+                    Until.findObject(By.text(NotificationHelper.FIRST_ACTION)),
+                    LONG_TIMEOUT);
+            assertNotNull("could not find first action button", target);
+            target.click();
         }
         Thread.sleep(SHORT_TIMEOUT);
         // top item is always expanded
@@ -240,8 +247,10 @@ public class NotificationInteractionTests extends InstrumentationTestCase {
                         .setPackageName(mContext.getPackageName()));
 
         mMetricsReader.checkpoint(); // clear out old logs again
-        mDevice.wait(Until.findObject(By.text(NotificationHelper.SECOND_ACTION)),
-                LONG_TIMEOUT).click();
+        target = mDevice.wait(Until.findObject(By.text(NotificationHelper.SECOND_ACTION)),
+                LONG_TIMEOUT);
+        assertNotNull("could not find second action button", target);
+        target.click();
         Thread.sleep(SHORT_TIMEOUT);
         MetricsAsserts.assertHasLog("missing notification action 1 click log", mMetricsReader,
                 new LogMaker(MetricsEvent.NOTIFICATION_ITEM_ACTION)
@@ -251,8 +260,10 @@ public class NotificationInteractionTests extends InstrumentationTestCase {
                         .setPackageName(mContext.getPackageName()));
 
         mMetricsReader.checkpoint(); // clear out old logs again\
-        mDevice.wait(Until.findObject(By.text(NotificationHelper.CONTENT_TITLE)),
-                LONG_TIMEOUT).click();
+        target = mDevice.wait(Until.findObject(By.text(NotificationHelper.CONTENT_TITLE)),
+                LONG_TIMEOUT);
+        assertNotNull("could not find content click target", target);
+        target.click();
         Thread.sleep(SHORT_TIMEOUT);
         MetricsAsserts.assertHasLog("missing notification content click log", mMetricsReader,
                 new LogMaker(MetricsEvent.NOTIFICATION_ITEM)
