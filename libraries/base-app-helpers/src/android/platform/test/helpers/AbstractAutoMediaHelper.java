@@ -69,48 +69,12 @@ public abstract class AbstractAutoMediaHelper extends AbstractStandardAppHelper{
      *
      * This method is used to open Folder Menu with menuOptions.
      * Example - openMenu->Folder->Mediafilename->trackName
-     *           openFolderMenuWith(mediafilename,trackName);
+     *           openMenuWith(Folder,mediafilename,trackName);
      *
      * @param - menuOptions used to pass multiple level of menu options in one go.
      *
      */
-    public abstract void openFolderMenuWith(String... menuOptions);
-
-    /**
-     * Setup expectations: media app is open.
-     *
-     * This method is used to used to open Albums menu with menuOptions.
-     * Example - openMenu->Albums->Mediafilename->trackName
-     *           openAlbumsMenuWith(albumname,trackName);
-     *
-     * @param - menuOptions used to pass multiple level of menu options in one go.
-     *
-     */
-    public abstract void openAlbumsMenuWith(String... menuOptions);
-
-    /**
-     * Setup expectations: media app is open.
-     *
-     * This method is used to used to open Artists menu with menuOptions.
-     * Example - openMenu->Artist->Mediafilename->trackName
-     *           openArtistMenuWith(artistname,trackName);
-     *
-     *  @param - menuOptions used to pass multiple level of menu options in one go.
-     *
-     */
-    public abstract void openArtistsMenuWith(String... menuOptions);
-
-    /**
-     * Setup expectations: media app is open.
-     *
-     * This method is used to used to open Genres menu with menuOptions.
-     * Example - openMenu->Genres->Mediafilename->trackName
-     *           openGenresMenuWith(genresname,trackName);
-     *
-     *  @param - menuOptions used to pass multiple level of menu options in one go.
-     *
-     */
-    public abstract void openGenresMenuWith(String... menuOptions);
+    public abstract void openMenuWith(String... menuOptions);
 
     /**
      * Setup expectations: media app is open.
