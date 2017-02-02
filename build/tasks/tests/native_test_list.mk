@@ -18,6 +18,8 @@ native_tests := \
     bionic-unit-tests \
     bionic-unit-tests-static \
     bluetoothtbd_test \
+    boringssl_crypto_test \
+    boringssl_ssl_test \
     bugreportz_test \
     camera2_test \
     camera_client_test \
