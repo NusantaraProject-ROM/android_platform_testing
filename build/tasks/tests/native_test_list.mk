@@ -19,6 +19,8 @@ native_tests := \
     bionic-unit-tests-static \
     bluetoothtbd_test \
     bootstat_tests \
+    boringssl_crypto_test \
+    boringssl_ssl_test \
     bugreportz_test \
     bsdiff_unittest \
     camera2_test \
