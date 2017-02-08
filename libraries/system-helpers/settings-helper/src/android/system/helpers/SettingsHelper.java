@@ -31,9 +31,15 @@ import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
+import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObject2;
+import android.support.test.uiautomator.UiObjectNotFoundException;
+import android.support.test.uiautomator.UiScrollable;
+import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.Until;
 import android.util.Log;
+import android.widget.TextView;
+
 import java.util.regex.Pattern;
 import junit.framework.Assert;
 
@@ -52,8 +58,11 @@ public class SettingsHelper {
     private static final String DND = "Do not disturb";
     private static final String ZEN_MODE = "zen_mode";
     private static final String FLASHLIGHT = "Flashlight";
-    private static final String AUTO_ROTATE_SCREEN = "Auto-rotate screen";    private static final BySelector SETTINGS_DASHBOARD = By.res(SETTINGS_PACKAGE,
+    private static final String AUTO_ROTATE_SCREEN = "Auto-rotate screen";
+    private static final BySelector SETTINGS_DASHBOARD = By.res(SETTINGS_PACKAGE,
             "dashboard_container");
+    private static final UiSelector LIST_ITEM_VALUE =
+            new UiSelector().className(TextView.class);
     public static final int TIMEOUT = 2000;
     private static SettingsHelper sInstance = null;
     private ActivityHelper mActivityHelper = null;
@@ -174,7 +183,24 @@ public class SettingsHelper {
     }
 
     /**
+     * Performs click action on a setting when setting has been found
+     * @param name
+     * @throws InterruptedException,UiObjectNotFoundException
+     */
+    public boolean selectSettingFor(String settingName)
+            throws InterruptedException, UiObjectNotFoundException {
+        UiScrollable settingsList = new UiScrollable(
+                new UiSelector().resourceId("android:id/content"));
+        UiObject appSettings = settingsList.getChildByText(LIST_ITEM_VALUE, settingName);
+        if (appSettings != null) {
+            return appSettings.click();
+        }
+        return false;
+    }
+
+    /**
      * Performs click action on a setting when setting name is provided as pattern
+     *
      * @param settingName
      * @throws InterruptedException
      */
@@ -467,7 +493,6 @@ public class SettingsHelper {
             BySelector bySelector) throws Exception {
         if (isQuickSettings) {
             launchQuickSettingsAndWait();
-            ;
         } else {
             mActivityHelper.launchIntent(settingsPage);
         }
