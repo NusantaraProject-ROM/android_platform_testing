@@ -35,6 +35,10 @@ public class AccessibilityHelper {
     public static final String IMAGE_BUTTON = "android.widget.ImageButton";
     public static final String TEXT_VIEW = "android.widget.TextView";
     public static final String SWITCH = "android.widget.Switch";
+    public static final String CHECKED_TEXT_VIEW = "android.widget.CheckedTextView";
+    public static final String RADIO_BUTTON = "android.widget.RadioButton";
+    public static final String SEEK_BAR = "android.widget.SeekBar";
+    public static final String SPINNER = "android.widget.Spinner";
     public static final int SHORT_TIMEOUT = 2000;
     public static final int LONG_TIMEOUT = 5000;
     public static AccessibilityHelper sInstance = null;
@@ -70,7 +74,7 @@ public class AccessibilityHelper {
      */
     public void setTalkBackSetting(SwitchStatus value) throws Exception {
         launchSpecificAccessibilitySetting("TalkBack");
-        setSwitchBarValue(SETTINGS_PACKAGE, value);
+        setSettingSwitchBarValue(value);
         mDevice.pressBack();
     }
 
@@ -82,7 +86,7 @@ public class AccessibilityHelper {
      */
     public void setHighContrast(SwitchStatus value) throws Exception {
         launchSpecificAccessibilitySetting("Accessibility");
-        setSwitchValue(SETTINGS_PACKAGE, "High contrast text", value);
+        setSettingSwitchValue("High contrast text", value);
     }
 
     /**
@@ -106,7 +110,7 @@ public class AccessibilityHelper {
                 if (actionBarText.equals(settingName)) {
                     break;
                 } else if (actionBarText.equals("Accessibility")) {
-                getItemFromList(SETTINGS_PACKAGE, settingName).click();
+                getSettingFromList(settingName).click();
                 } else {
                     mDevice.wait(Until.findObject(By.res(SETTINGS_PACKAGE, "action_bar")
                             .enabled(true)), SHORT_TIMEOUT)
@@ -119,16 +123,15 @@ public class AccessibilityHelper {
     /**
      * Set switch "ON"/"OFF".
      *
-     * @param pkg package
      * @param settingTag setting name
      * @param value "ON"/"OFF"
      * @return true/false
      * @throws UiObjectNotFoundException
      * @throws InterruptedException
      */
-    private boolean setSwitchValue(String pkg, String settingTag, SwitchStatus value)
+    private boolean setSettingSwitchValue(String settingTag, SwitchStatus value)
             throws UiObjectNotFoundException, InterruptedException {
-        UiObject2 cellSwitch = getItemFromList(pkg, settingTag)
+        UiObject2 cellSwitch = getSettingFromList(settingTag)
                 .getParent().getParent().findObject(By.clazz(SWITCH));
         if (cellSwitch != null) {
             if (!cellSwitch.getText().equals(value.toString())) {
@@ -147,19 +150,18 @@ public class AccessibilityHelper {
     /**
      * Set the switch widget value on the switch bar.
      *
-     * @param pkg package
      * @param value "ON"/"OFF"
      * @return true/false
      */
-    private boolean setSwitchBarValue(String pkg, SwitchStatus value) throws InterruptedException {
+    private boolean setSettingSwitchBarValue(SwitchStatus value) throws InterruptedException {
         int tries = 2; // Sometimes enable failed for the 1st time.
         while (tries > 0) {
             UiObject2 switchBar = mDevice.wait(Until.findObject(
-                    By.res(pkg, "switch_bar")), SHORT_TIMEOUT);
-            UiObject2 switchWidget = switchBar.findObject(By.res(pkg, "switch_widget"));
-            if (switchWidget != null) {
-                if (!switchWidget.getText().equals(value.toString())) {
-                    switchWidget.click();
+                    By.res(SETTINGS_PACKAGE, "switch_bar")), SHORT_TIMEOUT);
+            UiObject2 switchWgt = switchBar.findObject(By.res(SETTINGS_PACKAGE, "switch_widget"));
+            if (switchWgt != null) {
+                if (!switchWgt.getText().equals(value.toString())) {
+                    switchWgt.click();
                     UiObject2 okBtn = mDevice.wait(Until.findObject(
                             By.res("android:id/button1")), LONG_TIMEOUT);
                     if (okBtn != null) {
@@ -175,21 +177,20 @@ public class AccessibilityHelper {
     }
 
     /**
-     * Get object from list.
+     * Get setting name text object from list.
      *
-     * @param pkg package
-     * @param itemText item name/text
+     * @param settingName setting name
      * @return UiObject2
      * @throws UiObjectNotFoundException
      */
-    public UiObject2 getItemFromList(String pkg, String itemText)
+    private UiObject2 getSettingFromList(String settingName)
             throws UiObjectNotFoundException {
         UiScrollable listScrollable = new UiScrollable(
-                new UiSelector().resourceId(pkg+":id/list"));
+                new UiSelector().resourceId(SETTINGS_PACKAGE+":id/list"));
         if (listScrollable != null) {
             listScrollable.scrollToBeginning(100);
-            listScrollable.scrollTextIntoView(itemText);
-            return mDevice.findObject(By.text(itemText));
+            listScrollable.scrollTextIntoView(settingName);
+            return mDevice.findObject(By.text(settingName));
         } else {
             throw new UiObjectNotFoundException("Fail to get scrollable list %s.");
         }

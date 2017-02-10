@@ -19,6 +19,8 @@ package android.system.helpers;
 import android.app.Instrumentation;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.graphics.Point;
+import android.graphics.Rect;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
@@ -109,8 +111,9 @@ public class AccessibilityScannerHelper {
                 if (okBtn != null) {
                     okBtn.click();
                 }
-                initialSetups();
-                mDevice.pressBack();
+                if (initialSetups()) {
+                    mDevice.pressBack();
+                }
                 UiObject2 tapOk = mDevice.wait(Until.findObject(
                         By.pkg(ACCESSIBILITY_SCANNER_PACKAGE).text("OK")), SHORT_TIMEOUT);
                 if (tapOk != null) {
@@ -137,9 +140,10 @@ public class AccessibilityScannerHelper {
     /**
      * Steps for first time launching scanner app.
      *
+     * @return true/false return false immediately, if initial setup screen doesn't show up.
      * @throws Exception
      */
-    private void initialSetups() throws Exception {
+    private boolean initialSetups() throws Exception {
         UiObject2 getStartBtn = mDevice.wait(
                 Until.findObject(By.text("GET STARTED")), SHORT_TIMEOUT);
         if (getStartBtn != null) {
@@ -152,6 +156,9 @@ public class AccessibilityScannerHelper {
             }
             mDevice.wait(Until.findObject(By.text("OK, GOT IT")), SCANNER_WAIT_TIME).click();
             mDevice.wait(Until.findObject(By.text("DISMISS")), SHORT_TIMEOUT).click();
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -186,6 +193,53 @@ public class AccessibilityScannerHelper {
     // TODO: parsing detail results information not only number of suggestions.
     public void logScannerResult(String pageName) throws Exception {
         Log.i(RESULT_TAG, String.format("%s: %s suggestions!", pageName, getNumberOfSuggestions()));
+    }
+
+    /**
+     * Move scanner button to avoid blocking the object.
+     *
+     * @param avoidObj object to move the check button away from
+     */
+    public void adjustScannerButton(UiObject2 avoidObj) throws UiObjectNotFoundException {
+        Rect origBounds = getScannerCheckBtn().getVisibleBounds();
+        Rect avoidBounds = avoidObj.getVisibleBounds();
+        if (origBounds.intersect(avoidBounds)) {
+            Point dest = calculateDest(origBounds, avoidBounds);
+            moveScannerCheckButton(dest.x, dest.y);
+        }
+    }
+
+    /**
+     * Move scanner check button to a target location.
+     *
+     * @param locX target location x-axis
+     * @param locY target location y-axis
+     * @throws UiObjectNotFoundException
+     */
+    private void moveScannerCheckButton(int locX, int locY) throws UiObjectNotFoundException {
+        UiObject2 btn = getScannerCheckBtn();
+        Rect bounds = btn.getVisibleBounds();
+        int origX = bounds.centerX();
+        int origY = bounds.centerY();
+        if (locX != origX || locY != origY) {
+            btn.drag(new Point(locX, locY));
+        }
+    }
+
+    /**
+     * Calculate the moving destination of check button.
+     *
+     * @param origRect original bounds of the check button
+     * @param avoidRect bounds to move away from
+     * @return destination of check button center point.
+     */
+    private Point calculateDest(Rect origRect, Rect avoidRect) {
+        int bufferY = (int)Math.ceil(mDevice.getDisplayHeight() * 0.1);
+        int destY = avoidRect.bottom + bufferY + origRect.height()/2;
+        if (destY >= mDevice.getDisplayHeight()) {
+            destY = avoidRect.top - bufferY - origRect.height()/2;
+        }
+        return new Point(origRect.centerX(), destY);
     }
 
     /**
