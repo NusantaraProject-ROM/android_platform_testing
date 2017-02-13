@@ -55,11 +55,11 @@ class DexTestRunner extends AndroidTestRunner {
     private final DexClassLoader mLoader;
 
     /* State */
-    private TestResult mTestResult = new TestResult();
-    private List<TestCase> mTestCases = new ArrayList<>();
-    private String mTestClassName;
-    private Instrumentation mInstrumentation;
-    private Scheduler mScheduler;
+    protected TestResult mTestResult = new TestResult();
+    protected List<TestCase> mTestCases = new ArrayList<>();
+    protected String mTestClassName;
+    protected Instrumentation mInstrumentation;
+    protected Scheduler mScheduler;
 
     /* Field initialization */
     DexTestRunner(Instrumentation instrumentation, Scheduler scheduler, List<String> jars) {
@@ -74,14 +74,15 @@ class DexTestRunner extends AndroidTestRunner {
 
     @Override
     public void runTest() {
-        runTest(new TestResult());
+        runTest(newResult());
     }
 
     @Override
     public void runTest(TestResult testResult) {
+        mTestResult = testResult;
+
         for (TestCase testCase : mScheduler.apply(mTestCases)) {
             try {
-                onTestStart(testCase);
                 testCase.run(testResult);
             } catch (Exception ex) {
                 onError(testCase, ex);
@@ -89,8 +90,6 @@ class DexTestRunner extends AndroidTestRunner {
                 if (ex instanceof AuptTerminator) {
                     throw ex;
                 }
-            } finally {
-                onTestFinish(testCase);
             }
         }
     }
@@ -174,6 +173,7 @@ class DexTestRunner extends AndroidTestRunner {
     public void addTestListener(TestListener testListener) {
         if (testListener != null) {
             mTestListeners.add(testListener);
+            mTestResult.addListener(testListener);
         }
     }
 
@@ -208,19 +208,7 @@ class DexTestRunner extends AndroidTestRunner {
         return mTestClassName;
     }
 
-    /* Listener Callbacks */
-
-    void onTestStart(Test test) {
-        for (TestListener listener : mTestListeners) {
-            listener.startTest(test);
-        }
-    }
-
-    void onTestFinish(Test test) {
-        for (TestListener listener : mTestListeners) {
-            listener.endTest(test);
-        }
-    }
+    /* Listener Exception Callback. */
 
     void onError(Test test, Throwable t) {
         if (t instanceof AssertionFailedError) {
@@ -235,6 +223,16 @@ class DexTestRunner extends AndroidTestRunner {
     }
 
     /* Package-private Utilities */
+
+    TestResult newResult() {
+        TestResult result = new TestResult();
+
+        for (TestListener listener: mTestListeners) {
+            result.addListener(listener);
+        }
+
+        return result;
+    }
 
     static List<String> parseDexedJarPaths(String jarString) {
         List<String> jars = new ArrayList<>();
