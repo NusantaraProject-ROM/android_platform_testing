@@ -43,12 +43,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-
-import java.util.concurrent.TimeUnit;
-
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.concurrent.TimeUnit;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,10 +66,11 @@ import java.util.Random;
  *
  */
 public class AuptTestRunner extends InstrumentationTestRunner {
-
     /* Constants */
     private static final String LOG_TAG = AuptTestRunner.class.getSimpleName();
     private static final Long ANR_DELAY = 30000L;
+    private static final SimpleDateFormat SCREENSHOT_DATE_FORMAT =
+        new SimpleDateFormat("dd-mm-yy:HH:mm:ss:SSS");
 
     /* Keep a pointer to our argument bundle around for testing */
     private Bundle mParams;
@@ -680,7 +681,7 @@ public class AuptTestRunner extends InstrumentationTestRunner {
     }
 
     /**
-     * Dump memory info on test start/stop
+     * Collect a screenshot on test failure.
      */
     private class Screenshotter extends AuptListener {
         private void collectScreenshot(Test test, String suffix) {
@@ -691,27 +692,29 @@ public class AuptTestRunner extends InstrumentationTestRunner {
                 return;
             }
 
-            if (test instanceof TestCase) {
-                device.takeScreenshot(new File(mResultsDirectory.getPath() + "/screenshot-" +
-                        ((TestCase) test).getName().replaceAll("#", "_") + suffix + ".png"));
-            } else if (test instanceof TestSuite) {
-                device.takeScreenshot(new File(mResultsDirectory.getPath() + "/screenshot-" +
-                        ((TestSuite) test).getName().replaceAll("#", "_") + suffix + ".png"));
-            } else {
-                Log.e(LOG_TAG, "Got something other than a TestCase or TestSuite in AuptListener");
-                device.takeScreenshot(new File(mResultsDirectory.getPath() +
-                    "/screenshot-" + test.toString() + suffix + ".png"));
-            }
+            String testName =
+                    test instanceof TestCase
+                    ? ((TestCase) test).getName()
+                    : (test instanceof TestSuite ? ((TestSuite) test).getName() : test.toString());
+
+            String fileName =
+                    mResultsDirectory.getPath()
+                            + "/" + testName.replaceAll(".", "_")
+                            + suffix + ".png";
+
+            device.takeScreenshot(new File(fileName));
         }
 
         @Override
         public void addError(Test test, Throwable t) {
-            collectScreenshot(test, "-pre");
+            collectScreenshot(test,
+                    "_failure_screenshot_" + SCREENSHOT_DATE_FORMAT.format(new Date()));
         }
 
         @Override
         public void addFailure(Test test, AssertionFailedError t) {
-            collectScreenshot(test, "-post");
+            collectScreenshot(test,
+                    "_failure_screenshot_" + SCREENSHOT_DATE_FORMAT.format(new Date()));
         }
     }
 }
