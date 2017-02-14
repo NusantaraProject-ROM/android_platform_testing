@@ -35,6 +35,7 @@ import junit.framework.AssertionFailedError;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestListener;
+import junit.framework.TestResult;
 import junit.framework.TestSuite;
 
 import java.io.BufferedReader;
@@ -183,12 +184,15 @@ public class AuptTestRunner extends InstrumentationTestRunner {
                 TimeUnit.MINUTES.toMillis(parseLongParam("traceInterval", 0)),
                 mResultsDirectory, this);
 
-        // Make our TestRunner
+        // Make our TestRunner and make sure we injectInstrumentation.
         mRunner = new DexTestRunner(this, mScheduler, mJars) {
             @Override
-            void onTestStart(Test test) {
-                injectInstrumentation(test);
-                super.onTestStart(test);
+            public void runTest(TestResult result) {
+                for (TestCase test: mTestCases) {
+                    injectInstrumentation(test);
+                }
+
+                super.runTest(result);
             }
         };
 
