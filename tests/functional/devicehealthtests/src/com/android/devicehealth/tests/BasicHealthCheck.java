@@ -57,8 +57,8 @@ public class BasicHealthCheck {
     }
 
     /**
-     * Test if there are app crashes in the device by checking system_app_crash or
-     * system_app_native_crash using DropBoxManager service.
+     * Test if there are app crashes in the device by checking system_app_crash,
+     * system_app_native_crash or system_server_anr using DropBoxManager service.
      */
     @Test
     public void checkCrash() {
@@ -69,18 +69,22 @@ public class BasicHealthCheck {
         long timestamp = 0;
         DropBoxManager.Entry entry = null;
         int crashCount = 0;
-        // TODO: Fail the test if system_server_anr is observed or not.
+        StringBuilder errorDetails = new StringBuilder("Error details:\n");
         while (null != (entry = dropbox.getNextEntry(null, timestamp))) {
             try {
                 if (mDropboxLabel.equals(entry.getTag())) {
                     crashCount++;
+                    errorDetails.append(mDropboxLabel);
+                    errorDetails.append(": ");
+                    errorDetails.append(entry.getText(70));
+                    errorDetails.append("    ...\n");
                 }
             } finally {
                 entry.close();
             }
             timestamp = entry.getTimeMillis();
         }
-        Assert.assertEquals(0, crashCount);
+        Assert.assertEquals(errorDetails.toString(), 0, crashCount);
     }
 
 }
