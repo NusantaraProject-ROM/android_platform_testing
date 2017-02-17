@@ -710,7 +710,7 @@ public class SystemUiJankTests extends JankTestBase {
                     mDevice.getDisplayWidth() / 2, mDevice.getDisplayHeight() - SWIPE_MARGIN,
                     DEFAULT_SCROLL_STEPS);
             mDevice.waitForIdle();
-            mDevice.click(mDevice.getDisplayWidth() / 2, mDevice.getDisplayHeight() - SWIPE_MARGIN);
+            mDevice.click(mDevice.getDisplayWidth() / 4, mDevice.getDisplayHeight() - SWIPE_MARGIN);
             mDevice.waitForIdle();
         }
     }
