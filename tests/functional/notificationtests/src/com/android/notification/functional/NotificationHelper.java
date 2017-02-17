@@ -283,7 +283,7 @@ public class NotificationHelper {
     }
 
     public void swipeUp() throws Exception {
-        mDevice.swipe(mDevice.getDisplayWidth() / 2, mDevice.getDisplayHeight(),
+        mDevice.swipe(mDevice.getDisplayWidth() / 2, mDevice.getDisplayHeight()*3/4,
                 mDevice.getDisplayWidth() / 2, 0, 30);
         Thread.sleep(SHORT_TIMEOUT);
     }
