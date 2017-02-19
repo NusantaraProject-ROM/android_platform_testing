@@ -36,10 +36,6 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(Parameterized.class)
 public class BasicHealthCheck {
 
-    private static final String SYSTEM_APP_CRASH_TAG = "system_app_crash";
-    private static final String SYSTEM_APP_NATIVE_CRASH_TAG = "system_app_native_crash";
-    private static final String SYSTEM_SERVER_ANR_TAG = "system_server_anr";
-
     private Context mContext;
 
     @Parameter
@@ -47,8 +43,8 @@ public class BasicHealthCheck {
 
     @Parameters(name = "{0}")
     public static String[] dropboxLabels() {
-        return new String[] {
-                SYSTEM_APP_CRASH_TAG, SYSTEM_APP_NATIVE_CRASH_TAG, SYSTEM_SERVER_ANR_TAG};
+        return new String[] {"system_app_crash", "system_app_native_crash", "system_app_anr",
+                "system_server_crash", "system_server_native_crash", "system_server_anr"};
     }
 
     @Before
