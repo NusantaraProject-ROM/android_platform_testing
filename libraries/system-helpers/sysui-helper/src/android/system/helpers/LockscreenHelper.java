@@ -18,24 +18,17 @@ package android.system.helpers;
 
 import android.app.KeyguardManager;
 import android.content.Context;
-import android.content.Intent;
-import android.os.Environment;
-import android.os.RemoteException;
 import android.provider.Settings;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.By;
-import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
 import android.system.helpers.ActivityHelper;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import android.util.Log;
 import junit.framework.Assert;
 
+import java.io.IOException;
 /**
  * Implement common helper methods for Lockscreen.
  */
@@ -84,7 +77,6 @@ public class LockscreenHelper {
         // Load camera on LockScreen and take a photo
         mDevice.drag((w - 25), (h - 25), (int) (w * 0.5), (int) (w * 0.5), 40);
         mDevice.waitForIdle();
-        Log.i(LOG_TAG, "Camer_package:" + CAMERA_PACKAGE);
         return mDevice.wait(Until.hasObject(
                 By.res(CAMERA_PACKAGE, "activity_root_view")),
                 LONG_TIMEOUT * 2);
@@ -140,6 +132,7 @@ public class LockscreenHelper {
         pinField.setText(pwd);
         mDevice.pressEnter();
         mDevice.wait(Until.findObject(By.text("Swipe")), LONG_TIMEOUT).click();
+        mDevice.waitForIdle();
         mDevice.wait(Until.findObject(By.text("YES, REMOVE")), LONG_TIMEOUT).click();
     }
 
@@ -149,12 +142,12 @@ public class LockscreenHelper {
      */
     public void unlockScreen(String pwd)
             throws InterruptedException, IOException {
-        mDevice.swipe(mDevice.getDisplayWidth() / 2, mDevice.getDisplayHeight(),
-                mDevice.getDisplayWidth() / 2, 0, 30);
+        String command = String.format(" %s %s %s", "input", "keyevent", "82");
+        mDevice.executeShellCommand(command);
         Thread.sleep(SHORT_TIMEOUT);
         Thread.sleep(SHORT_TIMEOUT);
         // enter password to unlock screen
-        String command = String.format(" %s %s %s", "input", "text", pwd);
+        command = String.format(" %s %s %s", "input", "text", pwd);
         mDevice.executeShellCommand(command);
         mDevice.waitForIdle();
         Thread.sleep(SHORT_TIMEOUT);
