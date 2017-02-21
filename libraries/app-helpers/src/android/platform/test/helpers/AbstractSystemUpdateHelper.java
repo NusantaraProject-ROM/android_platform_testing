@@ -54,8 +54,9 @@ public abstract class AbstractSystemUpdateHelper extends AbstractStandardAppHelp
      * If an update is available, download it. Otherwise, throw {@link IllegalStateException}.
      * Precondition: The device is on the System Update screen.
      * Postcondition: A system update will be ready to install.
+     * @return true if the download succeeded
      */
-    public abstract void downloadUpdate();
+    public abstract boolean downloadUpdate();
 
     /**
      * Click on an existing OTA notification.
