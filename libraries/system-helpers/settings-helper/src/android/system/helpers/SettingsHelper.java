@@ -397,10 +397,6 @@ public class SettingsHelper {
         Thread.sleep(TIMEOUT * 3);
         if (isQuickSettings) {
             launchAndClickSettings(isQuickSettings, null, By.descContains(WIFI));
-            // To turn off Wi-Fi, an extra toggle is needed from the quick settings panel.
-            if (!verifyOn) {
-                mDevice.wait(Until.findObject(By.res("android:id/toggle")), TIMEOUT).click();
-            }
         } else {
             launchAndClickSettings(isQuickSettings, Settings.ACTION_WIFI_SETTINGS,
                     By.res(SETTINGS_PACKAGE, SWITCH_WIDGET).text(switchText));
