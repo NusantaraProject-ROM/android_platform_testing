@@ -52,12 +52,17 @@ public class LockscreenHelper {
     private UiDevice mDevice = null;
     private final ActivityHelper mActivityHelper;
     private final CommandsHelper mCommandsHelper;
+    private final DeviceHelper mDeviceHelper;
+    private boolean mIsRyuDevice = false;
 
     public LockscreenHelper() {
         mContext = InstrumentationRegistry.getTargetContext();
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
         mActivityHelper = ActivityHelper.getInstance();
         mCommandsHelper = CommandsHelper.getInstance(InstrumentationRegistry.getInstrumentation());
+        mDeviceHelper = DeviceHelper.getInstance();
+        mIsRyuDevice = mDeviceHelper.isRyuDevice();
+
     }
 
     public static LockscreenHelper getInstance() {
@@ -72,13 +77,14 @@ public class LockscreenHelper {
      * @return true/false
      */
     public boolean launchCameraOnLockScreen() {
+        String CameraPackage = mIsRyuDevice ? CAMERA2_PACKAGE : CAMERA_PACKAGE;
         int w = mDevice.getDisplayWidth();
         int h = mDevice.getDisplayHeight();
         // Load camera on LockScreen and take a photo
         mDevice.drag((w - 25), (h - 25), (int) (w * 0.5), (int) (w * 0.5), 40);
         mDevice.waitForIdle();
         return mDevice.wait(Until.hasObject(
-                By.res(CAMERA_PACKAGE, "activity_root_view")),
+                By.res(CameraPackage, "activity_root_view")),
                 LONG_TIMEOUT * 2);
     }
 
