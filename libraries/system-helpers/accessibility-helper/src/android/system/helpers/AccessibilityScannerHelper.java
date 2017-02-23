@@ -26,7 +26,6 @@ import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.Until;
-
 import android.util.Log;
 
 import java.util.List;
@@ -114,12 +113,35 @@ public class AccessibilityScannerHelper {
                 if (initialSetups()) {
                     mDevice.pressBack();
                 }
-                UiObject2 tapOk = mDevice.wait(Until.findObject(
-                        By.pkg(ACCESSIBILITY_SCANNER_PACKAGE).text("OK")), SHORT_TIMEOUT);
-                if (tapOk != null) {
-                    tapOk.click();
-                }
+                grantPermissions();
             }
+        }
+    }
+
+    /**
+     * Click through all permission pop ups for scanner. Grant all necessary permissions.
+     */
+    private void grantPermissions() {
+        UiObject2 auth1 = mDevice.wait(Until.findObject(
+                By.text("BEGIN AUTHORIZATION")), SHORT_TIMEOUT);
+        if (auth1 != null) {
+            auth1.click();
+        }
+        UiObject2 chk = mDevice.wait(Until.findObject(
+                By.clazz(AccessibilityHelper.CHECK_BOX)), SHORT_TIMEOUT);
+        if (chk != null) {
+            chk.click();
+            mDevice.findObject(By.text("START NOW")).click();
+        }
+        UiObject2 auth2 = mDevice.wait(Until.findObject(
+                By.text("BEGIN AUTHORIZATION")), SHORT_TIMEOUT);
+        if (auth2 != null) {
+            auth2.click();
+        }
+        UiObject2 tapOk = mDevice.wait(Until.findObject(
+                By.pkg(ACCESSIBILITY_SCANNER_PACKAGE).text("OK")), SHORT_TIMEOUT);
+        if (tapOk != null) {
+            tapOk.click();
         }
     }
 
@@ -157,6 +179,7 @@ public class AccessibilityScannerHelper {
             mDevice.wait(Until.findObject(By.text("OK, GOT IT")), SCANNER_WAIT_TIME).click();
             mDevice.wait(Until.findObject(By.text("DISMISS")), SHORT_TIMEOUT).click();
             return true;
+            // TODO: more window pops up for authorization
         } else {
             return false;
         }
@@ -207,6 +230,15 @@ public class AccessibilityScannerHelper {
             Point dest = calculateDest(origBounds, avoidBounds);
             moveScannerCheckButton(dest.x, dest.y);
         }
+    }
+
+    /**
+     * Move scanner check button back to the middle of the screen.
+     */
+    public void resetScannerCheckButton() throws UiObjectNotFoundException {
+        int midY = (int) Math.ceil(mDevice.getDisplayHeight() * 0.5);
+        int midX = (int) Math.ceil(mDevice.getDisplayWidth() * 0.5);
+        moveScannerCheckButton(midX, midY);
     }
 
     /**
