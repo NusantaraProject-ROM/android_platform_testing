@@ -24,4 +24,7 @@ LOCAL_PACKAGE_NAME := DeviceHealthTests
 LOCAL_CERTIFICATE := platform
 LOCAL_JAVA_LIBRARIES := android.test.runner
 LOCAL_STATIC_JAVA_LIBRARIES := android-support-test platform-test-annotations
+
+LOCAL_COMPATIBILITY_SUITE := device-tests
+
 include $(BUILD_PACKAGE)

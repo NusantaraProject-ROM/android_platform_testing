@@ -17,4 +17,6 @@ LOCAL_CERTIFICATE := vendor/unbundled_google/libraries/certs/clockwork
 
 LOCAL_PROGUARD_FLAG_FILES := proguard.flags
 
+LOCAL_COMPATIBILITY_SUITE := device-tests
+
 include $(BUILD_PACKAGE)

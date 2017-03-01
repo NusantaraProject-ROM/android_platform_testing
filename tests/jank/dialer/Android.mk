@@ -25,4 +25,6 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
     legacy-android-test
 LOCAK_SDK_VERSION := 22
 
+LOCAL_COMPATIBILITY_SUITE := device-tests
+
 include $(BUILD_PACKAGE)

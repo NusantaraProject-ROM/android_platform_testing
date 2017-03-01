@@ -14,4 +14,6 @@ LOCAL_STATIC_JAVA_LIBRARIES := ub-uiautomator \
 LOCAL_PACKAGE_NAME := PermissionFunctionalTests
 LOCAL_CERTIFICATE := platform
 
+LOCAL_COMPATIBILITY_SUITE := device-tests
+
 include $(BUILD_PACKAGE)

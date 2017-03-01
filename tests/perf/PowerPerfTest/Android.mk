@@ -21,4 +21,6 @@ LOCAL_STATIC_JAVA_LIBRARIES := PowerTestHelper-src ub-uiautomator junit
 LOCAL_CERTIFICATE := platform
 LOCAL_SRC_FILES := $(call all-subdir-java-files)
 
+LOCAL_COMPATIBILITY_SUITE := device-tests
+
 include $(BUILD_PACKAGE)
