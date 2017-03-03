@@ -22,13 +22,10 @@ import android.content.Intent;
 import android.os.SystemClock;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
-import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObject2;
-import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.Until;
 import android.util.Log;
 import android.view.KeyEvent;
-
 import junit.framework.Assert;
 
 /**
@@ -46,31 +43,15 @@ public class SysAppTestHelper {
     public static final int SHORT_TIMEOUT = 500;
     public static final int FLING_SPEED = 5000;
     private static final String LOG_TAG = SysAppTestHelper.class.getSimpleName();
-    private static final long NEW_CARD_TIMEOUT_MS = 5 * 1000; // 5s
     private static final String RELOAD_NOTIFICATION_CARD_INTENT = "com.google.android.wearable."
             + "support.wearnotificationgenerator.SHOW_NOTIFICATION";
     private static final String HOME_INDICATOR = "charging_icon";
+    private static final String NO_NOTIFICATION_ID = "no_notifications";
+    private static final String STREAM_CARD_ID = "stream_card";
 
-    // Demo card selectors
-    private static final UiSelector CARD_SELECTOR = new UiSelector()
-            .resourceId("com.google.android.wearable.app:id/snippet");
-    private static final UiSelector TITLE_SELECTOR = new UiSelector()
-            .resourceId("com.google.android.wearable.app:id/title");
-    private static final UiSelector CLOCK_SELECTOR = new UiSelector()
-            .resourceId("com.google.android.wearable.app:id/clock_bar");
-    private static final UiSelector ICON_SELECTOR = new UiSelector()
-            .resourceId("com.google.android.wearable.app:id/icon");
-    private static final UiSelector TEXT_SELECTOR = new UiSelector()
-            .resourceId("com.google.android.wearable.app:id/text");
-    private static final UiSelector STATUS_BAR_SELECTOR = new UiSelector()
-            .resourceId("com.google.android.wearable.app:id/status_bar_icons");
     private static SysAppTestHelper sysAppTestHelperInstance;
     private UiDevice mDevice = null;
     private Instrumentation instrumentation = null;
-    private UiObject mCard = null;
-    private UiObject mTitle = null;
-    private UiObject mIcon = null;
-    private UiObject mText = null;
     private Intent mIntent = null;
 
     /**
@@ -82,10 +63,6 @@ public class SysAppTestHelper {
         this.mDevice = mDevice;
         this.instrumentation = instrumentation;
         mIntent = new Intent();
-        mCard = mDevice.findObject(CARD_SELECTOR);
-        mTitle = mDevice.findObject(TITLE_SELECTOR);
-        mIcon = mDevice.findObject(ICON_SELECTOR);
-        mText = mDevice.findObject(TEXT_SELECTOR);
     }
 
     public static SysAppTestHelper getInstance(UiDevice device, Instrumentation instrumentation) {
@@ -173,34 +150,23 @@ public class SysAppTestHelper {
     public void hasDemoCards() {
         // Device should be pre-loaded with demo cards.
 
-        goBackHome(); // Start by going to Home.
+        goBackHome();
 
-        if (!mTitle.waitForExists(NEW_CARD_TIMEOUT_MS)) {
-            Log.d(LOG_TAG, "Card previews not available, swiping up");
-            swipeUp();
-            // For few devices, demo card preview is hidden by default. So swipe once to bring up
-            // the card.
-        }
+        // Swipe up to go to notification tray.
+        swipeUp();
 
-        // First card from the pre-loaded demo cards could be either in peek view
-        // or in full view(e.g Dory) or no peek view(Sturgeon). Ensure to check for demo cards
-        // existence in both cases.
-        if (!(mCard.waitForExists(NEW_CARD_TIMEOUT_MS)
-                || mTitle.waitForExists(NEW_CARD_TIMEOUT_MS)
-                || mIcon.waitForExists(NEW_CARD_TIMEOUT_MS)
-                || mText.waitForExists(NEW_CARD_TIMEOUT_MS))) {
-            Log.d(LOG_TAG, "Demo cards not found, going to reload the cards");
+        if (waitForSysAppUiObject2(NO_NOTIFICATION_ID) != null) {
+            Log.d(LOG_TAG, "No cards, going to reload the cards");
             // If there are no Demo cards, reload them.
+            goBackHome();
             reloadDemoCards();
-            if (!mTitle.waitForExists(NEW_CARD_TIMEOUT_MS)) {
-                swipeUp(); // For few devices, demo card preview is hidden by
-                // default. So swipe once to bring up the card.
-            }
         }
-        Assert.assertTrue("no cards available for testing",
-                (mTitle.waitForExists(NEW_CARD_TIMEOUT_MS)
-                        || mIcon.waitForExists(NEW_CARD_TIMEOUT_MS)
-                        || mText.waitForExists(NEW_CARD_TIMEOUT_MS)));
+        else if (waitForSysAppUiObject2(STREAM_CARD_ID) != null){
+            goBackHome();
+        }
+        else {
+            Assert.fail("Swipe up failed to go to notification tray.");
+        }
     }
 
     // This will ensure to reload notification cards by launching NotificationsGeneratorWear app
