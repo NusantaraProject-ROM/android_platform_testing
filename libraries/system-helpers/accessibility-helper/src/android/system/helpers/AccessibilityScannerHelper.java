@@ -74,16 +74,32 @@ public class AccessibilityScannerHelper {
     /**
      * Click scanner check button and parse and log results.
      *
+     * @param resultPrefix
      * @throws Exception
      */
-    public void runScanner(String pageName) throws Exception {
+    public void runScanner(String resultPrefix) throws Exception {
         clickScannerCheck();
         if (testPass() == true) {
-            Log.i(RESULT_TAG, String.format("%s: PASS", pageName));
+            Log.i(RESULT_TAG, String.format("%s: PASS", resultPrefix));
         } else {
-            logScannerResult(pageName);
+            logScannerResult(resultPrefix);
         }
-        mDevice.pressBack();
+    }
+
+    /**
+     * Click scanner check button and open share app in the share menu.
+     *
+     * @param resultPrefix
+     * @param shareAppTag
+     * @throws Exception
+     */
+    public void runScannerAndOpenShareApp(String resultPrefix, String shareAppTag)
+            throws Exception {
+        runScanner(resultPrefix);
+        UiObject2 shareApp = getShareApp(shareAppTag);
+        if (shareApp != null) {
+            shareApp.click();
+        }
     }
 
     /**
@@ -99,7 +115,8 @@ public class AccessibilityScannerHelper {
         mAccessibilityHelper.launchSpecificAccessibilitySetting("Accessibility Scanner");
         for (int tries = 0; tries < 2; tries++) {
             UiObject2 swt = mDevice.wait(Until.findObject(
-                    By.res(AccessibilityHelper.SETTINGS_PACKAGE, "switch_widget")), SHORT_TIMEOUT*2);
+                    By.res(AccessibilityHelper.SETTINGS_PACKAGE, "switch_widget")),
+                    SHORT_TIMEOUT * 2);
             if (swt.getText().equals(value.toString())) {
                 break;
             } else if (tries == 1) {
@@ -179,7 +196,6 @@ public class AccessibilityScannerHelper {
             mDevice.wait(Until.findObject(By.text("OK, GOT IT")), SCANNER_WAIT_TIME).click();
             mDevice.wait(Until.findObject(By.text("DISMISS")), SHORT_TIMEOUT).click();
             return true;
-            // TODO: more window pops up for authorization
         } else {
             return false;
         }
@@ -213,7 +229,6 @@ public class AccessibilityScannerHelper {
      * @param pageName
      * @throws Exception
      */
-    // TODO: parsing detail results information not only number of suggestions.
     public void logScannerResult(String pageName) throws Exception {
         Log.i(RESULT_TAG, String.format("%s: %s suggestions!", pageName, getNumberOfSuggestions()));
     }
@@ -351,5 +366,22 @@ public class AccessibilityScannerHelper {
         } else {
             throw new UiObjectNotFoundException("Fail to find toolbar text view");
         }
+    }
+
+    /**
+     * Return share app UiObject2
+     *
+     * @param appName
+     * @return
+     */
+    private UiObject2 getShareApp(String appName) {
+        UiObject2 shareBtn = mDevice.wait(Until.findObject(By.res(ACCESSIBILITY_SCANNER_PACKAGE,
+                "action_share_results")), SHORT_TIMEOUT);
+        if (shareBtn != null) {
+            shareBtn.click();
+            mDevice.wait(Until.hasObject(By.res("android:id/resolver_list")), SHORT_TIMEOUT * 3);
+            return mDevice.findObject(By.text(appName));
+        }
+        return null;
     }
 }
