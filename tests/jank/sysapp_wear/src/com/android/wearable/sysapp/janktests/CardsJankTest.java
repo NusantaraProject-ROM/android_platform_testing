@@ -64,7 +64,6 @@ public class CardsJankTest extends JankTestBase {
     public void openSwipeCard() throws Exception {
         mHelper.hasDemoCards();
         mHelper.swipeUp();
-        mHelper.swipeUp();
     }
 
     // Measure jank when dismissing a card
