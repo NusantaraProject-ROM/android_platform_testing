@@ -47,12 +47,12 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.concurrent.TimeUnit;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Ultra-fancy TestRunner to use when running AUPT: supports
@@ -203,8 +203,8 @@ public class AuptTestRunner extends InstrumentationTestRunner {
         mRunner.addTestListener(new DcimCleaner());
         mRunner.addTestListener(new PidChecker());
         mRunner.addTestListener(new TimeoutStackDumper());
-        mRunner.addTestListener(new TestTimeout());
         mRunner.addTestListener(new MemInfoDumper());
+        mRunner.addTestListener(new TestTimeout());
         mRunner.addTestListenerIf(parseBoolParam("quitOnError", false), new QuitOnErrorListener());
         mRunner.addTestListenerIf(parseBoolParam("checkBattery", false), new BatteryChecker());
         mRunner.addTestListenerIf(parseBoolParam("screenshots", false), new Screenshotter());
@@ -673,8 +673,8 @@ public class AuptTestRunner extends InstrumentationTestRunner {
                         new AnrGenerator().trigger();
                     }
 
+                    mRunner.killTest(new TimeoutException());
                     Log.d(LOG_TAG, "AuptTestRunner timed out during test " + mTest.toString());
-                    throw new TimeoutException();
                 } catch (InterruptedException e) { /* Drop out -- this is what we want */}
             }
         }
