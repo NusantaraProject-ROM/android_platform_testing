@@ -155,13 +155,13 @@ public class NotificationInteractionTests extends InstrumentationTestCase {
         }
         MetricsAsserts.assertHasVisibilityLog("missing panel revealed log", mMetricsReader,
                 MetricsEvent.NOTIFICATION_PANEL, true);
-        Queue<LogMaker> firstLog = MetricsAsserts.findMatchinLog(mMetricsReader,
+        Queue<LogMaker> firstLog = MetricsAsserts.findMatchingLogs(mMetricsReader,
                 new LogMaker(MetricsEvent.NOTIFICATION_ITEM)
                         .setType(MetricsEvent.TYPE_OPEN)
                         .addTaggedData(MetricsEvent.NOTIFICATION_ID, firstId)
                         .setPackageName(mContext.getPackageName()));
         assertTrue("missing first note visibility log", !firstLog.isEmpty());
-        Queue<LogMaker> secondLog = MetricsAsserts.findMatchinLog(mMetricsReader,
+        Queue<LogMaker> secondLog = MetricsAsserts.findMatchingLogs(mMetricsReader,
                 new LogMaker(MetricsEvent.NOTIFICATION_ITEM)
                         .setType(MetricsEvent.TYPE_OPEN)
                         .addTaggedData(MetricsEvent.NOTIFICATION_ID, secondId));
@@ -194,7 +194,7 @@ public class NotificationInteractionTests extends InstrumentationTestCase {
 
         MetricsAsserts.assertHasVisibilityLog("missing panel hidden log", mMetricsReader,
                 MetricsEvent.NOTIFICATION_PANEL, false);
-        firstLog = MetricsAsserts.findMatchinLog(mMetricsReader,
+        firstLog = MetricsAsserts.findMatchingLogs(mMetricsReader,
                 new LogMaker(MetricsEvent.NOTIFICATION_ITEM)
                         .setType(MetricsEvent.TYPE_CLOSE)
                         .addTaggedData(MetricsEvent.NOTIFICATION_ID, firstId)
@@ -203,7 +203,7 @@ public class NotificationInteractionTests extends InstrumentationTestCase {
         exposure = (Integer) firstLog.peek()
                 .getTaggedData(MetricsEvent.NOTIFICATION_SINCE_VISIBLE_MILLIS);
         assertTrue("first note visibility log should have nonzero exposure time", exposure > 0);
-        secondLog = MetricsAsserts.findMatchinLog(mMetricsReader,
+        secondLog = MetricsAsserts.findMatchingLogs(mMetricsReader,
                 new LogMaker(MetricsEvent.NOTIFICATION_ITEM)
                         .setType(MetricsEvent.TYPE_CLOSE)
                         .addTaggedData(MetricsEvent.NOTIFICATION_ID, secondId)

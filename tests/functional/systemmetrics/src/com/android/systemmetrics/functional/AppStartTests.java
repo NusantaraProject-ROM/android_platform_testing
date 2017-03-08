@@ -75,10 +75,8 @@ public class AppStartTests extends InstrumentationTestCase {
 
         int postUptime = (int) (SystemClock.uptimeMillis() / 1000);
 
-        Queue<LogMaker> startLogs = MetricsAsserts.findMatchinLog(mMetricsReader,
+        Queue<LogMaker> startLogs = MetricsAsserts.findMatchingLogs(mMetricsReader,
                 new LogMaker(MetricsEvent.APP_TRANSITION));
-        assertTrue("list of start logs is empty", !startLogs.isEmpty());
-
         boolean found = false;
         for (LogMaker log : startLogs) {
             Object componentObject = log.getTaggedData(MetricsEvent.APP_TRANSITION_COMPONENT_NAME);
