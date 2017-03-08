@@ -44,8 +44,7 @@ public class BasicHealthCheck {
     @Parameters(name = "{0}")
     public static String[] dropboxLabels() {
         return new String[] {"system_app_crash", "system_app_native_crash",
-                "system_server_crash", "system_server_native_crash", "system_server_anr",
-                "SYSTEM_TOMBSTONE"};
+                "system_server_crash", "system_server_native_crash", "system_server_anr"};
     }
 
     @Before
