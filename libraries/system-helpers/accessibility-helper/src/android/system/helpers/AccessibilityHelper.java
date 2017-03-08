@@ -175,8 +175,9 @@ public class AccessibilityHelper {
                 new UiSelector().resourceId(SETTINGS_PACKAGE+":id/list"));
         if (listScrollable != null) {
             listScrollable.scrollToBeginning(100);
-            listScrollable.scrollTextIntoView(settingName);
-            return mDevice.findObject(By.text(settingName));
+            listScrollable.scrollIntoView(
+                    new UiSelector().resourceId("android:id/title").text(settingName));
+            return mDevice.findObject(By.res("android:id/title").text(settingName));
         } else {
             throw new UiObjectNotFoundException("Fail to get scrollable list %s.");
         }
