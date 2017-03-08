@@ -304,6 +304,7 @@ public class AccessibilityScannerHelper {
         if (accessibilityScannerButton != null) {
             accessibilityScannerButton.click();
         } else {
+            // TODO: check if app crash error, restart scanner service
             Log.i(LOG_TAG, "Fail to find accessibility scanner check button.");
             throw new UiObjectNotFoundException(
                     "Fail to find accessibility scanner check button.");
