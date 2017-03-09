@@ -94,6 +94,7 @@ public class AuptTestRunner extends InstrumentationTestRunner {
     /* String Parameters */
     private List<String> mJars = new ArrayList<>();
     private List<String> mMemoryTrackedProcesses = new ArrayList<>();
+    private List<String> mFinishCommands;
 
     /* Other Parameters */
     private File mResultsDirectory;
@@ -123,6 +124,13 @@ public class AuptTestRunner extends InstrumentationTestRunner {
         mMaxDumpheaps = parseLongParam("maxDumpheaps", 5);
         mTestCaseTimeout = parseLongParam("testCaseTimeout", TimeUnit.MINUTES.toMillis(10));
         mSeed = parseLongParam("seed", new Random().nextLong());
+
+        // Option: -e finishCommand 'a;b;c;d'
+        String finishCommandArg = parseStringParam("finishCommand", null);
+        mFinishCommands =
+                finishCommandArg == null
+                        ? Arrays.<String>asList()
+                        : Arrays.asList(finishCommandArg.split("\\s*;\\s*"));
 
         // Option: -e shuffle true
         mScheduler = parseBoolParam("shuffle", false)
@@ -204,6 +212,7 @@ public class AuptTestRunner extends InstrumentationTestRunner {
         mRunner.addTestListener(new PidChecker());
         mRunner.addTestListener(new TimeoutStackDumper());
         mRunner.addTestListener(new MemInfoDumper());
+        mRunner.addTestListener(new FinishCommandRunner());
         mRunner.addTestListenerIf(parseBoolParam("generateANR", false), new ANRTrigger());
         mRunner.addTestListenerIf(parseBoolParam("quitOnError", false), new QuitOnErrorListener());
         mRunner.addTestListenerIf(parseBoolParam("checkBattery", false), new BatteryChecker());
@@ -671,6 +680,16 @@ public class AuptTestRunner extends InstrumentationTestRunner {
         public void addFailure(Test test, AssertionFailedError t) {
             collectScreenshot(test,
                     "_failure_screenshot_" + SCREENSHOT_DATE_FORMAT.format(new Date()));
+        }
+    }
+
+    /** Runs a command when a test finishes. */
+    private class FinishCommandRunner extends AuptListener {
+        @Override
+        public void endTest(Test test) {
+            for (String command : mFinishCommands) {
+                AuptTestRunner.this.getUiAutomation().executeShellCommand(command);
+            }
         }
     }
 }
