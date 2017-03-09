@@ -238,7 +238,8 @@ public class AccessibilityScannerHelper {
      *
      * @param avoidObj object to move the check button away from
      */
-    public void adjustScannerButton(UiObject2 avoidObj) throws UiObjectNotFoundException {
+    public void adjustScannerButton(UiObject2 avoidObj)
+            throws UiObjectNotFoundException, InterruptedException {
         Rect origBounds = getScannerCheckBtn().getVisibleBounds();
         Rect avoidBounds = avoidObj.getVisibleBounds();
         if (origBounds.intersect(avoidBounds)) {
@@ -250,7 +251,7 @@ public class AccessibilityScannerHelper {
     /**
      * Move scanner check button back to the middle of the screen.
      */
-    public void resetScannerCheckButton() throws UiObjectNotFoundException {
+    public void resetScannerCheckButton() throws UiObjectNotFoundException, InterruptedException {
         int midY = (int) Math.ceil(mDevice.getDisplayHeight() * 0.5);
         int midX = (int) Math.ceil(mDevice.getDisplayWidth() * 0.5);
         moveScannerCheckButton(midX, midY);
@@ -263,13 +264,25 @@ public class AccessibilityScannerHelper {
      * @param locY target location y-axis
      * @throws UiObjectNotFoundException
      */
-    private void moveScannerCheckButton(int locX, int locY) throws UiObjectNotFoundException {
-        UiObject2 btn = getScannerCheckBtn();
-        Rect bounds = btn.getVisibleBounds();
-        int origX = bounds.centerX();
-        int origY = bounds.centerY();
-        if (locX != origX || locY != origY) {
-            btn.drag(new Point(locX, locY));
+    private void moveScannerCheckButton(int locX, int locY)
+            throws UiObjectNotFoundException, InterruptedException {
+        int tries = 2;
+        while (tries-- > 0) {
+            UiObject2 btn = getScannerCheckBtn();
+            Rect bounds = btn.getVisibleBounds();
+            int origX = bounds.centerX();
+            int origY = bounds.centerY();
+            if (locX != origX || locY != origY) {
+                btn.drag(new Point(locX, locY));
+            }
+            Thread.sleep(SCANNER_WAIT_TIME);
+            // drag cause a click on the scanner button, bring the UI into scanner app
+            if (getScannerCheckBtn() == null
+                    && mDevice.findObject(By.pkg(ACCESSIBILITY_SCANNER_PACKAGE)) != null) {
+                mDevice.pressBack();
+            } else {
+                break;
+            }
         }
     }
 
