@@ -17,23 +17,21 @@
 package android.support.test.aupt;
 
 import android.app.Instrumentation;
-import android.content.Context;
-import android.content.ContextWrapper;
 import android.test.AndroidTestRunner;
-import android.util.Log;
-import dalvik.system.BaseDexClassLoader;
+
 import dalvik.system.DexClassLoader;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.List;
+
 import junit.framework.AssertionFailedError;
 import junit.framework.Test;
-import junit.framework.TestResult;
 import junit.framework.TestCase;
 import junit.framework.TestListener;
+import junit.framework.TestResult;
 import junit.framework.TestSuite;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 
 /**
  * A DexTestRunner runs tests by name from a given list of JARs,
@@ -54,12 +52,18 @@ class DexTestRunner extends AndroidTestRunner {
     private final List<TestListener> mTestListeners = new ArrayList<>();
     private final DexClassLoader mLoader;
 
-    /* State */
+    /* TestRunner State */
     protected TestResult mTestResult = new TestResult();
     protected List<TestCase> mTestCases = new ArrayList<>();
     protected String mTestClassName;
     protected Instrumentation mInstrumentation;
     protected Scheduler mScheduler;
+
+    /** The thread running the current test. */
+    private Thread mTestThread;
+
+    /** The exception from the current test, if any. */
+    private Exception mTestException;
 
     /* Field initialization */
     DexTestRunner(Instrumentation instrumentation, Scheduler scheduler, List<String> jars) {
@@ -78,19 +82,50 @@ class DexTestRunner extends AndroidTestRunner {
     }
 
     @Override
-    public void runTest(TestResult testResult) {
+    public synchronized void runTest(final TestResult testResult) {
+        mTestException = null;
         mTestResult = testResult;
 
-        for (TestCase testCase : mScheduler.apply(mTestCases)) {
-            try {
-                testCase.run(testResult);
-            } catch (Exception ex) {
-                onError(testCase, ex);
+        for (final TestCase testCase : mScheduler.apply(mTestCases)) {
+            // A Runnable that calls testCase::run. The reasoning behind using a thread here
+            // is that AuptTestRunner should be able to interrupt it (via killTest) if it runs
+            // too long; and interrupting the main thread here without actually exiting is tricky.
+            Runnable runnable =
+                    new Runnable() {
+                        @Override public void run() {
+                            try {
+                                testCase.run(testResult);
+                            } catch (Exception e) {
+                                // If we got an actual test exception, propagate it outside
+                                // this thread.
+                                if (!(e instanceof InterruptedException)) {
+                                    mTestException = e;
+                                }
+                            }
+                        }
+                    };
 
-                if (ex instanceof AuptTerminator) {
-                    throw ex;
+            try {
+                // Run our test-running thread and wait on it.
+                mTestThread = new Thread(runnable);
+                mTestThread.start();
+                mTestThread.join();
+            } catch (InterruptedException e) {
+                if (mTestException != null) {
+                    // We got an actual exception, so tell our listeners.
+                    onError(testCase, e);
                 }
+
+                // Otherwise, our main thread was interrupted, so just skip.
             }
+        }
+    }
+
+    /** Interrupt the current test. */
+    void killTest(Exception e) {
+        if (mTestThread != null) {
+            mTestException = e;
+            mTestThread.interrupt();
         }
     }
 
