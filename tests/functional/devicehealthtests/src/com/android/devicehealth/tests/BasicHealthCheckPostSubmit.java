@@ -21,18 +21,14 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
-import android.platform.test.annotations.GlobalPresubmit;
-
 /**
- * Tests used for basic device health validation after the device boot is completed. This test class
- * can be used to add more tests in the future for additional basic device health validation after
- * the device boot is completed. This test is used for global presubmit, any dropbox label checked
- * showing failures must be resolved immediately, or have flaky ones moved into
- * {@link BasicHealthCheckPostSubmit} instead.
+ * Tests used for basic device health validation (ex: system app crash or system app
+ * native crash) after the device boot is completed. This test class can be used to
+ * add more tests in the future for additional basic device health validation
+ * after the device boot is completed.
  */
-@GlobalPresubmit
 @RunWith(Parameterized.class)
-public class BasicHealthCheck extends HealthCheckBase {
+public class BasicHealthCheckPostSubmit extends HealthCheckBase {
 
     @Parameter
     public String mDropboxLabel;
@@ -40,10 +36,9 @@ public class BasicHealthCheck extends HealthCheckBase {
     @Parameters(name = "{0}")
     public static String[] dropboxLabels() {
         return new String[] {
-                "system_server_crash",
-                "system_server_native_crash",
-                "system_server_anr",
-                "system_app_native_crash",
+                "system_app_crash", // b/35314145
+                "system_app_anr", // b/35626956
+                "SYSTEM_TOMBSTONE", // b/36066697
                 };
     }
 
