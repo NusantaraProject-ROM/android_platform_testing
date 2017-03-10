@@ -70,4 +70,5 @@ native_tests := \
     time-unit-tests \
     wificond_unit_test \
     wifilogd_unit_test \
-    ziparchive-tests
+    ziparchive-tests \
+    SurfaceFlinger_test
