@@ -53,6 +53,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Ultra-fancy TestRunner to use when running AUPT: supports
@@ -115,7 +116,6 @@ public class AuptTestRunner extends InstrumentationTestRunner {
 
         // Parse out primitive parameters
         mIterations = parseLongParam("iterations", 1);
-        mGenerateAnr = parseBoolParam("generateANR", false);
         mRecordMeminfo = parseBoolParam("record_meminfo", false);
         mDumpheapEnabled = parseBoolParam("enableDumpheap", false);
         mDumpheapThreshold = parseLongParam("dumpheapThreshold", 200 * 1024 * 1024);
@@ -186,7 +186,7 @@ public class AuptTestRunner extends InstrumentationTestRunner {
                 mResultsDirectory, this);
 
         // Make our TestRunner and make sure we injectInstrumentation.
-        mRunner = new DexTestRunner(this, mScheduler, mJars) {
+        mRunner = new DexTestRunner(this, mScheduler, mJars, mTestCaseTimeout) {
             @Override
             public void runTest(TestResult result) {
                 for (TestCase test: mTestCases) {
@@ -204,7 +204,7 @@ public class AuptTestRunner extends InstrumentationTestRunner {
         mRunner.addTestListener(new PidChecker());
         mRunner.addTestListener(new TimeoutStackDumper());
         mRunner.addTestListener(new MemInfoDumper());
-        mRunner.addTestListener(new TestTimeout());
+        mRunner.addTestListenerIf(parseBoolParam("generateANR", false), new ANRTrigger());
         mRunner.addTestListenerIf(parseBoolParam("quitOnError", false), new QuitOnErrorListener());
         mRunner.addTestListenerIf(parseBoolParam("checkBattery", false), new BatteryChecker());
         mRunner.addTestListenerIf(parseBoolParam("screenshots", false), new Screenshotter());
@@ -286,17 +286,17 @@ public class AuptTestRunner extends InstrumentationTestRunner {
      *
      * Primarily meant to work around Java 7's lack of interface-default methods.
      */
-    private abstract class AuptListener implements TestListener {
-        /** Called when a test throws an exception */
+    abstract static class AuptListener implements TestListener {
+        /** Called when a test throws an exception. */
         public void addError(Test test, Throwable t) {}
 
-        /** Called when a test fails */
+        /** Called when a test fails. */
         public void addFailure(Test test, AssertionFailedError t) {}
 
-        /** Called whenever a test ends */
+        /** Called whenever a test ends. */
         public void endTest(Test test) {}
 
-        /** Called whenever a test begins */
+        /** Called whenever a test begins. */
         public void startTest(Test test) {}
     }
 
@@ -591,37 +591,30 @@ public class AuptTestRunner extends InstrumentationTestRunner {
 
         @Override
         public void addError(Test test, Throwable t) {
-            if (t instanceof TestTimeout.TimeoutException) {
+            if (t instanceof TimeoutException) {
                 Log.d("THREAD_DUMP", getStackTraces());
             }
         }
     }
 
-    /**
-     * Generates TimeoutExceptions (and/or ANRs) when a test takes too long.
-     */
-    private class TestTimeout extends AuptListener {
-        private Thread mTimeBomb;
-
+    /** Generates ANRs when a test takes too long. */
+    private class ANRTrigger extends AuptListener {
         @Override
-        public void startTest(Test test) {
-            mTimeBomb = new Thread(new TimeBomb(test));
-        }
+        public void addError(Test test, Throwable t) {
+            if (t instanceof TimeoutException) {
+                Context ctx = getTargetContext();
+                Log.d(LOG_TAG, "About to induce artificial ANR for debugging");
+                ctx.startService(new Intent(ctx, AnrGenerator.class));
 
-        @Override
-        public void endTest(Test test) {
-            try {
-                mTimeBomb.interrupt();
-                mTimeBomb.join();
-            } catch (InterruptedException ex) {
-                // Eat joining interruptions: if the runner got interrupted, our test is over
+                try {
+                    Thread.sleep(ANR_DELAY);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException("Interrupted while waiting for AnrGenerator...");
+                }
             }
         }
 
-        /* Supports for test timeout */
-
-        public class TimeoutException extends RuntimeException {}
-
+        /** Service that hangs to trigger an ANR. */
         private class AnrGenerator extends Service {
             @Override
             public IBinder onBind(Intent intent) {
@@ -639,43 +632,6 @@ public class AuptTestRunner extends InstrumentationTestRunner {
                 Log.i(LOG_TAG, "service hang finished -- stopping and returning");
                 stopSelf();
                 return START_NOT_STICKY;
-            }
-
-            public void trigger() {
-                Context ctx = getTargetContext();
-
-                Log.d(LOG_TAG, "About to induce artificial ANR for debugging");
-                ctx.startService(new Intent(ctx, AnrGenerator.class));
-
-                try {
-                    Thread.sleep(ANR_DELAY);
-                } catch (InterruptedException e) {
-                    // ignore
-                    Log.d(LOG_TAG, "");
-                    throw new RuntimeException("Interrupted while waiting for AnrGenerator...");
-                }
-            }
-        }
-
-        private class TimeBomb implements Runnable {
-            private final Test mTest;
-
-            TimeBomb (Test test) {
-                mTest = test;
-            }
-
-            @Override
-            public void run() {
-                try {
-                    Thread.sleep(mTestCaseTimeout);
-
-                    if (mGenerateAnr) {
-                        new AnrGenerator().trigger();
-                    }
-
-                    mRunner.killTest(new TimeoutException());
-                    Log.d(LOG_TAG, "AuptTestRunner timed out during test " + mTest.toString());
-                } catch (InterruptedException e) { /* Drop out -- this is what we want */}
             }
         }
     }
