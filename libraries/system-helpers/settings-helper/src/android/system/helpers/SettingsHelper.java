@@ -350,7 +350,14 @@ public class SettingsHelper {
             Pattern settingName, String internalName, boolean doLaunch) throws Exception {
         String onSettingBaseVal = getStringSetting(type, internalName);
         if (onSettingBaseVal == null) {
-            onSettingBaseVal = "0";
+            // Per bug b/35717943 default for charging sounds is ON
+            // So if null, the value should be set to 1.
+            if (settingName.matcher("Charging sounds").matches()) {
+                onSettingBaseVal = "1";
+            }
+            else {
+                onSettingBaseVal = "0";
+            }
         }
         int onSetting = Integer.parseInt(onSettingBaseVal);
         Log.d(TAG, "On Setting value is : " + onSetting);
