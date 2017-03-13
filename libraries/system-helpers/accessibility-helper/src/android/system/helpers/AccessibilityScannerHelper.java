@@ -272,7 +272,9 @@ public class AccessibilityScannerHelper {
             Rect bounds = btn.getVisibleBounds();
             int origX = bounds.centerX();
             int origY = bounds.centerY();
-            if (locX != origX || locY != origY) {
+            int buttonWidth = bounds.width();
+            int buttonHeight = bounds.height();
+            if (Math.abs(locX - origX) > buttonWidth || Math.abs(locY - origY) > buttonHeight) {
                 btn.drag(new Point(locX, locY));
             }
             Thread.sleep(SCANNER_WAIT_TIME);
