@@ -264,7 +264,7 @@ public class AccessibilityScannerHelper {
      * @param locY target location y-axis
      * @throws UiObjectNotFoundException
      */
-    private void moveScannerCheckButton(int locX, int locY)
+    public void moveScannerCheckButton(int locX, int locY)
             throws UiObjectNotFoundException, InterruptedException {
         int tries = 2;
         while (tries-- > 0) {
