@@ -25,6 +25,7 @@ import android.support.test.metricshelper.MetricsAsserts;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.Until;
+import android.telecom.Log;
 import android.test.InstrumentationTestCase;
 import android.test.suitebuilder.annotation.MediumTest;
 import android.text.TextUtils;
@@ -33,6 +34,9 @@ import com.android.internal.logging.nano.MetricsProto.MetricsEvent;
 
 import java.util.Queue;
 
+/**
+ * runtest --path platform_testing/tests/functional/systemmetrics/
+ */
 public class AppStartTests extends InstrumentationTestCase {
     private static final String LOG_TAG = AppStartTests.class.getSimpleName();
     private static final String SETTINGS_PACKAGE = "com.android.settings";
@@ -61,14 +65,19 @@ public class AppStartTests extends InstrumentationTestCase {
     }
 
     @MediumTest
-    public void testStartAop() throws Exception {
+    public void testStartApp() throws Exception {
         Context context = getInstrumentation().getContext();
         Intent intent = context.getPackageManager().getLaunchIntentForPackage(SETTINGS_PACKAGE);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK); // Clear out any previous instances
+
+        // Clear out any previous instances
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
 
         assertNotNull("component name is null", intent.getComponent());
-        String shortName = intent.getComponent().flattenToShortString();
-        assertTrue("shortName is empty", !TextUtils.isEmpty(shortName));
+        String className = intent.getComponent().getClassName();
+        String packageName = intent.getComponent().getPackageName();
+        assertTrue("className is empty", !TextUtils.isEmpty(className));
+        assertTrue("packageName is empty", !TextUtils.isEmpty(packageName));
+
 
         context.startActivity(intent);
         mDevice.wait(Until.hasObject(By.pkg(SETTINGS_PACKAGE).depth(0)), LONG_TIMEOUT_MS);
@@ -79,22 +88,32 @@ public class AppStartTests extends InstrumentationTestCase {
                 new LogMaker(MetricsEvent.APP_TRANSITION));
         boolean found = false;
         for (LogMaker log : startLogs) {
-            Object componentObject = log.getTaggedData(MetricsEvent.APP_TRANSITION_COMPONENT_NAME);
-            if (shortName.equals(componentObject)) {
+            String actualClassName = (String) log.getTaggedData(
+                    MetricsEvent.APP_TRANSITION_ACTIVITY_NAME);
+            String actualPackageName = log.getPackageName();
+            if (className.equals(actualClassName) && packageName.equals(actualPackageName)) {
                 found = true;
-                // not sure how to force this to cold/warm for the test
-                assertNotNull("log should have an opinion about cold/warm",
-                        log.getTaggedData(MetricsEvent.APP_TRANSITION_PROCESS_RUNNING));
-
                 int startUptime = ((Number)
                         log.getTaggedData(MetricsEvent.APP_TRANSITION_DEVICE_UPTIME_SECONDS))
                         .intValue();
+                assertTrue("must be either cold or warm launch",
+                        MetricsEvent.TYPE_TRANSITION_COLD_LAUNCH == log.getType()
+                                || MetricsEvent.TYPE_TRANSITION_WARM_LAUNCH == log.getType());
                 assertTrue("reported uptime should be after the app was started",
                         mPreUptime <= startUptime);
                 assertTrue("reported uptime should be before assertion time",
                         startUptime <= postUptime);
+                assertNotNull("log should have delay",
+                        log.getTaggedData(MetricsEvent.APP_TRANSITION_DELAY_MS));
+                assertEquals("transition should be started because of starting window",
+                        1 /* APP_TRANSITION_STARTING_WINDOW */, log.getSubtype());
+                assertNotNull("log should have starting window delay",
+                        log.getTaggedData(MetricsEvent.APP_TRANSITION_STARTING_WINDOW_DELAY_MS));
+                assertNotNull("log should have windows drawn delay",
+                        log.getTaggedData(MetricsEvent.APP_TRANSITION_WINDOWS_DRAWN_DELAY_MS));
             }
         }
-        assertTrue("did not find the app start start log for: " + shortName, found);
+        assertTrue("did not find the app start start log for: "
+                + intent.getComponent().flattenToShortString(), found);
     }
 }
