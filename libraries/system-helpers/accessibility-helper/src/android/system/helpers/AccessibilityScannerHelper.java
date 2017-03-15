@@ -79,11 +79,7 @@ public class AccessibilityScannerHelper {
      */
     public void runScanner(String resultPrefix) throws Exception {
         clickScannerCheck();
-        if (testPass() == true) {
-            Log.i(RESULT_TAG, String.format("%s: PASS", resultPrefix));
-        } else {
-            logScannerResult(resultPrefix);
-        }
+        logScannerResult(resultPrefix);
     }
 
     /**
@@ -230,7 +226,12 @@ public class AccessibilityScannerHelper {
      * @throws Exception
      */
     public void logScannerResult(String pageName) throws Exception {
-        Log.i(RESULT_TAG, String.format("%s: %s suggestions!", pageName, getNumberOfSuggestions()));
+        int res = getNumberOfSuggestions();
+        if (res > 0) {
+            Log.i(RESULT_TAG, String.format("%s: %s suggestions!", pageName, res));
+        } else if (res == 0) {
+            Log.i(RESULT_TAG, String.format("%s: Pass.", pageName));
+        }
     }
 
     /**
@@ -328,11 +329,10 @@ public class AccessibilityScannerHelper {
     }
 
     /**
-     * Check if test pass with no suggestions.
-     *
-     * @return true/false
-     * @throws UiObjectNotFoundException
+     * Check if no suggestion.
+     * @deprecated Use {@link #getNumberOfSuggestions} instead
      */
+    @Deprecated
     private Boolean testPass() throws UiObjectNotFoundException {
         UiObject2 txtView = getToolBarTextView();
         return txtView.getText().equals("No suggestions");
@@ -345,6 +345,9 @@ public class AccessibilityScannerHelper {
      * @throws UiObjectNotFoundException
      */
     private UiObject2 getToolBarTextView() throws UiObjectNotFoundException {
+        if (!mDevice.wait(Until.hasObject(By.pkg(ACCESSIBILITY_SCANNER_PACKAGE)), SHORT_TIMEOUT)) {
+            throw new UiObjectNotFoundException("Scanner app not active.");
+        }
         UiObject2 toolBar = mDevice.wait(Until.findObject(
                 By.res(ACCESSIBILITY_SCANNER_PACKAGE, "toolbar")), SHORT_TIMEOUT);
         if (toolBar != null) {
@@ -373,15 +376,21 @@ public class AccessibilityScannerHelper {
      * @throws UiObjectNotFoundException
      */
     private int getNumberOfSuggestions() throws UiObjectNotFoundException {
-        if (testPass() == true) return 0;
-        UiObject2 txtView = getToolBarTextView();
-        if (txtView != null) {
-            String result = txtView.getText();
-            String str = result.split("\\s+")[0];
-            return Integer.parseInt(str);
-        } else {
-            throw new UiObjectNotFoundException("Fail to find toolbar text view");
+        int tries = 2; // retries
+        while (tries-- > 0) {
+            UiObject2 txtView = getToolBarTextView();
+            if (txtView != null) {
+                String result = txtView.getText();
+                if (result.equals("No suggestions")) {
+                    return 0;
+                } else {
+                    String str = result.split("\\s+")[0];
+                    return Integer.parseInt(str);
+                }
+            }
         }
+        Log.i(LOG_TAG, String.format("Error in getting number of suggestions."));
+        return -1;
     }
 
     /**
