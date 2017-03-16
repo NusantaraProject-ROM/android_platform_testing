@@ -32,6 +32,13 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * A DexTestRunner runs tests by name from a given list of JARs,
@@ -44,6 +51,8 @@ import java.util.List;
  * before attempting to runTest.
  */
 class DexTestRunner extends AndroidTestRunner {
+    private static final String LOG_TAG = DexTestRunner.class.getSimpleName();
+
     /* Constants */
     static final String DEFAULT_JAR_PATH = "/data/local/tmp/";
     static final String DEX_OPT_PATH = "dex-test-opt";
@@ -51,6 +60,7 @@ class DexTestRunner extends AndroidTestRunner {
     /* Private fields */
     private final List<TestListener> mTestListeners = new ArrayList<>();
     private final DexClassLoader mLoader;
+    private final long mTimeoutMillis;
 
     /* TestRunner State */
     protected TestResult mTestResult = new TestResult();
@@ -59,19 +69,24 @@ class DexTestRunner extends AndroidTestRunner {
     protected Instrumentation mInstrumentation;
     protected Scheduler mScheduler;
 
-    /** The thread running the current test. */
-    private Thread mTestThread;
+    /** A temporary ExecutorService to manage running the current test. */
+    private ExecutorService mExecutorService;
 
-    /** The exception from the current test, if any. */
-    private Exception mTestException;
+    /** The current test. */
+    private TestCase mTestCase;
 
     /* Field initialization */
-    DexTestRunner(Instrumentation instrumentation, Scheduler scheduler, List<String> jars) {
+    DexTestRunner(
+            Instrumentation instrumentation,
+            Scheduler scheduler,
+            List<String> jars,
+            long testTimeoutMillis) {
         super();
 
         mInstrumentation = instrumentation;
         mScheduler = scheduler;
         mLoader = makeLoader(jars);
+        mTimeoutMillis = testTimeoutMillis;
     }
 
     /* Main methods */
@@ -83,49 +98,49 @@ class DexTestRunner extends AndroidTestRunner {
 
     @Override
     public synchronized void runTest(final TestResult testResult) {
-        mTestException = null;
         mTestResult = testResult;
 
         for (final TestCase testCase : mScheduler.apply(mTestCases)) {
-            // A Runnable that calls testCase::run. The reasoning behind using a thread here
+            mExecutorService = Executors.newSingleThreadExecutor();
+            mTestCase = testCase;
+
+            // A Future that calls testCase::run. The reasoning behind using a thread here
             // is that AuptTestRunner should be able to interrupt it (via killTest) if it runs
             // too long; and interrupting the main thread here without actually exiting is tricky.
-            Runnable runnable =
-                    new Runnable() {
-                        @Override public void run() {
-                            try {
-                                testCase.run(testResult);
-                            } catch (Exception e) {
-                                // If we got an actual test exception, propagate it outside
-                                // this thread.
-                                if (!(e instanceof InterruptedException)) {
-                                    mTestException = e;
+            Future<TestResult> result =
+                    mExecutorService.submit(
+                            new Callable<TestResult>() {
+                                @Override
+                                public TestResult call() throws Exception {
+                                    testCase.run(testResult);
+                                    return testResult;
                                 }
-                            }
-                        }
-                    };
+                            });
 
             try {
                 // Run our test-running thread and wait on it.
-                mTestThread = new Thread(runnable);
-                mTestThread.start();
-                mTestThread.join();
+                result.get(mTimeoutMillis, TimeUnit.MILLISECONDS);
+            } catch (TimeoutException e) {
+                killTest(e);
+            } catch (ExecutionException e) {
+                onError(testCase, e.getCause());
             } catch (InterruptedException e) {
-                if (mTestException != null) {
-                    // We got an actual exception, so tell our listeners.
-                    onError(testCase, e);
-                }
-
-                // Otherwise, our main thread was interrupted, so just skip.
+                Thread.currentThread().interrupt();
+            } finally {
+                mExecutorService.shutdownNow();
+                mTestCase = null;
             }
         }
     }
 
-    /** Interrupt the current test. */
+    /** Interrupt the current test with the given exception. */
     void killTest(Exception e) {
-        if (mTestThread != null) {
-            mTestException = e;
-            mTestThread.interrupt();
+        if (mTestCase != null) {
+            // First, tell our listeners.
+            onError(mTestCase, e);
+
+            // Kill the test.
+            mExecutorService.shutdownNow();
         }
     }
 
