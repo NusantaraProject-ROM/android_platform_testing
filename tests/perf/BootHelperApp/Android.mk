@@ -23,5 +23,8 @@ LOCAL_SRC_FILES := $(call all-java-files-under, src)
 LOCAL_PACKAGE_NAME := BootHelperApp
 LOCAL_JAVA_LIBRARIES := android.test.runner
 LOCAL_STATIC_JAVA_LIBRARIES := android-support-test ub-uiautomator
+
+LOCAL_COMPATIBILITY_SUITE := device-tests
+
 include $(BUILD_PACKAGE)
 

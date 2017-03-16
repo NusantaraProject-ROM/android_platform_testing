@@ -23,4 +23,6 @@ LOCAL_STATIC_JAVA_LIBRARIES := ub-janktesthelper ub-uiautomator timeresult-helpe
 
 LOCAL_SDK_VERSION := 21
 
+LOCAL_COMPATIBILITY_SUITE := device-tests
+
 include $(BUILD_PACKAGE)

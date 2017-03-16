@@ -22,5 +22,7 @@ LOCAL_SRC_FILES := \
 LOCAL_MODULE := hello_world_test
 LOCAL_MODULE_TAGS := tests
 
+LOCAL_COMPATIBILITY_SUITE := device-tests
+
 include $(BUILD_NATIVE_TEST)
 

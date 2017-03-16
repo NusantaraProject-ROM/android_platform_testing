@@ -23,4 +23,6 @@ LOCAL_PACKAGE_NAME := HelloWorldTests
 LOCAL_STATIC_JAVA_LIBRARIES := android-support-test
 LOCAL_CERTIFICATE := platform
 
+LOCAL_COMPATIBILITY_SUITE := device-tests
+
 include $(BUILD_PACKAGE)
