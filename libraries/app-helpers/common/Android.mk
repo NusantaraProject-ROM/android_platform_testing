@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2017 The Android Open Source Project
+# Copyright (C) 2016 The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,9 +16,13 @@
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE := tv-app-helper-base
-LOCAL_STATIC_JAVA_LIBRARIES := app-helpers-common dpad-util
-LOCAL_JAVA_LIBRARIES := ub-uiautomator launcher-helper-lib
+LOCAL_MODULE := app-helpers-common
+LOCAL_STATIC_JAVA_LIBRARIES := app-helpers-base
+LOCAL_JAVA_LIBRARIES := ub-uiautomator
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
 include $(BUILD_STATIC_JAVA_LIBRARY)
+
+######################################
+
+include $(call all-makefiles-under, $(LOCAL_PATH))

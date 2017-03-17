@@ -17,8 +17,7 @@ LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := auto-app-helper-base
-LOCAL_STATIC_JAVA_LIBRARIES := base-app-helpers
-LOCAL_JAVA_LIBRARIES := launcher-helper-lib
+LOCAL_STATIC_JAVA_LIBRARIES := app-helpers-common
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
 include $(BUILD_STATIC_JAVA_LIBRARY)
