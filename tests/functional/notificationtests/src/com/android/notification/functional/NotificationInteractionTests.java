@@ -118,7 +118,6 @@ public class NotificationInteractionTests extends InstrumentationTestCase {
         assertTrue(String.format("%s notifications have not been cleared", sbns.length),
                 sbns.length == currentSbns);
 
-        mMetricsReader.read(0);
         MetricsAsserts.assertHasVisibilityLog("missing panel revealed log", mMetricsReader,
                 MetricsEvent.NOTIFICATION_PANEL, true);
         MetricsAsserts.assertHasLog("missing notification visibility log", mMetricsReader,
@@ -154,7 +153,6 @@ public class NotificationInteractionTests extends InstrumentationTestCase {
         if (mDevice.openNotification()) {
             Thread.sleep(LONG_TIMEOUT);
         }
-        mMetricsReader.read(0);
         MetricsAsserts.assertHasVisibilityLog("missing panel revealed log", mMetricsReader,
                 MetricsEvent.NOTIFICATION_PANEL, true);
         Queue<LogMaker> firstLog = MetricsAsserts.findMatchingLogs(mMetricsReader,
@@ -194,7 +192,6 @@ public class NotificationInteractionTests extends InstrumentationTestCase {
             Thread.sleep(LONG_TIMEOUT);
         }
 
-        mMetricsReader.read(0);
         MetricsAsserts.assertHasVisibilityLog("missing panel hidden log", mMetricsReader,
                 MetricsEvent.NOTIFICATION_PANEL, false);
         firstLog = MetricsAsserts.findMatchingLogs(mMetricsReader,
@@ -231,7 +228,6 @@ public class NotificationInteractionTests extends InstrumentationTestCase {
         }
         Thread.sleep(SHORT_TIMEOUT);
         // top item is always expanded
-        mMetricsReader.read(0);
         MetricsAsserts.assertHasLog("missing notification expansion log", mMetricsReader,
                 new LogMaker(MetricsEvent.NOTIFICATION_ITEM)
                         .setType(MetricsEvent.TYPE_DETAIL)
@@ -256,7 +252,6 @@ public class NotificationInteractionTests extends InstrumentationTestCase {
         assertNotNull("could not find second action button", target);
         target.click();
         Thread.sleep(SHORT_TIMEOUT);
-        mMetricsReader.read(0);
         MetricsAsserts.assertHasLog("missing notification action 1 click log", mMetricsReader,
                 new LogMaker(MetricsEvent.NOTIFICATION_ITEM_ACTION)
                         .setType(MetricsEvent.TYPE_ACTION)
@@ -270,7 +265,6 @@ public class NotificationInteractionTests extends InstrumentationTestCase {
         assertNotNull("could not find content click target", target);
         target.click();
         Thread.sleep(SHORT_TIMEOUT);
-        mMetricsReader.read(0);
         MetricsAsserts.assertHasLog("missing notification content click log", mMetricsReader,
                 new LogMaker(MetricsEvent.NOTIFICATION_ITEM)
                         .setType(MetricsEvent.TYPE_ACTION)
