@@ -84,7 +84,6 @@ public class AppStartTests extends InstrumentationTestCase {
 
         int postUptime = (int) (SystemClock.uptimeMillis() / 1000);
 
-        mMetricsReader.read(0);
         Queue<LogMaker> startLogs = MetricsAsserts.findMatchingLogs(mMetricsReader,
                 new LogMaker(MetricsEvent.APP_TRANSITION));
         boolean found = false;

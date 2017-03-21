@@ -36,7 +36,7 @@ public class MetricsAsserts {
      * Assert unless there is a log with the matching category and with ACTION type.
      */
     public static void assertHasActionLog(String message, MetricsReader reader, int view) {
-        reader.reset();
+        reader.read(0);
         assertHasActionLog(message, new ReaderQueue(reader), view);
     }
     /**
@@ -54,7 +54,7 @@ public class MetricsAsserts {
      */
     public static void assertHasVisibilityLog(String message, MetricsReader reader,
             int view, boolean visible) {
-        reader.reset();
+        reader.read(0);
         assertHasVisibilityLog(message, new ReaderQueue(reader), view, visible);
     }
 
@@ -73,7 +73,7 @@ public class MetricsAsserts {
      * @returns logs that have at least all the matching fields in the template.
      */
     public static Queue<LogMaker> findMatchingLogs(MetricsReader reader, LogMaker template) {
-        reader.reset();
+        reader.read(0);
         return findMatchingLogs(new ReaderQueue(reader), template);
     }
 
@@ -98,7 +98,7 @@ public class MetricsAsserts {
      * Assert unless there is at least one  log that matches the template.
      */
     public static void assertHasLog(String message, MetricsReader reader, LogMaker expected) {
-        reader.reset();
+        reader.read(0);
         assertHasLog(message, new ReaderQueue(reader), expected);
     }
 
