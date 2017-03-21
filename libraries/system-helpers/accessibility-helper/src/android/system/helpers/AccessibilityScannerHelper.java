@@ -25,6 +25,8 @@ import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
+import android.support.test.uiautomator.UiScrollable;
+import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.Until;
 import android.util.Log;
 
@@ -78,8 +80,18 @@ public class AccessibilityScannerHelper {
      * @throws Exception
      */
     public void runScanner(String resultPrefix) throws Exception {
-        clickScannerCheck();
-        logScannerResult(resultPrefix);
+        int tries = 3; // retries
+        while (tries-- > 0) {
+            try {
+                clickScannerCheck();
+                logScannerResult(resultPrefix);
+                break;
+            } catch (UiObjectNotFoundException e) {
+                continue;
+            } catch (Exception e) {
+                throw e;
+            }
+        }
     }
 
     /**
@@ -231,6 +243,8 @@ public class AccessibilityScannerHelper {
             Log.i(RESULT_TAG, String.format("%s: %s suggestions!", pageName, res));
         } else if (res == 0) {
             Log.i(RESULT_TAG, String.format("%s: Pass.", pageName));
+        } else {
+            throw new UiObjectNotFoundException("Fail to get number of suggestions.");
         }
     }
 
@@ -345,15 +359,13 @@ public class AccessibilityScannerHelper {
      * @throws UiObjectNotFoundException
      */
     private UiObject2 getToolBarTextView() throws UiObjectNotFoundException {
-        if (!mDevice.wait(Until.hasObject(By.pkg(ACCESSIBILITY_SCANNER_PACKAGE)), SHORT_TIMEOUT)) {
-            throw new UiObjectNotFoundException("Scanner app not active.");
-        }
         UiObject2 toolBar = mDevice.wait(Until.findObject(
                 By.res(ACCESSIBILITY_SCANNER_PACKAGE, "toolbar")), SHORT_TIMEOUT);
         if (toolBar != null) {
             return toolBar.findObject(By.clazz(AccessibilityHelper.TEXT_VIEW));
         } else {
-            throw new UiObjectNotFoundException("Fail to find text view from toolbar.");
+            throw new UiObjectNotFoundException(
+                    "Failed to find Scanner tool bar. Scanner app might not be active.");
         }
     }
 
@@ -399,12 +411,18 @@ public class AccessibilityScannerHelper {
      * @param appName
      * @return
      */
-    private UiObject2 getShareApp(String appName) {
+    private UiObject2 getShareApp(String appName) throws UiObjectNotFoundException {
         UiObject2 shareBtn = mDevice.wait(Until.findObject(By.res(ACCESSIBILITY_SCANNER_PACKAGE,
                 "action_share_results")), SHORT_TIMEOUT);
         if (shareBtn != null) {
             shareBtn.click();
             mDevice.wait(Until.hasObject(By.res("android:id/resolver_list")), SHORT_TIMEOUT * 3);
+            UiScrollable scrollable = new UiScrollable(
+                    new UiSelector().className("android.widget.ScrollView"));
+            int tries = 3;
+            while (!mDevice.hasObject(By.text(appName)) && tries-- > 0) {
+                scrollable.scrollForward();
+            }
             return mDevice.findObject(By.text(appName));
         }
         return null;
