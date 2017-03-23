@@ -323,9 +323,8 @@ public class AccessibilityScannerHelper {
      * Return scanner check button.
      *
      * @return UiObject2
-     * @throws UiObjectNotFoundException
      */
-    private UiObject2 getScannerCheckBtn() throws UiObjectNotFoundException {
+    private UiObject2 getScannerCheckBtn() {
         return mDevice.findObject(By.res(ACCESSIBILITY_SCANNER_PACKAGE, CHECK_BUTTON_RES_ID));
     }
 
@@ -426,5 +425,17 @@ public class AccessibilityScannerHelper {
             return mDevice.findObject(By.text(appName));
         }
         return null;
+    }
+
+    /**
+     * Return if scanner enabled by check if home screen has check button.
+     *
+     * @return true/false
+     */
+    public boolean ifScannerEnabled() throws InterruptedException {
+        mDevice.pressHome();
+        Thread.sleep(SHORT_TIMEOUT);
+        mDevice.waitForIdle();
+        return getScannerCheckBtn() != null;
     }
 }
