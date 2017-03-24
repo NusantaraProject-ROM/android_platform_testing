@@ -57,6 +57,7 @@ native_tests := \
     simpleperf_cpu_hotplug_test \
     simpleperf_unit_test \
     time-unit-tests \
+    update_engine_unittests \
     wificond_unit_test \
     wifilogd_unit_test \
     ziparchive-tests
