@@ -69,6 +69,7 @@ native_tests := \
     simpleperf_unit_test \
     syscall_filter_unittest_gtest \
     time-unit-tests \
+    update_engine_unittests \
     wificond_unit_test \
     wifilogd_unit_test \
     ziparchive-tests \
