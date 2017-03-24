@@ -89,7 +89,7 @@ public class AppStartTests extends InstrumentationTestCase {
         boolean found = false;
         for (LogMaker log : startLogs) {
             String actualClassName = (String) log.getTaggedData(
-                    MetricsEvent.APP_TRANSITION_ACTIVITY_NAME);
+                    MetricsEvent.FIELD_CLASS_NAME);
             String actualPackageName = log.getPackageName();
             if (className.equals(actualClassName) && packageName.equals(actualPackageName)) {
                 found = true;
