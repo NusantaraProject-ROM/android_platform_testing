@@ -134,11 +134,11 @@ public abstract class AbstractStandardAppHelper implements IStandardAppHelper {
     }
 
     @Override
-    public void captureScreenshot(String name) throws IOException {
+    public boolean captureScreenshot(String name) throws IOException {
         File scrOut = File.createTempFile(name, ".png", getScreenshotDirectory());
         File uixOut = File.createTempFile(name, ".uix", getScreenshotDirectory());
-        mDevice.takeScreenshot(scrOut);
         mDevice.dumpWindowHierarchy(uixOut);
+        return mDevice.takeScreenshot(scrOut);
     }
 
     private static File getScreenshotDirectory() {
