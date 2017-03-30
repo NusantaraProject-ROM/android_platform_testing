@@ -83,5 +83,5 @@ public interface IStandardAppHelper {
      * @throws IOException if there is a capture failure
      * @throws RuntimeException if creating the screenshot directory fails.
      */
-    abstract void captureScreenshot(String name) throws IOException;
+    abstract boolean captureScreenshot(String name) throws IOException;
 }
