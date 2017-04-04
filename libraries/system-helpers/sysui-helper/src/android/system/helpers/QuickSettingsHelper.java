@@ -20,9 +20,9 @@ import android.app.Instrumentation;
 import android.content.ContentResolver;
 import android.graphics.Point;
 import android.provider.Settings;
+import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
-import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.Until;
 
 import org.junit.Assert;
@@ -45,7 +45,7 @@ public class QuickSettingsHelper {
     }
 
     public enum QuickSettingDefaultTiles {
-        WIFI("Wi-Fi"), SIM("SIM"), DND("Do not disturb"), FLASHLIGHT("Flashlight"), SCREEN(
+        WIFI("Wi-Fi"), SIM("Mobile data"), DND("Do not disturb"), FLASHLIGHT("Flashlight"), SCREEN(
                 "Auto-rotate screen"), BLUETOOTH("Bluetooth"), AIRPLANE("Airplane mode"),
                 BRIGHTNESS("Display brightness");
 
