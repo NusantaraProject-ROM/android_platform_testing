@@ -16,10 +16,9 @@
 
 package android.system.helpers;
 
-import android.content.ComponentName;
-import android.system.helpers.ActivityHelper;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
+import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -38,10 +37,12 @@ import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.Until;
 import android.util.Log;
+import android.widget.Switch;
 import android.widget.TextView;
 
-import java.util.regex.Pattern;
 import junit.framework.Assert;
+
+import java.util.regex.Pattern;
 
 /**
  * Implement common helper methods for settings.
@@ -403,7 +404,8 @@ public class SettingsHelper {
         wifiManager.setWifiEnabled(!verifyOn);
         Thread.sleep(TIMEOUT * 3);
         if (isQuickSettings) {
-            launchAndClickSettings(isQuickSettings, null, By.descContains(WIFI));
+            launchAndClickSettings(isQuickSettings, null, By.descContains(WIFI)
+                    .clazz(Switch.class));
         } else {
             launchAndClickSettings(isQuickSettings, Settings.ACTION_WIFI_SETTINGS,
                     By.res(SETTINGS_PACKAGE, SWITCH_WIDGET).text(switchText));
@@ -428,7 +430,8 @@ public class SettingsHelper {
         boolean success = (verifyOn ? bluetoothAdapter.disable() : bluetoothAdapter.enable());
         Thread.sleep(TIMEOUT * 3);
         if (isQuickSettings) {
-            launchAndClickSettings(isQuickSettings, null, By.descContains(BLUETOOTH));
+            launchAndClickSettings(isQuickSettings, null,
+                    By.descContains(BLUETOOTH).clazz(Switch.class));
         } else {
             launchAndClickSettings(isQuickSettings, Settings.ACTION_BLUETOOTH_SETTINGS,
                     By.res(SETTINGS_PACKAGE, SWITCH_WIDGET).text(switchText));
