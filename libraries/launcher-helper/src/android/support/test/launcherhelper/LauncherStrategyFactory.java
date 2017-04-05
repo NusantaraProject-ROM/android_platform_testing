@@ -15,7 +15,6 @@
  */
 package android.support.test.launcherhelper;
 
-import android.app.Instrumentation;
 import android.support.test.uiautomator.UiDevice;
 import android.util.Log;
 
@@ -41,6 +40,7 @@ public class LauncherStrategyFactory {
         mInstanceMap = new HashMap<>();
         mKnownLauncherStrategies = new HashSet<>();
         registerLauncherStrategy(AospLauncherStrategy.class);
+        registerLauncherStrategy(AutoLauncherStrategy.class);
         registerLauncherStrategy(GoogleExperienceLauncherStrategy.class);
         registerLauncherStrategy(Launcher3Strategy.class);
         registerLauncherStrategy(NexusLauncherStrategy.class);
@@ -111,5 +111,18 @@ public class LauncherStrategyFactory {
             return (ILeanbackLauncherStrategy)launcherStrategy;
         }
         throw new RuntimeException("This LauncherStrategy is not for leanback launcher.");
+    }
+
+    /**
+     * Retrieves a {@link IAutoLauncherStrategy} that supports the current default auto
+     * launcher
+     * @return
+     */
+    public IAutoLauncherStrategy getAutoLauncherStrategy() {
+        ILauncherStrategy launcherStrategy = getLauncherStrategy();
+        if (launcherStrategy instanceof IAutoLauncherStrategy) {
+            return (IAutoLauncherStrategy) launcherStrategy;
+        }
+        throw new RuntimeException("This LauncherStrategy is not for auto launcher.");
     }
 }
