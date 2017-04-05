@@ -42,8 +42,10 @@ public class FailureTestWatcher extends TestWatcher {
     @Override
     protected void failed(Throwable e, Description description) {
         try {
-            mHelper.captureScreenshot(String.format(SCREENSHOT_NAME_FORMAT,
-                    description.getClassName(), description.getMethodName()));
+            if (!mHelper.captureScreenshot(String.format(SCREENSHOT_NAME_FORMAT,
+                    description.getClassName(), description.getMethodName()))) {
+                Log.e(LOG_TAG, "Failed to capture a screenshot for unknown reasons.");
+            }
         } catch (IOException ioe) {
             Log.e(LOG_TAG, "Failed to capture a screenshot.", ioe);
         }
