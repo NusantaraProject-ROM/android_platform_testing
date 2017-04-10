@@ -35,10 +35,10 @@ public abstract class AbstractPlayMusicHelper extends AbstractStandardAppHelper 
     /**
      * Setup expectations: PlayMusic is open and the navigation bar is visible.
      *
-     * This method will open the navigation bar, press "Listen Now".
+     * This method will open the navigation bar, press "Home".
      * This method blocks until the process is complete.
      */
-    public abstract void goToListenNow();
+    public abstract void goToHome();
 
 
     /**
