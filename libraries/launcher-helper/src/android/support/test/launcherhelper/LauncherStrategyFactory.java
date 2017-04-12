@@ -47,6 +47,7 @@ public class LauncherStrategyFactory {
         registerLauncherStrategy(PixelCLauncherStrategy.class);
         registerLauncherStrategy(LeanbackLauncherStrategy.class);
         registerLauncherStrategy(WearLauncherStrategy.class);
+        registerLauncherStrategy(TvLauncherStrategy.class);
     }
 
     /**
@@ -101,8 +102,8 @@ public class LauncherStrategyFactory {
     }
 
     /**
-     * Retrieves a {@link ILeanbackLauncherStrategy} that supports the current default leanback
-     * launcher
+     * Retrieves a {@link ILeanbackLauncherStrategy} that supports the current default launcher
+     * for TV. Either Leanback Launcher or new TV Launcher
      * @return
      */
     public ILeanbackLauncherStrategy getLeanbackLauncherStrategy() {
@@ -110,7 +111,7 @@ public class LauncherStrategyFactory {
         if (launcherStrategy instanceof ILeanbackLauncherStrategy) {
             return (ILeanbackLauncherStrategy)launcherStrategy;
         }
-        throw new RuntimeException("This LauncherStrategy is not for leanback launcher.");
+        throw new RuntimeException("This LauncherStrategy is suitable for TV.");
     }
 
     /**

@@ -22,7 +22,7 @@ import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 
 /**
- * Defines the common use cases a leanback launcher UI automation helper should fulfill.
+ * Defines the common use cases that any types of TV launcher UI automation helper should fulfill.
  * <p>Class will be instantiated by {@link LauncherStrategyFactory} based on current launcher
  * package, and a {@link UiDevice} instance will be provided via {@link #setUiDevice(UiDevice)}
  * method.
@@ -35,7 +35,7 @@ public interface ILeanbackLauncherStrategy extends ILauncherStrategy {
     public void setInstrumentation(Instrumentation instrumentation);
 
     /**
-     * Searches for a given query on leanback launcher
+     * Searches for a given query on TV launcher
      */
     public void search(String query);
 
@@ -82,7 +82,8 @@ public interface ILeanbackLauncherStrategy extends ILauncherStrategy {
     public BySelector getNowPlayingCardSelector();
 
     /**
-     * Returns a {@link UiObject2} describing the focused search row
+     * Returns a {@link UiObject2} describing the focused search row,
+     * or the top row on new TV Launcher
      * @return
      */
     public UiObject2 selectSearchRow();
