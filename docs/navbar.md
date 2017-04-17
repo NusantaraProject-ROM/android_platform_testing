@@ -1,7 +1,7 @@
 *   [Overview](index.md)
 *   [Basics](basics/index.md)
 *   [Test Development Workflow](development/index.md)
-    *   [Test Configuration Files](development/test-configs.md)
+    *   [Test Configuration Files](development/test-config.md)
     *   [Instrumentation Tests](development/instrumentation.md)
         *   [Self-Instrumenting Tests: A Complete Example](development/instr-self-e2e.md)
         *   [Instrumentation Targeting an Application: A Complete Example](development/instr-app-e2e.md)

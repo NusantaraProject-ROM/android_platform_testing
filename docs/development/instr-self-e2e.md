@@ -174,8 +174,8 @@ to `Android.mk` for your test tmodule, it will get included automatically by the
 `BUILD_PACKAGE` core makefile.
 
 Before proceeding further, it's highly recommended to go through the external
-[documentation on manifest file]
-(https://developer.android.com/guide/topics/manifest/manifest-intro.html) first.
+[documentation on manifest file](https://developer.android.com/guide/topics/manifest/manifest-intro.html)
+first.
 
 This gives an overview of basic components of a manifest file and their
 functionalities.
@@ -215,8 +215,7 @@ application (or in this context: your test application). Each user in the system
 can only install one application with that package name.
 
 Furthermore, this `package` attribute is the same as what
-[`ComponentName#getPackageName()`]
-(https://developer.android.com/reference/android/content/ComponentName.html#getPackageName\(\))
+[`ComponentName#getPackageName()`](https://developer.android.com/reference/android/content/ComponentName.html#getPackageName\(\))
 returns, and also the same you would use to interact with various `pm` sub
 commands via `adb shell`.
 
@@ -379,8 +378,7 @@ related test APIs and more.
 Because the JUnit4 tests no longer require a common base class, it's no longer
 necessary to obtain `Instrumentation` instance via
 `InstrumentationTestCase#getInstrumentation()`, instead, the new test runner
-manages it via [`InstrumentationRegistry`]
-(https://developer.android.com/reference/android/support/test/InstrumentationRegistry.html)
+manages it via [`InstrumentationRegistry`](https://developer.android.com/reference/android/support/test/InstrumentationRegistry.html)
 where contextual and environmental setup created by instrumentation framework is
 stored.
 

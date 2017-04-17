@@ -27,13 +27,12 @@ Currently the main tags handled via the test module configs are the “target_pr
 "test" tags.
 
 ## Target Preparers
-A “target_preparer” tag, as the name suggests, defines a target preparer (see
-[ITargetPreparer]
-(https://source.android.com/reference/com/android/tradefed/targetprep/ITargetPreparer.html))
+A “target_preparer” tag, as the name suggests, defines a target preparer
+(see [ITargetPreparer](https://source.android.com/reference/com/android/tradefed/targetprep/ITargetPreparer.html))
 that offers a setup method, which gets called before the test module is executed
 for testing; and if the class referenced in the “target_preparer” tag also
-implements [ITargetCleaner]
-(https://source.android.com/reference/com/android/tradefed/targetprep/ITargetCleaner.html),
+implements
+[ITargetCleaner](https://source.android.com/reference/com/android/tradefed/targetprep/ITargetCleaner.html),
 its teardown method will be invoked after the test module has finished.
 
 To use the built-in common module config, add a new file ‘AndroidTest.xml’ at
@@ -80,8 +79,7 @@ value for the option “teardown-command” also defined by the same target prep
 with short name “run-command”. Here's a summary of the 3 common target
 preparers:
 
-*   class name: [PushFilePreparer]
-    (https://android.googlesource.com/platform/tools/tradefederation/+/master/src/com/android/tradefed/targetprep/PushFilePreparer.java)
+*   class name: [PushFilePreparer](https://android.googlesource.com/platform/tools/tradefederation/+/master/src/com/android/tradefed/targetprep/PushFilePreparer.java)
 
     *   **short name**: push-file
     *   **function**: pushes arbitrary files under test case folder into
@@ -100,8 +98,7 @@ preparers:
             <your command>`\`) after all pushes have been attempted. Typical use
             case would be using chmod for permissions
 
-*   class name: [InstallApkSetup]
-    (https://android.googlesource.com/platform/tools/tradefederation/+/master/src/com/android/tradefed/targetprep/InstallApkSetup.java)
+*   class name: [InstallApkSetup](https://android.googlesource.com/platform/tools/tradefederation/+/master/src/com/android/tradefed/targetprep/InstallApkSetup.java)
 
     *   **short name:**install-apk
     *   **function:** pushes arbitrary apk files under into destination on
@@ -112,8 +109,7 @@ preparers:
         *   **install-arg:** Additional arguments to be passed to the pm install
             command, including leading dash, e.g. “-d". May be repeated
 
-*   class name: [RunCommandTargetPreparer]
-    (https://android.googlesource.com/platform/tools/tradefederation/+/master/src/com/android/tradefed/targetprep/RunCommandTargetPreparer.java)
+*   class name: [RunCommandTargetPreparer](https://android.googlesource.com/platform/tools/tradefederation/+/master/src/com/android/tradefed/targetprep/RunCommandTargetPreparer.java)
 
     *   **short name:** run-command
     *   **function:** executes arbitrary shell commands before or after test
@@ -135,16 +131,14 @@ A test class is the TradeFederation class to use to execute the test.
 
 Here are 3 common test classes:
 
-*   class name: [GTest]
-    (https://android.googlesource.com/platform/tools/tradefederation/+/master/src/com/android/tradefed/testtype/GTest.java)
+*   class name: [GTest](https://android.googlesource.com/platform/tools/tradefederation/+/master/src/com/android/tradefed/testtype/GTest.java)
 
     *   **short name:** gtest
     *   **function:** A Test that runs a native test package on given device.
     *   **options:**
         *   **native-test-device-path:**The path on the device where native tests are located.
 
-*   class name: [InstrumentationTest]
-    (https://android.googlesource.com/platform/tools/tradefederation/+/master/src/com/android/tradefed/testtype/InstrumentationTest.java)
+*   class name: [InstrumentationTest](https://android.googlesource.com/platform/tools/tradefederation/+/master/src/com/android/tradefed/testtype/InstrumentationTest.java)
 
     *   **short name:** instrumentation
     *   **function:** A Test that runs an instrumentation test package on given device
@@ -153,8 +147,7 @@ Here are 3 common test classes:
         *   **class:**The test class name to run.
         *   **method:**The test method name to run.
 
-*   class name: [AndroidJUnitTest]
-    (https://android.googlesource.com/platform/tools/tradefederation/+/master/src/com/android/tradefed/testtype/AndroidJUnitTest.java)
+*   class name: [AndroidJUnitTest](https://android.googlesource.com/platform/tools/tradefederation/+/master/src/com/android/tradefed/testtype/AndroidJUnitTest.java)
 
     *   **function:** A Test that runs an instrumentation test package on given
                       device using the android.support.test.runner.AndroidJUnitRunner
