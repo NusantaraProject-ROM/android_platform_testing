@@ -4,10 +4,9 @@
 
 ## Overview
 
-Before understanding how testing is done on [Android platform]
-(http://source.android.com/devices/index.html), please refer to the Android
-platform architecture for an overview. The diagram from that page is embedded
-below for convenience:
+Before understanding how testing is done on [Android platform](http://source.android.com/devices/index.html),
+please refer to the Android platform architecture for an overview.
+The diagram from that page is embedded below for convenience:
 
 ![Android platform architecture](../imgs/ape_fwk_all.png)
 
@@ -32,10 +31,9 @@ type 3 is typically written as **native tests** using gtest framework.
 
 ## Instrumentation Tests for Platform Testing
 
-You may have read the [Testing Fundamentals]
-(https://developer.android.com/tools/testing/testing_android.html) on
-`developer.android.com`, however, there still may be some differences in how
-instrumentation tests are used in platform testing.
+You may have read the [Testing Fundamentals](https://developer.android.com/tools/testing/testing_android.html)
+on `developer.android.com`, however, there still may be some differences in
+how instrumentation tests are used in platform testing.
 
 In a nutshell, an instrumentation test provides a special test execution
 environment as launched via `am instrument` command, where the targeted
@@ -48,15 +46,13 @@ and APIs to manipulate the application process under test.
 Some key concepts about instrumentation:
 
 *   an instrumentation must be declared in an application package, with an
-    [`<instrumentation>`]
-    (https://developer.android.com/guide/topics/manifest/instrumentation-element.html)
+    [`<instrumentation>`](https://developer.android.com/guide/topics/manifest/instrumentation-element.html)
     tag nested under the `<manifest>` tag of the application package manifest
 *   an application package manifest may technically contain multiple
     `<instrumentation>` tags, though it's not commonly used in this fashion
 *   each `<instrumentation>` must contain:
     *   an `android:name` attribute: it should be the name of a subclass of
-        [`Instrumentation`]
-        (https://developer.android.com/reference/android/app/Instrumentation.html)
+        [`Instrumentation`](https://developer.android.com/reference/android/app/Instrumentation.html)
         that's included in the test application, which is typically the test
         runner that's being used, e.g.
         `android.support.test.runner.AndroidJUnitRunner`

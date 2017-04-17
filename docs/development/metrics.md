@@ -15,14 +15,20 @@ google-benchmark dependencies are included automatically
    ```shell
    make -j40 bionic-benchmarks
    ```
-1. Push the generated test binary onto device:
+1.  Automatic installation and run with the TradeFederation test harness:
 
-   ```shell
-   adb push ${OUT}/data/benchmarktest/bionic-benchmarks/bionic-benchmarks32 \
-     /data/benchmarktest/bionic-benchmarks/bionic-benchmarks32
-   ```
-1. Execute the test by invoking test binary on device:
+    ```
+    make tradefed-all -j
+    tradefed.sh run template/local_min --template:map test=bionic-benchmarks
+1. Manually Install and Run:
+   1. Push the generated test binary onto device:
 
-   ```shell
-   adb shell /data/benchmarktest/bionic-benchmarks/bionic-benchmarks32
-   ```
+      ```shell
+      adb push ${OUT}/data/benchmarktest/bionic-benchmarks/bionic-benchmarks32 \
+        /data/benchmarktest/bionic-benchmarks/bionic-benchmarks32
+      ```
+   1. Execute the test by invoking test binary on device:
+
+      ```shell
+      adb shell /data/benchmarktest/bionic-benchmarks/bionic-benchmarks32
+      ```

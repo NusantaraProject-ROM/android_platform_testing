@@ -7,13 +7,11 @@ the following guidelines.
 
 Supported test types are:
 
-*   standard [instrumentation]
-    (http://developer.android.com/tools/testing/testing_android.html) tests
+*   standard [instrumentation](http://developer.android.com/tools/testing/testing_android.html) tests
     *   supports both functional and metrics tests
 *   native tests
     *   functional: [gtest](https://github.com/google/googletest) framework
-    *   metrics: native benchmark tests using [google-benchmark]
-        (https://github.com/google/benchmark)
+    *   metrics: native benchmark tests using [google-benchmark](https://github.com/google/benchmark)
 
 Functional tests make assertions of pass or fail on test cases, while metrics
 tests generally performs an action repeatedly to collect timing metrics.

@@ -85,8 +85,7 @@ Your test can make an explicit assertion on pass or fail using `JUnit` APIs; in
 addition, any uncaught exceptions will also cause a functional failure.
 
 To emit performance metrics, your test code can call
-[`Instrumentation#sendStatus`]
-(http://developer.android.com/reference/android/app/Instrumentation.html#sendStatus\(int, android.os.Bundle\))
+[`Instrumentation#sendStatus`](http://developer.android.com/reference/android/app/Instrumentation.html#sendStatus\(int, android.os.Bundle\))
 to send out a list of key-value pairs. It's important to note that:
 
 1.  metrics can be integer or floating point

@@ -168,8 +168,8 @@ to `Android.mk` for your test tmodule, it will get included automatically by the
 `BUILD_PACKAGE` core makefile.
 
 Before proceeding further, it's highly recommended to go through the external
-[documentation on manifest file]
-(https://developer.android.com/guide/topics/manifest/manifest-intro.html) first.
+[documentation on manifest file](https://developer.android.com/guide/topics/manifest/manifest-intro.html)
+first.
 
 This gives an overview of basic components of a manifest file and their
 functionalities.
@@ -225,8 +225,7 @@ package under test, a different package name must be used: one common convention
 is to add a suffix `.test`.
 
 Furthermore, this `package` attribute is the same as what
-[`ComponentName#getPackageName()`]
-(https://developer.android.com/reference/android/content/ComponentName.html#getPackageName\(\))
+[`ComponentName#getPackageName()`](https://developer.android.com/reference/android/content/ComponentName.html#getPackageName\(\))
 returns, and also the same you would use to interact with various `pm` sub
 commands via `adb shell`.
 
@@ -371,8 +370,7 @@ take no parameters, and may throw exceptions.
 Because the JUnit4 tests no longer require a common base class, it's no longer
 necessary to obtain `Context` instances via `getContext()` or
 `getTargetContext()` via base class methods; instead, the new test runner
-manages them via [`InstrumentationRegistry`]
-(https://developer.android.com/reference/android/support/test/InstrumentationRegistry.html)
+manages them via [`InstrumentationRegistry`](https://developer.android.com/reference/android/support/test/InstrumentationRegistry.html)
 where contextual and environmental setup created by instrumentation framework is
 stored. Through this class, you can also call:
 
