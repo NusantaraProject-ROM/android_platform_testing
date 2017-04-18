@@ -499,10 +499,12 @@ public class SettingsHelper {
             BySelector bySelector) throws Exception {
         if (isQuickSettings) {
             launchQuickSettingsAndWait();
+            UiObject2 qsTile = mDevice.wait(Until.findObject(bySelector), TIMEOUT * 3);
+            qsTile.findObject(By.clazz("android.widget.FrameLayout")).click();
         } else {
             mActivityHelper.launchIntent(settingsPage);
+            mDevice.wait(Until.findObject(bySelector), TIMEOUT * 3).click();
         }
-        mDevice.wait(Until.findObject(bySelector), TIMEOUT * 3).click();
     }
 
     /**
