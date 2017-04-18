@@ -67,6 +67,7 @@ public class AppSmokeTest {
 
     private boolean mAppHasError = false;
     private boolean mLaunchIntentDetected = false;
+    private boolean mHasLeanback = false;
     private ILauncherStrategy mLauncherStrategy = null;
     private static UiDevice sDevice = null;
 
@@ -209,7 +210,8 @@ public class AppSmokeTest {
         // Inject an instance of instrumentation only if leanback. This enables to launch any app
         // in the Apps and Games row on leanback launcher.
         Instrumentation instr = InstrumentationRegistry.getInstrumentation();
-        if (hasLeanback(instr.getTargetContext())) {
+        mHasLeanback = hasLeanback(instr.getTargetContext());
+        if (mHasLeanback) {
             factory.getLeanbackLauncherStrategy().setInstrumentation(instr);
         }
         mAppHasError = false;
@@ -256,12 +258,19 @@ public class AppSmokeTest {
     }
 
     private void pokeApp() {
-        int w = sDevice.getDisplayWidth();
-        int h = sDevice.getDisplayHeight();
-        int dY = h / 4;
-        boolean ret = sDevice.swipe(w / 2, h / 2 + dY, w / 2, h / 2 - dY, 40);
-        if (!ret) {
-            Log.w(TAG, "Failed while attempting to poke front end window with swipe");
+        // The swipe action on leanback launcher that doesn't support swipe gesture may
+        // cause unnecessary focus change and test to fail.
+        // Use the dpad key to poke the app instead.
+        if (!mHasLeanback) {
+            int w = sDevice.getDisplayWidth();
+            int h = sDevice.getDisplayHeight();
+            int dY = h / 4;
+            boolean ret = sDevice.swipe(w / 2, h / 2 + dY, w / 2, h / 2 - dY, 40);
+            if (!ret) {
+                Log.w(TAG, "Failed while attempting to poke front end window with swipe");
+            }
+        } else {
+            sDevice.pressDPadUp();
         }
     }
 
