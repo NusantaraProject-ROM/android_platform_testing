@@ -15,17 +15,17 @@
  */
 package com.android.devicehealth.tests;
 
-import static android.support.test.InstrumentationRegistry.getInstrumentation;
-import static org.junit.Assert.*;
-
 import android.content.Context;
 import android.os.DropBoxManager;
-import android.support.test.runner.AndroidJUnit4;
-import android.util.Log;
+import android.support.test.InstrumentationRegistry;
 
+import org.junit.Assert;
 import org.junit.Before;
-import org.junit.runner.RunWith;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
 
 /**
  * Tests used for basic device health validation (ex: system app crash or system app
@@ -33,20 +33,27 @@ import org.junit.Test;
  * add more tests in the future for additional basic device health validation
  * after the device boot is completed.
  */
-@RunWith(AndroidJUnit4.class)
+@RunWith(Parameterized.class)
 public class BasicHealthCheck {
 
     private static final String SYSTEM_APP_CRASH_TAG = "system_app_crash";
     private static final String SYSTEM_APP_NATIVE_CRASH_TAG = "system_app_native_crash";
     private static final String SYSTEM_SERVER_ANR_TAG = "system_server_anr";
-    private static final String OUTPUT_FORMAT = "%s count = %d, %s count = %d, %s count = %d";
-    private static final String TEST_APP_CRASHES = "testAppCrashes";
 
     private Context mContext;
 
+    @Parameter
+    public String mDropboxLabel;
+
+    @Parameters(name = "{0}")
+    public static String[] dropboxLabels() {
+        return new String[] {
+                SYSTEM_APP_CRASH_TAG, SYSTEM_APP_NATIVE_CRASH_TAG, SYSTEM_SERVER_ANR_TAG};
+    }
+
     @Before
     public void setUp() throws Exception {
-        mContext = getInstrumentation().getContext();
+        mContext = InstrumentationRegistry.getInstrumentation().getContext();
     }
 
     /**
@@ -54,33 +61,26 @@ public class BasicHealthCheck {
      * system_app_native_crash using DropBoxManager service.
      */
     @Test
-    public void testAppCrashes() {
+    public void checkCrash() {
         DropBoxManager dropbox = (DropBoxManager) mContext
-                .getSystemService(mContext.DROPBOX_SERVICE);
-        assertNotNull("Unable access the DropBoxManager service", dropbox);
-        int systemAppCrashCount = 0;
-        int systemAppNativeCrashCount = 0;
-        int systemServerAnrCount = 0;
+                .getSystemService(Context.DROPBOX_SERVICE);
+        Assert.assertNotNull("Unable access the DropBoxManager service", dropbox);
 
-        DropBoxManager.Entry entry = dropbox.getNextEntry(null, 0);
+        long timestamp = 0;
+        DropBoxManager.Entry entry = null;
+        int crashCount = 0;
         // TODO: Fail the test if system_server_anr is observed or not.
-        while (null != entry) {
-            String errorTag = entry.getTag();
-            if (SYSTEM_APP_CRASH_TAG.equalsIgnoreCase(errorTag)) {
-                systemAppCrashCount++;
-            } else if (SYSTEM_APP_NATIVE_CRASH_TAG.equalsIgnoreCase(errorTag)) {
-                systemAppNativeCrashCount++;
-            } else if (SYSTEM_SERVER_ANR_TAG.equalsIgnoreCase(errorTag)) {
-                systemServerAnrCount++;
+        while (null != (entry = dropbox.getNextEntry(null, timestamp))) {
+            try {
+                if (mDropboxLabel.equals(entry.getTag())) {
+                    crashCount++;
+                }
+            } finally {
+                entry.close();
             }
-            entry.close();
-            entry = dropbox.getNextEntry(null, entry.getTimeMillis());
+            timestamp = entry.getTimeMillis();
         }
-        String status = String.format(OUTPUT_FORMAT, SYSTEM_APP_CRASH_TAG, systemAppCrashCount,
-                SYSTEM_APP_NATIVE_CRASH_TAG, systemAppNativeCrashCount, SYSTEM_SERVER_ANR_TAG,
-                systemServerAnrCount);
-        Log.i(TEST_APP_CRASHES, status);
-        assertEquals(status, 0, (systemAppCrashCount + systemAppNativeCrashCount));
+        Assert.assertEquals(0, crashCount);
     }
 
 }
