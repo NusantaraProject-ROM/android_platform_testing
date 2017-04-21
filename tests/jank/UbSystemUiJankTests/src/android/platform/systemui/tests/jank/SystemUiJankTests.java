@@ -459,7 +459,7 @@ public class SystemUiJankTests extends JankTestBase {
     @GfxMonitor(processName = SYSTEMUI_PACKAGE)
     public void testExpandGroup() throws Exception {
         UiObject expandButton = mDevice.findObject(
-                new UiSelector().description("Expand button"));
+                new UiSelector().resourceId("android:id/expand_button"));
         for (int i = 0; i < INNER_LOOP; i++) {
             expandButton.click();
             mDevice.waitForIdle();
