@@ -311,7 +311,7 @@ This specifies the TradeFederation test class to use to execute the test and
 passes in the package on the device to be executed and the test runner
 framework which is JUnit in this case.
 
-Look here for more information on [Test Module Configs](../test-config.md)
+Look here for more information on [Test Module Configs](test-config.md)
 
 ## JUnit4 Features
 
@@ -391,4 +391,4 @@ Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation()
 
 ## Build & Test Locally:
 
-Follow these [Instructions](../instrumentation.md)
+Follow these [Instructions](instrumentation.md)
