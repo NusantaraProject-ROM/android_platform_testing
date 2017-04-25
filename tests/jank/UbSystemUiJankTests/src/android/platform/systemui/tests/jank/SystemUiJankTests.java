@@ -54,6 +54,7 @@ import java.util.List;
 public class SystemUiJankTests extends JankTestBase {
 
     private static final String SYSTEMUI_PACKAGE = "com.android.systemui";
+    private static final String SETTINGS_PACKAGE = "com.android.settings";
     private static final BySelector RECENTS = By.res(SYSTEMUI_PACKAGE, "recents_view");
     private static final String LOG_TAG = SystemUiJankTests.class.getSimpleName();
     private static final int SWIPE_MARGIN = 5;
@@ -799,6 +800,52 @@ public class SystemUiJankTests extends JankTestBase {
         mDevice.waitForIdle();
         String command = String.format("%s %s %s", "input", "text", PIN);
         mDevice.executeShellCommand(command);
+        mDevice.waitForIdle();
+    }
+
+    public void beforeLaunchSettings() throws Exception {
+        prepareNotifications(GROUP_MODE_UNGROUPED);
+        TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+    }
+
+    public void beforeLaunchSettingsLoop() throws Exception {
+        mDevice.openNotification();
+
+        // Wait until animation kicks in
+        SystemClock.sleep(100);
+        mDevice.waitForIdle();
+    }
+
+    public void afterLaunchSettingsLoop() throws Exception {
+        mDevice.executeShellCommand("am force-stop " + SETTINGS_PACKAGE);
+        mDevice.pressHome();
+        mDevice.waitForIdle();
+    }
+
+    public void afterLaunchSettings(Bundle metrics) throws Exception {
+        TimeResultLogger.writeTimeStampLogEnd(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+        cancelNotifications();
+        TimeResultLogger.writeResultToFile(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), RESULTS_FILE, metrics);
+        super.afterTest(metrics);
+    }
+
+    /**
+     * Measures jank when launching settings from notification shade
+     */
+    @JankTest(expectedFrames = 30,
+            defaultIterationCount = 5,
+            beforeTest = "beforeLaunchSettings",
+            afterTest = "afterLaunchSettings",
+            beforeLoop = "beforeLaunchSettingsLoop",
+            afterLoop = "afterLaunchSettingsLoop")
+    @GfxMonitor(processName = SYSTEMUI_PACKAGE)
+    public void testLaunchSettings() throws Exception {
+        mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "settings_button")).click();
+        // Wait until animation kicks in
+        SystemClock.sleep(100);
         mDevice.waitForIdle();
     }
 }
