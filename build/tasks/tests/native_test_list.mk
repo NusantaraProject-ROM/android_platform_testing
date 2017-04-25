@@ -21,6 +21,8 @@ native_tests := \
     bootstat_tests \
     boringssl_crypto_test \
     boringssl_ssl_test \
+    buffer_hub_queue-test \
+    buffer_hub_queue_producer-test \
     bugreportz_test \
     bsdiff_unittest \
     camera2_test \
