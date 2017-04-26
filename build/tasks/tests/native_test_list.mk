@@ -23,7 +23,6 @@ native_tests := \
     boringssl_ssl_test \
     bugreportz_test \
     bsdiff_unittest \
-    camera2_test \
     camera_client_test \
     crashcollector \
     debuggerd_test \
