@@ -36,7 +36,6 @@ public class BasicHealthCheckPostSubmit extends HealthCheckBase {
     @Parameters(name = "{0}")
     public static String[] dropboxLabels() {
         return new String[] {
-                "system_app_anr", // b/35626956
                 "SYSTEM_TOMBSTONE", // b/36066697
                 };
     }
