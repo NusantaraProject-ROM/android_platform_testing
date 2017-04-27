@@ -45,6 +45,7 @@ public class BasicHealthCheck extends HealthCheckBase {
                 "system_server_anr",
                 "system_app_crash",
                 "system_app_native_crash",
+                "system_app_anr",
                 };
     }
 
