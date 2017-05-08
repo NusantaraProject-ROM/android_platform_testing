@@ -21,7 +21,11 @@ LOCAL_SDK_VERSION := current
 
 LOCAL_SRC_FILES := $(call all-subdir-java-files)
 LOCAL_JAVA_LIBRARIES := android.test.runner
-LOCAL_STATIC_JAVA_LIBRARIES := launcher-helper-lib ub-uiautomator
+LOCAL_STATIC_JAVA_LIBRARIES := \
+    launcher-helper-lib \
+    ub-uiautomator \
+    legacy-android-test \
+    junit
 
 LOCAL_PACKAGE_NAME := AppLinkFunctionalTests
 LOCAL_CERTIFICATE := platform
