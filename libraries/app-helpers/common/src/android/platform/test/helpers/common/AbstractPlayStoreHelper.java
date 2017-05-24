@@ -53,4 +53,15 @@ public abstract class AbstractPlayStoreHelper extends AbstractStandardAppHelper 
      * @return true, if the app is already installed, or false if not.
      */
     public abstract boolean isAppInstalled();
+
+    /**
+     * Setup expectations: An app's install page is open, and the app is installed.
+     *
+     * Press the uninstall button. This method will block until
+     * the app completes uninstallation, though uninstallation cannot be guaranteed.
+     */
+    public void uninstallApp() {
+        throw new UnsupportedOperationException(
+                "uninstallApp is not implemented for Play Store.");
+    }
 }

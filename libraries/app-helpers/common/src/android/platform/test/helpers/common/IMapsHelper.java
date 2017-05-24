@@ -16,8 +16,6 @@
 
 package android.platform.test.helpers;
 
-import android.app.Instrumentation;
-
 public interface IMapsHelper extends IStandardAppHelper {
     /**
      * Setup expectation: On the standard Map screen in any setup.

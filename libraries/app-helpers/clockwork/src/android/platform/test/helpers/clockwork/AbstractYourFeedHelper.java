@@ -29,6 +29,7 @@ public abstract class AbstractYourFeedHelper extends AbstractStandardAppHelper {
      * Setup expectation: Your Feed is open
      *
      * Scroll in direction
+     *
      * @param d direction to scroll
      * @return boolean scroll successful or not
      */

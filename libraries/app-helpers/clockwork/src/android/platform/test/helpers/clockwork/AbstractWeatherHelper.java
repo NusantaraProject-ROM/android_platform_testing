@@ -29,6 +29,7 @@ public abstract class AbstractWeatherHelper extends AbstractStandardAppHelper {
      * Setup expectation: Weather app is open
      *
      * Scroll in direction
+     *
      * @param d direction to scroll
      * @return boolean scroll successful or not
      */

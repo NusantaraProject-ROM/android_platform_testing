@@ -29,6 +29,7 @@ public abstract class AbstractAgendaHelper extends AbstractStandardAppHelper {
      * Setup expectation: Agenda app is open
      *
      * Scroll in direction
+     *
      * @param d direction to scroll
      * @return boolean scroll successful or not
      */

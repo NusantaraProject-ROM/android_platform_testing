@@ -16,10 +16,9 @@
 
 package android.platform.test.helpers;
 
-import java.io.IOException;
-
 import android.app.Instrumentation;
-import android.support.test.uiautomator.Direction;
+
+import java.io.IOException;
 
 public abstract class AbstractGoogleFitHelper extends AbstractStandardAppHelper {
 
@@ -105,4 +104,13 @@ public abstract class AbstractGoogleFitHelper extends AbstractStandardAppHelper 
      */
     public abstract void stopActivity() throws IOException;
 
+    /**
+     * Setup expectation: On the summary page
+     *
+     * Check summary after an activity
+     */
+    public void checkSummary() {
+        throw new UnsupportedOperationException(
+                "checkSummary is not implemented for Fit.");
+    }
 }
