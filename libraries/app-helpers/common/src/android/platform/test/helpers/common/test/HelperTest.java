@@ -18,7 +18,7 @@ package android.platform.test.helpers.common.test;
 
 import android.os.Bundle;
 import android.platform.test.helpers.HelperManager;
-import android.platform.test.helpers.AbstractStandardAppHelper;
+import android.platform.test.helpers.IStandardAppHelper;
 import android.platform.test.helpers.listeners.FailureTestWatcher;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.UiDevice;
@@ -42,7 +42,7 @@ import com.android.permissionutils.GrantPermissionUtil;
  *
  * @param T the helper interface under test.
  */
-public abstract class HelperTest<T extends AbstractStandardAppHelper> {
+public abstract class HelperTest<T extends IStandardAppHelper> {
     private static final String LOG_TAG = HelperTest.class.getSimpleName();
     private static final String SKIP_INIT_PARAM = "skip-init";
 
