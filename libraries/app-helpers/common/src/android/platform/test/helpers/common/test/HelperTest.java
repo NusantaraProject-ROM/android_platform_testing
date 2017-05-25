@@ -28,6 +28,7 @@ import android.util.Log;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.TestRule;
 import org.junit.rules.Timeout;
 
@@ -65,8 +66,12 @@ public abstract class HelperTest<T extends IStandardAppHelper> {
     protected UiDevice mDevice;
     protected T mHelper;
 
+    /**
+     * Set up the target application before each test case starts.
+     */
     @Before
-    public <T> void setUp() {
+    public void setUp() {
+        // Initialize each application once on the first open unless skipped.
         if (!mInitMap.containsKey(getHelperClass()) &&
                 !"true".equals(getArguments().get(SKIP_INIT_PARAM))) {
             initialize();
@@ -76,23 +81,33 @@ public abstract class HelperTest<T extends IStandardAppHelper> {
         openApp();
     }
 
-    public void initialize() { }
-
+    /**
+     * Tear down the target application after each test case completes.
+     */
     @After
     public void tearDown() {
         exitApp();
     }
 
     /**
-     * Reset the target application by clearing user data and re-granting runtime permissions.
+     * An empty test that ensures setup and initialization work properly.
      */
-    public void resetApp() {
-        // Clear the application's state.
-        PackageHelper.getInstance(InstrumentationRegistry.getInstrumentation())
-                .cleanPackage(getHelper().getPackage());
-        // Re-grant cleared runtime permissions.
-        GrantPermissionUtil.grantAllPermissions(InstrumentationRegistry.getContext());
+    @Test
+    public void testDismissDialogs() { }
+
+    /**
+     * Initialize the target application once before the test suite starts.
+     */
+    public void initialize() {
+        getHelper().open();
+        getHelper().dismissInitialDialogs();
+        getHelper().exit();
     }
+
+    /**
+     * Reset the target application.
+     */
+    public void resetApp() { }
 
     /**
      * Open the target application.
@@ -111,7 +126,7 @@ public abstract class HelperTest<T extends IStandardAppHelper> {
     }
 
     /**
-     * @return the connected @{code UiDevice}
+     * @return the connected {@link UiDevice}
      */
     public UiDevice getDevice() {
         if (mDevice == null) {
@@ -122,7 +137,7 @@ public abstract class HelperTest<T extends IStandardAppHelper> {
     }
 
     /**
-     * @return the @{code Bundle} of args
+     * @return the {@link Bundle} of arguments
      */
     public Bundle getArguments() {
         return InstrumentationRegistry.getArguments();
