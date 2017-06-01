@@ -17,6 +17,8 @@
 package android.support.test.launcherhelper;
 
 import android.app.Instrumentation;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Point;
 import android.os.RemoteException;
 import android.os.SystemClock;
@@ -148,7 +150,7 @@ public class TvLauncherStrategy implements ILeanbackLauncherStrategy {
      */
     @Override
     public BySelector getSearchRowSelector() {
-        return SELECTOR_TOP_ROW;
+        return  SELECTOR_TOP_ROW;
     }
 
     /**
@@ -188,20 +190,14 @@ public class TvLauncherStrategy implements ILeanbackLauncherStrategy {
         return SELECTOR_ALL_APPS_LOGO;
     }
 
-    public BySelector getAppSelector(String appName) {
-        if (isAppStore(appName)) {
-            return By.res(getSupportedLauncherPackage(), "store_title").text(appName);
-        } else {
-            return By.res(getSupportedLauncherPackage(), "app_banner_image").desc(appName);
-        }
-    }
-
     /**
      * {@inheritDoc}
      */
     @Override
     public long launch(String appName, String packageName) {
-        return launchApp(this, appName, packageName);
+        BySelector appSelector = By.res(getSupportedLauncherPackage(),
+                "app_banner_image").desc(appName);
+        return launchApp(this, appSelector, packageName, isGame(packageName));
     }
 
     /**
@@ -272,10 +268,13 @@ public class TvLauncherStrategy implements ILeanbackLauncherStrategy {
 
     /**
      * Select the given app in All Apps activity.
-     * Use {@link #selectAppInAllAppsZigZag} if the given app banner is likely to change when
-     * focused in runtime.
+     * When the All Apps opens, the focus is always at the top right.
+     * Search from left to right, and down to the next row, from right to left, and
+     * down to the next row like a zigzag pattern until the app is found.
      */
     protected UiObject2 selectAppInAllApps(BySelector appSelector, String packageName) {
+        openAllApps(true);
+
         // Assume that the focus always starts at the top left of the Apps view.
         final int maxScrollAttempts = 20;
         final int margin = 10;
@@ -330,27 +329,8 @@ public class TvLauncherStrategy implements ILeanbackLauncherStrategy {
         return expected;
     }
 
-    /**
-     * Select the given app in All Apps activity in zigzag manner.
-     * When the All Apps opens, the focus is always at the top left.
-     * Search from left to right, and down to the next row, from right to left, and
-     * down to the next row like a zigzag pattern until it founds a given app.
-     */
-    public UiObject2 selectAppInAllAppsZigZag(BySelector appSelector, String packageName) {
-        Direction direction = Direction.RIGHT;
-        UiObject2 app = select(appSelector, direction, UI_TRANSITION_WAIT_TIME);
-        while (app == null && move(Direction.DOWN)) {
-            direction = Direction.reverse(direction);
-            app = select(appSelector, direction, UI_TRANSITION_WAIT_TIME);
-        }
-        if (app != null) {
-            Log.i(LOG_TAG, String.format("The app %s is selected", packageName));
-        }
-        return app;
-    }
-
-    protected long launchApp(ILauncherStrategy launcherStrategy, String appName,
-            String packageName) {
+    protected long launchApp(ILauncherStrategy launcherStrategy, BySelector appSelector,
+            String packageName, boolean isGame) {
         unlockDeviceIfAsleep();
 
         if (isAppOpen(packageName)) {
@@ -365,16 +345,10 @@ public class TvLauncherStrategy implements ILeanbackLauncherStrategy {
         // Search for the app in the Apps row first.
         // If not exists, open the 'All Apps' and search for the app there
         UiObject2 app = null;
-        BySelector appSelector = getAppSelector(appName);
         if (mDevice.hasObject(appSelector)) {
             app = selectBidirect(By.focused(true).hasDescendant(appSelector), Direction.RIGHT);
         } else {
-            openAllApps(true);
-            if (isAppStore(appName)) {
-                app = selectAppInAllAppsZigZag(appSelector, packageName);
-            } else {
-                app = selectAppInAllApps(appSelector, packageName);
-            }
+            app = selectAppInAllApps(appSelector, packageName);
         }
         if (app == null) {
             throw new RuntimeException(
@@ -441,12 +415,25 @@ public class TvLauncherStrategy implements ILeanbackLauncherStrategy {
         }
     }
 
-    /**
-     * Note that Google Play Store & Play Games are available only on selecting the "+" icon
-     * in the Apps view.
-     */
-    private boolean isAppStore(String appName) {
-        return ("Play Store".equals(appName) || "Play Games".equals(appName));
+    private boolean isGame(String packageName) {
+        boolean isGame = false;
+        if (mInstrumentation != null) {
+            try {
+                ApplicationInfo appInfo =
+                        mInstrumentation.getTargetContext().getPackageManager().getApplicationInfo(
+                                packageName, 0);
+                // TV game apps should use the "isGame" tag added since the L release. They are
+                // listed on the Games row on the TV Launcher.
+                isGame = (appInfo.metaData != null && appInfo.metaData.getBoolean("isGame", false))
+                        || ((appInfo.flags & ApplicationInfo.FLAG_IS_GAME) != 0);
+                Log.i(LOG_TAG, String.format("The package %s isGame: %b", packageName, isGame));
+            } catch (PackageManager.NameNotFoundException e) {
+                Log.w(LOG_TAG,
+                        String.format("No package found: %s, error:%s", packageName, e.toString()));
+                return false;
+            }
+        }
+        return isGame;
     }
 
     /**
@@ -507,36 +494,6 @@ public class TvLauncherStrategy implements ILeanbackLauncherStrategy {
             object = select(selector, Direction.reverse(direction), UI_TRANSITION_WAIT_TIME);
         }
         return object;
-    }
-
-    /**
-     * Simulate a move pressing a key code.
-     * Return true if a focus is shifted on TV UI, otherwise false.
-     */
-    public boolean move(Direction direction) {
-        int keyCode = KeyEvent.KEYCODE_UNKNOWN;
-        switch (direction) {
-            case LEFT:
-                keyCode = KeyEvent.KEYCODE_DPAD_LEFT;
-                break;
-            case RIGHT:
-                keyCode = KeyEvent.KEYCODE_DPAD_RIGHT;
-                break;
-            case UP:
-                keyCode = KeyEvent.KEYCODE_DPAD_UP;
-                break;
-            case DOWN:
-                keyCode = KeyEvent.KEYCODE_DPAD_DOWN;
-                break;
-            default:
-                throw new RuntimeException(String.format("This direction %s is not supported.",
-                    direction));
-        }
-        UiObject2 focus = mDevice.wait(Until.findObject(By.focused(true)),
-                UI_TRANSITION_WAIT_TIME);
-        mDPadUtil.pressKeyCodeAndWait(keyCode);
-        return !focus.equals(mDevice.wait(Until.findObject(By.focused(true)),
-            UI_TRANSITION_WAIT_TIME));
     }
 
 
