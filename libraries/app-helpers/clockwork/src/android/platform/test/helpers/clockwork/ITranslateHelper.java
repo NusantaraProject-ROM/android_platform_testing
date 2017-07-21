@@ -18,23 +18,25 @@ package android.platform.test.helpers;
 
 import android.app.Instrumentation;
 
-public abstract class AbstractRemindersHelper extends AbstractStandardAppHelper {
-
-    public AbstractRemindersHelper(Instrumentation instr) {
-        super(instr);
-    }
+public interface ITranslateHelper extends IStandardAppHelper {
+    /**
+     * Setup expectation: Translate app is open
+     *
+     * Inject a voice file for translation
+     */
+    public void translate(String filePath);
 
     /**
-     * Setup expectation: Reminders app is open
+     * Setup expectation: Translation is showing
      *
-     * Create reminder
+     * Validate the on-screen translation
      */
-    public abstract void createReminder();
+    public void validate(String expectedTranslation);
 
     /**
-     * Setup expectation: Reminders app is open
+     * Setup expectation: Translate app is open
      *
-     * Delete reminder
+     * Change the selected languages
      */
-    public abstract void deleteReminder();
+    public void changeLanguages(String source, String target);
 }

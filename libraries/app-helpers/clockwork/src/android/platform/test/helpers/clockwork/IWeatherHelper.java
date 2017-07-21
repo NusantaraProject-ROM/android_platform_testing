@@ -17,24 +17,16 @@
 package android.platform.test.helpers;
 
 import android.app.Instrumentation;
+import android.support.test.uiautomator.Direction;
 
-public abstract class AbstractPhoneHelper extends AbstractStandardAppHelper {
-
-    public AbstractPhoneHelper(Instrumentation instr) {
-        super(instr);
-    }
-
+public interface IWeatherHelper extends IStandardAppHelper {
     /**
-     * Setup expectation: Phone app is open
+     * Setup expectation: Weather app is open
      *
-     * Go to number pad and dial number
-     */
-    public abstract void dialNumber(String number);
-
-    /**
-     * Setup expectation: Number is being called
+     * Scroll in direction
      *
-     * Hang up
+     * @param d direction to scroll
+     * @return boolean scroll successful or not
      */
-    public abstract void hangUp();
+    public boolean scroll(Direction d);
 }

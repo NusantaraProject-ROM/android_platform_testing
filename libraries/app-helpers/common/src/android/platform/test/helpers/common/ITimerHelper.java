@@ -16,53 +16,46 @@
 
 package android.platform.test.helpers;
 
-import android.app.Instrumentation;
-
-public abstract class AbstractTimerHelper extends AbstractStandardAppHelper {
-
-    public AbstractTimerHelper(Instrumentation instr) {
-        super(instr);
-    }
-
+public interface ITimerHelper extends IStandardAppHelper {
     /**
      * Setup expectation: Timer app is open on initial screen
      *
      * Create a new timer
      */
-    public abstract void createTimer();
+    public void createTimer();
 
     /**
      * Setup expectation: Timer is running
      *
      * Pause timer
      */
-    public abstract void pauseTimer();
+    public void pauseTimer();
 
     /**
      * Setup expectation: Timer is paused
      *
      * Resume timer
      */
-    public abstract void resumeTimer();
+    public void resumeTimer();
 
     /**
      * Setup expectation: Timer is paused
      *
      * Reset timer
      */
-    public abstract void resetTimer();
+    public void resetTimer();
 
     /**
      * Setup expectation: Timer is paused
      *
      * Dismiss timer
      */
-    public abstract void dismissTimer();
+    public void dismissTimer();
 
     /**
      * Setup expectation: Timer app is open on initial screen
      *
      * Delete timer from list
      */
-    public abstract void deleteTimer();
+    public void deleteTimer();
 }
