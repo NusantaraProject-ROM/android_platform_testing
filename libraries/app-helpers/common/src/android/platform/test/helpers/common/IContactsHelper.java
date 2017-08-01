@@ -16,32 +16,25 @@
 
 package android.platform.test.helpers;
 
-import android.app.Instrumentation;
-
-public abstract class AbstractAlarmHelper extends AbstractStandardAppHelper {
-
-    public AbstractAlarmHelper(Instrumentation instr) {
-        super(instr);
-    }
+public interface IContactsHelper extends IStandardAppHelper {
+    /**
+     * Setup expectation: Contacts app is open
+     *
+     * Scroll to contact name and click
+     */
+    public void selectContact(String contactName);
 
     /**
-     * Setup expectation: Alarm app is open
+     * Setup expectation: Contact is open
      *
-     * Create alarm
+     * Click the call button
      */
-    public abstract void createAlarm();
+    public void call();
 
     /**
-     * Setup expectation: Alarm app is open
+     * Setup expectation: Contact is open
      *
-     * Delete alarm
+     * Click text button, send text message from quick reply list
      */
-    public abstract void deleteAlarm();
-
-    /**
-     * Setup expectation: Alarm is ringing
-     *
-     * Dismiss alarm
-     */
-    public abstract void dismissAlarm();
+    public void sendText(String quickReplyText);
 }

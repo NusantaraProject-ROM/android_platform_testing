@@ -26,7 +26,7 @@ public interface IRecentsHelper extends IStandardAppHelper {
      * </p>
      * @param dir the direction for the apps to move
      */
-    void flingRecents(Direction dir);
+    public void flingRecents(Direction dir);
 
     /**
      * Setup expectations: "Recents" is open with content
@@ -34,12 +34,12 @@ public interface IRecentsHelper extends IStandardAppHelper {
      * Clears up open recent items. Nothing happens if there is no content.
      * </p>
      */
-    void clearAll();
+    public void clearAll();
 
     /**
      * Setup expectations: "Recents" is open.
      *
      * @return True if there is Recents content.
      */
-    boolean hasContent();
+    public boolean hasContent();
 }

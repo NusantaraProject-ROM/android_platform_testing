@@ -17,19 +17,16 @@
 package android.platform.test.helpers;
 
 import android.app.Instrumentation;
+import android.support.test.uiautomator.Direction;
 
-public abstract class AbstractWatchFacePickerHelper extends AbstractStandardAppHelper {
-
-    public AbstractWatchFacePickerHelper(Instrumentation instr) {
-        super(instr);
-    }
-
+public interface IYourFeedHelper extends IStandardAppHelper {
     /**
-     * Setup expectation: Watch face picker is open
+     * Setup expectation: Your Feed is open
      *
-     * Select watch face from favorites or add more watch faces
+     * Scroll in direction
+     *
+     * @param d direction to scroll
+     * @return boolean scroll successful or not
      */
-    public abstract void selectWatchFace(String watchFaceName);
-
-
+    public boolean scroll(Direction d);
 }

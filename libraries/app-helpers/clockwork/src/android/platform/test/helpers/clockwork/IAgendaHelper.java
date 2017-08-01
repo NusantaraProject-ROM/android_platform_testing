@@ -17,25 +17,16 @@
 package android.platform.test.helpers;
 
 import android.app.Instrumentation;
-import android.support.test.uiautomator.BySelector;
+import android.support.test.uiautomator.Direction;
 
-public abstract class AbstractVoiceHelper extends AbstractStandardAppHelper {
-
-    public AbstractVoiceHelper(Instrumentation instr) {
-        super(instr);
-    }
-
+public interface IAgendaHelper extends IStandardAppHelper {
     /**
-     * Setup expectation: Microphone is open
+     * Setup expectation: Agenda app is open
      *
-     * Inject audio file
-     */
-    public abstract void inject(String filePath);
-
-    /**
-     * Setup expectation: Some result is showing
+     * Scroll in direction
      *
-     * Validate on-screen result
+     * @param d direction to scroll
+     * @return boolean scroll successful or not
      */
-    public abstract void validate(BySelector itemToValidate);
+    public boolean scroll(Direction d);
 }

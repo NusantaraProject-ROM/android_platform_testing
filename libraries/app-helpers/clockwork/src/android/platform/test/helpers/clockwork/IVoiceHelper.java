@@ -17,21 +17,20 @@
 package android.platform.test.helpers;
 
 import android.app.Instrumentation;
-import android.support.test.uiautomator.Direction;
+import android.support.test.uiautomator.BySelector;
 
-public abstract class AbstractYourFeedHelper extends AbstractStandardAppHelper {
-
-    public AbstractYourFeedHelper(Instrumentation instr) {
-        super(instr);
-    }
+public interface IVoiceHelper extends IStandardAppHelper {
+    /**
+     * Setup expectation: Microphone is open
+     *
+     * Inject audio file
+     */
+    public void inject(String filePath);
 
     /**
-     * Setup expectation: Your Feed is open
+     * Setup expectation: Some result is showing
      *
-     * Scroll in direction
-     *
-     * @param d direction to scroll
-     * @return boolean scroll successful or not
+     * Validate on-screen result
      */
-    public abstract boolean scroll(Direction d);
+    public void validate(BySelector itemToValidate);
 }
