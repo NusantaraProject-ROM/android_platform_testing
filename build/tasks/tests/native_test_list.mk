@@ -43,6 +43,7 @@ native_tests := \
     libcutils_test \
     libcutils_test_static \
     libgui_test \
+    libhidl_test \
     libjavacore-unit-tests \
     liblog-unit-tests \
     libminijail_unittest_gtest \
