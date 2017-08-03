@@ -17,21 +17,14 @@
 package android.platform.test.helpers;
 
 import android.app.Instrumentation;
-import android.support.test.uiautomator.Direction;
 
-public abstract class AbstractWeatherHelper extends AbstractStandardAppHelper {
-
-    public AbstractWeatherHelper(Instrumentation instr) {
-        super(instr);
-    }
-
+public interface IWatchFacePickerHelper extends IStandardAppHelper {
     /**
-     * Setup expectation: Weather app is open
+     * Setup expectation: Watch face picker is open
      *
-     * Scroll in direction
-     *
-     * @param d direction to scroll
-     * @return boolean scroll successful or not
+     * Select watch face from favorites or add more watch faces
      */
-    public abstract boolean scroll(Direction d);
+    public void selectWatchFace(String watchFaceName);
+
+
 }

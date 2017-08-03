@@ -23,26 +23,26 @@ public interface IMapsHelper extends IStandardAppHelper {
      * Best effort attempt to go to the query screen (if not currently there),
      * does a search, and selects the results.
      */
-    public abstract void doSearch(String query);
+    public void doSearch(String query);
 
     /**
      * Setup expectation: Destination is selected.
      *
      * Best effort attempt to go to the directions screen for the selected destination.
      */
-    public abstract void getDirections();
+    public void getDirections();
 
     /**
      * Setup expectation: On directions screen.
      *
      * Best effort attempt to start navigation for the selected destination.
      */
-    public abstract void startNavigation();
+    public void startNavigation();
 
     /**
      * Setup expectation: On navigation screen.
      *
      * Best effort attempt to stop navigation, and go back to the directions screen.
      */
-    public abstract void stopNavigation();
+    public void stopNavigation();
 }

@@ -16,32 +16,25 @@
 
 package android.platform.test.helpers;
 
-import android.app.Instrumentation;
-
-public abstract class AbstractStopwatchHelper extends AbstractStandardAppHelper {
-
-    public AbstractStopwatchHelper(Instrumentation instr) {
-        super(instr);
-    }
-
+public interface IStopwatchHelper extends IStandardAppHelper {
     /**
      * Setup expectation: Stopwatch app is open
      *
      * Start the stopwatch
      */
-    public abstract void start();
+    public void start();
 
     /**
      * Setup expectation: Stopwatch app is open
      *
      * Stop the stopwatch
      */
-    public abstract void stop();
+    public void stop();
 
     /**
      * Setup expectation: Stopwatch app is open
      *
      * Reset the stopwatch
      */
-    public abstract void reset();
+    public void reset();
 }

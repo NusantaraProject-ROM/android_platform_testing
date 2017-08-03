@@ -16,22 +16,18 @@
 
 package android.platform.test.helpers;
 
-import android.app.Instrumentation;
-import android.support.test.uiautomator.Direction;
-
-public abstract class AbstractAgendaHelper extends AbstractStandardAppHelper {
-
-    public AbstractAgendaHelper(Instrumentation instr) {
-        super(instr);
-    }
+public interface IPhoneHelper extends IStandardAppHelper {
+    /**
+     * Setup expectation: Phone app is open
+     *
+     * Go to number pad and dial number
+     */
+    public void dialNumber(String number);
 
     /**
-     * Setup expectation: Agenda app is open
+     * Setup expectation: Number is being called
      *
-     * Scroll in direction
-     *
-     * @param d direction to scroll
-     * @return boolean scroll successful or not
+     * Hang up
      */
-    public abstract boolean scroll(Direction d);
+    public void hangUp();
 }
