@@ -29,6 +29,6 @@ LOCAL_JAVA_LIBRARIES := legacy-android-test
 
 #LOCAL_SDK_VERSION := current
 
-LOCAL_COMPATIBILITY_SUITE := device-tests
+LOCAL_COMPATIBILITY_SUITE := device-tests gts
 
 include $(BUILD_PACKAGE)
