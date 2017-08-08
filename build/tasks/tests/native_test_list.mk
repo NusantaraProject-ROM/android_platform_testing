@@ -31,6 +31,7 @@ native_tests := \
     dumpstate_test \
     dumpstate_test_fixture \
     dumpsys_test \
+    gatekeeperd-unit-tests \
     hello_world_test \
     hwui_unit_tests \
     init_tests \
