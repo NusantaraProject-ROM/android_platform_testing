@@ -20,6 +20,7 @@ instrumentation_tests := \
     FrameworksNetTests \
     FrameworksNotificationTests \
     FrameworksServicesTests \
+    JobTestApp \
     FrameworksUtilTests \
     MtpDocumentsProviderTests \
     DocumentsUITests \
