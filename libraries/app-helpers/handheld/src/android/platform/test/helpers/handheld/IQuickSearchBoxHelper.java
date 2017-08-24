@@ -18,24 +18,5 @@ package android.platform.test.helpers;
 
 import android.app.Instrumentation;
 
-public abstract class AbstractGoogleKeyboardHelper extends AbstractStandardAppHelper {
-
-    public AbstractGoogleKeyboardHelper(Instrumentation instr) {
-        super(instr);
-    }
-
-    /*
-     * Setup expectations: Recently performed action that will open Google Keyboard
-     *
-     * @param timeout wait timeout in milliseconds
-     */
-    public abstract boolean waitForKeyboard(long timeout);
-
-    /*
-     * Setup expectations: Google Keyboard is open and visible
-     *
-     * @param text text to type
-     * @param delayBetweenKeyPresses delay between key presses in milliseconds
-     */
-    public abstract void typeText(String text, long delayBetweenKeyPresses);
+public interface IQuickSearchBoxHelper extends IStandardAppHelper {
 }
