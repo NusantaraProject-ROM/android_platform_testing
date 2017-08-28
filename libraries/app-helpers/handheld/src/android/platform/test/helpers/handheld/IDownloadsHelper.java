@@ -18,17 +18,13 @@ package android.platform.test.helpers;
 
 import android.app.Instrumentation;
 
-public abstract class AbstractDownloadsHelper extends AbstractStandardAppHelper {
+public interface IDownloadsHelper extends IStandardAppHelper {
 
     public static enum Category {
         AUDIO,
         IMAGES,
         RECENT,
         VIDEOS
-    }
-
-    public AbstractDownloadsHelper(Instrumentation instr) {
-        super(instr);
     }
 
     /**
@@ -38,7 +34,7 @@ public abstract class AbstractDownloadsHelper extends AbstractStandardAppHelper 
      *
      * @param category - menu item to select (click)
      */
-    public abstract void selectMenuCategory(Category category);
+    public void selectMenuCategory(Category category);
 
     /**
      * Setup expectation: Item has been selected from Navigation Drawer's list
@@ -47,7 +43,7 @@ public abstract class AbstractDownloadsHelper extends AbstractStandardAppHelper 
      *
      * @param directoryName - name of directory to open
      */
-    public abstract void selectDirectory(String directoryName);
+    public void selectDirectory(String directoryName);
 
     /**
      * Setup expectation: Navigated to the right folder
@@ -56,7 +52,7 @@ public abstract class AbstractDownloadsHelper extends AbstractStandardAppHelper 
      *
      * @param filename - name of file to open
      */
-    public abstract void openFile(String filename);
+    public void openFile(String filename);
 
     /**
      * Setup expectation: Video is playing
@@ -66,7 +62,7 @@ public abstract class AbstractDownloadsHelper extends AbstractStandardAppHelper 
      *
      * @param timeoutInSeconds - timeout value in seconds the test will wait for video to end
      */
-    public abstract void waitForVideoToStopPlaying(long timeoutInSeconds);
+    public void waitForVideoToStopPlaying(long timeoutInSeconds);
 
     /**
      * Setup expectation: Audio is playing
@@ -76,7 +72,7 @@ public abstract class AbstractDownloadsHelper extends AbstractStandardAppHelper 
      *
      * @param timeoutInSeconds - timeout value in seconds the test will wait for audio to end
      */
-    public abstract void waitForAudioToStopPlaying(long timeoutInSeconds);
+    public void waitForAudioToStopPlaying(long timeoutInSeconds);
 
     /**
      * Setup expectation: Video is playing
@@ -86,5 +82,5 @@ public abstract class AbstractDownloadsHelper extends AbstractStandardAppHelper 
      *
      * @param enableVideoLooping - true for continuous looping video, false for not looping video
      */
-    public abstract void enableVideoLooping(boolean enableVideoLooping);
+    public void enableVideoLooping(boolean enableVideoLooping);
 }
