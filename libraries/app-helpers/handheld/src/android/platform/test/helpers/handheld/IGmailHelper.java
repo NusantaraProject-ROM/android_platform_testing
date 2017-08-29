@@ -21,46 +21,40 @@ import android.support.test.uiautomator.Direction;
 
 import java.util.List;
 
-public abstract class AbstractGmailHelper extends AbstractStandardAppHelper {
-
-    public AbstractGmailHelper(Instrumentation instr) {
-        super(instr);
-    }
+public interface IGmailHelper extends IStandardAppHelper {
 
     /**
      * Setup expectations: Gmail is open and the navigation bar is visible.
      *
      * This method will navigate to the Inbox or Primary, depending on the name.
      */
-    public abstract void goToInbox();
+    public void goToInbox();
 
     /**
      * Alias method for AbstractGmailHelper#goToInbox
      */
-    public void goToPrimary() {
-        goToInbox();
-    }
+    public void goToPrimary();
 
     /**
      * Setup expectations: Gmail is open on the Inbox or Primary page.
      *
      * This method will open a new e-mail to compose and block until complete.
      */
-    public abstract void goToComposeEmail();
+    public void goToComposeEmail();
 
     /**
      * Checks if the current view is the compose email view.
      *
      * @return true if the current view is the compose email view, false otherwise.
      */
-    public abstract boolean isInComposeEmail();
+    public boolean isInComposeEmail();
 
     /**
      * Checks if the app is open on the Inbox or Primary page.
      *
      * @return true if the current view is the Inbox or Primary page, false otherwise.
      */
-    public abstract boolean isInPrimaryOrInbox();
+    public boolean isInPrimaryOrInbox();
 
     /**
      * Setup expectations: Gmail is open and on the Inbox or Primary page.
@@ -69,7 +63,7 @@ public abstract class AbstractGmailHelper extends AbstractStandardAppHelper {
      * visible in the foreground. The top-most visible e-mail will always be labeled 0. To get the
      * number of visible e-mails, consult the getVisibleEmailCount() function.
      */
-    public abstract void openEmailByIndex(int index);
+    public void openEmailByIndex(int index);
 
     /**
      * Setup expectations: Gmail is open and on the Inbox or Primary page.
@@ -77,7 +71,7 @@ public abstract class AbstractGmailHelper extends AbstractStandardAppHelper {
      * This method will return the number of visible e-mails for use with the #openEmailByIndex
      * method.
      */
-    public abstract int getVisibleEmailCount();
+    public int getVisibleEmailCount();
 
     /**
      * Setup expectations: Gmail is open and an e-mail is open in the foreground.
@@ -85,21 +79,21 @@ public abstract class AbstractGmailHelper extends AbstractStandardAppHelper {
      * This method will press reply, send a reply e-mail with the given parameters, and block until
      * the original message is in the foreground again.
      */
-    public abstract void sendReplyEmail(String address, String body);
+    public void sendReplyEmail(String address, String body);
 
     /**
      * Setup expectations: Gmail is open and composing an e-mail.
      *
      * This method will set the e-mail's To address and block until complete.
      */
-    public abstract void setEmailToAddress(String address);
+    public void setEmailToAddress(String address);
 
     /**
      * Setup expectations: Gmail is open and composing an e-mail.
      *
      * This method will set the e-mail's subject and block until complete.
      */
-    public abstract void setEmailSubject(String subject);
+    public void setEmailSubject(String subject);
 
     /**
      * Setup expectations: Gmail is open and composing an e-mail.
@@ -107,14 +101,14 @@ public abstract class AbstractGmailHelper extends AbstractStandardAppHelper {
      * This method will set the e-mail's Body and block until complete. Focus will remain on the
      * e-mail body after completion.
      */
-    public abstract void setEmailBody(String body);
+    public void setEmailBody(String body);
 
     /**
      * Setup expectations: Gmail is open and composing an e-mail.
      *
      * This method will press send and block until the device is idle on the original e-mail.
      */
-    public abstract void clickSendButton();
+    public void clickSendButton();
 
     /**
      * Setup expectations: Gmail is open and composing an e-mail.
@@ -123,28 +117,28 @@ public abstract class AbstractGmailHelper extends AbstractStandardAppHelper {
      *
      * @return {String} the text contained in the email composition's body.
      */
-    public abstract String getComposeEmailBody();
+    public String getComposeEmailBody();
 
     /**
      * Setup expectations: Gmail is open and the navigation drawer is visible.
      *
      * This method will open the navigation drawer and block until complete.
      */
-    public abstract void openNavigationDrawer();
+    public void openNavigationDrawer();
 
     /**
      * Setup expectations: Gmail is open and the navigation drawer is open.
      *
      * This method will close the navigation drawer and returns true otherwise false
      */
-    public abstract boolean closeNavigationDrawer();
+    public boolean closeNavigationDrawer();
 
     /**
      * Setup expectations: Gmail is open and the navigation drawer is open.
      *
      * This method will scroll the navigation drawer and block until idle. Only accepts UP and DOWN.
      */
-    public abstract void scrollNavigationDrawer(Direction dir);
+    public void scrollNavigationDrawer(Direction dir);
 
     /**
      * Setup expectations: Gmail is open and a mailbox is open.
@@ -155,7 +149,7 @@ public abstract class AbstractGmailHelper extends AbstractStandardAppHelper {
      * @param amount        The amount to scroll
      * @param scrollToEnd   Whether or not to scroll to the end
      */
-    public abstract void scrollMailbox(Direction direction, float amount, boolean scrollToEnd);
+    public void scrollMailbox(Direction direction, float amount, boolean scrollToEnd);
 
     /**
      * Setup expectations: Gmail is open and an email is open.
@@ -166,7 +160,7 @@ public abstract class AbstractGmailHelper extends AbstractStandardAppHelper {
      * @param amount        The amount to scroll
      * @param scrollToEnd   Whether or not to scroll to the end
      */
-    public abstract void scrollEmail(Direction direction, float amount, boolean scrollToEnd);
+    public void scrollEmail(Direction direction, float amount, boolean scrollToEnd);
 
     /**
      * Setup expectations: Gmail is open and the navigation drawer is open.
@@ -176,14 +170,14 @@ public abstract class AbstractGmailHelper extends AbstractStandardAppHelper {
      *
      * @param mailboxName The case insensitive name of the mailbox to open
      */
-    public abstract void openMailbox(String mailboxName);
+    public void openMailbox(String mailboxName);
 
     /**
      * Setup expectations: Gmail is open and an email is open.
      *
      * This method will return to the mailbox the current email was opened from.
      */
-    public abstract void returnToMailbox();
+    public void returnToMailbox();
 
     /**
      * Setup expectations: Gmail is open and an email is open.
@@ -194,7 +188,7 @@ public abstract class AbstractGmailHelper extends AbstractStandardAppHelper {
      *
      * @param index The index of the attachment to download
      */
-    public abstract void downloadAttachment(int index);
+    public void downloadAttachment(int index);
 
     /**
      * Setup expectations: Gmail is open and an email is open.
@@ -204,7 +198,7 @@ public abstract class AbstractGmailHelper extends AbstractStandardAppHelper {
      *
      * @return an iterator over the links in the message
      */
-    public abstract List<String> getEmailLinks();
+    public List<String> getEmailLinks();
 
     /**
      * Setup expectations: Gmail is open and an email is open.
@@ -213,5 +207,5 @@ public abstract class AbstractGmailHelper extends AbstractStandardAppHelper {
      *
      * @param target the target of the link to click
      */
-    public abstract void openEmailLink(String target);
+    public void openEmailLink(String target);
 }

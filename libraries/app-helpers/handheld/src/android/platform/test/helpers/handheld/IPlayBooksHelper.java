@@ -18,58 +18,54 @@ package android.platform.test.helpers;
 
 import android.app.Instrumentation;
 
-public abstract class AbstractPlayBooksHelper extends AbstractStandardAppHelper {
-
-    public AbstractPlayBooksHelper(Instrumentation instr) {
-        super(instr);
-    }
+public interface IPlayBooksHelper extends IStandardAppHelper {
 
     /**
      * Setup expectations: PlayBooks is open on any screen.
      *
      * Navigates to "My Library" and selects the "ALL BOOKS" tab.
      */
-    public abstract void goToAllBooksTab();
+    public void goToAllBooksTab();
 
     /**
      * Setup expectations: PlayBooks is open on "My Library - ALL BOOKS" screen.
      *
      * Selects the first Book and start reading.
      */
-    public abstract void openBook();
+    public void openBook();
 
     /**
      * Setup expectations: PlayBooks is on a page of a book.
      *
      * Exits reading mode.
      */
-    public abstract void exitReadingMode();
+    public void exitReadingMode();
 
     /**
      * Setup expectations: PlayBooks is on a full-screen page of a book.
      *
      * Goes to the next page by clicking the right side of the page.
      */
-    public abstract void goToNextPage();
+    public void goToNextPage();
 
     /**
      * Setup expectations: PlayBooks is on a full-screen page of a book.
      *
      * Goes to the previous page by clicking the left side of the page.
      */
-    public abstract void goToPreviousPage();
+    public void goToPreviousPage();
 
     /**
      * Setup expectations: PlayBooks is on a full-screen page of a book.
      *
      * Goes to the next page by scrolling leftwards.
      */
-    public abstract void scrollToNextPage();
+    public void scrollToNextPage();
 
     /**
      * Setup expectations: PlayBooks is on a full-screen page of a book.
      *
      * Goes to the previous page by scrolling rightwards.
      */
-    public abstract void scrollToPreviousPage();
+    public void scrollToPreviousPage();
 }

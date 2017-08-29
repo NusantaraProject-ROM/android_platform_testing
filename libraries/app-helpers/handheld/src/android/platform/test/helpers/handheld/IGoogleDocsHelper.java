@@ -18,12 +18,7 @@ package android.platform.test.helpers;
 
 import android.app.Instrumentation;
 
-public abstract class AbstractGoogleDocsHelper extends AbstractStandardAppHelper {
-
-    public AbstractGoogleDocsHelper(Instrumentation instr) {
-        super(instr);
-    }
-
+public interface IGoogleDocsHelper extends IStandardAppHelper {
     /**
      * Setup expectation: Google Docs is open and the Recent Docs Tab can be reached by
      * pressing back button multiple times, i.e. the test procedure has been on the Recent
@@ -31,7 +26,7 @@ public abstract class AbstractGoogleDocsHelper extends AbstractStandardAppHelper
      *
      * Returns to the Recent Docs Tab.
      */
-    public abstract void goToRecentDocsTab();
+    public void goToRecentDocsTab();
 
     /**
      * Setup expectation: Google Docs is on the Recent Docs tab.
@@ -40,12 +35,12 @@ public abstract class AbstractGoogleDocsHelper extends AbstractStandardAppHelper
      *
      * @param title The title (case sensitive) of the document as is displayed in the app.
      */
-    public abstract void openDoc(String title);
+    public void openDoc(String title);
 
     /**
      * Setup expectation: Google Docs is on a document page.
      *
      * Scrolls down the document.
      */
-    public abstract void scrollDownDocument();
+    public void scrollDownDocument();
 }

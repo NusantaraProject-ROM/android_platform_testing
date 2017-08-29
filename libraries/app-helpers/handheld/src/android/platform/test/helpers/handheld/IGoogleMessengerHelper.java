@@ -19,32 +19,27 @@ package android.platform.test.helpers;
 import android.app.Instrumentation;
 import android.support.test.uiautomator.Direction;
 
-public abstract class AbstractGoogleMessengerHelper extends AbstractStandardAppHelper {
-
-    public AbstractGoogleMessengerHelper(Instrumentation instr) {
-        super(instr);
-    }
-
+public interface IGoogleMessengerHelper extends IStandardAppHelper {
     /*
      * Setup expectations: Google Messenger app is open.
      *
      * This method brings the Messenger app to the home page.
      */
-    public abstract void goToHomePage();
+    public void goToHomePage();
 
     /*
      * Setup expectation: Google Messenger app is on the home page.
      *
      * This method brings up the new conversation page.
      */
-    public abstract void goToNewConversationPage();
+    public void goToNewConversationPage();
 
     /*
      * Setup expectations: Google Messenger app is on the new conversation page.
      *
      * This method moves the Google Messenger app to messages page with the specified contacts.
      */
-    public abstract void goToMessagesPage();
+    public void goToMessagesPage();
 
     /**
      * Setup expectations: Google Messenger app is on the messages page.
@@ -53,21 +48,21 @@ public abstract class AbstractGoogleMessengerHelper extends AbstractStandardAppH
      *
      * @param direction Direction to scroll, must be UP or DOWN.
      */
-    public abstract void scrollMessages(Direction direction);
+    public void scrollMessages(Direction direction);
 
     /**
      * Setup expectations: Google Messenger app is on the messages page.
      *
      * This method clicks the "send message" textbox on the messages page.
      */
-    public abstract void clickComposeMessageText();
+    public void clickComposeMessageText();
 
     /**
      * Setup expectations:
      *   1. Google Messenger app is on the messages page
      *   2. New message textbox is not empty.
      */
-    public abstract void clickSendMessageButton();
+    public void clickSendMessageButton();
 
     /**
      * Setup expectations: Google Messenger app is on the messages page.
@@ -75,5 +70,5 @@ public abstract class AbstractGoogleMessengerHelper extends AbstractStandardAppH
      * This method clicks the "attach media" button and attaches the media file with the given
      * index in the device media gallery view.
      */
-    public abstract void attachMediaFromDevice(int index);
+    public void attachMediaFromDevice(int index);
 }

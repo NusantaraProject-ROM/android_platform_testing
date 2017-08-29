@@ -19,12 +19,7 @@ package android.platform.test.helpers;
 import android.app.Instrumentation;
 import android.support.test.uiautomator.Direction;
 
-public abstract class AbstractPhotosHelper extends AbstractStandardAppHelper {
-
-    public AbstractPhotosHelper(Instrumentation instr) {
-        super(instr);
-    }
-
+public interface IPhotosHelper extends IStandardAppHelper {
     /**
      * Setup expectations: Photos is open and on the main or a device folder's screen.
      *
@@ -33,7 +28,7 @@ public abstract class AbstractPhotosHelper extends AbstractStandardAppHelper {
      *
      * @return true if video clips are found, false otherwise
      */
-    public abstract boolean searchForVideoClip();
+    public boolean searchForVideoClip();
 
     /**
      * Setup expectations: Photos is open and on the main or a device folder's screen.
@@ -41,35 +36,35 @@ public abstract class AbstractPhotosHelper extends AbstractStandardAppHelper {
      * This method will select the first clip to open and play. This will block until the clip
      * begins to plays.
      */
-    public abstract void openFirstClip();
+    public void openFirstClip();
 
     /**
      * Setup expectations: Photos is open and a clip is currently playing.
      *
      * This method will pause the current clip and block until paused.
      */
-    public abstract void pauseClip();
+    public void pauseClip();
 
     /**
      * Setup expectations: Photos is open and a clip is currently paused in the foreground.
      *
      * This method will play the current clip and block until it is playing.
      */
-    public abstract void playClip();
+    public void playClip();
 
     /**
      * Setup expectations: Photos is open.
      *
      * This method will go to the main screen.
      */
-    public abstract void goToMainScreen();
+    public void goToMainScreen();
 
     /**
      * Setup expectations: Photos is open.
      *
      * This method will go to device folder screen.
      */
-    public abstract void goToDeviceFolderScreen();
+    public void goToDeviceFolderScreen();
 
     /**
      * Setup expectations:
@@ -84,7 +79,7 @@ public abstract class AbstractPhotosHelper extends AbstractStandardAppHelper {
      * @param folderName  User-specified device folder name
      * @return true if device folder is found, false otherwise
      */
-    public abstract boolean searchForDeviceFolder(String folderName);
+    public boolean searchForDeviceFolder(String folderName);
 
     /**
      * Setup expectations:
@@ -96,7 +91,7 @@ public abstract class AbstractPhotosHelper extends AbstractStandardAppHelper {
      *
      * @param folderName  User-specified device folder name
      */
-    public abstract void openDeviceFolder(String folderName);
+    public void openDeviceFolder(String folderName);
 
     /**
      * Setup expectations: Photos is open and on the main or a device folder's screen.
@@ -106,7 +101,7 @@ public abstract class AbstractPhotosHelper extends AbstractStandardAppHelper {
      *
      * @return true if pictures are found
      */
-    public abstract boolean searchForPicture();
+    public boolean searchForPicture();
 
     /**
      * Setup expectations: Photos is open and on the main or a device folder's screen.
@@ -115,7 +110,7 @@ public abstract class AbstractPhotosHelper extends AbstractStandardAppHelper {
      *
      * @param index The index of the picture to open
      */
-    public abstract void openPicture(int index);
+    public void openPicture(int index);
 
     /**
      * Setup expectations: Photos is open and a picture album is open.
@@ -124,5 +119,5 @@ public abstract class AbstractPhotosHelper extends AbstractStandardAppHelper {
      *
      * @param direction The direction to scroll, must be LEFT or RIGHT.
      */
-    public abstract void scrollAlbum(Direction direction);
+    public void scrollAlbum(Direction direction);
 }
