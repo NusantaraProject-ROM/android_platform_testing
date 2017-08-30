@@ -16,21 +16,14 @@
 
 package android.platform.test.helpers;
 
-import android.app.Instrumentation;
-
-public abstract class AbstractAutoMediaHelper extends AbstractStandardAppHelper{
-
-    public AbstractAutoMediaHelper(Instrumentation instr) {
-        super(instr);
-    }
-
+public interface IAutoMediaHelper extends IStandardAppHelper {
     /**
      * Setup expectations: media app is open
      *
      * This method is used to play media.
      *
      */
-    public abstract void playMedia();
+    void playMedia();
 
     /**
      * Setup expectations: media app is open.
@@ -38,7 +31,7 @@ public abstract class AbstractAutoMediaHelper extends AbstractStandardAppHelper{
      * This method is used to pause media.
      *
      */
-    public abstract void pauseMedia();
+    void pauseMedia();
 
     /**
      * Setup expectations: media app is open.
@@ -46,7 +39,7 @@ public abstract class AbstractAutoMediaHelper extends AbstractStandardAppHelper{
      * This method is used to select next track.
      *
      */
-    public abstract void clickNextTrack();
+    void clickNextTrack();
 
     /**
      * Setup expectations: media app is open.
@@ -54,7 +47,7 @@ public abstract class AbstractAutoMediaHelper extends AbstractStandardAppHelper{
      * This method is used to select previous track.
      *
      */
-    public abstract void clickPreviousTrack();
+    void clickPreviousTrack();
 
     /**
      * Setup expectations: media app is open.
@@ -62,7 +55,7 @@ public abstract class AbstractAutoMediaHelper extends AbstractStandardAppHelper{
      * This method is used to shuffle tracks.
      *
      */
-    public abstract void clickShuffleAll();
+    void clickShuffleAll();
 
     /**
      * Setup expectations: media app is open.
@@ -74,7 +67,7 @@ public abstract class AbstractAutoMediaHelper extends AbstractStandardAppHelper{
      * @param - menuOptions used to pass multiple level of menu options in one go.
      *
      */
-    public abstract void openMenuWith(String... menuOptions);
+    void openMenuWith(String... menuOptions);
 
     /**
      * Setup expectations: media app is open.
@@ -83,13 +76,13 @@ public abstract class AbstractAutoMediaHelper extends AbstractStandardAppHelper{
      *
      *  @param - trackName - media to be played.
      */
-    public abstract void openNowPlayingWith(String trackName);
+    void openNowPlayingWith(String trackName);
 
     /**
      * Setup expectations: Radio app is open.
      *
      * @return to get current playing track name.
      */
-    public abstract String getMediaTrackName();
+    String getMediaTrackName();
 
 }

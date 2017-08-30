@@ -21,55 +21,50 @@ import android.app.Instrumentation;
 /**
  * Helper class for functional tests of Settings facet
  */
-public abstract class AbstractAutoSettingHelper extends AbstractStandardAppHelper {
-
-    public AbstractAutoSettingHelper(Instrumentation instr) {
-        super(instr);
-    }
-
+public interface IAutoSettingHelper extends IStandardAppHelper {
     /**
      * Setup expectations: The app is open and the settings facet is open
      *
      * @param setting  option to open.
      */
-    public abstract void openSetting(String setting);
+    void openSetting(String setting);
 
     /**
      * Setup expectations: The app is open and wifi setting options is selected
      *
      * Turns on/off wifi
      */
-    public abstract void turnOnOffWifi(boolean turnOn);
+    void turnOnOffWifi(boolean turnOn);
 
     /**
      * Setup expectations: The app is open and bluetooth setting options is selected
      *
      * Turns on/off bluetooth
      */
-    public abstract void turnOnOffBluetooth(boolean turnOn);
+    void turnOnOffBluetooth(boolean turnOn);
 
     /**
      * Setup expectations: The app is open.
      *
      * Checks if the wifi is enabled.
      */
-    public abstract boolean isWifiOn();
+    boolean isWifiOn();
 
     /**
      * Setup expectations: The app is open.
      *
      * Checks if the bluetooth is enabled.
      */
-    public abstract boolean isBluetoothOn();
+    boolean isBluetoothOn();
 
     /**
      * Setup expectations: The app is open and the settings facet is open
      */
-    public abstract void goBackToSettingsScreen();
+    void goBackToSettingsScreen();
 
     /**
      * Force stops the settings application
      */
-    public abstract void stopSettingsApplication();
+    void stopSettingsApplication();
 
 }
