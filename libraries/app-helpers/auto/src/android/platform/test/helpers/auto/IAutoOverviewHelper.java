@@ -18,19 +18,14 @@ package android.platform.test.helpers;
 
 import android.app.Instrumentation;
 
-public abstract class AbstractAutoOverviewHelper extends AbstractStandardAppHelper{
-
-    public AbstractAutoOverviewHelper(Instrumentation instr) {
-        super(instr);
-    }
-
+public interface IAutoOverviewHelper extends IStandardAppHelper{
     /**
      * Setup expectations: in home (overview) screen.
      *
      * This method is used to open settings.
      *
      */
-    public abstract void openSettings();
+    void openSettings();
 
     /**
      * Setup expectations: in home (overview) screen.
@@ -38,7 +33,7 @@ public abstract class AbstractAutoOverviewHelper extends AbstractStandardAppHelp
      * This method is used to start voice assistant.
      *
      */
-    public abstract void startVoiceAssistant();
+    void startVoiceAssistant();
 
     /**
      * Setup expectations:
@@ -51,7 +46,7 @@ public abstract class AbstractAutoOverviewHelper extends AbstractStandardAppHelp
      * This method is used to click next track/next station on Media/Radio card.
      *
      */
-    public abstract void clickNextTrack();
+    void clickNextTrack();
 
     /**
      * Setup expectations:
@@ -64,7 +59,7 @@ public abstract class AbstractAutoOverviewHelper extends AbstractStandardAppHelp
      * This method is used to click previous track/previous station on Media/Radio card.
      *
      */
-    public abstract void clickPreviousTrack();
+    void clickPreviousTrack();
 
     /**
      * Setup expectations:
@@ -77,7 +72,7 @@ public abstract class AbstractAutoOverviewHelper extends AbstractStandardAppHelp
      * This method is used to play media on Media/Radio card.
      *
      */
-    public abstract void playMedia();
+    void playMedia();
 
     /**
      * Setup expectations:
@@ -90,7 +85,7 @@ public abstract class AbstractAutoOverviewHelper extends AbstractStandardAppHelp
      * This method is used to pause media on Media/Radio card.
      *
      */
-    public abstract void pauseMedia();
+    void pauseMedia();
 
     /**
      * Setup expectations:
@@ -104,7 +99,7 @@ public abstract class AbstractAutoOverviewHelper extends AbstractStandardAppHelp
      * ( Radio,Bluetooth Media, Local Media player).
      *
      */
-    public abstract void openMediaApp();
+    void openMediaApp();
 
     /**
      * Setup expectations:
@@ -117,7 +112,7 @@ public abstract class AbstractAutoOverviewHelper extends AbstractStandardAppHelp
      * This method is used to end call on Dial card.
      *
      */
-    public abstract void endCall();
+    void endCall();
 
     /**
      * Setup expectations:
@@ -130,7 +125,7 @@ public abstract class AbstractAutoOverviewHelper extends AbstractStandardAppHelp
      * This method is used to mute on going call.
      *
      */
-    public abstract void muteCall();
+    void muteCall();
 
     /**
      * Setup expectations:
@@ -143,6 +138,6 @@ public abstract class AbstractAutoOverviewHelper extends AbstractStandardAppHelp
      * This method is used to dial recent call activity.
      *
      */
-    public abstract void dialRecentCall();
+    void dialRecentCall();
 
 }
