@@ -102,8 +102,5 @@ public interface IGoogleFitHelper extends IStandardAppHelper {
      *
      * Check summary after an activity
      */
-    default void checkSummary() {
-        throw new UnsupportedOperationException(
-                "checkSummary is not implemented for Fit.");
-    }
+    public void checkSummary();
 }

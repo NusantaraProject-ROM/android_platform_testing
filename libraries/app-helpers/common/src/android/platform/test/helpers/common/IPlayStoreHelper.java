@@ -54,8 +54,5 @@ public interface IPlayStoreHelper extends IStandardAppHelper {
      * Press the uninstall button. This method will block until
      * the app completes uninstallation, though uninstallation cannot be guaranteed.
      */
-    default void uninstallApp() {
-        throw new UnsupportedOperationException(
-                "uninstallApp is not implemented for Play Store.");
-    }
+    public void uninstallApp();
 }

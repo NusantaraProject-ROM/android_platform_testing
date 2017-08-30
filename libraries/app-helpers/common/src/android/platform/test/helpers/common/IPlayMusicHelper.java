@@ -66,11 +66,7 @@ public interface IPlayMusicHelper extends IStandardAppHelper {
      * This method will navigate to the Library tab, select the Album tab, and then select the
      * album. The method will block until the song is playing.
      */
-    default void selectAlbum(String album) {
-        throw new UnsupportedOperationException(
-                "Cannot select a single album as playback for Google Play Music.");
-    }
-
+    public void selectAlbum(String album);
 
     /**
      * Setup expectations: PlayMusic is open with a song playing.
