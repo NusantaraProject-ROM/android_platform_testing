@@ -16,26 +16,19 @@
 
 package android.platform.test.helpers;
 
-import android.app.Instrumentation;
-
-public abstract class AbstractPlayMoviesHelper extends AbstractStandardAppHelper {
-
-    public AbstractPlayMoviesHelper(Instrumentation instr) {
-        super(instr);
-    }
-
+public interface IPlayMoviesHelper extends IStandardAppHelper {
     /**
      * Setup expectations: PlayMovies is open on any screen with access to the navigation bar.
      *
      * This method will navigate to "My Library" and select the "My Movies" tab. This will block
      * until the method is complete.
      */
-    public abstract void openMoviesTab();
+    public void openMoviesTab();
 
     /**
      * Setup expectations: PlayMovies is open on any screen.
      *
      * PlayMovies will select the movie card and subsequently press the play button.
      */
-    public abstract void playMovie(String name);
+    public void playMovie(String name);
 }

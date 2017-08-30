@@ -16,9 +16,7 @@
 
 package android.platform.test.helpers;
 
-import android.app.Instrumentation;
-
-public abstract class AbstractYouTubeHelper extends AbstractStandardAppHelper {
+public interface IYouTubeHelper extends IStandardAppHelper {
 
     public enum VideoQuality {
         QUALITY_AUTO ("Auto"),
@@ -40,23 +38,19 @@ public abstract class AbstractYouTubeHelper extends AbstractStandardAppHelper {
         }
     };
 
-    public AbstractYouTubeHelper(Instrumentation instr) {
-        super(instr);
-    }
-
     /**
      * Setup expectations: YouTube app is open.
      *
      * This method keeps pressing the back button until YouTube is on the home page.
      */
-    public abstract void goToHomePage();
+    public void goToHomePage();
 
     /**
      * Setup expectations: YouTube is on the home page.
      *
      * This method scrolls to the top of the home page and clicks the search button.
      */
-    public abstract void goToSearchPage();
+    public void goToSearchPage();
 
     /**
      * Setup expectations: YouTube is on the non-fullscreen video player page.
@@ -64,21 +58,21 @@ public abstract class AbstractYouTubeHelper extends AbstractStandardAppHelper {
      * This method changes the video player to fullscreen mode. Has no effect if the video player
      * is already in fullscreen mode.
      */
-    public abstract void goToFullscreenMode();
+    public void goToFullscreenMode();
 
     /**
      * Setup expectations: YouTube is on the home page.
      *
      * This method selects a video on the home page and blocks until the video is playing.
      */
-    public abstract void playHomePageVideo();
+    public void playHomePageVideo();
 
     /**
      * Setup expectations: YouTube is on the search results page.
      *
      * This method selects a search result video and blocks until the video is playing.
      */
-    public abstract void playSearchResultPageVideo();
+    public void playSearchResultPageVideo();
 
     /**
      * Setup expectations: Recently opened a video in the YouTube app.
@@ -88,7 +82,7 @@ public abstract class AbstractYouTubeHelper extends AbstractStandardAppHelper {
      * @param timeout wait timeout in milliseconds
      * @return true if video loaded within the timeout, false otherwise
      */
-    public abstract boolean waitForVideoToLoad(long timeout);
+    public boolean waitForVideoToLoad(long timeout);
 
     /**
      * Setup expectations: Recently initiated a search query in the YouTube app.
@@ -98,7 +92,7 @@ public abstract class AbstractYouTubeHelper extends AbstractStandardAppHelper {
      * @param timeout wait timeout in milliseconds
      * @return true if search results appeared within timeout, false otherwise
      */
-    public abstract boolean waitForSearchResults(long timeout);
+    public boolean waitForSearchResults(long timeout);
 
     /**
      * Setup expectations: YouTube is on the video player page.
@@ -106,21 +100,21 @@ public abstract class AbstractYouTubeHelper extends AbstractStandardAppHelper {
      * This method changes the video quality of the current video.
      *
      * @param quality   the desired video quality
-     * @see AbstractYouTubeHelper.VideoQuality
+     * @see IYouTubeHelper.VideoQuality
      */
-    public abstract void setVideoQuality(VideoQuality quality);
+    public void setVideoQuality(VideoQuality quality);
 
     /**
      * Setup expectations: YouTube is on the video player page.
      *
      * This method pauses the video if it is playing.
      */
-    public abstract void pauseVideo();
+    public void pauseVideo();
 
     /**
      * Setup expectations: YouTube is on the video player page.
      *
      * This method resumes the video if it is paused.
      */
-    public abstract void resumeVideo();
+    public void resumeVideo();
 }
