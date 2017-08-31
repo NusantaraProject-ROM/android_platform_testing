@@ -19,74 +19,69 @@ package android.platform.test.helpers;
 
 import android.app.Instrumentation;
 
-public abstract class AbstractAutoRadioHelper extends AbstractStandardAppHelper {
-
-    public AbstractAutoRadioHelper(Instrumentation instr) {
-        super(instr);
-    }
-
+public interface IAutoRadioHelper extends IStandardAppHelper {
     /**
      * Setup expectations: Radio app is open
      *
      * This method is used to play Radio.
      */
-    public abstract void playRadio();
+    void playRadio();
 
     /**
      * Setup expectations: Radio app is open.
      *
      * This method is used to pause radio.
      */
-    public abstract void pauseRadio();
+    void pauseRadio();
 
     /**
      * Setup expectations: Radio app is open.
      *
      * This method is used to select next station.
      */
-    public abstract void clickNextStation();
+    void clickNextStation();
 
     /**
      * Setup expectations: Radio app is open.
      *
      * This method is used to select previous station.
      */
-    public abstract void clickPreviousStation();
+    void clickPreviousStation();
 
     /**
      * Setup expectations: Radio app is open.
      *
      * This method is used to save current station.
      */
-    public abstract void saveCurrentStation();
+    void saveCurrentStation();
 
     /**
      * Setup expectations: Radio app is open
      *
      * This method is used to unsave current station.
      */
-    public abstract void unsaveCurrentStation();
+    void unsaveCurrentStation();
 
     /**
      * Setup expectations: Radio app is open
      *
      * This method is used to open saved station list.
      */
-    public abstract void openSavedStationList();
+    void openSavedStationList();
 
     /**
      * Setup expectations: Radio app is open.
      *
      * This method is used to select AM from menu.
      */
-    public abstract void clickAmFromMenu();
+    void clickAmFromMenu();
 
     /**
      * Setup expectations: Radio app is open.
      *
      * This method is used to select FM from menu.
      */
-    public abstract void clickFmFromMenu();
+    void clickFmFromMenu();
 
     /**
      * Setup expectations: Radio app is open.
@@ -96,14 +91,14 @@ public abstract class AbstractAutoRadioHelper extends AbstractStandardAppHelper 
      * @param stationType - to select AM or FM.
      * @param band        - band to tune in.
      */
-    public abstract void setStation(String stationType, double band);
+    void setStation(String stationType, double band);
 
     /**
      * Setup expectations: Radio app is open.
      *
      * @return to get current playing station band with Am or Fm.
      */
-    public abstract String getStationBand();
+    String getStationBand();
 
     /**
      * Setup expectations: Radio app is open and
@@ -111,7 +106,7 @@ public abstract class AbstractAutoRadioHelper extends AbstractStandardAppHelper 
      *
      * This method is used to pause radio from current station card
      */
-    public abstract void pauseCurrentStationCard();
+    void pauseCurrentStationCard();
 
     /**
      * Setup expectations: Radio app is open and
@@ -119,7 +114,7 @@ public abstract class AbstractAutoRadioHelper extends AbstractStandardAppHelper 
      *
      * This method is used to play radio from current station card
      */
-    public abstract void playCurrentStationCard();
+    void playCurrentStationCard();
 
     /**
      * Setup expectations: Radio app is open and
@@ -127,7 +122,7 @@ public abstract class AbstractAutoRadioHelper extends AbstractStandardAppHelper 
      *
      * This method is used to exit current station card
      */
-    public abstract void exitCurrentStationCard();
+    void exitCurrentStationCard();
 
     /**
      * Setup expectations: Radio app is open and
@@ -137,5 +132,5 @@ public abstract class AbstractAutoRadioHelper extends AbstractStandardAppHelper 
      *
      * @param channelName : the channel name to be played
      */
-    public abstract void playFavoriteStation(String channelName);
+    void playFavoriteStation(String channelName);
 }

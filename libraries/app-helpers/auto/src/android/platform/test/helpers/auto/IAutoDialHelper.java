@@ -18,12 +18,7 @@ package android.platform.test.helpers;
 
 import android.app.Instrumentation;
 
-public abstract class AbstractAutoDialHelper extends AbstractStandardAppHelper {
-
-    public AbstractAutoDialHelper(Instrumentation instr) {
-        super(instr);
-    }
-
+public interface IAutoDialHelper extends IStandardAppHelper {
     /**
      * Setup expectations: The app is open and the drawer is open
      *
@@ -31,49 +26,49 @@ public abstract class AbstractAutoDialHelper extends AbstractStandardAppHelper {
      *
      * @param phoneNumber  phone number to dial.
      */
-    public abstract void dialANumber(String phoneNumber);
+    void dialANumber(String phoneNumber);
 
     /**
      * Setup expectations: The app is open and there is an ongoing call.
      *
      * This method is used to end call.
      */
-    public abstract void endCall();
+    void endCall();
 
     /**
      * Setup expectations: The app is open and the drawer is open.
      *
      * This method is used to open call history details.
      */
-    public abstract void openCallHistory();
+    void openCallHistory();
 
     /**
      * Setup expectations: The app is open and the drawer is open.
      *
      * This method is used to open missed call details.
      */
-    public abstract void openMissedCall();
+    void openMissedCall();
 
     /**
      * Setup expectations: The app is open and in "Dial a number" drawer option
      *
      * This method is used to delete the number entered on dialpad using backspace
      */
-    public abstract void deleteDialedNumber();
+    void deleteDialedNumber();
 
     /**
      * Setup expectations: The app is open and in "Dial a number" drawer option
      *
      * This method is used to get the number entered on dialpad
      */
-    public abstract String getDialedNumber();
+    String getDialedNumber();
 
     /**
      * Setup expectations: The app is open and there is an ongoing call.
      *
      * This method is used to get the name of the contact for the ongoing call
      */
-    public abstract String getDialedContactName();
+    String getDialedContactName();
 
     /**
      * Setup expectations: The app is open and phonenumber is entered on the dialpad
@@ -81,7 +76,7 @@ public abstract class AbstractAutoDialHelper extends AbstractStandardAppHelper {
      * This method is used to make a call
      *
      */
-    public abstract void makeCall();
+    void makeCall();
 
     /**
      * Setup expectations: The app is open
@@ -91,26 +86,26 @@ public abstract class AbstractAutoDialHelper extends AbstractStandardAppHelper {
      *
      * @param phoneNumber  phoneNumber to be dialed
      */
-    public abstract void dialNumberFromList(String phoneNumber);
+    void dialNumberFromList(String phoneNumber);
 
     /**
      * Setup expectations: The app is open and there is an ongoing call
      *
      * This method is used to enter number on the in-call dialpad
      */
-    public abstract void inCallDialPad(String phoneNumber);
+    void inCallDialPad(String phoneNumber);
 
     /**
      * Setup expectations: The app is open and there is an ongoing call
      *
      * This method is used to mute the ongoing call
      */
-    public abstract void muteCall();
+    void muteCall();
 
     /**
      * Setup expectations: The app is open and there is an ongoing call
      *
      * This method is used to unmute the ongoing call
      */
-    public abstract void unmuteCall();
+    void unmuteCall();
 }

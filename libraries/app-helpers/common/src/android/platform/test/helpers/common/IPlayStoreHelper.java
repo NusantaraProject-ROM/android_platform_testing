@@ -16,28 +16,22 @@
 
 package android.platform.test.helpers;
 
-import android.app.Instrumentation;
 
-public abstract class AbstractPlayStoreHelper extends AbstractStandardAppHelper {
-
-    public AbstractPlayStoreHelper(Instrumentation instr) {
-        super(instr);
-    }
-
+public interface IPlayStoreHelper extends IStandardAppHelper {
     /**
      * Setup expectations: The app is open.
      *
      * Looks for the search bar or button by scrolling up or pressing back. It then enters a query,
      * and displays the results. This method blocks until the results are selectable.
      */
-    public abstract void doSearch(String query);
+    public void doSearch(String query);
 
     /**
      * Setup expectations: There are visible search results.
      *
      * Selects the first search result card and blocks until the app's install page is open.
      */
-    public abstract void selectFirstResult();
+    public void selectFirstResult();
 
     /**
      * Setup expectations: An app's install page is open, but the app is not installed.
@@ -45,14 +39,14 @@ public abstract class AbstractPlayStoreHelper extends AbstractStandardAppHelper 
      * Press the install button and dismiss any confirmation dialogs. This method will block until
      * the app starts downloading, though installation cannot be guaranteed.
      */
-    public abstract void installApp();
+    public void installApp();
 
     /**
      * Setup expectations: An app's install page is open.
      *
      * @return true, if the app is already installed, or false if not.
      */
-    public abstract boolean isAppInstalled();
+    public boolean isAppInstalled();
 
     /**
      * Setup expectations: An app's install page is open, and the app is installed.
@@ -60,8 +54,5 @@ public abstract class AbstractPlayStoreHelper extends AbstractStandardAppHelper 
      * Press the uninstall button. This method will block until
      * the app completes uninstallation, though uninstallation cannot be guaranteed.
      */
-    public void uninstallApp() {
-        throw new UnsupportedOperationException(
-                "uninstallApp is not implemented for Play Store.");
-    }
+    public void uninstallApp();
 }

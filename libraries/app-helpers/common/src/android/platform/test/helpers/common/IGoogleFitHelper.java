@@ -16,36 +16,29 @@
 
 package android.platform.test.helpers;
 
-import android.app.Instrumentation;
-
 import java.io.IOException;
 
-public abstract class AbstractGoogleFitHelper extends AbstractStandardAppHelper {
-
-    public AbstractGoogleFitHelper(Instrumentation instr) {
-        super(instr);
-    }
-
+public interface IGoogleFitHelper extends IStandardAppHelper {
     /**
      * Setup expectations: Google Fit is open and idle.
      *
      * This method will open the "Home" page of Fit
      */
-    public abstract void goToHome();
+    public void goToHome();
 
     /**
      * Setup expectations: Google Fit is open and idle.
      *
      * This method will open the "Timeline" page of Fit
      */
-    public abstract void goToTimeline();
+    public void goToTimeline();
 
     /**
      * Setup expectations: Google Fit is open and idle.
      *
      * This method will open the "Challenges" page of Fit
      */
-    public abstract void goToChallenges();
+    public void goToChallenges();
 
     /**
      * Setup expectations: Google Fit is open and idle on the home page.
@@ -54,7 +47,7 @@ public abstract class AbstractGoogleFitHelper extends AbstractStandardAppHelper 
      * @param mode the goal type by steps (1), duration (2), or run times (3)
      * @param value the method will set values for each type of goal
      */
-    public abstract void addGoal(int mode, int value);
+    public void addGoal(int mode, int value);
 
     /**
      * Setup expectations: Google Fit is open and idle on the home page or timeline page.
@@ -66,7 +59,7 @@ public abstract class AbstractGoogleFitHelper extends AbstractStandardAppHelper 
      * @param steps value of Steps
      * @param distance value of Distance in mile
      */
-    public abstract void addActivity(String activity, int duration, int calories,
+    public void addActivity(String activity, int duration, int calories,
                                      int steps, int distance);
     /**
      * Setup expectations: Google Fit is open and idle on the home page or timeline page.
@@ -74,43 +67,40 @@ public abstract class AbstractGoogleFitHelper extends AbstractStandardAppHelper 
      * This method will select an activity type and start an activity session
      * @param activity case-insensitive activity types, like: running, biking, walking
      */
-    public abstract void startActivity(String activity) throws IOException;
+    public void startActivity(String activity) throws IOException;
 
     /**
      * Setup expectations: An activity session is started.
      *
      * This method will pause the current activity and end on the activity page.
      */
-    public abstract void pauseActivity();
+    public void pauseActivity();
 
     /**
      * Setup expectations: An activity session is paused.
      *
      * This method will resume the current paused activity and end on the activity page.
      */
-    public abstract void resumeActivity();
+    public void resumeActivity();
 
     /**
      * Setup expectations: An activity session is paused.
      *
      * This method will terminate and save the current activity and end on the activity summary page
      */
-    public abstract void saveActivity();
+    public void saveActivity();
 
     /**
      * Setup expectations: An activity session is started.
      *
      * This method will stop the current activity and end on the activity page.
      */
-    public abstract void stopActivity() throws IOException;
+    public void stopActivity() throws IOException;
 
     /**
      * Setup expectation: On the summary page
      *
      * Check summary after an activity
      */
-    public void checkSummary() {
-        throw new UnsupportedOperationException(
-                "checkSummary is not implemented for Fit.");
-    }
+    public void checkSummary();
 }
