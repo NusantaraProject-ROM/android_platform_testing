@@ -20,7 +20,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE_TAGS := tests
 LOCAL_PACKAGE_NAME := LongevityLibSamples
 LOCAL_SDK_VERSION := 24
-LOCAL_STATIC_JAVA_LIBRARIES := longevity-lib guava
+LOCAL_STATIC_JAVA_LIBRARIES := longevity-lib
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
 include $(BUILD_PACKAGE)
