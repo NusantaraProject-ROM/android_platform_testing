@@ -18,12 +18,11 @@ package android.platform.test.helpers;
 
 import android.app.Instrumentation;
 
-public interface IAutoOverviewHelper extends IStandardAppHelper{
+public interface IAutoOverviewHelper extends IStandardAppHelper {
     /**
      * Setup expectations: in home (overview) screen.
      *
      * This method is used to open settings.
-     *
      */
     void openSettings();
 
@@ -31,7 +30,6 @@ public interface IAutoOverviewHelper extends IStandardAppHelper{
      * Setup expectations: in home (overview) screen.
      *
      * This method is used to start voice assistant.
-     *
      */
     void startVoiceAssistant();
 
@@ -44,7 +42,6 @@ public interface IAutoOverviewHelper extends IStandardAppHelper{
      * else throws UnknownUiException if element not found.
      *
      * This method is used to click next track/next station on Media/Radio card.
-     *
      */
     void clickNextTrack();
 
@@ -57,7 +54,6 @@ public interface IAutoOverviewHelper extends IStandardAppHelper{
      * else throws UnknownUiException if element not found.
      *
      * This method is used to click previous track/previous station on Media/Radio card.
-     *
      */
     void clickPreviousTrack();
 
@@ -70,7 +66,6 @@ public interface IAutoOverviewHelper extends IStandardAppHelper{
      * else throws UnknownUiException if element not found.
      *
      * This method is used to play media on Media/Radio card.
-     *
      */
     void playMedia();
 
@@ -83,7 +78,6 @@ public interface IAutoOverviewHelper extends IStandardAppHelper{
      * else throws UnknownUiException if element not found.
      *
      * This method is used to pause media on Media/Radio card.
-     *
      */
     void pauseMedia();
 
@@ -97,7 +91,6 @@ public interface IAutoOverviewHelper extends IStandardAppHelper{
      *
      * This method is used to open active media card app.
      * ( Radio,Bluetooth Media, Local Media player).
-     *
      */
     void openMediaApp();
 
@@ -110,7 +103,6 @@ public interface IAutoOverviewHelper extends IStandardAppHelper{
      * else throws UnknownUiException if element not found.
      *
      * This method is used to end call on Dial card.
-     *
      */
     void endCall();
 
@@ -123,7 +115,6 @@ public interface IAutoOverviewHelper extends IStandardAppHelper{
      * else throws UnknownUiException if element not found.
      *
      * This method is used to mute on going call.
-     *
      */
     void muteCall();
 
@@ -136,8 +127,20 @@ public interface IAutoOverviewHelper extends IStandardAppHelper{
      * else throws UnknownUiException if element not found.
      *
      * This method is used to dial recent call activity.
-     *
      */
     void dialRecentCall();
 
+    /**
+     * Setup expectations:
+     * 1.Play media from Media player
+     * 2.Select Home button.
+     * 3.Media card shown on Home screen
+     *
+     * else throws UnknownUiException if element not found.
+     *
+     * This method is used to get the media-title/trackname on the media card.
+     *
+     * @return current media-title/trackname
+     */
+    String getMediaTitle();
 }
