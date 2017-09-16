@@ -24,7 +24,7 @@ import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
 import android.system.helpers.CommandsHelper;
 
-public class AutoLauncherStrategy  implements IAutoLauncherStrategy {
+public class AutoLauncherStrategy implements IAutoLauncherStrategy {
 
     private static final String LOG_TAG = AutoLauncherStrategy.class.getSimpleName();
     private static final String CAR_LENSPICKER = "com.android.support.car.lenspicker";
@@ -72,7 +72,7 @@ public class AutoLauncherStrategy  implements IAutoLauncherStrategy {
     }
 
     @Override
-    public  void openMediaFacet(String appName) {
+    public void openMediaFacet(String appName) {
         openApp(appName, MEDIA_FACET, FACET_APPS);
     }
 
@@ -91,6 +91,7 @@ public class AutoLauncherStrategy  implements IAutoLauncherStrategy {
     public void openHomeFacet() {
         CommandsHelper.getInstance(mInstrumentation).executeShellCommand(
                 "input tap " + HOME_FACET + " " + FACET_APPS);
+        mDevice.waitForIdle(APP_INIT_WAIT);
     }
 
     public void openApp(String appName, int x, int y) {
