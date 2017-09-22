@@ -31,9 +31,9 @@ import org.junit.Test;
 import org.junit.rules.TestRule;
 import org.junit.rules.Timeout;
 
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import com.android.permissionutils.GrantPermissionUtil;
 
@@ -51,7 +51,7 @@ public abstract class HelperTest<T extends IStandardAppHelper> {
 
     // Global 5-minute test timeout
     @Rule
-    public final TestRule timeout = Timeout.millis(Duration.ofMinutes(5).toMillis());
+    public final TestRule timeout = new Timeout((int)TimeUnit.MINUTES.toMillis(5));
 
     // Global screenshot capture on failures
     public FailureTestWatcher watcher = new FailureTestWatcher();
