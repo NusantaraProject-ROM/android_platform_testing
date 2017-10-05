@@ -60,6 +60,15 @@ public interface IAutoMediaHelper extends IStandardAppHelper {
     /**
      * Setup expectations: media app is open.
      *
+     * This method is used to click on nth instance among the visible menu items
+     *
+     * @param - instance is the index of the menu item (starts from 0)
+     */
+    void clickMenuItem(int instance);
+
+    /**
+     * Setup expectations: media app is open.
+     *
      * This method is used to open Folder Menu with menuOptions.
      * Example - openMenu->Folder->Mediafilename->trackName
      *           openMenuWith(Folder,mediafilename,trackName);
