@@ -83,8 +83,7 @@ public class AutoLauncherStrategy implements IAutoLauncherStrategy {
 
     @Override
     public void openMapsFacet(String appName) {
-        CommandsHelper.getInstance(mInstrumentation).executeShellCommand(
-                "input tap " + MAP_FACET + " " + FACET_APPS);
+        openApp(appName, MAP_FACET, FACET_APPS);
     }
 
     @Override
