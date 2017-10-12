@@ -18,6 +18,7 @@ native_metric_tests := \
     crashcollector \
     hwuimacro \
     hwuimicro \
+    libandroidfw_benchmarks \
     libjavacore-benchmarks \
     minikin_perftests \
     mmapPerf \

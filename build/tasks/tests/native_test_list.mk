@@ -40,6 +40,7 @@ native_tests := \
     installd_service_test \
     installd_utils_test \
     JniInvocation_test \
+    libandroidfw_tests \
     libappfuse_test \
     libbase_test \
     libcutils_test \
