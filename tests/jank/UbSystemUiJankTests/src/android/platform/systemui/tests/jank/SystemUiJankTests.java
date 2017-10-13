@@ -36,6 +36,7 @@ import android.support.test.jank.JankTestBase;
 import android.support.test.timeresulthelper.TimeResultLogger;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
+import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObject2;
@@ -58,9 +59,9 @@ public class SystemUiJankTests extends JankTestBase {
     private static final BySelector RECENTS = By.res(SYSTEMUI_PACKAGE, "recents_view");
     private static final String LOG_TAG = SystemUiJankTests.class.getSimpleName();
     private static final int SWIPE_MARGIN = 5;
-    private static final int DEFAULT_FLING_STEPS = 5;
     private static final int DEFAULT_SCROLL_STEPS = 15;
     private static final int BRIGHTNESS_SCROLL_STEPS = 30;
+    private static final int DEFAULT_FLING_SPEED = 15000;
 
     // short transitions should be repeated within the test function, otherwise frame stats
     // captured are not really meaningful in a statistical sense
@@ -258,15 +259,14 @@ public class SystemUiJankTests extends JankTestBase {
             afterTest = "forceStopPackages", expectedFrames = 100, defaultIterationCount = 5)
     @GfxMonitor(processName = SYSTEMUI_PACKAGE)
     public void testRecentAppsFling() {
-        UiObject2 recents = mDevice.findObject(RECENTS);
-        Rect r = recents.getVisibleBounds();
-        // decide the top & bottom edges for scroll gesture
-        int top = r.top + r.height() / 4; // top edge = top + 25% height
-        int bottom = r.bottom - 200; // bottom edge = bottom & shift up 200px
+        final UiObject2 recents = mDevice.findObject(RECENTS);
+        final Rect r = recents.getVisibleBounds();
+        final int margin = r.height() / 4; // top & bottom edges for fling gesture = 25% height
+        recents.setGestureMargins(0, margin, 0, margin);
         for (int i = 0; i < INNER_LOOP; i++) {
-            mDevice.swipe(r.width() / 2, top, r.width() / 2, bottom, DEFAULT_FLING_STEPS);
+            recents.fling(Direction.UP, DEFAULT_FLING_SPEED);
             mDevice.waitForIdle();
-            mDevice.swipe(r.width() / 2, bottom, r.width() / 2, top, DEFAULT_FLING_STEPS);
+            recents.fling(Direction.DOWN, DEFAULT_FLING_SPEED);
             mDevice.waitForIdle();
         }
     }
