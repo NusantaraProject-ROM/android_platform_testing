@@ -62,6 +62,7 @@ ifeq ($(PRODUCT_IOT),true)
 instrumentation_tests += \
     AndroidThingsTests \
     IoTLauncherTests \
+    ThingsIntegrationTests \
     WifiSetupUnitTests
 
 endif  # PRODUCT_IOT == true
