@@ -70,6 +70,7 @@ native_tests := \
     net_test_device \
     net_test_hci \
     net_test_osi \
+    net_test_performance \
     net_test_stack \
     net_test_stack_ad_parser \
     net_test_stack_multi_adv \
@@ -78,7 +79,6 @@ native_tests := \
     netd_integration_test \
     netd_unit_test \
     pagemap_test \
-    performance_test \
     perfprofd_test \
     recovery_component_test \
     recovery_unit_test \
