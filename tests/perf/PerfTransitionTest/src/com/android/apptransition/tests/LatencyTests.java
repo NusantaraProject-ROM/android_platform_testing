@@ -21,11 +21,15 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.provider.Settings;
 import android.support.test.InstrumentationRegistry;
+import android.support.test.rule.logging.AtraceLogger;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.system.helpers.LockscreenHelper;
 import android.system.helpers.OverviewHelper;
 
+import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -43,6 +47,27 @@ public class LatencyTests {
             + "com.android.systemui.latency.ACTION_TURN_ON_SCREEN";
     private static final String AM_START_COMMAND_TEMPLATE = "am start -a %s";
     private static final String PIN = "1234";
+    private static final String KEY_TRACE_DIRECTORY = "trace_directory";
+    private static final String KEY_TRACE_CATEGORY = "trace_categories";
+    private static final String KEY_TRACE_BUFFERSIZE = "trace_bufferSize";
+    private static final String KEY_TRACE_DUMPINTERVAL = "tracedump_interval";
+    private static final String DEFAULT_TRACE_CATEGORIES = "sched,freq,gfx,view,dalvik,webview,"
+            + "input,wm,disk,am,wm";
+    private static final String DEFAULT_TRACE_BUFFER_SIZE = "20000";
+    private static final String DEFAULT_TRACE_DUMP_INTERVAL = "10";
+    private static final String DELIMITER = ",";
+    private static final String TEST_EXPANDNOTIFICATIONS = "testExpandNotificationsLatency";
+    private static final String TEST_FINGERPRINT = "testFingerprintWakeAndUnlock";
+    private static final String TEST_SCREEN_TURNON = "testScreenTurnOn";
+    private static final String TEST_PINCHECK_DELAY = "testPinCheckDelay";
+    private static final String TEST_APPTORECENTS = "testAppToRecents";
+    private String mTraceDirectoryStr = null;
+    private Bundle mArgs;
+    private File mRootTrace = null;
+    private int mTraceBufferSize = 0;
+    private int mTraceDumpInterval = 0;
+    private Set<String> mTraceCategoriesSet = null;
+    private AtraceLogger mAtraceLogger = null;
 
     private UiDevice mDevice;
     private int mIterationCount;
@@ -50,10 +75,28 @@ public class LatencyTests {
     @Before
     public void setUp() throws Exception {
         mDevice = UiDevice.getInstance(getInstrumentation());
-        Bundle args = InstrumentationRegistry.getArguments();
-        mIterationCount = Integer.parseInt(args.getString(KEY_ITERATION_COUNT,
+        Bundle mArgs = InstrumentationRegistry.getArguments();
+        mIterationCount = Integer.parseInt(mArgs.getString(KEY_ITERATION_COUNT,
                 Integer.toString(DEFAULT_ITERATION_COUNT)));
         mDevice.pressHome();
+
+        // Parse the trace parameters
+        mTraceDirectoryStr = mArgs.getString(KEY_TRACE_DIRECTORY);
+        if (isTracesEnabled()) {
+            String traceCategoriesStr = mArgs
+                    .getString(KEY_TRACE_CATEGORY, DEFAULT_TRACE_CATEGORIES);
+            mTraceBufferSize = Integer.parseInt(mArgs.getString(KEY_TRACE_BUFFERSIZE,
+                    DEFAULT_TRACE_BUFFER_SIZE));
+            mTraceDumpInterval = Integer.parseInt(mArgs.getString(KEY_TRACE_DUMPINTERVAL,
+                    DEFAULT_TRACE_DUMP_INTERVAL));
+            mTraceCategoriesSet = new HashSet<String>();
+            if (!traceCategoriesStr.isEmpty()) {
+                String[] traceCategoriesSplit = traceCategoriesStr.split(DELIMITER);
+                for (int i = 0; i < traceCategoriesSplit.length; i++) {
+                    mTraceCategoriesSet.add(traceCategoriesSplit[i]);
+                }
+            }
+        }
     }
 
     /**
@@ -63,7 +106,15 @@ public class LatencyTests {
      */
     @Test
     public void testExpandNotificationsLatency() throws Exception {
+        if (isTracesEnabled()) {
+            createTraceDirectory();
+        }
         for (int i = 0; i < mIterationCount; i++) {
+            if (null != mAtraceLogger) {
+                mAtraceLogger.atraceStart(mTraceCategoriesSet, mTraceBufferSize,
+                        mTraceDumpInterval, mRootTrace,
+                        String.format("%s-%d", TEST_EXPANDNOTIFICATIONS, i));
+            }
             swipeDown();
             mDevice.waitForIdle();
             swipeUp();
@@ -71,6 +122,10 @@ public class LatencyTests {
 
             // Wait for clocks to settle down
             SystemClock.sleep(CLOCK_SETTLE_DELAY);
+            if (null != mAtraceLogger) {
+                mAtraceLogger.atraceStop();
+            }
+
         }
     }
 
@@ -97,14 +152,26 @@ public class LatencyTests {
      */
     @Test
     public void testFingerprintWakeAndUnlock() throws Exception {
+        if (isTracesEnabled()) {
+            createTraceDirectory();
+        }
         for (int i = 0; i < mIterationCount; i++) {
             mDevice.sleep();
 
             // Wait for clocks to settle down
             SystemClock.sleep(CLOCK_SETTLE_DELAY);
+            if (null != mAtraceLogger) {
+                mAtraceLogger.atraceStart(mTraceCategoriesSet, mTraceBufferSize,
+                        mTraceDumpInterval, mRootTrace,
+                        String.format("%s-%d", TEST_FINGERPRINT, i));
+            }
 
             mDevice.executeShellCommand(FINGERPRINT_WAKE_FAKE_COMMAND);
             mDevice.waitForIdle();
+
+            if (null != mAtraceLogger) {
+                mAtraceLogger.atraceStop();
+            }
         }
     }
 
@@ -115,14 +182,25 @@ public class LatencyTests {
      */
     @Test
     public void testScreenTurnOn() throws Exception {
+        if (isTracesEnabled()) {
+            createTraceDirectory();
+        }
         for (int i = 0; i < mIterationCount; i++) {
             mDevice.sleep();
 
             // Wait for clocks to settle down
             SystemClock.sleep(CLOCK_SETTLE_DELAY);
+            if (null != mAtraceLogger) {
+                mAtraceLogger.atraceStart(mTraceCategoriesSet, mTraceBufferSize,
+                        mTraceDumpInterval, mRootTrace,
+                        String.format("%s-%d", TEST_SCREEN_TURNON, i));
+            }
 
             mDevice.executeShellCommand(TURN_ON_SCREEN_COMMAND);
             mDevice.waitForIdle();
+            if (null != mAtraceLogger) {
+                mAtraceLogger.atraceStop();
+            }
         }
 
         // Put device to home screen.
@@ -138,14 +216,25 @@ public class LatencyTests {
     @Test
     public void testPinCheckDelay() throws Exception {
         LockscreenHelper.getInstance().setScreenLockViaShell(PIN, LockscreenHelper.MODE_PIN);
+        if (isTracesEnabled()) {
+            createTraceDirectory();
+        }
         for (int i = 0; i < mIterationCount; i++) {
             mDevice.sleep();
+            if (null != mAtraceLogger) {
+                mAtraceLogger.atraceStart(mTraceCategoriesSet, mTraceBufferSize,
+                        mTraceDumpInterval, mRootTrace,
+                        String.format("%s-%d", TEST_PINCHECK_DELAY, i));
+            }
 
             // Make sure not to launch camera with "double-tap".
             Thread.sleep(300);
             mDevice.wakeUp();
             LockscreenHelper.getInstance().unlockScreen(PIN);
             mDevice.waitForIdle();
+            if (null != mAtraceLogger) {
+                mAtraceLogger.atraceStop();
+            }
         }
         LockscreenHelper.getInstance().removeScreenLockViaShell(PIN);
         mDevice.pressHome();
@@ -162,6 +251,9 @@ public class LatencyTests {
      */
     @Test
     public void testAppToRecents() throws Exception {
+        if (isTracesEnabled()) {
+            createTraceDirectory();
+        }
         OverviewHelper.getInstance().populateManyRecentApps();
         for (int i = 0; i < mIterationCount; i++) {
             mDevice.executeShellCommand(String.format(AM_START_COMMAND_TEMPLATE,
@@ -170,15 +262,42 @@ public class LatencyTests {
 
             // Wait for clocks to settle.
             SystemClock.sleep(CLOCK_SETTLE_DELAY);
+            if (null != mAtraceLogger) {
+                mAtraceLogger.atraceStart(mTraceCategoriesSet, mTraceBufferSize,
+                        mTraceDumpInterval, mRootTrace,
+                        String.format("%s-%d", TEST_APPTORECENTS, i));
+            }
             pressUiRecentApps();
             mDevice.waitForIdle();
 
             // Make sure all the animations are really done.
             SystemClock.sleep(200);
+            if (null != mAtraceLogger) {
+                mAtraceLogger.atraceStop();
+            }
         }
     }
 
     private void pressUiRecentApps() throws Exception {
         mDevice.findObject(By.res("com.android.systemui", "recent_apps")).click();
+    }
+
+    /**
+     * Create trace directory for the latency tests to store the trace files.
+     * @param subDirectoryName
+     */
+    private void createTraceDirectory() throws Exception {
+        mRootTrace = new File(mTraceDirectoryStr);
+        if (!mRootTrace.exists() && !mRootTrace.mkdirs()) {
+            throw new Exception("Unable to create the trace directory");
+        }
+        mAtraceLogger = AtraceLogger.getAtraceLoggerInstance(getInstrumentation());
+    }
+
+    /**
+     * @return
+     */
+    private boolean isTracesEnabled(){
+        return (null != mTraceDirectoryStr && !mTraceDirectoryStr.isEmpty());
     }
 }
