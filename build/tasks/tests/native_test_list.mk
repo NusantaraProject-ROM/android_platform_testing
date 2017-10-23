@@ -14,7 +14,6 @@
 
 native_tests := \
     adbd_test \
-    async_io_test \
     bionic-unit-tests \
     bionic-unit-tests-static \
     bluetoothtbd_test \
@@ -80,6 +79,7 @@ native_tests := \
     netd_unit_test \
     pagemap_test \
     perfprofd_test \
+    posix_async_io_test \
     recovery_component_test \
     recovery_unit_test \
     scrape_mmap_addr \
