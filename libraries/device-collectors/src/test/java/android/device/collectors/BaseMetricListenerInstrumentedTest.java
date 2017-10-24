@@ -16,26 +16,29 @@
 package android.device.collectors;
 
 import android.app.Instrumentation;
+import android.content.Context;
 import android.os.Bundle;
+import android.support.test.InstrumentationRegistry;
+import android.support.test.runner.AndroidJUnit4;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
-import java.io.PrintStream;
+import java.util.List;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 
 /**
- * Unit tests for {@link BaseMetricListener}.
+ * Android Unit Tests for {@link BaseMetricListener}.
  */
-@RunWith(JUnit4.class)
-public class BaseMetricListenerTest {
+@RunWith(AndroidJUnit4.class)
+public class BaseMetricListenerInstrumentedTest {
 
     private static final String RUN_START_KEY = "run_start_key";
     private static final String RUN_END_KEY = "run_end_key";
@@ -46,14 +49,10 @@ public class BaseMetricListenerTest {
     private static final String TEST_START_VALUE = "test_start_value";
     private static final String TEST_END_VALUE = "test_end_value";
     private BaseMetricListener mListener;
-    private Bundle mMockBundle;
-    private Bundle mRunBundle;
     private Instrumentation mMockInstrumentation;
 
     @Before
     public void setUp() {
-        mMockBundle = Mockito.mock(Bundle.class);
-        mRunBundle = Mockito.mock(Bundle.class);
         mMockInstrumentation = Mockito.mock(Instrumentation.class);
         mListener = new BaseMetricListener() {
             @Override
@@ -71,22 +70,12 @@ public class BaseMetricListenerTest {
             @Override
             public void onTestRunStart(DataRecord runData) {
                 assertFalse(runData.hasMetrics());
-                runData.addStringMetric(RUN_START_KEY, RUN_END_KEY);
+                runData.addStringMetric(RUN_START_KEY, RUN_START_VALUE);
             }
 
             @Override
             public void onTestRunEnd(DataRecord runData, Result result) {
-                runData.addStringMetric(RUN_START_VALUE, RUN_END_VALUE);
-            }
-
-            @Override
-            DataRecord createDataRecord() {
-                return new DataRecord() {
-                    @Override
-                    Bundle createBundle() {
-                        return mMockBundle;
-                    }
-                };
+                runData.addStringMetric(RUN_END_KEY, RUN_END_VALUE);
             }
         };
         mListener.setInstrumentation(mMockInstrumentation);
@@ -104,32 +93,24 @@ public class BaseMetricListenerTest {
         mListener.testFinished(testDescription);
         mListener.testRunFinished(new Result());
         // AJUR runner is then gonna call instrumentationRunFinished
-        mListener.instrumentationRunFinished(System.out, mRunBundle, new Result());
+        Bundle resultBundle = new Bundle();
+        mListener.instrumentationRunFinished(System.out, resultBundle, new Result());
 
-        Mockito.verify(mMockBundle).putString(TEST_START_KEY, TEST_START_VALUE);
-        Mockito.verify(mMockBundle).putString(TEST_END_KEY, TEST_END_VALUE);
+        // Check that the in progress status contains the metrics.
+        ArgumentCaptor<Bundle> capture = ArgumentCaptor.forClass(Bundle.class);
         Mockito.verify(mMockInstrumentation)
-                .sendStatus(Mockito.eq(BaseMetricListener.INST_STATUS_IN_PROGRESS), (Bundle) any());
-        // The temporary bundle is passed to the run result bundle
-        Mockito.verify(mRunBundle, Mockito.times(1)).putAll(mMockBundle);
-    }
+                .sendStatus(Mockito.eq(
+                        BaseMetricListener.INST_STATUS_IN_PROGRESS), capture.capture());
+        List<Bundle> capturedBundle = capture.getAllValues();
+        assertEquals(1, capturedBundle.size());
+        Bundle check = capturedBundle.get(0);
+        assertEquals(TEST_START_VALUE, check.getString(TEST_START_KEY));
+        assertEquals(TEST_END_VALUE, check.getString(TEST_END_KEY));
+        assertEquals(2, check.size());
 
-    /**
-     * Ensure that when multiple tests are running, DataRecord object passed to each test is a new
-     * empty one.
-     */
-    @Test
-    public void testMultiTestReporting() throws Exception {
-        Description testDescription = Description.createTestDescription("class", "method");
-        mListener.testStarted(testDescription);
-        mListener.testFinished(testDescription);
-        Description testDescription2 = Description.createTestDescription("class2", "method2");
-        mListener.testStarted(testDescription2);
-        mListener.testFinished(testDescription2);
-
-        Mockito.verify(mMockBundle, Mockito.times(2)).putString(TEST_START_KEY, TEST_START_VALUE);
-        Mockito.verify(mMockBundle, Mockito.times(2)).putString(TEST_END_KEY, TEST_END_VALUE);
-        Mockito.verify(mMockInstrumentation, Mockito.times(2))
-                .sendStatus(Mockito.eq(BaseMetricListener.INST_STATUS_IN_PROGRESS), (Bundle) any());
+        // Check that final bundle contains run results
+        assertEquals(RUN_START_VALUE, resultBundle.getString(RUN_START_KEY));
+        assertEquals(RUN_END_VALUE, resultBundle.getString(RUN_END_KEY));
+        assertEquals(2, resultBundle.size());
     }
 }
