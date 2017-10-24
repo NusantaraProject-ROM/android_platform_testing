@@ -14,6 +14,7 @@
 
 instrumentation_tests := \
     HelloWorldTests \
+    BluetoothInstrumentationTests \
     crashcollector \
     ManagedProvisioningTests \
     FrameworksCoreTests \
