@@ -19,7 +19,6 @@ import android.os.Bundle;
 import android.support.annotation.VisibleForTesting;
 
 import java.io.File;
-import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -30,6 +29,7 @@ public class DataRecord {
     // TODO: expend type supports to more complex type: Object,etc.
     private LinkedHashMap<String, String> mCurrentStringMetrics = new LinkedHashMap<>();
     private LinkedHashMap<String, File> mCurrentFileMetrics = new LinkedHashMap<>();
+    private LinkedHashMap<String, byte[]> mCurrentBinaryMetrics = new LinkedHashMap<>();
 
     /**
      * Add a metric to be tracked by a key.
@@ -53,14 +53,28 @@ public class DataRecord {
     }
 
     /**
+     * Add a byte[] metric to be tracked by a key.
+     *
+     * @param key the key under which to find the metric
+     * @param value the byte[] value associated with the key
+     */
+    public void addBinaryMetric(String key, byte[] value) {
+        mCurrentBinaryMetrics.put(key, value);
+    }
+
+    /**
      * Returns True if the {@link DataRecord} already contains some metrics, False otherwise.
      */
     public boolean hasMetrics() {
-        return !getMetrics().isEmpty();
+        return mCurrentBinaryMetrics.size() + mCurrentFileMetrics.size()
+                + mCurrentBinaryMetrics.size() > 0;
     }
 
-    /** Returns all the data received so far to the map of metrics that will be reported. */
-    private Map<String, String> getMetrics() {
+    /**
+     * Returns all the string and file data received so far to the map of metrics that will be
+     * reported.
+     */
+    private Map<String, String> getStringMetrics() {
         Map<String, String> res = new LinkedHashMap<>();
         for (Map.Entry<String, File> entry : mCurrentFileMetrics.entrySet()) {
             res.put(entry.getKey(), entry.getValue().getAbsolutePath());
@@ -74,10 +88,13 @@ public class DataRecord {
      * available.
      */
     final Bundle createBundleFromMetrics() {
-        Map<String, String> map = getMetrics();
+        Map<String, String> map = getStringMetrics();
         Bundle b = createBundle();
         for (String key : map.keySet()) {
             b.putString(key, map.get(key));
+        }
+        for (String key : mCurrentBinaryMetrics.keySet()) {
+            b.putByteArray(key, mCurrentBinaryMetrics.get(key));
         }
         return b;
     }
