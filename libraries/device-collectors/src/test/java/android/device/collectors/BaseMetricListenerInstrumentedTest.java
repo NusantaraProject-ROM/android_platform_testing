@@ -56,7 +56,7 @@ public class BaseMetricListenerInstrumentedTest {
         mMockInstrumentation = Mockito.mock(Instrumentation.class);
         mListener = new BaseMetricListener() {
             @Override
-            public void onTestStart(DataRecord testData) {
+            public void onTestStart(DataRecord testData, Description description) {
                 // In this test check that a new DataRecord is passed to testStart each time.
                 assertFalse(testData.hasMetrics());
                 testData.addStringMetric(TEST_START_KEY, TEST_START_VALUE);
@@ -68,7 +68,7 @@ public class BaseMetricListenerInstrumentedTest {
             }
 
             @Override
-            public void onTestRunStart(DataRecord runData) {
+            public void onTestRunStart(DataRecord runData, Description description) {
                 assertFalse(runData.hasMetrics());
                 runData.addStringMetric(RUN_START_KEY, RUN_START_VALUE);
             }

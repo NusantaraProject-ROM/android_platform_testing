@@ -21,9 +21,9 @@ import android.support.test.internal.runner.listener.InstrumentationRunListener;
 
 import org.junit.runner.Description;
 import org.junit.runner.Result;
+import org.junit.runner.notification.Failure;
 
 import java.io.PrintStream;
-import java.util.Map;
 
 /**
  * Base implementation of a device metric listener that will capture and output metrics for each
@@ -44,7 +44,7 @@ public class BaseMetricListener extends InstrumentationRunListener {
     @Override
     public final void testRunStarted(Description description) throws Exception {
         mRunData = createDataRecord();
-        onTestRunStart(mRunData);
+        onTestRunStart(mRunData, description);
         super.testRunStarted(description);
     }
 
@@ -57,8 +57,15 @@ public class BaseMetricListener extends InstrumentationRunListener {
     @Override
     public final void testStarted(Description description) throws Exception {
         mTestData = createDataRecord();
-        onTestStart(mTestData);
+        onTestStart(mTestData, description);
         super.testStarted(description);
+    }
+
+    @Override
+    public final void testFailure(Failure failure) throws Exception {
+        Description description = failure.getDescription();
+        onTestFail(mTestData, description, failure);
+        super.testFailure(failure);
     }
 
     @Override
@@ -92,8 +99,9 @@ public class BaseMetricListener extends InstrumentationRunListener {
      * Called when {@link #testRunStarted(Description)} is called.
      *
      * @param runData structure where metrics can be put.
+     * @param description the {@link Description} for the run about to start.
      */
-    public void onTestRunStart(DataRecord runData) {
+    public void onTestRunStart(DataRecord runData, Description description) {
         // Does nothing
     }
 
@@ -111,8 +119,20 @@ public class BaseMetricListener extends InstrumentationRunListener {
      * Called when {@link #testStarted(Description)} is called.
      *
      * @param testData structure where metrics can be put.
+     * @param description the {@link Description} for the test case about to start.
      */
-    public void onTestStart(DataRecord testData) {
+    public void onTestStart(DataRecord testData, Description description) {
+        // Does nothing
+    }
+
+    /**
+     * Called when {@link #testFailure(Failure)} is called.
+     *
+     * @param testData structure where metrics can be put.
+     * @param description the {@link Description} for the test case that just failed.
+     * @param failure the {@link Failure} describing the failure.
+     */
+    public void onTestFail(DataRecord testData, Description description, Failure failure) {
         // Does nothing
     }
 
@@ -124,5 +144,12 @@ public class BaseMetricListener extends InstrumentationRunListener {
      */
     public void onTestEnd(DataRecord testData, Description description) {
         // Does nothing
+    }
+
+    /**
+     * Returns the name of the current class to be used as a logging tag.
+     */
+    String getTag() {
+        return this.getClass().getName();
     }
 }
