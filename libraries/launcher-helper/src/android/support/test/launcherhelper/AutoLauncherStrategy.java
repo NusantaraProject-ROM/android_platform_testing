@@ -23,6 +23,7 @@ import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
 import android.system.helpers.CommandsHelper;
+import android.util.Log;
 
 public class AutoLauncherStrategy implements IAutoLauncherStrategy {
 
@@ -30,6 +31,7 @@ public class AutoLauncherStrategy implements IAutoLauncherStrategy {
     private static final String CAR_LENSPICKER = "com.android.support.car.lenspicker";
 
     private static final long APP_INIT_WAIT = 10000;
+    private static final int OPEN_FACET_RETRY_TIME = 5;
 
     //todo: Remove x and y axis and use resource ID's.
     private static final int FACET_APPS = 560;
@@ -39,7 +41,7 @@ public class AutoLauncherStrategy implements IAutoLauncherStrategy {
     private static final int MEDIA_FACET = 680;
     private static final int SETTINGS_FACET = 810;
 
-    private static final BySelector R_ID_LENSPICKER_PAGEDOWN =
+    private static final BySelector R_ID_LENSPICKER_PAGE_DOWN =
             By.res(CAR_LENSPICKER, "page_down");
 
     protected UiDevice mDevice;
@@ -94,13 +96,19 @@ public class AutoLauncherStrategy implements IAutoLauncherStrategy {
     }
 
     public void openApp(String appName, int x, int y) {
+        int retry = OPEN_FACET_RETRY_TIME;
         do {
             CommandsHelper.getInstance(mInstrumentation).executeShellCommand(
                     "input tap " + x + " " + y);
         }
-        while (!mDevice.hasObject(R_ID_LENSPICKER_PAGEDOWN));
+        while (!mDevice.hasObject(R_ID_LENSPICKER_PAGE_DOWN) && --retry > 0);
 
-        UiObject2 scrollContainer = mDevice.findObject(R_ID_LENSPICKER_PAGEDOWN);
+        if (retry == 0) {
+            Log.w(LOG_TAG, "Could not find Lenspicker, but the app might be open.");
+            return;
+        }
+
+        UiObject2 scrollContainer = mDevice.findObject(R_ID_LENSPICKER_PAGE_DOWN);
 
         if (scrollContainer == null) {
             throw new UnsupportedOperationException("Cannot find scroll container");
