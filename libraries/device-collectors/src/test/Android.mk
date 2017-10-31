@@ -35,4 +35,5 @@ LOCAL_SDK_VERSION := current
 
 LOCAL_COMPATIBILITY_SUITE := general-tests
 
+-include tools/tradefederation/core/error_prone_rules.mk
 include $(BUILD_PACKAGE)

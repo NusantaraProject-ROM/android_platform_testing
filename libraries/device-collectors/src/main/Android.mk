@@ -28,4 +28,5 @@ LOCAL_MODULE := collector-device-lib
 
 LOCAL_SDK_VERSION := current
 
+-include tools/tradefederation/core/error_prone_rules.mk
 include $(BUILD_STATIC_JAVA_LIBRARY)

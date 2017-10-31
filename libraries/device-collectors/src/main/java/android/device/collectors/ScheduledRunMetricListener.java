@@ -16,7 +16,6 @@
 package android.device.collectors;
 
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.VisibleForTesting;
 import android.support.test.InstrumentationRegistry;
 import android.util.Log;
