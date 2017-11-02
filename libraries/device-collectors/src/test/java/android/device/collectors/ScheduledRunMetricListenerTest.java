@@ -45,7 +45,7 @@ public class ScheduledRunMetricListenerTest {
     public void setUp() {
         Instrumentation mockInstrumentation = Mockito.mock(Instrumentation.class);
         Bundle b = new Bundle();
-        b.putLong(ScheduledRunMetricListener.INTERVAL_ARG_KEY, 100L);
+        b.putString(ScheduledRunMetricListener.INTERVAL_ARG_KEY, "100");
         mListener = new ScheduledRunMetricListener(b) {
             private int counter = 0;
             @Override

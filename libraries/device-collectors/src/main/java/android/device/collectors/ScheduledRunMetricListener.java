@@ -39,11 +39,9 @@ public abstract class ScheduledRunMetricListener extends BaseMetricListener {
     private static final long DEFAULT_INTERVAL_MS = 60 * 1000l; // 1 min
 
     private Timer mTimer;
-    private Bundle mArgsBundle;
+    private Bundle mArgsBundle = null;
 
-    public ScheduledRunMetricListener() {
-        this(InstrumentationRegistry.getArguments());
-    }
+    public ScheduledRunMetricListener() {}
 
     @VisibleForTesting
     ScheduledRunMetricListener(Bundle argsBundle) {
@@ -114,10 +112,26 @@ public abstract class ScheduledRunMetricListener extends BaseMetricListener {
             throws InterruptedException;
 
     /**
+     * Returns the bundle containing the instrumentation arguments.
+     */
+    private Bundle getArgsBundle() {
+        if (mArgsBundle == null) {
+            mArgsBundle = InstrumentationRegistry.getArguments();
+        }
+        return mArgsBundle;
+    }
+
+    /**
      * Extract the interval from the instrumentation arguments or use the default interval value.
      */
     private long getIntervalFromArgs() {
-        long interval = mArgsBundle.getLong(INTERVAL_ARG_KEY);
+        String intervalValue = getArgsBundle().getString(INTERVAL_ARG_KEY);
+        long interval = 0L;
+        try {
+            interval = Long.parseLong(intervalValue);
+        } catch (NumberFormatException e) {
+            Log.e(getTag(), "Failed to parse the interval value.", e);
+        }
         // In case invalid or no interval was specified, we use the default one.
         if (interval <= 0l) {
             Log.d(getTag(),
