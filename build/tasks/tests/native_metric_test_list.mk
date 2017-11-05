@@ -15,6 +15,7 @@
 native_metric_tests := \
     binderAddInts \
     bionic-benchmarks \
+    buffer_transport_benchmark \
     crashcollector \
     hwuimacro \
     hwuimicro \
