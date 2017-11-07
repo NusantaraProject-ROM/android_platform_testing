@@ -29,7 +29,6 @@ instrumentation_tests := \
     ShellTests \
     SystemUITests \
     TestablesTests \
-    RecyclerViewTests \
     FrameworksWifiApiTests \
     FrameworksWifiTests \
     FrameworksTelephonyTests \
