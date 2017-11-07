@@ -19,7 +19,6 @@ import android.os.Bundle;
 import android.support.annotation.VisibleForTesting;
 
 import java.io.File;
-import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
