@@ -16,19 +16,33 @@
 package android.device.collectors;
 
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.ParcelFileDescriptor;
 import android.support.annotation.VisibleForTesting;
 import android.support.test.internal.runner.listener.InstrumentationRunListener;
+import android.util.Log;
 
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 
 /**
  * Base implementation of a device metric listener that will capture and output metrics for each
  * test run or test cases. Collectors will have access to {@link DataRecord} objects where they
  * can put results and the base class ensure these results will be send to the instrumentation.
+ *
+ * Any subclass that calls {@link #createAndEmptyDirectory(String)} needs external storage permission.
+ * So to use this class at runtime, your test need to
+ * <a href="{@docRoot}training/basics/data-storage/files.html#GetWritePermission">have storage
+ * permission enabled</a>, and preferably granted at install time (to avoid interrupting the test).
+ * For testing at desk, run adb install -r -g testpackage.apk
+ * "-g" grants all required permission at install time.
  */
 public class BaseMetricListener extends InstrumentationRunListener {
 
@@ -37,6 +51,7 @@ public class BaseMetricListener extends InstrumentationRunListener {
      * the running use cases.
      */
     public static final int INST_STATUS_IN_PROGRESS = 2;
+    public static final int BUFFER_SIZE = 1024;
 
     private DataRecord mRunData;
     private DataRecord mTestData;
@@ -144,6 +159,47 @@ public class BaseMetricListener extends InstrumentationRunListener {
      */
     public void onTestEnd(DataRecord testData, Description description) {
         // Does nothing
+    }
+
+    /**
+     * Turn executeShellCommand into a blocking operation.
+     *
+     * @param command shell command to be executed.
+     * @return byte array of execution result
+     */
+    public byte[] executeCommandBlocking(String command) {
+        try (
+                InputStream is = new ParcelFileDescriptor.AutoCloseInputStream(
+                        getInstrumentation().getUiAutomation().executeShellCommand(command));
+                ByteArrayOutputStream out = new ByteArrayOutputStream()
+        ) {
+            byte[] buf = new byte[BUFFER_SIZE];
+            int length;
+            while ((length = is.read(buf)) >= 0) {
+                out.write(buf, 0, length);
+            }
+            return out.toByteArray();
+        } catch (IOException e) {
+            Log.e(getTag(), "Error executing: " + command, e);
+            return null;
+        }
+    }
+
+    /**
+     * Create a directory inside external storage, and empty it.
+     *
+     * @param dir full path to the dir to be created.
+     * @return directory file created
+     */
+    public File createAndEmptyDirectory(String dir) {
+        File rootDir = Environment.getExternalStorageDirectory();
+        File destDir = new File(rootDir, dir);
+        executeCommandBlocking("rm -rf " + destDir.getAbsolutePath());
+        if (!destDir.exists() && !destDir.mkdirs()) {
+            Log.e(getTag(), "Unable to create dir: " + destDir.getAbsolutePath());
+            return null;
+        }
+        return destDir;
     }
 
     /**
