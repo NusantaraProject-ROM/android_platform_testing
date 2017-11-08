@@ -16,9 +16,7 @@
 package android.device.collectors;
 
 import android.app.Instrumentation;
-import android.content.Context;
 import android.os.Bundle;
-import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
 import org.junit.Before;
@@ -31,8 +29,8 @@ import org.mockito.Mockito;
 
 import java.util.List;
 
-import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 /**
  * Android Unit Tests for {@link BaseMetricListener}.
