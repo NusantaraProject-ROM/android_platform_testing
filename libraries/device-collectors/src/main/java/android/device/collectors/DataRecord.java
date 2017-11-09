@@ -66,8 +66,8 @@ public class DataRecord {
      * Returns True if the {@link DataRecord} already contains some metrics, False otherwise.
      */
     public boolean hasMetrics() {
-        return mCurrentBinaryMetrics.size() + mCurrentFileMetrics.size()
-                + mCurrentBinaryMetrics.size() > 0;
+        return (mCurrentStringMetrics.size() + mCurrentFileMetrics.size()
+                + mCurrentBinaryMetrics.size()) > 0;
     }
 
     /**
