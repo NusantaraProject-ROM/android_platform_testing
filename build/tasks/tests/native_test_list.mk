@@ -102,7 +102,6 @@ native_tests := \
 ifeq ($(PRODUCT_IOT),true)
 
 native_tests += \
-    audio_userdriver_test \
     crash_reporter_tests \
     libandroidthings_pio_tests \
     libbrillo_test \
