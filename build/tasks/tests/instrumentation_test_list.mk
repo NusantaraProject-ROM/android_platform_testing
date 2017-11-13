@@ -16,10 +16,12 @@ instrumentation_tests := \
     HelloWorldTests \
     BluetoothInstrumentationTests \
     crashcollector \
+    LongevityLibTests \
     ManagedProvisioningTests \
     FrameworksCoreTests \
     FrameworksNetTests \
     FrameworksNotificationTests \
+    ConnTestApp \
     FrameworksServicesTests \
     FrameworksUtilTests \
     MtpDocumentsProviderTests \
@@ -52,5 +54,21 @@ instrumentation_tests := \
     CarrierConfigTests \
     TeleServiceTests \
     SettingsProviderTest \
-    StorageManagerUnitTests \
     SettingsTests
+
+# Android Things specific tests
+ifeq ($(PRODUCT_IOT),true)
+
+instrumentation_tests += \
+    AndroidThingsTests \
+    IoTLauncherTests \
+    WifiSetupUnitTests
+
+endif  # PRODUCT_IOT == true
+
+# Storage Manager may not exist on device
+ifneq ($(filter StorageManager, $(PRODUCT_PACKAGES)),)
+
+instrumentation_tests += StorageManagerUnitTests
+
+endif
