@@ -16,9 +16,9 @@
 
 package android.system.helpers;
 
-import android.app.Instrumentation;
 import android.app.KeyguardManager;
 import android.content.Context;
+import android.graphics.Point;
 import android.provider.Settings;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.By;
@@ -27,8 +27,6 @@ import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
 import android.system.helpers.ActivityHelper;
 import android.system.helpers.DeviceHelper;
-import android.graphics.Point;
-import android.graphics.Rect;
 
 import junit.framework.Assert;
 
@@ -90,6 +88,8 @@ public class LockscreenHelper {
      * @return true/false
      */
     public boolean launchCameraOnLockScreen() {
+        // Hit the back button to dismiss any keyguard
+        mDevice.pressBack();
         String CameraPackage = mIsRyuDevice ? CAMERA2_PACKAGE : CAMERA_PACKAGE;
         int w = mDevice.getDisplayWidth();
         int h = mDevice.getDisplayHeight();
