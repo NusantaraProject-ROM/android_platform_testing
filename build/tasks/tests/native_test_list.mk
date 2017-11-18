@@ -81,6 +81,7 @@ native_tests := \
     net_test_types \
     netd_integration_test \
     netd_unit_test \
+    nfc_test_utils \
     pagemap_test \
     perfprofd_test \
     posix_async_io_test \
