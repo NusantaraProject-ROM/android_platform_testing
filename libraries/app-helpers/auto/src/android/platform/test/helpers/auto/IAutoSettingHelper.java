@@ -22,7 +22,16 @@ import android.app.Instrumentation;
  * Helper class for functional tests of Settings facet
  */
 public interface IAutoSettingHelper extends IStandardAppHelper {
+
     /**
+     * enum for changing(increasing, decreasing) value.
+     */
+    enum ChangeType{
+        INCREASE,
+        DECREASE
+    }
+
+     /**
      * Setup expectations: The app is open and the settings facet is open
      *
      * @param setting  option to open.
@@ -32,14 +41,14 @@ public interface IAutoSettingHelper extends IStandardAppHelper {
     /**
      * Setup expectations: The app is open and wifi setting options is selected
      *
-     * Turns on/off wifi
+     * @param option to turn on/off wifi
      */
     void turnOnOffWifi(boolean turnOn);
 
     /**
      * Setup expectations: The app is open and bluetooth setting options is selected
      *
-     * Turns on/off bluetooth
+     * @param option to turn on/off bluetooth
      */
     void turnOnOffBluetooth(boolean turnOn);
 
@@ -66,5 +75,62 @@ public interface IAutoSettingHelper extends IStandardAppHelper {
      * Force stops the settings application
      */
     void stopSettingsApplication();
+
+    /**
+     * Setup expectations: settings app is open.
+     *
+     * This method is used to open Settings Menu with menuOptions.
+     * Example - Settings->App info->Calandar->Permissions
+     *           openMenuWith("App info", "Calandar", "Permissions");
+     *
+     * @param - menuOptions used to pass multiple level of menu options in one go.
+     *
+     */
+    void openMenuWith(String... menuOptions);
+
+    /**
+     * Setup expectations: settings app is open and settings menu is selected
+     *
+     * Checks if the toggle switch for the given index is checked.
+     * @param index of toggle switch.
+     * index should be passed as 0 if only one toggle switch is present on screen.
+     */
+    boolean isToggleSwitchChecked(int index);
+
+    /**
+     * Setup expectations: settings app is open and settings menu is selected
+     *
+     * Clicks the toggle switch for the given index
+     * @param index of toggle switch.
+     * index should be passed as 0 if only one toggle switch is present on screen.
+     */
+    void clickToggleSwitch(int index);
+
+    /**
+     * Setup expectations: settings app is open.
+     *
+     * gets the value of the setting.
+     * @param setting should be passed. example for setting is screen_brightness.
+     */
+    int getValue(String setting);
+
+    /**
+     * Setup expectations: settings app is open
+     *
+     * sets the value of the setting.
+     * @param setting should be passed. example for setting is screen_brightness.
+     */
+    void setValue(String setting, int value);
+
+    /**
+     * Setup expectations: settings app is open and a seekbar is visible on the screen
+     *
+     * changes setting level of seekbar for the given index.
+     * @param index of seekbar. should be passed as 0 if only one seekbar is present on screen.
+     * @param changeType determines to increase or decrease the value of setting.
+     */
+    void changeSeekbarLevel(int index, ChangeType changeType);
+
+
 
 }
