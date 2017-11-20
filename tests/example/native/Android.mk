@@ -19,6 +19,8 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := \
   HelloWorldTest.cpp
 
+LOCAL_CFLAGS := -Wall -Werror
+
 LOCAL_MODULE := hello_world_test
 LOCAL_MODULE_TAGS := tests
 
