@@ -23,7 +23,12 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
     launcher-helper-lib \
     metrics-helper-lib \
     ub-uiautomator \
-    services.core
+    services.accessibility \
+    services.core \
+    services.devicepolicy \
+    services.net \
+    services.usage \
+    # services.* are notifications specific, do not copy to other tests
 
 LOCAL_JAVA_LIBRARIES := legacy-android-test
 
