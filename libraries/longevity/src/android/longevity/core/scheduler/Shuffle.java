@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.platform.longevity.scheduler;
-
-import android.os.Bundle;
+package android.longevity.core.scheduler;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import org.junit.runner.Runner;
@@ -32,13 +31,13 @@ public class Shuffle implements Scheduler {
     static final String SEED_OPTION_NAME = "seed";
 
     @Override
-    public List<Runner> apply(Bundle args, List<Runner> input) {
-        boolean shuffle = Boolean.parseBoolean(
-                args.getString(SHUFFLE_OPTION_NAME, String.valueOf(SHUFFLE_DEFAULT_VALUE)));
-        long seed = Long.parseLong(
-                args.getString(SEED_OPTION_NAME, String.valueOf(new Random().nextLong())));
+    public List<Runner> apply(Map<String, String> args, List<Runner> input) {
+        boolean shuffle = args.containsKey(SHUFFLE_OPTION_NAME) ?
+                Boolean.parseBoolean(args.get(SHUFFLE_OPTION_NAME)) : SHUFFLE_DEFAULT_VALUE;
         // TODO: Log the options selected.
         if (shuffle) {
+            long seed = args.containsKey(SEED_OPTION_NAME) ?
+                    Long.parseLong(args.get(SEED_OPTION_NAME)) : new Random().nextLong();
             Collections.shuffle(input, new Random(seed));
         }
         return input;

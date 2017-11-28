@@ -13,22 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.platform.longevity.listeners;
+package android.longevity.platform.listener;
 
-import org.junit.runner.Description;
-import org.junit.runner.notification.Failure;
+import android.util.Log;
+
 import org.junit.runner.notification.RunNotifier;
 
 /**
- * An {@link ActionListener} for terminating early due to test failures.
+ * A {@link RunTerminator} for terminating early due to test failures for platform device suites.
  */
-public final class ErrorTerminator extends RunTerminator {
+public final class ErrorTerminator extends android.longevity.core.listener.ErrorTerminator {
     public ErrorTerminator(RunNotifier notifier) {
         super(notifier);
     }
 
+    /**
+     * Prints the message to logcat.
+     */
     @Override
-    public void testFailure(Failure failure) {
-        kill("a test failed");
+    protected void print(String reason) {
+        Log.e(getClass().getSimpleName(), reason);
     }
 }

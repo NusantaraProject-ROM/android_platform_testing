@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.platform.longevity.listeners;
+package android.longevity.platform.listener;
 
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.never;
@@ -22,8 +22,10 @@ import static org.mockito.Mockito.verify;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
 import android.support.test.filters.SmallTest;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -50,8 +52,8 @@ public class BatteryTerminatorTest {
         MockitoAnnotations.initMocks(this);
         when(mContext.registerReceiver(any(), any())).thenReturn(mIntent);
         when(mIntent.getIntExtra("scale", -1)).thenReturn(100);
-        Bundle args = new Bundle();
-        args.putString(BatteryTerminator.OPTION, String.valueOf(0.5));
+        Map args = new HashMap();
+        args.put(BatteryTerminator.OPTION, String.valueOf(0.5));
         mListener = new BatteryTerminator(mNotifier, args, mContext);
     }
 

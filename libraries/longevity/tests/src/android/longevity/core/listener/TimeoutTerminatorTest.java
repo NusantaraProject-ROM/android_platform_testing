@@ -13,18 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.platform.longevity.listeners;
+package android.longevity.core.listener;
 
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 
-import android.support.test.filters.SmallTest;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.Description;
 import org.junit.runner.RunWith;
-import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.JUnit4;
 
@@ -32,39 +33,38 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 /**
- * Unit tests for {@link ErrorTerminator}.
+ * Unit tests for the core {@link TimeoutTerminator}.
  */
 @RunWith(JUnit4.class)
-public class ErrorTerminatorTest {
-    private ErrorTerminator mListener;
+public class TimeoutTerminatorTest {
+    private TimeoutTerminator mListener;
     @Mock private RunNotifier mNotifier;
 
     @Before
     public void setupListener() {
         MockitoAnnotations.initMocks(this);
-        mListener = new ErrorTerminator(mNotifier);
+        Map<String, String> args = new HashMap<>();
+        args.put(TimeoutTerminator.OPTION, String.valueOf(50L));
+        mListener = new TimeoutTerminator(mNotifier, args);
     }
-
     /**
      * Unit test the listener's kill logic.
      */
     @Test
-    @SmallTest
-    public void testErrorTerminator_errors() throws Exception {
-        mListener.testFailure(new Failure(Description.EMPTY, new Throwable()));
-        verify(mNotifier).pleaseStop();
-    }
-
-    /**
-     * Unit test the listener's kill logic.
-     */
-    @Test
-    @SmallTest
-    public void testErrorTerminator_none() throws Exception {
+    public void testTimeoutTerminator_pass() throws Exception {
         mListener.testStarted(Description.EMPTY);
-        mListener.testFinished(Description.EMPTY);
-        mListener.testFinished(Description.EMPTY);
-        mListener.testIgnored(Description.EMPTY);
+        Thread.sleep(10L);
         verify(mNotifier, never()).pleaseStop();
+    }
+
+    /**
+     * Unit test the listener's kill logic.
+     */
+    @Test
+    public void testTimeoutTerminator_timeout() throws Exception {
+        mListener.testStarted(Description.EMPTY);
+        Thread.sleep(60L);
+        mListener.testFinished(Description.EMPTY);
+        verify(mNotifier).pleaseStop();
     }
 }

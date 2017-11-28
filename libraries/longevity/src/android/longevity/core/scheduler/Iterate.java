@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.platform.longevity.scheduler;
-
-import android.os.Bundle;
+package android.longevity.core.scheduler;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.junit.runner.Runner;
@@ -32,9 +31,9 @@ public class Iterate implements Scheduler {
     private static final int DEFAULT_VALUE = 1;
 
     @Override
-    public List<Runner> apply(Bundle args, List<Runner> input) {
-        int iterations =
-            Integer.parseInt(args.getString(OPTION_NAME, String.valueOf(DEFAULT_VALUE)));
+    public List<Runner> apply(Map<String, String> args, List<Runner> input) {
+        int iterations = args.containsKey(OPTION_NAME) ?
+            Integer.parseInt(args.get(OPTION_NAME)) : DEFAULT_VALUE;
         // TODO: Log the options selected.
         return Collections.nCopies(iterations, input)
             .stream()

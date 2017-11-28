@@ -16,7 +16,7 @@ instrumentation_tests := \
     HelloWorldTests \
     BluetoothInstrumentationTests \
     crashcollector \
-    LongevityLibTests \
+    LongevityPlatformLibTests \
     ManagedProvisioningTests \
     FrameworksCoreTests \
     FrameworksNetTests \
