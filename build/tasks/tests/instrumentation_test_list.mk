@@ -21,6 +21,7 @@ instrumentation_tests := \
     FrameworksCoreTests \
     FrameworksNetTests \
     FrameworksNotificationTests \
+    BstatsTestApp \
     ConnTestApp \
     FrameworksServicesTests \
     JobTestApp \
