@@ -55,7 +55,8 @@ instrumentation_tests := \
     TelephonyProviderTests \
     CarrierConfigTests \
     TeleServiceTests \
-    SettingsProviderTest
+    SettingsProviderTest \
+    FrameworksLocationTests
 
 # Android Things specific tests
 ifeq ($(PRODUCT_IOT),true)
