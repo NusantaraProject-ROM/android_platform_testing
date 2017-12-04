@@ -28,5 +28,6 @@ LOCAL_COMPATIBILITY_SUITE := general-tests
 
 include $(BUILD_HOST_JAVA_LIBRARY)
 
+-include tools/tradefederation/core/error_prone_rules.mk
 # Build the test using their own makefiles
 include $(call all-makefiles-under,$(LOCAL_PATH))
