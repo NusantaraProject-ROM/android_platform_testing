@@ -35,6 +35,6 @@ public class NexusLauncherStrategy extends BaseLauncher3Strategy {
      */
     @Override
     public BySelector getAllAppsButtonSelector() {
-        return By.res(getSupportedLauncherPackage(), "page_indicator");
+        return By.res(getSupportedLauncherPackage(), "all_apps_handle");
     }
 }
