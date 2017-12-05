@@ -21,7 +21,8 @@ LOCAL_MODULE := AuptLib
 LOCAL_JAVA_LIBRARIES := ub-uiautomator \
     junit \
     legacy-android-test \
-    android.test.runner
+    android.test.runner \
+    android.test.base
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
 include $(BUILD_STATIC_JAVA_LIBRARY)

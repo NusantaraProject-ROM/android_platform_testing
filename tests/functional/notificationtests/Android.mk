@@ -30,7 +30,7 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
     services.usage \
     # services.* are notifications specific, do not copy to other tests
 
-LOCAL_JAVA_LIBRARIES := legacy-android-test
+LOCAL_JAVA_LIBRARIES := android.test.base
 
 #LOCAL_SDK_VERSION := current
 
