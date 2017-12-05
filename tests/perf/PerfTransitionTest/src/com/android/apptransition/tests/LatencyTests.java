@@ -26,6 +26,11 @@ import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.system.helpers.LockscreenHelper;
 import android.system.helpers.OverviewHelper;
+import android.view.IWindowManager;
+import android.view.Surface;
+import android.view.WindowManagerGlobal;
+
+import com.android.internal.view.RotationPolicy;
 
 import java.io.File;
 import java.util.HashSet;
@@ -61,6 +66,7 @@ public class LatencyTests {
     private static final String TEST_SCREEN_TURNON = "testScreenTurnOn";
     private static final String TEST_PINCHECK_DELAY = "testPinCheckDelay";
     private static final String TEST_APPTORECENTS = "testAppToRecents";
+    private static final String TEST_ROTATION_LATENCY = "testRotationLatency";
     private String mTraceDirectoryStr = null;
     private Bundle mArgs;
     private File mRootTrace = null;
@@ -238,6 +244,43 @@ public class LatencyTests {
         }
         LockscreenHelper.getInstance().removeScreenLockViaShell(PIN);
         mDevice.pressHome();
+    }
+
+    /**
+     * Test how long it takes for rotation animation.
+     * <p>
+     * Every iteration will output a log in the form of "LatencyTracker/action=6 delay=x".
+     */
+    @Test
+    public void testRotationLatency() throws Exception {
+        if (isTracesEnabled()) {
+            createTraceDirectory();
+        }
+        mDevice.wakeUp();
+        for (int i = 0; i < mIterationCount; i++) {
+            mDevice.executeShellCommand(String.format(AM_START_COMMAND_TEMPLATE,
+                    Settings.ACTION_SETTINGS));
+            mDevice.waitForIdle();
+            if (null != mAtraceLogger) {
+                mAtraceLogger.atraceStart(mTraceCategoriesSet, mTraceBufferSize,
+                        mTraceDumpInterval, mRootTrace,
+                        String.format("%s-%d", TEST_ROTATION_LATENCY, i));
+            }
+
+            IWindowManager wm = WindowManagerGlobal.getWindowManagerService();
+            wm.freezeRotation(Surface.ROTATION_0);
+            mDevice.waitForIdle();
+            wm.freezeRotation(Surface.ROTATION_90);
+            mDevice.waitForIdle();
+            wm.thawRotation();
+            mDevice.waitForIdle();
+
+            if (null != mAtraceLogger) {
+                mAtraceLogger.atraceStop();
+            }
+        }
+        mDevice.pressHome();
+        mDevice.waitForIdle();
     }
 
     /**
