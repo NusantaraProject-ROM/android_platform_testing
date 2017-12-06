@@ -22,7 +22,6 @@ LOCAL_STATIC_JAVA_LIBRARIES := ub-uiautomator \
     activity-helper \
     commands-helper \
     device-helper \
-    legacy-android-test \
     app-helpers-common \
 
 LOCAL_SRC_FILES := $(call all-java-files-under, src)

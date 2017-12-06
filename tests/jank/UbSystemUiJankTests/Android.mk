@@ -22,7 +22,7 @@ LOCAL_MODULE_TAGS := tests
 LOCAL_STATIC_JAVA_LIBRARIES := ub-janktesthelper ub-uiautomator launcher-helper-lib \
     timeresult-helper-lib sysui-helper
 
-LOCAL_JAVA_LIBRARIES := legacy-android-test
+LOCAL_JAVA_LIBRARIES := android.test.base
 
 LOCAL_COMPATIBILITY_SUITE := device-tests
 
