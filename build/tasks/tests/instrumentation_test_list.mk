@@ -20,7 +20,7 @@ instrumentation_tests := \
     ManagedProvisioningTests \
     FrameworksCoreTests \
     FrameworksNetTests \
-    FrameworksNotificationTests \
+    FrameworksUiServicesTests \
     BstatsTestApp \
     ConnTestApp \
     FrameworksServicesTests \
