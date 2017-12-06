@@ -23,6 +23,8 @@ LOCAL_MODULE := CollectorHostsideLibTest
 
 LOCAL_JAVA_LIBRARIES := tradefed
 
+LOCAL_STATIC_JAVA_LIBRARIES := platformprotos mockito-host
+
 # tag this module as a test artifact
 LOCAL_COMPATIBILITY_SUITE := general-tests
 
