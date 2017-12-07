@@ -22,7 +22,7 @@ instrumentation_tests := \
     BinderProxyCountingTestApp \
     BinderProxyCountingTestService \
     FrameworksNetTests \
-    FrameworksNotificationTests \
+    FrameworksUiServicesTests \
     BstatsTestApp \
     ConnTestApp \
     FrameworksServicesTests \
