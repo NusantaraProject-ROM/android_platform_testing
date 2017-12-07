@@ -21,7 +21,7 @@ LOCAL_PACKAGE_NAME := MetricsHelperTests
 
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
-LOCAL_JAVA_LIBRARIES := android.test.runner
+LOCAL_JAVA_LIBRARIES := android.test.runner android.test.base
 LOCAL_STATIC_JAVA_LIBRARIES := \
     android-support-test \
     mockito-target-minus-junit4 \

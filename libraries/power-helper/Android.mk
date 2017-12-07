@@ -24,7 +24,7 @@ LOCAL_MODULE := PowerTestHelper-src
 
 LOCAL_MODULE_TAGS := optional
 
-LOCAL_JAVA_LIBRARIES := android.test.runner ub-uiautomator
-LOCAL_STATIC_JAVA_LIBRARIES := junit legacy-android-test
+LOCAL_JAVA_LIBRARIES := android.test.runner ub-uiautomator android.test.base
+LOCAL_STATIC_JAVA_LIBRARIES := junit
 
 include $(BUILD_STATIC_JAVA_LIBRARY)

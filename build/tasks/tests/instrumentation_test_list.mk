@@ -19,8 +19,10 @@ instrumentation_tests := \
     LongevityLibTests \
     ManagedProvisioningTests \
     FrameworksCoreTests \
+    BinderProxyCountingTestApp \
+    BinderProxyCountingTestService \
     FrameworksNetTests \
-    FrameworksNotificationTests \
+    FrameworksUiServicesTests \
     BstatsTestApp \
     ConnTestApp \
     FrameworksServicesTests \
