@@ -23,7 +23,6 @@ LOCAL_STATIC_JAVA_LIBRARIES += \
     android-support-test \
     collector-device-lib \
     junit \
-    legacy-android-test \
     mockito-target-minus-junit4
 
 LOCAL_DEX_PREOPT := false
