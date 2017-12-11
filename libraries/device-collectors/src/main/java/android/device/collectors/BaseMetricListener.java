@@ -58,34 +58,59 @@ public class BaseMetricListener extends InstrumentationRunListener {
 
     @Override
     public final void testRunStarted(Description description) throws Exception {
-        mRunData = createDataRecord();
-        onTestRunStart(mRunData, description);
+        try {
+            mRunData = createDataRecord();
+            onTestRunStart(mRunData, description);
+        } catch (RuntimeException e) {
+            // Prevent exception from reporting events.
+            Log.e(getTag(), "Exception during onTestRunStart.", e);
+        }
         super.testRunStarted(description);
     }
 
     @Override
     public final void testRunFinished(Result result) throws Exception {
-        onTestRunEnd(mRunData, result);
+        try {
+            onTestRunEnd(mRunData, result);
+        } catch (RuntimeException e) {
+            // Prevent exception from reporting events.
+            Log.e(getTag(), "Exception during onTestRunEnd.", e);
+        }
         super.testRunFinished(result);
     }
 
     @Override
     public final void testStarted(Description description) throws Exception {
-        mTestData = createDataRecord();
-        onTestStart(mTestData, description);
+        try {
+            mTestData = createDataRecord();
+            onTestStart(mTestData, description);
+        } catch (RuntimeException e) {
+            // Prevent exception from reporting events.
+            Log.e(getTag(), "Exception during onTestStart.", e);
+        }
         super.testStarted(description);
     }
 
     @Override
     public final void testFailure(Failure failure) throws Exception {
         Description description = failure.getDescription();
-        onTestFail(mTestData, description, failure);
+        try {
+            onTestFail(mTestData, description, failure);
+        } catch (RuntimeException e) {
+            // Prevent exception from reporting events.
+            Log.e(getTag(), "Exception during onTestFail.", e);
+        }
         super.testFailure(failure);
     }
 
     @Override
     public final void testFinished(Description description) throws Exception {
-        onTestEnd(mTestData, description);
+        try {
+            onTestEnd(mTestData, description);
+        } catch (RuntimeException e) {
+            // Prevent exception from reporting events.
+            Log.e(getTag(), "Exception during onTestEnd.", e);
+        }
         if (mTestData.hasMetrics()) {
             // Only send the status progress if there are metrics
             sendStatus(INST_STATUS_IN_PROGRESS, mTestData.createBundleFromMetrics());
