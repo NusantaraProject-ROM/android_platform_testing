@@ -35,8 +35,8 @@ LOCAL_MODULE_TAGS := tests
 LOCAL_PACKAGE_NAME := AuptRunner
 LOCAL_STATIC_JAVA_LIBRARIES := ub-uiautomator \
     junit \
-    legacy-android-test \
     android.test.runner
+LOCAL_JAVA_LIBRARIES := android.test.base
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
 include $(BUILD_PACKAGE)
