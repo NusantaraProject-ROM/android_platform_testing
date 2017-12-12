@@ -98,6 +98,7 @@ native_tests := \
     wificond_unit_test \
     wifilogd_unit_test \
     ziparchive-tests \
+    NeuralNetworksTest \
     SurfaceFlinger_test
 
 # Android Things specific tests
