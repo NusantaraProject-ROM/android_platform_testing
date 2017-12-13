@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package android.platform.longevity.samples;
+package android.longevity.platform.samples;
 
-import android.platform.longevity.LongevitySuite;
+import android.longevity.platform.LongevitySuite;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -28,6 +28,9 @@ import org.junit.runners.Suite.SuiteClasses;
     SimpleSuite.PassingTest.class,
     SimpleSuite.FailingTest.class
 })
+/**
+ * Sample device-side test cases.
+ */
 public class SimpleSuite {
     // no local test cases.
 

@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.platform.longevity.scheduler;
-
-import android.os.Bundle;
+package android.longevity.core.scheduler;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 
 import org.junit.runner.Runner;
@@ -26,8 +25,8 @@ import org.junit.runner.Runner;
  * A {@code BiFunction} for modifying the execution of {@code LongevitySuite} {@code Runner}s.
  */
 @FunctionalInterface
-public interface Scheduler extends BiFunction<Bundle, List<Runner>, List<Runner>> {
+public interface Scheduler extends BiFunction<Map<String, String>, List<Runner>, List<Runner>> {
     default Scheduler andThen(Scheduler next) {
-        return (bundle, list) -> next.apply(bundle, this.apply(bundle, list));
+        return (args, list) -> next.apply(args, this.apply(args, list));
     }
 }

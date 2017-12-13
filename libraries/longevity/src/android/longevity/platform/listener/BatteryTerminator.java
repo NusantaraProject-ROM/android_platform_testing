@@ -13,19 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.platform.longevity.listeners;
+package android.longevity.platform.listener;
 
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Bundle;
+import android.longevity.core.listener.RunTerminator;
 import android.support.annotation.VisibleForTesting;
+import android.util.Log;
+
+import java.util.Map;
 
 import org.junit.runner.Description;
 import org.junit.runner.notification.RunNotifier;
 
 /**
- * An {@link ActionListener} for terminating early on test end due to low battery.
+ * A {@link RunTerminator} for terminating early on test end due to low battery.
  */
 public final class BatteryTerminator extends RunTerminator {
     @VisibleForTesting
@@ -35,9 +38,9 @@ public final class BatteryTerminator extends RunTerminator {
     private final Context mContext;
     private final double mMinBattery;
 
-    public BatteryTerminator(RunNotifier notifier, Bundle args, Context context) {
+    public BatteryTerminator(RunNotifier notifier, Map<String, String> args, Context context) {
         super(notifier);
-        mMinBattery = Double.parseDouble(args.getString(OPTION, String.valueOf(DEFAULT)));
+        mMinBattery = args.containsKey(OPTION) ? Double.parseDouble(args.get(OPTION)) : DEFAULT;
         mContext = context;
     }
 
@@ -60,5 +63,13 @@ public final class BatteryTerminator extends RunTerminator {
         if (getBatteryLevel() < mMinBattery) {
             kill(String.format("battery fell below %.2f%%", mMinBattery * 100.0f));
         }
+    }
+
+    /**
+     * Prints messages to logcat.
+     */
+    @Override
+    protected void print(String reason) {
+        Log.e(getClass().getSimpleName(), reason);
     }
 }
