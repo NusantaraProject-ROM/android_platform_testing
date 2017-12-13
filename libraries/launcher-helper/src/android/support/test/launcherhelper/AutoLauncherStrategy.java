@@ -23,7 +23,6 @@ import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
 import android.system.helpers.CommandsHelper;
-import android.util.Log;
 
 public class AutoLauncherStrategy implements IAutoLauncherStrategy {
 
@@ -43,6 +42,8 @@ public class AutoLauncherStrategy implements IAutoLauncherStrategy {
 
     private static final BySelector R_ID_LENSPICKER_PAGE_DOWN =
             By.res(CAR_LENSPICKER, "page_down");
+    private static final BySelector R_ID_LENSPICKER_LIST =
+            By.res(CAR_LENSPICKER, "list_view");
 
     protected UiDevice mDevice;
     private Instrumentation mInstrumentation;
@@ -85,7 +86,8 @@ public class AutoLauncherStrategy implements IAutoLauncherStrategy {
 
     @Override
     public void openMapsFacet(String appName) {
-        openApp(appName, MAP_FACET, FACET_APPS);
+        CommandsHelper.getInstance(mInstrumentation).executeShellCommand(
+                "input tap " + MAP_FACET + " " + FACET_APPS);
     }
 
     @Override
@@ -96,33 +98,24 @@ public class AutoLauncherStrategy implements IAutoLauncherStrategy {
     }
 
     public void openApp(String appName, int x, int y) {
-        int retry = OPEN_FACET_RETRY_TIME;
         do {
             CommandsHelper.getInstance(mInstrumentation).executeShellCommand(
                     "input tap " + x + " " + y);
         }
-        while (!mDevice.hasObject(R_ID_LENSPICKER_PAGE_DOWN) && --retry > 0);
-
-        if (retry == 0) {
-            Log.w(LOG_TAG, "Could not find Lenspicker, but the app might be open.");
-            return;
-        }
+        //R_ID_LENSPICKER_LIST to open app if scrollContainer not avilable.
+        while (!mDevice.hasObject(R_ID_LENSPICKER_PAGE_DOWN)
+                && !mDevice.hasObject(R_ID_LENSPICKER_LIST));
 
         UiObject2 scrollContainer = mDevice.findObject(R_ID_LENSPICKER_PAGE_DOWN);
 
-        if (scrollContainer == null) {
-            throw new UnsupportedOperationException("Cannot find scroll container");
-        }
+        if (scrollContainer != null) {
 
-        if (!mDevice.hasObject(By.text(appName))) {
-            do {
-                scrollContainer.scroll(Direction.DOWN, 1.0f);
+            if (!mDevice.hasObject(By.text(appName))) {
+                do {
+                    scrollContainer.scroll(Direction.DOWN, 1.0f);
+                }
+                while (!mDevice.hasObject(By.text(appName)) && scrollContainer.isEnabled());
             }
-            while (!mDevice.hasObject(By.text(appName)) && scrollContainer.isEnabled());
-        }
-
-        if (!scrollContainer.isEnabled()) {
-            throw new UnsupportedOperationException("Unable to find application " + appName);
         }
 
         UiObject2 application = mDevice.wait(Until.findObject(By.text(appName)), APP_INIT_WAIT);
@@ -130,7 +123,7 @@ public class AutoLauncherStrategy implements IAutoLauncherStrategy {
             application.click();
             mDevice.waitForIdle();
         } else {
-            throw new RuntimeException("Unable to find permission text ok button");
+            throw new UnsupportedOperationException("Unable to find application " + appName);
         }
     }
 
