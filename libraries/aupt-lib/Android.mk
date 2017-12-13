@@ -20,7 +20,6 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := AuptLib
 LOCAL_JAVA_LIBRARIES := ub-uiautomator \
     junit \
-    legacy-android-test \
     android.test.runner \
     android.test.base
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
