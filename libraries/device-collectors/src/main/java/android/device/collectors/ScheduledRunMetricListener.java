@@ -17,7 +17,6 @@ package android.device.collectors;
 
 import android.os.Bundle;
 import android.support.annotation.VisibleForTesting;
-import android.support.test.InstrumentationRegistry;
 import android.util.Log;
 
 import org.junit.runner.Description;
@@ -38,13 +37,12 @@ public abstract class ScheduledRunMetricListener extends BaseMetricListener {
     private static final long DEFAULT_INTERVAL_MS = 60 * 1000l; // 1 min
 
     private Timer mTimer;
-    private Bundle mArgsBundle = null;
 
     public ScheduledRunMetricListener() {}
 
     @VisibleForTesting
     ScheduledRunMetricListener(Bundle argsBundle) {
-        mArgsBundle = argsBundle;
+        super(argsBundle);
     }
 
     @Override
@@ -109,16 +107,6 @@ public abstract class ScheduledRunMetricListener extends BaseMetricListener {
      */
     public abstract void collect(DataRecord runData, Description description)
             throws InterruptedException;
-
-    /**
-     * Returns the bundle containing the instrumentation arguments.
-     */
-    private Bundle getArgsBundle() {
-        if (mArgsBundle == null) {
-            mArgsBundle = InstrumentationRegistry.getArguments();
-        }
-        return mArgsBundle;
-    }
 
     /**
      * Extract the interval from the instrumentation arguments or use the default interval value.

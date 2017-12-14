@@ -20,7 +20,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 import android.support.annotation.VisibleForTesting;
-import android.support.test.InstrumentationRegistry;
 import android.util.Log;
 
 import org.junit.runner.Description;
@@ -61,19 +60,23 @@ public class BatteryStatsListener extends BaseMetricListener {
     static final String KEY_PER_RUN = "batterystats-per-run";
     static final String KEY_FORMAT = "batterystats-format";
 
-    private Bundle mArgs;
     private File mDestDir;
     private String mTestClassName;
     private boolean mPerRun;
     private boolean mBatteryStatReset;
     private boolean mToFile;
 
+    public BatteryStatsListener() {
+        super();
+    }
+
     /**
-     * Set arguments bundle for testing, instead of retrieving from InstrumentationRegistry
+     * Constructor to simulate receiving the instrumentation arguments. Should not be used except
+     * for testing.
      */
     @VisibleForTesting
-    void setArgs (Bundle argsBundle) {
-        mArgs = argsBundle;
+    BatteryStatsListener(Bundle argsBundle) {
+        super(argsBundle);
     }
 
     @Override
@@ -82,16 +85,14 @@ public class BatteryStatsListener extends BaseMetricListener {
             Log.w(getTag(), "dumpsys batterystats requires API version >= 21");
             return;
         }
-        if (mArgs == null) {
-            mArgs = InstrumentationRegistry.getArguments();
-        }
-        mPerRun = "true".equals(mArgs.getString(KEY_PER_RUN));
-        mToFile = !OPTION_BYTE.equals(mArgs.getString(KEY_FORMAT));
+        Bundle args = getArgsBundle();
+        mPerRun = "true".equals(args.getString(KEY_PER_RUN));
+        mToFile = !OPTION_BYTE.equals(args.getString(KEY_FORMAT));
         if (mToFile) {
             String dir = DEFAULT_DIR;
-            if (mArgs.containsKey(KEY_FORMAT)) {
-                String[] args = mArgs.getString(KEY_FORMAT).split(":", 2);
-                if (args.length > 1) dir = args[1];
+            if (args.containsKey(KEY_FORMAT)) {
+                String[] argsArray = args.getString(KEY_FORMAT).split(":", 2);
+                if (argsArray.length > 1) dir = argsArray[1];
             }
             mDestDir = createAndEmptyDirectory(dir);
         }
