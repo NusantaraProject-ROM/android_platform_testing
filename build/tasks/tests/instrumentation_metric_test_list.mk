@@ -21,4 +21,5 @@ instrumentation_metric_tests := \
     perf-setup.sh \
     RsBlasBenchmark \
     ImageProcessingJB \
-    MultiUserPerfTests
+    MultiUserPerfTests \
+    NeuralNetworksApiBenchmark
