@@ -2,12 +2,33 @@
 
 This library serves as a test runner for longevity suites, which exercise test cases repeatedly in
 order to exercise or stress the device under test. Annotate a collection of JUnit test classes as a
-`LongevitySuite`, and voila! You now have longevity tests!
+`LongevitySuite`, and voila...you now have longevity tests!
 
 ## Examples
 
-All examples below use the sample suites bundled as part of the `LongevityLibSamples` module under
-the `samples/` directory. Follow the samples directory to see how longevity suites are constructed.
+There is both host-side (core) and device-side (platform) for longevity tests with only
+minor differences. All of the examples below use the sample suites bundled as part of the
+`LongevityHostLibSamples` and `LongevityPlatformLibSamples` modules under the `samples/` directory.
+Follow the samples directory to see how longevity suites are constructed.
+
+### Host
+
+**Template command with stubbed out options.**
+
+`java <options> -cp <jar> org.junit.runner.JUnitCore <suite>`
+
+**Run simple test suite 50 times, and quit when an error is encountered.**
+
+`java -Diterations=5 -Dquitter=true out/host/linux-x86/framework/LongevityHostSamples.jar
+org.junit.runner.JUnitCore android.longevity.core.samples.SimpleSuite`
+
+**Run simple test suite 10 times, shuffle all tests, and quit after 30 minutes.**
+
+`java -Diterations=10 -Dsuite-timeout_msec=1800000 -Dshuffle=true
+out/host/linux-x86/framework/LongevityHostSamples.jar
+org.junit.runner.JUnitCore android.longevity.core.samples.SimpleSuite`
+
+### Device
 
 **Template command with stubbed out options.**
 
@@ -43,9 +64,13 @@ android.platform.longevity.samples/android.support.test.runner.AndroidJUnitRunne
 
 ## Tests
 
-Tests for the library can be built with the `LongevityLibTests` module under the `tests/` directory.
-Run them using `adb shell am instrument -w -r
-android.platform.longevity.tests/android.support.test.runner.AndroidJUnitRunner`
+Host-side tests for the library can be built with the `LongevityHostLibTests` module under the
+`tests/` directory. Run them using `java out/host/linux-x86/framework/LongevityHostLibTests.jar
+org.junit.runner.JUnitCore <test class>`.
+
+Device-side tests for the library can be built with the `LongevityLibTests` module under the
+`tests/` directory. Run them using `adb shell am instrument -w -r
+android.platform.longevity.tests/android.support.test.runner.AndroidJUnitRunner`.
 
 ## Issues
 

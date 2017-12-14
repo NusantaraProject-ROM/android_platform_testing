@@ -13,9 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.platform.longevity.listeners;
-
-import android.util.Log;
+package android.longevity.core.listener;
 
 import org.junit.runner.notification.RunListener;
 import org.junit.runner.notification.RunNotifier;
@@ -25,7 +23,7 @@ import org.junit.runner.notification.RunNotifier;
  * killing tests early.
  */
 public abstract class RunTerminator extends RunListener {
-    private RunNotifier mNotifier;
+    protected RunNotifier mNotifier;
 
     public RunTerminator(RunNotifier notifier) {
         mNotifier = notifier;
@@ -35,9 +33,14 @@ public abstract class RunTerminator extends RunListener {
      * Kills subsequent tests and logs a message for future debugging.
      */
     protected final void kill(String reason) {
-        Log.d(getClass().getSimpleName(),
-                String.format("Test run killed by %s because %s.",
-                        getClass().getSimpleName(), reason));
+        print(String.format("Test run killed because %s.", reason));
         mNotifier.pleaseStop();
+    }
+
+    /**
+     * Prints a message to the error output stream.
+     */
+    protected void print(String message) {
+        System.err.println(message);
     }
 }

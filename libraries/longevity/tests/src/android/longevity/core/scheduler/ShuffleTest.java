@@ -13,19 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.platform.longevity.scheduler;
+package android.longevity.core.scheduler;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.when;
 
-import android.os.Bundle;
-import android.support.test.filters.SmallTest;
-
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.Random;
 import java.util.stream.IntStream;
 
 import org.junit.Test;
@@ -37,38 +35,32 @@ import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
 /**
- * Unit test the logic for {@link Iterate}
+ * Unit test the logic for {@link Shuffle}
  */
 @RunWith(JUnit4.class)
-public class IterateTest {
+public class ShuffleTest {
     private static final int NUM_TESTS = 10;
-    private static final int TEST_ITERATIONS = 25;
+    private static final long SEED_VALUE = new Random().nextLong();
 
-    private Iterate mIterate = new Iterate();
+    private Shuffle mShuffle = new Shuffle();
 
     /**
-     * Unit test the iteration count is respected.
+     * Unit test that shuffling with a specific seed is respected.
      */
     @Test
-    @SmallTest
-    public void testIterationsRespected() {
+    public void testShuffleSeedRespected()  {
         // Construct argument bundle.
-        Bundle args = new Bundle();
-        args.putString(Iterate.OPTION_NAME, String.valueOf(TEST_ITERATIONS));
+        Map<String, String> args = new HashMap();
+        args.put(Shuffle.SHUFFLE_OPTION_NAME, "true");
+        args.put(Shuffle.SEED_OPTION_NAME, String.valueOf(SEED_VALUE));
         // Construct input runners.
         List<Runner> input = new ArrayList<>();
         IntStream.range(1, NUM_TESTS).forEach(i -> input.add(getMockRunner(i)));
-        // Apply iterator on arguments and runners.
-        List<Runner> output = mIterate.apply(args, input);
-        // Count occurrences of test descriptions into a map.
-        Map<String, Long> countMap = output.stream()
-            .map(Runner::getDescription)
-                .map(Description::getDisplayName)
-                    .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
-        // Ensure all test descriptions have N entries.
-        boolean respected = countMap.entrySet().stream()
-            .noneMatch(entry -> (entry.getValue() != TEST_ITERATIONS));
-        assertThat(respected).isTrue();
+        // Apply shuffler on arguments and runners.
+        List<Runner> output = mShuffle.apply(args, new ArrayList(input));
+        // Shuffle locally against the same seed and compare results.
+        Collections.shuffle(input, new Random(SEED_VALUE));
+        assertThat(input).isEqualTo(output);
     }
 
     private Runner getMockRunner (int id) {

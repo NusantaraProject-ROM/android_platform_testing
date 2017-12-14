@@ -13,11 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.platform.longevity;
+package android.longevity.core;
 
 import static org.junit.Assert.fail;
-
-import android.support.test.filters.SmallTest;
 
 import org.junit.Test;
 import org.junit.internal.builders.AllDefaultPossibilitiesBuilder;
@@ -35,7 +33,6 @@ public class LongevitySuiteTest {
      * Unit test that the {@link SuiteClasses} annotation is required.
      */
     @Test
-    @SmallTest
     public void testAnnotationRequired() {
         try {
             new LongevitySuite(NoSuiteClassesSuite.class, new AllDefaultPossibilitiesBuilder(true));
