@@ -24,6 +24,8 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
     ub-janktesthelper \
     junit
 
+LOCAL_JAVA_LIBRARIES := android.test.base.stubs
+
 LOCAL_SDK_VERSION := current
 
 LOCAL_COMPATIBILITY_SUITE := device-tests

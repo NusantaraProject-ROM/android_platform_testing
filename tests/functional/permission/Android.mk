@@ -13,6 +13,8 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
     package-helper \
     junit
 
+LOCAL_JAVA_LIBRARIES := android.test.base.stubs
+
 LOCAL_PACKAGE_NAME := PermissionFunctionalTests
 LOCAL_CERTIFICATE := platform
 

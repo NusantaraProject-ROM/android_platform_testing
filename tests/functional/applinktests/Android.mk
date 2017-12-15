@@ -26,6 +26,8 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
     platform-test-annotations \
     junit
 
+LOCAL_JAVA_LIBRARIES := android.test.base.stubs
+
 LOCAL_PACKAGE_NAME := AppLinkFunctionalTests
 LOCAL_CERTIFICATE := platform
 
