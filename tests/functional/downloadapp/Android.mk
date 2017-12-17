@@ -11,6 +11,8 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
     ub-uiautomator \
     android-support-test
 
+LOCAL_JAVA_LIBRARIES := android.test.base.stubs
+
 LOCAL_PACKAGE_NAME := DownloadAppFunctionalTests
 LOCAL_CERTIFICATE := platform
 
