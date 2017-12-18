@@ -29,6 +29,7 @@ instrumentation_tests := \
     JobTestApp \
     FrameworksUtilTests \
     MtpDocumentsProviderTests \
+    MtpTests \
     DocumentsUITests \
     ShellTests \
     SystemUITests \
