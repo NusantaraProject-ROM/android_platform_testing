@@ -22,12 +22,16 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
     android-support-test \
     launcher-helper-lib \
     metrics-helper-lib \
+    platform-test-annotations \
     ub-uiautomator \
     services.accessibility \
     services.core \
     services.devicepolicy \
     services.net \
     services.usage \
+    services.core \
+    system-helpers \
+    sysui-helper \
     # services.* are notifications specific, do not copy to other tests
 
 LOCAL_JAVA_LIBRARIES := android.test.base
