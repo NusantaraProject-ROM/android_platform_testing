@@ -97,7 +97,7 @@ public class NotificationDNDTests extends InstrumentationTestCase {
         try {
             mNotificationManager
                     .setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_PRIORITY);
-            mHelper.sendNotificationsWithInLineReply(NOTIFICATION_ID, true);
+            mHelper.sendNotificationsWithInlineReply(NOTIFICATION_ID, true);
             Thread.sleep(LONG_TIMEOUT);
             NotificationRecord nr = new NotificationRecord(mContext,
                     mHelper.getStatusBarNotification(NOTIFICATION_ID), mHelper.getDefaultChannel());
@@ -127,7 +127,7 @@ public class NotificationDNDTests extends InstrumentationTestCase {
             mDevice.wait(Until.findObject(By.textContains("Override Do Not Disturb")), LONG_TIMEOUT)
                     .click();
             Thread.sleep(LONG_TIMEOUT);
-            mHelper.sendNotificationsWithInLineReply(NOTIFICATION_ID, true);
+            mHelper.sendNotificationsWithInlineReply(NOTIFICATION_ID, true);
             Thread.sleep(LONG_TIMEOUT);
             NotificationRecord nr = new NotificationRecord(mContext,
                     mHelper.getStatusBarNotification(NOTIFICATION_ID), mHelper.getDefaultChannel());
@@ -153,7 +153,7 @@ public class NotificationDNDTests extends InstrumentationTestCase {
             mHelper.showAppNotificationSettings(mContext);
             mDevice.wait(Until.findObject(By.textContains("Block all")), LONG_TIMEOUT).click();
             Thread.sleep(LONG_TIMEOUT);
-            mHelper.sendNotificationsWithInLineReply(NOTIFICATION_ID, true);
+            mHelper.sendNotificationsWithInlineReply(NOTIFICATION_ID, true);
             Thread.sleep(LONG_TIMEOUT);
             if (mHelper.checkNotificationExistence(NOTIFICATION_ID, true)) {
                 fail(String.format("Notification %s has not been blocked", NOTIFICATION_ID));

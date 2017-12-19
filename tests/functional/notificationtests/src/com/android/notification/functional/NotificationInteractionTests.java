@@ -34,7 +34,10 @@ import android.util.Log;
 import android.metrics.MetricsReader;
 import com.android.internal.logging.nano.MetricsProto.MetricsEvent;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
@@ -42,6 +45,10 @@ public class NotificationInteractionTests extends InstrumentationTestCase {
     private static final String LOG_TAG = NotificationInteractionTests.class.getSimpleName();
     private static final int LONG_TIMEOUT = 3000;
     private static final int SHORT_TIMEOUT = 200;
+    private static final int GROUP_NOTIFICATION_ID = 1;
+    private static final int CHILD_NOTIFICATION_ID = 100;
+    private static final int SECOND_CHILD_NOTIFICATION_ID = 101;
+    private static final String BUNDLE_GROUP_KEY = "group key ";
     private final boolean DEBUG = false;
     private NotificationManager mNotificationManager;
     private UiDevice mDevice = null;
@@ -117,14 +124,6 @@ public class NotificationInteractionTests extends InstrumentationTestCase {
         sbns = mNotificationManager.getActiveNotifications();
         assertTrue(String.format("%s notifications have not been cleared", sbns.length),
                 sbns.length == currentSbns);
-
-        MetricsAsserts.assertHasVisibilityLog("missing panel revealed log", mMetricsReader,
-                MetricsEvent.NOTIFICATION_PANEL, true);
-        MetricsAsserts.assertHasLog("missing notification visibility log", mMetricsReader,
-                new LogMaker(MetricsEvent.NOTIFICATION_ITEM)
-                        .setType(MetricsEvent.TYPE_OPEN)
-                        .addTaggedData(MetricsEvent.NOTIFICATION_ID, CUSTOM_NOTIFICATION_ID)
-                        .setPackageName(mContext.getPackageName()));
         MetricsAsserts.assertHasLog("missing notification cancel log", mMetricsReader,
                 new LogMaker(MetricsEvent.NOTIFICATION_ITEM)
                         .setType(MetricsEvent.TYPE_DISMISS)
@@ -132,13 +131,11 @@ public class NotificationInteractionTests extends InstrumentationTestCase {
                         .setPackageName(mContext.getPackageName()));
         MetricsAsserts.assertHasActionLog("missing dismiss-all log", mMetricsReader,
                 MetricsEvent.ACTION_DISMISS_ALL_NOTES);
-        MetricsAsserts.assertHasVisibilityLog("missing panel hidden log", mMetricsReader,
-                MetricsEvent.NOTIFICATION_PANEL, false);
     }
 
     /** send notifications, then open and close the shade to test visibility metrics. */
     @MediumTest
-    public void testNotificationShadeMetricsl() throws Exception {
+    public void testNotificationShadeMetrics() throws Exception {
         Map<Integer, String> lists = new HashMap<Integer, String>();
         int firstId = CUSTOM_NOTIFICATION_ID;
         int secondId = CUSTOM_NOTIFICATION_ID + 1;
@@ -227,12 +224,6 @@ public class NotificationInteractionTests extends InstrumentationTestCase {
             target.click();
         }
         Thread.sleep(SHORT_TIMEOUT);
-        // top item is always expanded
-        MetricsAsserts.assertHasLog("missing notification expansion log", mMetricsReader,
-                new LogMaker(MetricsEvent.NOTIFICATION_ITEM)
-                        .setType(MetricsEvent.TYPE_DETAIL)
-                        .addTaggedData(MetricsEvent.NOTIFICATION_ID, id)
-                        .setPackageName(mContext.getPackageName()));
         MetricsAsserts.assertHasLog("missing notification alert log", mMetricsReader,
                 new LogMaker(MetricsEvent.NOTIFICATION_ALERT)
                         .setType(MetricsEvent.TYPE_OPEN)
@@ -270,6 +261,34 @@ public class NotificationInteractionTests extends InstrumentationTestCase {
                         .setType(MetricsEvent.TYPE_ACTION)
                         .addTaggedData(MetricsEvent.NOTIFICATION_ID, id)
                         .setPackageName(mContext.getPackageName()));
+    }
+
+    @MediumTest
+    public void testReceiveAndExpandRedactNotification() throws Exception {
+        List<Integer> lists = new ArrayList<Integer>(Arrays.asList(GROUP_NOTIFICATION_ID,
+                CHILD_NOTIFICATION_ID, SECOND_CHILD_NOTIFICATION_ID));
+        mHelper.sendBundlingNotifications(lists, BUNDLE_GROUP_KEY);
+        Thread.sleep(LONG_TIMEOUT);
+        mDevice.openNotification();
+        UiObject2 notification = mDevice.wait(
+                Until.findObject(By.text(lists.get(1).toString())),
+                LONG_TIMEOUT * 2);
+        assertNotNull("The second notification has not been found", notification);
+        int currentY = notification.getVisibleCenter().y;
+        mDevice.wait(Until.findObject(By.res("android:id/expand_button")), LONG_TIMEOUT * 2)
+                .click();
+        Thread.sleep(LONG_TIMEOUT);
+        notification = mDevice.wait(Until.findObject(By.text(lists.get(1).toString())),
+                LONG_TIMEOUT);
+        assertFalse("The notifications has not been bundled",
+                notification.getVisibleCenter().y == currentY);
+        mDevice.wait(Until.findObject(By.res("android:id/expand_button")), LONG_TIMEOUT).click();
+        Thread.sleep(LONG_TIMEOUT);
+        notification = mDevice.wait(Until.findObject(By.text(lists.get(1).toString())),
+                LONG_TIMEOUT * 2);
+        assertTrue("The notifications can not be redacted",
+                notification.getVisibleCenter().y == currentY);
+        mNotificationManager.cancelAll();
     }
 
     private UiObject2 findByText(String text) throws Exception {
