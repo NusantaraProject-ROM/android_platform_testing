@@ -30,13 +30,12 @@ import android.view.IWindowManager;
 import android.view.Surface;
 import android.view.WindowManagerGlobal;
 
-import com.android.internal.view.RotationPolicy;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
-import org.junit.Before;
-import org.junit.Test;
 
 /**
  * Tests to test various latencies in the system.
@@ -327,7 +326,6 @@ public class LatencyTests {
 
     /**
      * Create trace directory for the latency tests to store the trace files.
-     * @param subDirectoryName
      */
     private void createTraceDirectory() throws Exception {
         mRootTrace = new File(mTraceDirectoryStr);
@@ -340,7 +338,7 @@ public class LatencyTests {
     /**
      * @return
      */
-    private boolean isTracesEnabled(){
+    private boolean isTracesEnabled() {
         return (null != mTraceDirectoryStr && !mTraceDirectoryStr.isEmpty());
     }
 }

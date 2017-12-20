@@ -25,4 +25,10 @@ public interface ISettingsIntelligenceHelper extends IStandardAppHelper {
      */
     void performQuery();
 
+    /**
+     * Setup expectations: Settings homepage is open
+     *
+     * This method opens search page.
+     */
+    void openSearch();
 }
