@@ -26,6 +26,7 @@ import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.system.helpers.LockscreenHelper;
 import android.system.helpers.OverviewHelper;
+import android.system.helpers.SettingsHelper;
 import android.view.IWindowManager;
 import android.view.Surface;
 import android.view.WindowManagerGlobal;
@@ -66,6 +67,8 @@ public class LatencyTests {
     private static final String TEST_PINCHECK_DELAY = "testPinCheckDelay";
     private static final String TEST_APPTORECENTS = "testAppToRecents";
     private static final String TEST_ROTATION_LATENCY = "testRotationLatency";
+    private static final String TEST_SETTINGS_SEARCH = "testSettingsSearch";
+
     private String mTraceDirectoryStr = null;
     private Bundle mArgs;
     private File mRootTrace = null;
@@ -317,6 +320,32 @@ public class LatencyTests {
             if (null != mAtraceLogger) {
                 mAtraceLogger.atraceStop();
             }
+        }
+    }
+
+    @Test
+    public void testSettingsSearch() throws Exception {
+        if (isTracesEnabled()) {
+            createTraceDirectory();
+        }
+        SettingsHelper settingsHelper = SettingsHelper.getInstance();
+
+        for (int i = 0; i < mIterationCount; i++) {
+            mDevice.executeShellCommand(String.format(AM_START_COMMAND_TEMPLATE,
+                    Settings.ACTION_SETTINGS));
+            settingsHelper.openSearch(InstrumentationRegistry.
+                    getInstrumentation().getContext());
+            if (mAtraceLogger != null) {
+                mAtraceLogger.atraceStart(mTraceCategoriesSet, mTraceBufferSize,
+                        mTraceDumpInterval, mRootTrace,
+                        String.format("%s-%d", TEST_SETTINGS_SEARCH, i));
+            }
+            settingsHelper.performNoResultQuery();
+            if (mAtraceLogger != null) {
+                mAtraceLogger.atraceStop();
+            }
+            mDevice.pressHome();
+            mDevice.waitForIdle();
         }
     }
 
