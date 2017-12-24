@@ -16,7 +16,7 @@
 
 package android.platform.test.helpers;
 
-public interface ISettingsHelper extends IStandardAppHelper {
+public interface ISettingsIntelligenceHelper extends IStandardAppHelper {
 
     /**
      * Setup expectations: Settings search page is open
@@ -25,4 +25,10 @@ public interface ISettingsHelper extends IStandardAppHelper {
      */
     void performQuery();
 
+    /**
+     * Setup expectations: Settings homepage is open
+     *
+     * This method opens search page.
+     */
+    void openSearch();
 }

@@ -24,4 +24,5 @@ native_metric_tests := \
     minikin_perftests \
     mmapPerf \
     netd_benchmark \
-    perf-setup.sh
+    perf-setup.sh \
+    skia_nanobench
