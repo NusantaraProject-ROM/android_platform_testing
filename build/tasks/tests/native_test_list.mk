@@ -53,6 +53,7 @@ native_tests := \
     libjavacore-unit-tests \
     liblog-unit-tests \
     libminijail_unittest_gtest \
+    libperfmgr_test \
     libtextclassifier_tests \
     libvintf_test \
     libwifi-system_tests \
