@@ -37,4 +37,12 @@ public class NexusLauncherStrategy extends BaseLauncher3Strategy {
     public BySelector getAllAppsButtonSelector() {
         return By.res(getSupportedLauncherPackage(), "all_apps_handle");
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public BySelector getHotSeatSelector() {
+        return By.res(getSupportedLauncherPackage(), "hotseat");
+    }
 }
