@@ -48,6 +48,7 @@ instrumentation_tests := \
     LauncherFunctionalTests \
     DownloadAppFunctionalTests \
     NotificationFunctionalTests \
+    DexLoggerIntegrationTests \
     DownloadProviderTests \
     EmergencyInfoUnitTests \
     CalendarProviderTests \
