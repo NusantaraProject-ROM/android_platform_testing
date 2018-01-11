@@ -20,6 +20,7 @@ LOCAL_SRC_FILES := $(call all-java-files-under, src)
 LOCAL_MODULE_TAGS := tests
 
 LOCAL_STATIC_JAVA_LIBRARIES := \
+    collector-device-lib \
     ub-uiautomator \
     ub-janktesthelper \
     junit
