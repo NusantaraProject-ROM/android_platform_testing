@@ -15,8 +15,13 @@
  */
 package android.support.test.launcherhelper;
 
+import android.graphics.Point;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
+import android.support.test.uiautomator.UiObject2;
+import android.support.test.uiautomator.Until;
+
+import junit.framework.Assert;
 
 /**
  * Implementation of {@link ILauncherStrategy} to support Nexus launcher
@@ -34,8 +39,16 @@ public class NexusLauncherStrategy extends BaseLauncher3Strategy {
      * {@inheritDoc}
      */
     @Override
+    public BySelector getAllAppsSelector() {
+        return By.res(getSupportedLauncherPackage(), "apps_view");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public BySelector getAllAppsButtonSelector() {
-        return By.res(getSupportedLauncherPackage(), "all_apps_handle");
+        throw new UnsupportedOperationException("UI element no longer exists.");
     }
 
     /**
@@ -44,5 +57,25 @@ public class NexusLauncherStrategy extends BaseLauncher3Strategy {
     @Override
     public BySelector getHotSeatSelector() {
         return By.res(getSupportedLauncherPackage(), "hotseat");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public UiObject2 openAllApps(boolean reset) {
+        // If not on all apps or to reset, then go to launcher and re-open all apps.
+        if (!mDevice.hasObject(getAllAppsSelector()) || reset) {
+            // Restart from the launcher home screen.
+            open();
+            // Swipe from the hotseat to near the top, e.g. 10% of the screen.
+            UiObject2 hotseat = mDevice.wait(Until.findObject(getHotSeatSelector()), 2500);
+            Point start = hotseat.getVisibleCenter();
+            int endY = (int) (mDevice.getDisplayHeight() * 0.1f);
+            mDevice.swipe(start.x, start.y, start.x, endY, (start.y - endY) / 100); // 100 px/step
+        }
+        UiObject2 allAppsContainer = mDevice.wait(Until.findObject(getAllAppsSelector()), 2500);
+        Assert.assertNotNull("openAllApps: did not find all apps container", allAppsContainer);
+        return allAppsContainer;
     }
 }
