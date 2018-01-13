@@ -55,6 +55,7 @@ native_tests := \
     libminijail_unittest_gtest \
     libperfmgr_test \
     libtextclassifier_tests \
+    libsurfaceflinger_unittest \
     libvintf_test \
     libwifi-system_tests \
     linker-unit-tests \
