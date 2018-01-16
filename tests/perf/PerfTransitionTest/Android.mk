@@ -27,6 +27,7 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
     ub-uiautomator \
     launcher-helper-lib \
     sysui-helper \
+    collector-device-lib \
     settings-helper
 
 LOCAL_COMPATIBILITY_SUITE := device-tests
