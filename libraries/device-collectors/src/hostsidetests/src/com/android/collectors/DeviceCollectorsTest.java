@@ -16,17 +16,14 @@
 package com.android.collectors;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
-import android.service.batterystats.BatteryStatsServiceDumpProto;
-
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
+import com.android.ddmlib.testrunner.TestResult;
 import com.android.ddmlib.testrunner.TestRunResult;
-import com.android.tradefed.config.OptionSetter;
-import com.android.tradefed.device.metric.DeviceMetricData;
-import com.android.tradefed.device.metric.FilePullerDeviceMetricCollector;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.result.CollectingTestListener;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
@@ -36,18 +33,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collection;
 
 /**
- * Host side tests for the device collectors, this ensure that we are able to use the collectors
- * in a similar way as the infra.
+ * Host side tests for the core device collectors, this ensure that we are able to use the
+ * collectors in a similar way as the infra.
  *
  * Command:
  * mm CollectorHostsideLibTest CollectorDeviceLibTest -j16
@@ -63,11 +54,6 @@ public class DeviceCollectorsTest extends BaseHostJUnit4Test {
             "android.device.collectors.StubTestMetricListener";
     private static final String SCHEDULED_COLLECTOR =
             "android.device.collectors.StubScheduledRunMetricListener";
-    private static final String BATTERYSTATS_COLLECTOR =
-            "android.device.collectors.BatteryStatsListener";
-    private static final String SCREENSHOT_COLLECTOR =
-            "android.device.collectors.ScreenshotListener";
-    private static final String BATTERYSTATS_PROTO = "batterystatsproto";
 
     private RemoteAndroidTestRunner mTestRunner;
     private IInvocationContext mContext;
@@ -94,11 +80,46 @@ public class DeviceCollectorsTest extends BaseHostJUnit4Test {
         Collection<TestRunResult> results = listener.getRunResults();
         assertEquals(1, results.size());
         TestRunResult result = results.iterator().next();
+        assertFalse(result.isRunFailure());
+        assertFalse(result.hasFailedTests());
         // Ensure the listener added a metric at test run start and end.
         assertTrue(result.getRunMetrics().containsKey("run_start"));
         assertTrue(result.getRunMetrics().containsKey("run_end"));
         // TODO: check each test cases once AJUR is fixed.
     }
+
+    /**
+     * Test that our base metric listener can filter metrics to run only against some groups tagged
+     * with an annotation.
+     */
+    @Test
+    public void testBaseListenerRuns_withExcludeFilters() throws Exception {
+        mTestRunner.addInstrumentationArg("listener", STUB_BASE_COLLECTOR);
+        mTestRunner.addInstrumentationArg("exclude-filter-group", "testGroup");
+        mTestRunner.setClassName("android.device.collectors.BaseMetricListenerInstrumentedTest");
+        CollectingTestListener listener = new CollectingTestListener();
+        assertTrue(getDevice().runInstrumentationTests(mTestRunner, listener));
+        Collection<TestRunResult> results = listener.getRunResults();
+        assertEquals(1, results.size());
+        TestRunResult result = results.iterator().next();
+        assertFalse(result.isRunFailure());
+        assertFalse(result.hasFailedTests());
+        // Ensure the listener added a metric at test run start and end.
+        assertTrue(result.getRunMetrics().containsKey("run_start"));
+        assertTrue(result.getRunMetrics().containsKey("run_end"));
+        // We did run some tests
+        assertTrue(!result.getTestResults().isEmpty());
+        // After filtering none of the test case should contain non of the metrics since it was
+        // filtered.
+        for (TestResult testCaseResult : result.getTestResults().values()) {
+            assertFalse(testCaseResult.getMetrics().containsKey("test_start"));
+            assertFalse(testCaseResult.getMetrics().containsKey("test_fail"));
+            assertFalse(testCaseResult.getMetrics().containsKey("test_end"));
+        }
+    }
+
+    // TODO: add a test case with include filter and exclude+include filter. Needs new AJUR runner
+    // drop.
 
     /**
      * Test that our base scheduled listener can output metrics periodically.
@@ -112,6 +133,8 @@ public class DeviceCollectorsTest extends BaseHostJUnit4Test {
         Collection<TestRunResult> results = listener.getRunResults();
         assertEquals(1, results.size());
         TestRunResult result = results.iterator().next();
+        assertFalse(result.isRunFailure());
+        assertFalse(result.hasFailedTests());
         // There is time during the test to output at least a handful of periodic metrics.
         assertTrue(result.getRunMetrics().containsKey("collect0"));
         assertTrue(result.getRunMetrics().containsKey("collect1"));
@@ -132,110 +155,10 @@ public class DeviceCollectorsTest extends BaseHostJUnit4Test {
         Collection<TestRunResult> results = listener.getRunResults();
         assertEquals(1, results.size());
         TestRunResult result = results.iterator().next();
+        assertFalse(result.isRunFailure());
+        assertFalse(result.hasFailedTests());
         // The default interval value is one minute so it will only have time to run once.
         assertEquals(1, result.getRunMetrics().size());
         assertTrue(result.getRunMetrics().containsKey("collect0"));
-    }
-
-    /**
-     * Test that BatteryStatsListener collects batterystats and records to a file per run.
-     */
-    @Test
-    public void testBatteryStatsListener_perRun() throws Exception {
-        mTestRunner.addInstrumentationArg("listener", BATTERYSTATS_COLLECTOR);
-        mTestRunner.addInstrumentationArg("batterystats-format", "file:batterystats-log");
-        mTestRunner.addInstrumentationArg("batterystats-per-run", "true");
-        CollectingTestListener listener = new CollectingTestListener();
-        FilePullerDeviceMetricCollector collector = new FilePullerDeviceMetricCollector() {
-            @Override
-            public void processMetricFile(String key, File metricFile, DeviceMetricData runData) {
-                assertTrue(metricFile.getName().contains(BATTERYSTATS_PROTO));
-                runData.addStringMetric(key, metricFile.getAbsolutePath());
-                try (
-                        InputStream is = new BufferedInputStream(new FileInputStream(metricFile))
-                ) {
-                    BatteryStatsServiceDumpProto bssdp = BatteryStatsServiceDumpProto.parseFrom(is);
-                    assertTrue(bssdp.hasBatterystats());
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                } finally {
-                    assertTrue(metricFile.delete());
-                }
-            }
-        };
-        OptionSetter optionSetter = new OptionSetter(collector);
-        String pattern = String.format("%s_.*", BATTERYSTATS_COLLECTOR);
-        optionSetter.setOptionValue("pull-pattern-keys", pattern);
-        collector.init(mContext, listener);
-        assertTrue(getDevice().runInstrumentationTests(mTestRunner, collector));
-
-        Collection<TestRunResult> results = listener.getRunResults();
-        assertEquals(1, results.size());
-        TestRunResult result = results.iterator().next();
-        assertEquals(1, result.getRunMetrics().size());
-        String metricFileKey = result.getRunMetrics().keySet().iterator().next();
-        assertTrue(metricFileKey.contains(BATTERYSTATS_COLLECTOR));
-    }
-
-    /**
-     * Test that BatteryStatsListener collects batterystats and records to a file per test.
-     */
-    @Test
-    public void testBatteryStatsListener_perTest() throws Exception {
-        mTestRunner.addInstrumentationArg("listener", BATTERYSTATS_COLLECTOR);
-        mTestRunner.addInstrumentationArg("batterystats-format", "file:batterystats-log");
-        mTestRunner.addInstrumentationArg("batterystats-per-run", "false");
-        CollectingTestListener listener = new CollectingTestListener();
-        FilePullerDeviceMetricCollector collector = new FilePullerDeviceMetricCollector() {
-            @Override
-            public void processMetricFile(String key, File metricFile, DeviceMetricData runData) {
-                assertTrue(metricFile.getName().contains(BATTERYSTATS_PROTO));
-                try (
-                        InputStream is = new BufferedInputStream(new FileInputStream(metricFile))
-                ) {
-                    BatteryStatsServiceDumpProto bssdp = BatteryStatsServiceDumpProto.parseFrom(is);
-                    assertTrue(bssdp.hasBatterystats());
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                } finally {
-                    assertTrue(metricFile.delete());
-                }
-            }
-        };
-        OptionSetter optionSetter = new OptionSetter(collector);
-        String pattern = String.format("%s_.*", BATTERYSTATS_COLLECTOR);
-        optionSetter.setOptionValue("pull-pattern-keys", pattern);
-        collector.init(mContext, listener);
-        assertTrue(getDevice().runInstrumentationTests(mTestRunner, collector));
-    }
-
-    /**
-     * Test that ScreenshotListener collects screenshot and records to a file per test.
-     */
-    @Test
-    public void testScreenshotListener() throws Exception {
-        mTestRunner.addInstrumentationArg("listener", SCREENSHOT_COLLECTOR);
-        mTestRunner.addInstrumentationArg("screenshot-format", "file:screenshot-log");
-
-        CollectingTestListener listener = new CollectingTestListener();
-        FilePullerDeviceMetricCollector collector = new FilePullerDeviceMetricCollector() {
-            @Override
-            public void processMetricFile(String key, File metricFile, DeviceMetricData runData) {
-                try {
-                    assertTrue(metricFile.getName().contains("png"));
-                    assertTrue(metricFile.length() > 0);
-                    assertEquals("image/png", Files.probeContentType(metricFile.toPath()));
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                } finally {
-                    assertTrue(metricFile.delete());
-                }
-            }
-        };
-        OptionSetter optionSetter = new OptionSetter(collector);
-        String pattern = String.format("%s_.*", SCREENSHOT_COLLECTOR);
-        optionSetter.setOptionValue("pull-pattern-keys", pattern);
-        collector.init(mContext, listener);
-        assertTrue(getDevice().runInstrumentationTests(mTestRunner, collector));
     }
 }

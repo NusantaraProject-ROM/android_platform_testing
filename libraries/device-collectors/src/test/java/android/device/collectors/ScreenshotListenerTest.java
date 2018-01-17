@@ -15,18 +15,11 @@
  */
 package android.device.collectors;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
 import android.app.Instrumentation;
 import android.os.Bundle;
 import android.support.test.runner.AndroidJUnit4;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.Description;
@@ -36,17 +29,24 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
 
 import java.io.File;
 import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 /**
  * Android Unit tests for {@link BatteryStatsListener}.
  *
  * To run:
- * TODO: Add instruction to run with atest.
- * > bit CollectorDeviceLibTest:android.device.collectors.ScreenshotListenerTest
+ * atest CollectorDeviceLibTest:android.device.collectors.ScreenshotListenerTest
  */
 @RunWith(AndroidJUnit4.class)
 public class ScreenshotListenerTest {
@@ -57,9 +57,8 @@ public class ScreenshotListenerTest {
     private File mLogFile;
     private Description mRunDesc;
     private Description mTestDesc;
-
-    @Spy
     private ScreenshotListener mListener;
+
     @Mock
     private Instrumentation mInstrumentation;
 
@@ -70,17 +69,32 @@ public class ScreenshotListenerTest {
         mLogFile = new File("unique_log_file.log");
         mRunDesc = Description.createSuiteDescription("run");
         mTestDesc = Description.createTestDescription("run", "test");
-        mListener.setInstrumentation(mInstrumentation);
-        doNothing().when(mListener).screenshotToStream(any());
-        doReturn(mLogDir).when(mListener).createAndEmptyDirectory(anyString());
-        doReturn(mLogFile).when(mListener).takeScreenshot(anyString());
+    }
+
+    @After
+    public void tearDown() {
+        if (mLogFile != null) {
+            mLogFile.delete();
+        }
+        if (mLogDir != null) {
+            mLogDir.delete();
+        }
+    }
+
+    private ScreenshotListener initListener(Bundle b) {
+        ScreenshotListener listener = spy(new ScreenshotListener(b));
+        listener.setInstrumentation(mInstrumentation);
+        doNothing().when(listener).screenshotToStream(any());
+        doReturn(mLogDir).when(listener).createAndEmptyDirectory(anyString());
+        doReturn(mLogFile).when(listener).takeScreenshot(anyString());
+        return listener;
     }
 
     @Test
     public void testSaveAsBytes() throws Exception {
         Bundle b = new Bundle();
         b.putString(ScreenshotListener.KEY_FORMAT, ScreenshotListener.OPTION_BYTE);
-        mListener.setArgs(b);
+        mListener = initListener(b);
 
         // Test run start behavior
         mListener.testRunStarted(mRunDesc);
@@ -120,7 +134,7 @@ public class ScreenshotListenerTest {
     public void testSaveAsFile() throws Exception {
         Bundle b = new Bundle();
         b.putString(ScreenshotListener.KEY_FORMAT, "file");
-        mListener.setArgs(b);
+        mListener = initListener(b);
 
         // Test run start behavior
         mListener.testRunStarted(mRunDesc);
@@ -160,7 +174,7 @@ public class ScreenshotListenerTest {
     public void testSaveToSpecifiedDir() throws Exception {
         Bundle b = new Bundle();
         b.putString(ScreenshotListener.KEY_FORMAT, "file:unique/dir");
-        mListener.setArgs(b);
+        mListener = initListener(b);
 
         // Test run start behavior
         mListener.testRunStarted(mRunDesc);

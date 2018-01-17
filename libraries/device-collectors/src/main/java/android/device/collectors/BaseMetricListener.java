@@ -15,10 +15,12 @@
  */
 package android.device.collectors;
 
+import android.device.collectors.annotations.MetricOption;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.support.annotation.VisibleForTesting;
+import android.support.test.InstrumentationRegistry;
 import android.support.test.internal.runner.listener.InstrumentationRunListener;
 import android.util.Log;
 
@@ -31,18 +33,29 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Base implementation of a device metric listener that will capture and output metrics for each
  * test run or test cases. Collectors will have access to {@link DataRecord} objects where they
  * can put results and the base class ensure these results will be send to the instrumentation.
  *
- * Any subclass that calls {@link #createAndEmptyDirectory(String)} needs external storage permission.
- * So to use this class at runtime, your test need to
+ * Any subclass that calls {@link #createAndEmptyDirectory(String)} needs external storage
+ * permission. So to use this class at runtime, your test need to
  * <a href="{@docRoot}training/basics/data-storage/files.html#GetWritePermission">have storage
  * permission enabled</a>, and preferably granted at install time (to avoid interrupting the test).
  * For testing at desk, run adb install -r -g testpackage.apk
  * "-g" grants all required permission at install time.
+ *
+ * Filtering:
+ * You can annotate any test method (@Test) with {@link MetricOption} and specify an arbitrary
+ * group name that the test will be part of. It is possible to trigger the collection only against
+ * test part of a group using '--include-filter-group [group name]' or to exclude a particular
+ * group using '--exclude-filter-group [group name]'.
+ * Several group name can be passed using a comma separated argument.
+ *
  */
 public class BaseMetricListener extends InstrumentationRunListener {
 
@@ -53,11 +66,36 @@ public class BaseMetricListener extends InstrumentationRunListener {
     public static final int INST_STATUS_IN_PROGRESS = 2;
     public static final int BUFFER_SIZE = 1024;
 
+    /** Options keys that the collector can receive. */
+    // Filter groups, comma separated list of group name to be included or excluded
+    public static final String INCLUDE_FILTER_GROUP_KEY = "include-filter-group";
+    public static final String EXCLUDE_FILTER_GROUP_KEY = "exclude-filter-group";
+
     private DataRecord mRunData;
     private DataRecord mTestData;
 
+    private Bundle mArgsBundle = null;
+    private final List<String> mIncludeFilters;
+    private final List<String> mExcludeFilters;
+
+    public BaseMetricListener() {
+        mIncludeFilters = new ArrayList<>();
+        mExcludeFilters = new ArrayList<>();
+    }
+
+    /**
+     * Constructor to simulate receiving the instrumentation arguments. Should not be used except
+     * for testing.
+     */
+    @VisibleForTesting
+    BaseMetricListener(Bundle argsBundle) {
+        this();
+        mArgsBundle = argsBundle;
+    }
+
     @Override
     public final void testRunStarted(Description description) throws Exception {
+        parseArguments();
         try {
             mRunData = createDataRecord();
             onTestRunStart(mRunData, description);
@@ -81,12 +119,14 @@ public class BaseMetricListener extends InstrumentationRunListener {
 
     @Override
     public final void testStarted(Description description) throws Exception {
-        try {
-            mTestData = createDataRecord();
-            onTestStart(mTestData, description);
-        } catch (RuntimeException e) {
-            // Prevent exception from reporting events.
-            Log.e(getTag(), "Exception during onTestStart.", e);
+        if (shouldRun(description)) {
+            try {
+                mTestData = createDataRecord();
+                onTestStart(mTestData, description);
+            } catch (RuntimeException e) {
+                // Prevent exception from reporting events.
+                Log.e(getTag(), "Exception during onTestStart.", e);
+            }
         }
         super.testStarted(description);
     }
@@ -94,26 +134,30 @@ public class BaseMetricListener extends InstrumentationRunListener {
     @Override
     public final void testFailure(Failure failure) throws Exception {
         Description description = failure.getDescription();
-        try {
-            onTestFail(mTestData, description, failure);
-        } catch (RuntimeException e) {
-            // Prevent exception from reporting events.
-            Log.e(getTag(), "Exception during onTestFail.", e);
+        if (shouldRun(description)) {
+            try {
+                onTestFail(mTestData, description, failure);
+            } catch (RuntimeException e) {
+                // Prevent exception from reporting events.
+                Log.e(getTag(), "Exception during onTestFail.", e);
+            }
         }
         super.testFailure(failure);
     }
 
     @Override
     public final void testFinished(Description description) throws Exception {
-        try {
-            onTestEnd(mTestData, description);
-        } catch (RuntimeException e) {
-            // Prevent exception from reporting events.
-            Log.e(getTag(), "Exception during onTestEnd.", e);
-        }
-        if (mTestData.hasMetrics()) {
-            // Only send the status progress if there are metrics
-            sendStatus(INST_STATUS_IN_PROGRESS, mTestData.createBundleFromMetrics());
+        if (shouldRun(description)) {
+            try {
+                onTestEnd(mTestData, description);
+            } catch (RuntimeException e) {
+                // Prevent exception from reporting events.
+                Log.e(getTag(), "Exception during onTestEnd.", e);
+            }
+            if (mTestData.hasMetrics()) {
+                // Only send the status progress if there are metrics
+                sendStatus(INST_STATUS_IN_PROGRESS, mTestData.createBundleFromMetrics());
+            }
         }
         super.testFinished(description);
     }
@@ -122,7 +166,9 @@ public class BaseMetricListener extends InstrumentationRunListener {
     public void instrumentationRunFinished(
             PrintStream streamResult, Bundle resultBundle, Result junitResults) {
         // Test Run data goes into the INSTRUMENTATION_RESULT
-        resultBundle.putAll(mRunData.createBundleFromMetrics());
+        if (mRunData != null) {
+            resultBundle.putAll(mRunData.createBundleFromMetrics());
+        }
     }
 
     /**
@@ -232,5 +278,51 @@ public class BaseMetricListener extends InstrumentationRunListener {
      */
     String getTag() {
         return this.getClass().getName();
+    }
+
+    /**
+     * Returns the bundle containing the instrumentation arguments.
+     */
+    protected final Bundle getArgsBundle() {
+        if (mArgsBundle == null) {
+            mArgsBundle = InstrumentationRegistry.getArguments();
+        }
+        return mArgsBundle;
+    }
+
+    private void parseArguments() {
+        Bundle args = getArgsBundle();
+        // Handle filtering
+        String includeGroup = args.getString(INCLUDE_FILTER_GROUP_KEY);
+        String excludeGroup = args.getString(EXCLUDE_FILTER_GROUP_KEY);
+        if (includeGroup != null) {
+            mIncludeFilters.addAll(Arrays.asList(includeGroup.split(",")));
+        }
+        if (excludeGroup != null) {
+            mExcludeFilters.addAll(Arrays.asList(excludeGroup.split(",")));
+        }
+    }
+
+    /**
+     * Helper to decide whether the collector should run or not against the test case.
+     *
+     * @param desc The {@link Description} of the method.
+     * @return True if the collector should run.
+     */
+    private boolean shouldRun(Description desc) {
+        MetricOption annotation = desc.getAnnotation(MetricOption.class);
+        String group = "";
+        if (annotation != null) {
+            group = annotation.group();
+        }
+        // Exclude filters has priority
+        if (mExcludeFilters.contains(group)) {
+            return false;
+        }
+        // If we have include filters, we can only run what's part of them.
+        if (!mIncludeFilters.isEmpty() && !mIncludeFilters.contains(group)) {
+            return false;
+        }
+        return true;
     }
 }

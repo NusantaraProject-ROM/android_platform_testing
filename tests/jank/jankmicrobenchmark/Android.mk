@@ -23,6 +23,7 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
     ub-uiautomator \
     ub-janktesthelper \
     launcher-helper-lib \
+    collector-device-lib \
     junit
 
 LOCAL_JAVA_LIBRARIES := android.test.base.stubs

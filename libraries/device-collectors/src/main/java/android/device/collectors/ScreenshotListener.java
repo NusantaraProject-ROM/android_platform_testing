@@ -18,7 +18,6 @@ package android.device.collectors;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.VisibleForTesting;
-import android.support.test.InstrumentationRegistry;
 import android.util.Log;
 
 import org.junit.runner.Description;
@@ -57,24 +56,26 @@ public class ScreenshotListener extends BaseMetricListener {
     private boolean mToFile;
 
     private File mDestDir;
-    private Bundle mArgs;
+
+    public ScreenshotListener() {
+        super();
+    }
 
     /**
-     * Set arguments bundle for testing, instead of retrieving from InstrumentationRegistry
+     * Constructor to simulate receiving the instrumentation arguments. Should not be used except
+     * for testing.
      */
     @VisibleForTesting
-    void setArgs(Bundle argsBundle) {
-        mArgs = argsBundle;
+    ScreenshotListener(Bundle args) {
+        super(args);
     }
 
     @Override
     public void onTestRunStart(DataRecord runData, Description description) {
-        if (mArgs == null) {
-            mArgs = InstrumentationRegistry.getArguments();
-        }
-        if (mArgs.containsKey(KEY_QUALITY)) {
+        Bundle args = getArgsBundle();
+        if (args.containsKey(KEY_QUALITY)) {
             try {
-                int quality = Integer.parseInt(mArgs.getString(KEY_QUALITY));
+                int quality = Integer.parseInt(args.getString(KEY_QUALITY));
                 if (quality >= 0 && quality <= 100) {
                     mQuality = quality;
                 } else {
@@ -84,13 +85,13 @@ public class ScreenshotListener extends BaseMetricListener {
                 Log.e(getTag(), "Failed to parse screenshot quality", e);
             }
         }
-        mToFile = !OPTION_BYTE.equals(mArgs.getString(KEY_FORMAT));
+        mToFile = !OPTION_BYTE.equals(args.getString(KEY_FORMAT));
         if (mToFile) {
             String dir = DEFAULT_DIR;
-            if (mArgs.containsKey(KEY_FORMAT)) {
-                String[] args = mArgs.getString(KEY_FORMAT).split(":", 2);
-                if (args.length > 1) {
-                    dir = args[1];
+            if (args.containsKey(KEY_FORMAT)) {
+                String[] argsArray = args.getString(KEY_FORMAT).split(":", 2);
+                if (argsArray.length > 1) {
+                    dir = argsArray[1];
                 }
             }
             mDestDir = createAndEmptyDirectory(dir);

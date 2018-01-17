@@ -15,16 +15,11 @@
  */
 package android.device.collectors;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
 import android.app.Instrumentation;
 import android.os.Bundle;
 import android.support.test.runner.AndroidJUnit4;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.Description;
@@ -34,17 +29,22 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
 
 import java.io.File;
 import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 /**
  * Android Unit tests for {@link BatteryStatsListener}.
  *
  * To run:
- * TODO: Add instruction to run with atest.
- * > bit CollectorDeviceLibTest:android.device.collectors.BatteryStatsListenerTest
+ * atest CollectorDeviceLibTest:android.device.collectors.BatteryStatsListenerTest
  */
 @RunWith(AndroidJUnit4.class)
 public class BatteryStatsListenerTest {
@@ -53,11 +53,11 @@ public class BatteryStatsListenerTest {
     private File mLogFile;
     private Description mRunDesc;
     private Description mTestDesc;
+    private BatteryStatsListener mListener;
 
     @Mock
     private Instrumentation mInstrumentation;
-    @Spy
-    private BatteryStatsListener mListener;
+
 
     @Before
     public void setUp() {
@@ -66,19 +66,33 @@ public class BatteryStatsListenerTest {
         mLogFile = new File("unique_log_file.log");
         mRunDesc = Description.createSuiteDescription("run");
         mTestDesc = Description.createTestDescription("run", "test");
+    }
 
-        mListener.setInstrumentation(mInstrumentation);
-        doReturn(new byte[0]).when(mListener).executeCommandBlocking(anyString());
-        doReturn(mLogDir).when(mListener).createAndEmptyDirectory(anyString());
-        doReturn(mLogFile).when(mListener).dumpBatteryStats(anyString());
-        doReturn(true).when(mListener).resetBatteryStats();
+    @After
+    public void tearDown() {
+        if (mLogFile != null) {
+            mLogFile.delete();
+        }
+        if (mLogDir != null) {
+            mLogDir.delete();
+        }
+    }
+
+    private BatteryStatsListener initListener(Bundle b) {
+        BatteryStatsListener listener = spy(new BatteryStatsListener(b));
+        listener.setInstrumentation(mInstrumentation);
+        doReturn(new byte[0]).when(listener).executeCommandBlocking(anyString());
+        doReturn(mLogDir).when(listener).createAndEmptyDirectory(anyString());
+        doReturn(mLogFile).when(listener).dumpBatteryStats(anyString());
+        doReturn(true).when(listener).resetBatteryStats();
+        return listener;
     }
 
     @Test
     public void testTestRunCollector() throws Exception {
         Bundle b = new Bundle();
         b.putString(BatteryStatsListener.KEY_PER_RUN, "true");
-        mListener.setArgs(b);
+        mListener = initListener(b);
 
         // Test run start behavior
         mListener.testRunStarted(mRunDesc);
@@ -114,7 +128,7 @@ public class BatteryStatsListenerTest {
         Bundle b = new Bundle();
         b.putString(BatteryStatsListener.KEY_PER_RUN, "true");
         b.putString(BatteryStatsListener.KEY_FORMAT, "file:unique/bs/dir");
-        mListener.setArgs(b);
+        mListener = initListener(b);
 
         // Test run start behavior
         mListener.testRunStarted(mRunDesc);
@@ -125,7 +139,7 @@ public class BatteryStatsListenerTest {
     public void testTestRunToBytesCollector() throws Exception {
         Bundle b = new Bundle();
         b.putString(BatteryStatsListener.KEY_FORMAT, BatteryStatsListener.OPTION_BYTE);
-        mListener.setArgs(b);
+        mListener = initListener(b);
         final int numTestCase = 5;
 
         // Test run start behavior
@@ -171,7 +185,7 @@ public class BatteryStatsListenerTest {
     @Test
     public void testTestCaseCollector() throws Exception {
         Bundle b = new Bundle();
-        mListener.setArgs(b);
+        mListener = initListener(b);
         final int numTestCase = 5;
 
         // Test run start behavior
