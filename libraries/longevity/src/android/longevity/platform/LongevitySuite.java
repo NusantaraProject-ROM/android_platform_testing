@@ -32,7 +32,7 @@ import org.junit.runners.model.RunnerBuilder;
  *
  * This class is used for constructing longevity suites that run on an Android device.
  */
-public final class LongevitySuite<T> extends android.longevity.core.LongevitySuite<T> {
+public final class LongevitySuite extends android.longevity.core.LongevitySuite {
     private static final String LOG_TAG = LongevitySuite.class.getSimpleName();
 
     /**
@@ -57,7 +57,7 @@ public final class LongevitySuite<T> extends android.longevity.core.LongevitySui
     /**
      * Called reflectively on classes annotated with {@code @RunWith(LongevitySuite.class)}
      */
-    public LongevitySuite(Class<T> klass, RunnerBuilder builder)
+    public LongevitySuite(Class<?> klass, RunnerBuilder builder)
             throws InitializationError {
         super(klass, builder, toMap(InstrumentationRegistry.getArguments()));
     }

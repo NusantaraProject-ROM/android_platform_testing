@@ -37,7 +37,7 @@ import org.junit.runners.model.RunnerBuilder;
  * shuffling in order to simulate longevity conditions and repeated stress or exercise. For examples
  * look at the bundled samples package.
  */
-public class LongevitySuite<T> extends Suite {
+public class LongevitySuite extends Suite {
     private static final String QUITTER_OPTION = "quitter";
     private static final boolean QUITTER_DEFAULT = false; // don't quit
 
@@ -46,7 +46,7 @@ public class LongevitySuite<T> extends Suite {
     /**
      * Called reflectively on classes annotated with {@code @RunWith(LongevitySuite.class)}
      */
-    public LongevitySuite(Class<T> klass, RunnerBuilder builder)
+    public LongevitySuite(Class<?> klass, RunnerBuilder builder)
             throws InitializationError {
         this(klass, builder,
             System.getProperties().entrySet()
@@ -57,9 +57,9 @@ public class LongevitySuite<T> extends Suite {
     }
 
     /**
-     * Called by tests in order to pass in configurable arguments without affecting the registry.
+     * Called explicitly to pass in configurable arguments without affecting expected formats.
      */
-    protected LongevitySuite(Class<T> klass, RunnerBuilder builder, Map<String, String> args)
+    public LongevitySuite(Class<?> klass, RunnerBuilder builder, Map<String, String> args)
             throws InitializationError {
         this(klass, constructClassRunners(klass, builder, args), args);
     }
@@ -67,7 +67,7 @@ public class LongevitySuite<T> extends Suite {
     /**
      * Called by this class once the suite class and runners have been determined.
      */
-    protected LongevitySuite(Class<T> klass, List<Runner> runners, Map<String, String> args)
+    protected LongevitySuite(Class<?> klass, List<Runner> runners, Map<String, String> args)
             throws InitializationError {
         super(klass, runners);
         mArguments = args;
@@ -119,5 +119,14 @@ public class LongevitySuite<T> extends Suite {
      */
     public TimeoutTerminator getTimeoutTerminator(final RunNotifier notifier) {
         return new TimeoutTerminator(notifier, mArguments);
+    }
+
+    /**
+     * Returns the {@link List<Runner>} children for explicit modification by another class.
+     * <p>
+     * Note: using this method is highly discouraged unless explicitly needed.
+     */
+    public List<Runner> getRunners() {
+        return getChildren();
     }
 }
