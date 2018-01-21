@@ -22,10 +22,10 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
-import com.android.ddmlib.testrunner.TestResult;
-import com.android.ddmlib.testrunner.TestRunResult;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.result.CollectingTestListener;
+import com.android.tradefed.result.TestResult;
+import com.android.tradefed.result.TestRunResult;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 

@@ -24,12 +24,12 @@ import static org.mockito.Mockito.mock;
 import android.service.batterystats.BatteryStatsServiceDumpProto;
 
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
-import com.android.ddmlib.testrunner.TestRunResult;
 import com.android.tradefed.config.OptionSetter;
 import com.android.tradefed.device.metric.DeviceMetricData;
 import com.android.tradefed.device.metric.FilePullerDeviceMetricCollector;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.result.CollectingTestListener;
+import com.android.tradefed.result.TestRunResult;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
