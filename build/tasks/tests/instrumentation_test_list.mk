@@ -62,7 +62,8 @@ instrumentation_tests := \
     PresencePollingTests \
     SettingsProviderTest \
     FrameworksLocationTests \
-    FrameworksPrivacyLibraryTests
+    FrameworksPrivacyLibraryTests \
+    SettingsUITests
 
 # Android Things specific tests
 ifeq ($(PRODUCT_IOT),true)
