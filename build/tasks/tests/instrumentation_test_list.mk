@@ -59,6 +59,7 @@ instrumentation_tests := \
     TelephonyProviderTests \
     CarrierConfigTests \
     TeleServiceTests \
+    PresencePollingTests \
     SettingsProviderTest \
     FrameworksLocationTests \
     FrameworksPrivacyLibraryTests
