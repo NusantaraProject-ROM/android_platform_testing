@@ -35,8 +35,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import com.android.permissionutils.GrantPermissionUtil;
-
 /**
  * A base-class for testing app helper implementations.
  *

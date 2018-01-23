@@ -20,6 +20,7 @@ LOCAL_MODULE := app-helpers-common-interfaces
 LOCAL_JAVA_LIBRARIES := ub-uiautomator
 LOCAL_STATIC_JAVA_LIBRARIES := app-helpers-core
 LOCAL_SRC_FILES := $(call all-java-files-under, common)
+LOCAL_SDK_VERSION := current
 
 include $(BUILD_STATIC_JAVA_LIBRARY)
 
@@ -30,6 +31,7 @@ LOCAL_MODULE := app-helpers-auto-interfaces
 LOCAL_JAVA_LIBRARIES := ub-uiautomator app-helpers-core
 LOCAL_STATIC_JAVA_LIBRARIES := app-helpers-common-interfaces
 LOCAL_SRC_FILES := $(call all-java-files-under, auto)
+LOCAL_SDK_VERSION := current
 
 include $(BUILD_STATIC_JAVA_LIBRARY)
 
@@ -40,6 +42,7 @@ LOCAL_MODULE := app-helpers-clockwork-interfaces
 LOCAL_JAVA_LIBRARIES := ub-uiautomator app-helpers-core
 LOCAL_STATIC_JAVA_LIBRARIES := app-helpers-common-interfaces
 LOCAL_SRC_FILES := $(call all-java-files-under, clockwork)
+LOCAL_SDK_VERSION := current
 
 include $(BUILD_STATIC_JAVA_LIBRARY)
 
@@ -50,6 +53,7 @@ LOCAL_MODULE := app-helpers-handheld-interfaces
 LOCAL_JAVA_LIBRARIES := ub-uiautomator app-helpers-core
 LOCAL_STATIC_JAVA_LIBRARIES := app-helpers-common-interfaces
 LOCAL_SRC_FILES := $(call all-java-files-under, handheld)
+LOCAL_SDK_VERSION := current
 
 include $(BUILD_STATIC_JAVA_LIBRARY)
 
@@ -60,5 +64,6 @@ LOCAL_MODULE := app-helpers-tv-interfaces
 LOCAL_JAVA_LIBRARIES := ub-uiautomator app-helpers-core launcher-helper-lib
 LOCAL_STATIC_JAVA_LIBRARIES := app-helpers-common-interfaces dpad-util
 LOCAL_SRC_FILES := $(call all-java-files-under, tv)
+LOCAL_SDK_VERSION := current
 
 include $(BUILD_STATIC_JAVA_LIBRARY)
