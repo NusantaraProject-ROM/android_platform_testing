@@ -15,7 +15,6 @@
 instrumentation_metric_tests := \
     crashcollector \
     CorePerfTests \
-    DocumentsUIPerfTests \
     DocumentsUIAppPerfTests \
     perf-setup.sh \
     RsBlasBenchmark \
@@ -25,3 +24,5 @@ instrumentation_metric_tests := \
 
     #TODO(b/72220346): Uncomment when privileged app status fixed
     #MtpDocumentsProviderPerfTests
+    # TODO(b/72332760): Uncomment when fixed
+    #DocumentsUIPerfTests
