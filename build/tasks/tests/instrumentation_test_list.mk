@@ -59,9 +59,11 @@ instrumentation_tests := \
     TelephonyProviderTests \
     CarrierConfigTests \
     TeleServiceTests \
+    PresencePollingTests \
     SettingsProviderTest \
     FrameworksLocationTests \
-    FrameworksPrivacyLibraryTests
+    FrameworksPrivacyLibraryTests \
+    SettingsUITests
 
 # Android Things specific tests
 ifeq ($(PRODUCT_IOT),true)
