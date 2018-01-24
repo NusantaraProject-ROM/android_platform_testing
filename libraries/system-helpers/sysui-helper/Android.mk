@@ -25,5 +25,6 @@ LOCAL_STATIC_JAVA_LIBRARIES := ub-uiautomator \
     app-helpers-handheld-interfaces \
 
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
+LOCAL_SDK_VERSION := current
 
 include $(BUILD_STATIC_JAVA_LIBRARY)
