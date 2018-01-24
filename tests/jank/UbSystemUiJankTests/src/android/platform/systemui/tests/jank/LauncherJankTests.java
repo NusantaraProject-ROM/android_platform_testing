@@ -51,6 +51,7 @@ public class LauncherJankTests extends JankTestBase {
     // captured are not really meaningful in a statistical sense
     private static final int INNER_LOOP = 3;
     private static final int FLING_SPEED = 12000;
+    private static final String SYSTEMUI_PACKAGE = "com.android.systemui";
     private UiDevice mDevice;
     private PackageManager pm;
     private ILauncherStrategy mLauncherStrategy = null;
@@ -211,6 +212,38 @@ public class LauncherJankTests extends JankTestBase {
         for (int i = 0; i < INNER_LOOP; i++) {
             allWidgets.fling(dir, FLING_SPEED);
             allWidgets.fling(Direction.reverse(dir), FLING_SPEED);
+        }
+    }
+
+    public void beforeOpenCloseMessagesApp() throws UiObjectNotFoundException, IOException {
+        TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+    }
+
+    public void afterOpenCloseMessagesApp(Bundle metrics) throws IOException {
+        TimeResultLogger.writeTimeStampLogEnd(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+        TimeResultLogger.writeResultToFile(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), RESULTS_FILE, metrics);
+        super.afterTest(metrics);
+    }
+
+    private void pressUiHome() throws RemoteException {
+        mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "home")).click();
+        mDevice.waitForIdle();
+    }
+
+    /**
+     * Opens and closes the Messages app repeadetly, measuring jank for synchronized app
+     * transitions.
+     */
+    @JankTest(beforeTest="beforeOpenCloseMessagesApp", afterTest="afterOpenCloseMessagesApp",
+            expectedFrames=90)
+    @GfxMonitor(processName="#getLauncherPackage")
+    public void testOpenCloseMessagesApp() throws Exception {
+        for (int i = 0; i < INNER_LOOP; i++) {
+            mLauncherStrategy.launch("Messages", "com.google.android.apps.messaging");
+            pressUiHome();
         }
     }
 }
