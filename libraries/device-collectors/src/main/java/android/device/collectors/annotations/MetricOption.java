@@ -31,7 +31,8 @@ public @interface MetricOption {
     /**
      * Defines a group name, all method annotated with the same name will be considered part of
      * the same group. By default or when the annotation is not specified method will be considered
-     * part of a default group.
+     * part of a default group. Several groups can be specified using comma separated values.
+     * For example: @MetricOption(group = "testGroup,testGroup2")
      */
     String group() default "";
 }

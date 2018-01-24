@@ -22,10 +22,12 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
+import com.android.ddmlib.testrunner.TestIdentifier;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.result.CollectingTestListener;
 import com.android.tradefed.result.TestResult;
 import com.android.tradefed.result.TestRunResult;
+import com.android.tradefed.testtype.AndroidJUnitTest;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
@@ -35,6 +37,7 @@ import org.junit.runner.RunWith;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map.Entry;
 
 /**
  * Host side tests for the core device collectors, this ensure that we are able to use the
@@ -64,6 +67,8 @@ public class DeviceCollectorsTest extends BaseHostJUnit4Test {
         assertTrue(isPackageInstalled(PACKAGE_NAME));
         mTestRunner =
                 new RemoteAndroidTestRunner(PACKAGE_NAME, AJUR_RUNNER, getDevice().getIDevice());
+        // Set the new runListener order to ensure test cases can show their metrics.
+        mTestRunner.addInstrumentationArg(AndroidJUnitTest.NEW_RUN_LISTENER_ORDER_KEY, "true");
         mContext = mock(IInvocationContext.class);
         doReturn(Arrays.asList(getDevice())).when(mContext).getDevices();
         doReturn(Arrays.asList(getBuild())).when(mContext).getBuildInfos();
@@ -85,12 +90,17 @@ public class DeviceCollectorsTest extends BaseHostJUnit4Test {
         // Ensure the listener added a metric at test run start and end.
         assertTrue(result.getRunMetrics().containsKey("run_start"));
         assertTrue(result.getRunMetrics().containsKey("run_end"));
-        // TODO: check each test cases once AJUR is fixed.
+        // Check that each test case has results with the metrics associated.
+        for (TestResult res : result.getTestResults().values()) {
+            assertTrue(res.getMetrics().containsKey("test_start"));
+            assertTrue(res.getMetrics().containsKey("test_end"));
+        }
     }
 
     /**
      * Test that our base metric listener can filter metrics to run only against some groups tagged
-     * with an annotation.
+     * with an annotation. All annotation of BaseMetricListenerInstrumentedTest are annotated with
+     * the group 'testGroup'.
      */
     @Test
     public void testBaseListenerRuns_withExcludeFilters() throws Exception {
@@ -109,7 +119,7 @@ public class DeviceCollectorsTest extends BaseHostJUnit4Test {
         assertTrue(result.getRunMetrics().containsKey("run_end"));
         // We did run some tests
         assertTrue(!result.getTestResults().isEmpty());
-        // After filtering none of the test case should contain non of the metrics since it was
+        // After filtering none of the test case should contain any of the metrics since it was
         // filtered.
         for (TestResult testCaseResult : result.getTestResults().values()) {
             assertFalse(testCaseResult.getMetrics().containsKey("test_start"));
@@ -118,8 +128,72 @@ public class DeviceCollectorsTest extends BaseHostJUnit4Test {
         }
     }
 
-    // TODO: add a test case with include filter and exclude+include filter. Needs new AJUR runner
-    // drop.
+    /**
+     * Test that if an include and exclude filters are provided, the exclude filters has priority.
+     */
+    @Test
+    public void testBaseListenerRuns_withIncludeAndExcludeFilters() throws Exception {
+        mTestRunner.addInstrumentationArg("listener", STUB_BASE_COLLECTOR);
+        mTestRunner.addInstrumentationArg("include-filter-group", "testGroup");
+        mTestRunner.addInstrumentationArg("exclude-filter-group", "testGroup");
+        mTestRunner.setClassName("android.device.collectors.BaseMetricListenerInstrumentedTest");
+        CollectingTestListener listener = new CollectingTestListener();
+        assertTrue(getDevice().runInstrumentationTests(mTestRunner, listener));
+        Collection<TestRunResult> results = listener.getRunResults();
+        assertEquals(1, results.size());
+        TestRunResult result = results.iterator().next();
+        assertFalse(result.isRunFailure());
+        assertFalse(result.hasFailedTests());
+        // Ensure the listener added a metric at test run start and end.
+        assertTrue(result.getRunMetrics().containsKey("run_start"));
+        assertTrue(result.getRunMetrics().containsKey("run_end"));
+        // We did run some tests
+        assertTrue(!result.getTestResults().isEmpty());
+        // After filtering none of the test case should contain any of the metrics since it was
+        // filtered. Exclusion has priority over inclusion.
+        for (TestResult testCaseResult : result.getTestResults().values()) {
+            assertFalse(testCaseResult.getMetrics().containsKey("test_start"));
+            assertFalse(testCaseResult.getMetrics().containsKey("test_fail"));
+            assertFalse(testCaseResult.getMetrics().containsKey("test_end"));
+        }
+    }
+
+    /**
+     * Test that if an include filter is provided, only method part of the included group will
+     * run the collection.
+     */
+    @Test
+    public void testBaseListenerRuns_withIncludeFilters() throws Exception {
+        mTestRunner.addInstrumentationArg("listener", STUB_BASE_COLLECTOR);
+        mTestRunner.addInstrumentationArg("include-filter-group", "testGroup1");
+        mTestRunner.setClassName("android.device.collectors.BaseMetricListenerInstrumentedTest");
+        CollectingTestListener listener = new CollectingTestListener();
+        assertTrue(getDevice().runInstrumentationTests(mTestRunner, listener));
+        Collection<TestRunResult> results = listener.getRunResults();
+        assertEquals(1, results.size());
+        TestRunResult result = results.iterator().next();
+        assertFalse(result.isRunFailure());
+        assertFalse(result.hasFailedTests());
+        // Ensure the listener added a metric at test run start and end.
+        assertTrue(result.getRunMetrics().containsKey("run_start"));
+        assertTrue(result.getRunMetrics().containsKey("run_end"));
+        // We did run some tests
+        assertTrue(!result.getTestResults().isEmpty());
+        // After filtering none of the test case should contain any of the metrics since it was
+        // filtered. Exclusion has priority over inclusion.
+        for (Entry<TestIdentifier, TestResult> testResult : result.getTestResults().entrySet()) {
+            // testReportMetrics method is the only one annotated with 'testGroup1' it should be the
+            // only one collecting metrics.
+            if ("testReportMetrics".equals(testResult.getKey().getTestName())) {
+                assertTrue(testResult.getValue().getMetrics().containsKey("test_start"));
+                assertTrue(testResult.getValue().getMetrics().containsKey("test_end"));
+            } else {
+                assertFalse(testResult.getValue().getMetrics().containsKey("test_start"));
+                assertFalse(testResult.getValue().getMetrics().containsKey("test_fail"));
+                assertFalse(testResult.getValue().getMetrics().containsKey("test_end"));
+            }
+        }
+    }
 
     /**
      * Test that our base scheduled listener can output metrics periodically.
