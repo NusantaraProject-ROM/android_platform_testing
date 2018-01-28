@@ -66,6 +66,8 @@ native_tests := \
     memunreachable_test \
     minadbd_test \
     minikin_tests \
+    mj_system_unittest_gtest \
+    mj_util_unittest_gtest \
     mtp_ffs_handle_test \
     net_test_bluetooth \
     net_test_bta \

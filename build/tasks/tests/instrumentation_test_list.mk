@@ -41,6 +41,7 @@ instrumentation_tests := \
     ContactsProviderTests2 \
     SettingsUnitTests \
     TelecomUnitTests \
+    TraceurUiTests \
     AndroidVCardTests \
     PermissionFunctionalTests \
     BlockedNumberProviderTest \

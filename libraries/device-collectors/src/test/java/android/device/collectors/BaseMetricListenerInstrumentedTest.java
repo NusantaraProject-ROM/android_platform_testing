@@ -93,7 +93,7 @@ public class BaseMetricListenerInstrumentedTest {
     /**
      * When metrics are logged during a test, expect them to be added to the bundle.
      */
-    @MetricOption(group = "testGroup")
+    @MetricOption(group = "testGroup,testGroup1")
     @Test
     public void testReportMetrics() throws Exception {
         Description runDescription = Description.createSuiteDescription("run");
@@ -169,6 +169,50 @@ public class BaseMetricListenerInstrumentedTest {
         assertEquals(TEST_START_VALUE + "method3", check2.getString(TEST_START_KEY));
         assertEquals(TEST_END_VALUE + "method3", check2.getString(TEST_END_KEY));
         assertEquals(2, check2.size());
+    }
+
+    /**
+     * Test that only included group are running collection, even if some method have multiple
+     * groups, if any of its group is included, the method is included.
+     */
+    @MetricOption(group = "testGroup")
+    @Test
+    public void testReportMetrics_withIncludeFilters_multiGroup() throws Exception {
+        Bundle args = new Bundle();
+        args.putString(BaseMetricListener.INCLUDE_FILTER_GROUP_KEY, "group4");
+        mListener = createWithArgs(args);
+        mListener.setInstrumentation(mMockInstrumentation);
+
+        Description runDescription = Description.createSuiteDescription("run");
+        mListener.testRunStarted(runDescription);
+        Description testDescription = Description.createTestDescription("class", "method",
+                new TestAnnotation("group1"));
+        mListener.testStarted(testDescription);
+        mListener.testFinished(testDescription);
+        // A second test case that will not be included
+        Description testDescription2 = Description.createTestDescription("class", "method2",
+                new TestAnnotation("group3,group4"));
+        mListener.testStarted(testDescription2);
+        mListener.testFinished(testDescription2);
+        // A third test case that will be included
+        Description testDescription3 = Description.createTestDescription("class", "method3",
+                new TestAnnotation("group2"));
+        mListener.testStarted(testDescription3);
+        mListener.testFinished(testDescription3);
+
+        // Check that the in progress status contains the metrics.
+        ArgumentCaptor<Bundle> capture = ArgumentCaptor.forClass(Bundle.class);
+        Mockito.verify(mMockInstrumentation, Mockito.times(1))
+                .sendStatus(Mockito.eq(
+                        BaseMetricListener.INST_STATUS_IN_PROGRESS), capture.capture());
+        // Check that only method2 did generate metrics since it was included.
+        List<Bundle> capturedBundle = capture.getAllValues();
+        assertEquals(1, capturedBundle.size());
+        Bundle check = capturedBundle.get(0);
+        // Got call from method2
+        assertEquals(TEST_START_VALUE + "method2", check.getString(TEST_START_KEY));
+        assertEquals(TEST_END_VALUE + "method2", check.getString(TEST_END_KEY));
+        assertEquals(2, check.size());
     }
 
     /**

@@ -311,16 +311,27 @@ public class BaseMetricListener extends InstrumentationRunListener {
      */
     private boolean shouldRun(Description desc) {
         MetricOption annotation = desc.getAnnotation(MetricOption.class);
-        String group = "";
+        List<String> groups = new ArrayList<>();
         if (annotation != null) {
-            group = annotation.group();
+            String group = annotation.group();
+            groups.addAll(Arrays.asList(group.split(",")));
         }
-        // Exclude filters has priority
-        if (mExcludeFilters.contains(group)) {
-            return false;
+        if (!mExcludeFilters.isEmpty()) {
+            for (String group : groups) {
+                // Exclude filters has priority, if any of the group is excluded, exclude the method
+                if (mExcludeFilters.contains(group)) {
+                    return false;
+                }
+            }
         }
         // If we have include filters, we can only run what's part of them.
-        if (!mIncludeFilters.isEmpty() && !mIncludeFilters.contains(group)) {
+        if (!mIncludeFilters.isEmpty()) {
+            for (String group : groups) {
+                if (mIncludeFilters.contains(group)) {
+                    return true;
+                }
+            }
+            // We have include filter and did not match them.
             return false;
         }
         return true;

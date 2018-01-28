@@ -16,13 +16,13 @@ instrumentation_metric_tests := \
     crashcollector \
     CorePerfTests \
     DocumentsUIAppPerfTests \
+    MtpDocumentsProviderPerfTests \
     perf-setup.sh \
     RsBlasBenchmark \
     ImageProcessingJB \
     MultiUserPerfTests \
     NeuralNetworksApiBenchmark
 
-    #TODO(b/72220346): Uncomment when privileged app status fixed
-    #MtpDocumentsProviderPerfTests
     # TODO(b/72332760): Uncomment when fixed
     #DocumentsUIPerfTests
+
