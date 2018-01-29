@@ -389,9 +389,9 @@ public class SystemUiJankTests extends JankTestBase {
                 new UiSelector().className(ImageView.class)
                         .descriptionContains("quick settings"));
         for (int i = 0; i < INNER_LOOP; i++) {
-            quickSettingsButton.click();
+            swipeDown();
             mDevice.waitForIdle();
-            quickSettingsButton.click();
+            mDevice.pressBack();
             mDevice.waitForIdle();
         }
     }
