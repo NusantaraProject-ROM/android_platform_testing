@@ -810,7 +810,7 @@ public class SystemUiJankTests extends JankTestBase {
     }
 
     public void beforeLaunchSettingsLoop() throws Exception {
-        mDevice.openNotification();
+        mDevice.openQuickSettings();
 
         // Wait until animation kicks in
         SystemClock.sleep(100);
