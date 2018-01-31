@@ -50,6 +50,7 @@ instrumentation_tests := \
     DownloadAppFunctionalTests \
     NotificationFunctionalTests \
     DexLoggerIntegrationTests \
+    UsbTests \
     DownloadProviderTests \
     EmergencyInfoUnitTests \
     CalendarProviderTests \
