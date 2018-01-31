@@ -102,6 +102,10 @@ public class BatterystatsCollectorHostTest extends BaseHostJUnit4Test {
                     assertTrue(metricFile.delete());
                 }
             }
+            @Override
+            public void processMetricDirectory(String key, File metricDirectory,
+                    DeviceMetricData runData) {
+            }
         };
         OptionSetter optionSetter = new OptionSetter(collector);
         String pattern = String.format("%s_.*", BATTERYSTATS_COLLECTOR);
@@ -143,6 +147,10 @@ public class BatterystatsCollectorHostTest extends BaseHostJUnit4Test {
                 } finally {
                     assertTrue(metricFile.delete());
                 }
+            }
+            @Override
+            public void processMetricDirectory(String key, File metricDirectory,
+                    DeviceMetricData runData) {
             }
         };
         OptionSetter optionSetter = new OptionSetter(collector);

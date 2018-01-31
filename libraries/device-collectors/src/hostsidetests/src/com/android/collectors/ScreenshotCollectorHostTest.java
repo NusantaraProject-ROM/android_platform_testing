@@ -91,6 +91,10 @@ public class ScreenshotCollectorHostTest extends BaseHostJUnit4Test {
                     assertTrue(metricFile.delete());
                 }
             }
+            @Override
+            public void processMetricDirectory(String key, File metricDirectory,
+                    DeviceMetricData runData) {
+            }
         };
         OptionSetter optionSetter = new OptionSetter(collector);
         String pattern = String.format("%s_.*", SCREENSHOT_COLLECTOR);
