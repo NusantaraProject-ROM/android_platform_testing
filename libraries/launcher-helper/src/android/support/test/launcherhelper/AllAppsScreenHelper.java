@@ -63,7 +63,7 @@ public class AllAppsScreenHelper {
 
     public void launchAllAppsScreen() {
         mDevice.pressHome();
-        mDevice.findObject(mLauncherStrategy.getAllAppsButtonSelector()).click();
+        mLauncherStrategy.openAllApps(false);
         mDevice.wait(Until.hasObject(By.res(getLauncherPackage(), allApps)), TIMEOUT);
     }
 
