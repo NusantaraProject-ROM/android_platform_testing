@@ -21,6 +21,9 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application>
+        <activity android:name=".DummyActivity" android:label="DummyActivity">
+        </activity>
+
         <uses-library android:name="android.test.runner" />
         <!-- below are fake activity stubs to inflate launcher all apps icon count-->
         <activity android:name="android.app.Activity1" android:label="Cupcake">

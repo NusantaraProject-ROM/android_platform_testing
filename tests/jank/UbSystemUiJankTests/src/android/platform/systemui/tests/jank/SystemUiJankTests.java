@@ -189,7 +189,8 @@ public class SystemUiJankTests extends JankTestBase {
     }
 
     private void postNotifications(int groupMode, int sleepBetweenDuration, int maxCount) {
-        Builder builder = new Builder(getInstrumentation().getTargetContext())
+        Context context = getInstrumentation().getContext();
+        Builder builder = new Builder(context)
                 .setContentTitle(NOTIFICATION_TEXT);
         if (groupMode == GROUP_MODE_GROUPED) {
             builder.setGroup("key");
@@ -210,6 +211,8 @@ public class SystemUiJankTests extends JankTestBase {
             }
             builder.setContentText(Integer.toHexString(icon))
                     .setSmallIcon(icon);
+            builder.setContentIntent(PendingIntent.getActivity(
+                    context, 0, new Intent(context, DummyActivity.class), 0));
             mNotificationManager.notify(icon, builder.build());
             SystemClock.sleep(sleepBetweenDuration);
             first = false;
@@ -844,6 +847,52 @@ public class SystemUiJankTests extends JankTestBase {
     @GfxMonitor(processName = SYSTEMUI_PACKAGE)
     public void testLaunchSettings() throws Exception {
         mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "settings_button")).click();
+        // Wait until animation kicks in
+        SystemClock.sleep(100);
+        mDevice.waitForIdle();
+    }
+
+    public void beforeLaunchNotification() throws Exception {
+        prepareNotifications(GROUP_MODE_UNGROUPED);
+        TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+    }
+
+    public void beforeLaunchNotificationLoop() throws Exception {
+        mDevice.openNotification();
+
+        // Wait until animation kicks in
+        SystemClock.sleep(100);
+        mDevice.waitForIdle();
+    }
+
+    public void afterLaunchNotificationLoop() throws Exception {
+        mDevice.pressHome();
+        mDevice.waitForIdle();
+    }
+
+    public void afterLaunchNotification(Bundle metrics) throws Exception {
+        TimeResultLogger.writeTimeStampLogEnd(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+        cancelNotifications();
+        TimeResultLogger.writeResultToFile(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), RESULTS_FILE, metrics);
+        super.afterTest(metrics);
+    }
+
+    /**
+     * Measures jank when launching a notification
+     */
+    @JankTest(expectedFrames = 30,
+            defaultIterationCount = 5,
+            beforeTest = "beforeLaunchNotification",
+            afterTest = "afterLaunchNotification",
+            beforeLoop = "beforeLaunchNotificationLoop",
+            afterLoop = "afterLaunchNotificationLoop")
+    @GfxMonitor(processName = SYSTEMUI_PACKAGE)
+    public void testLaunchNotification() throws Exception {
+        mDevice.findObject(By.text("Lorem ipsum dolor sit amet")).click();
+
         // Wait until animation kicks in
         SystemClock.sleep(100);
         mDevice.waitForIdle();
