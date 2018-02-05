@@ -15,6 +15,7 @@
  */
 package android.device.collectors;
 
+import android.device.collectors.annotations.OptionClass;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.VisibleForTesting;
@@ -45,6 +46,7 @@ import java.io.OutputStream;
  * Do NOT throw exception anywhere in this class. We don't want to halt the test when metrics
  * collection fails.
  */
+@OptionClass(alias = "screenshot-collector")
 public class ScreenshotListener extends BaseMetricListener {
 
     public static final String DEFAULT_DIR = "run_listeners/screenshots";
