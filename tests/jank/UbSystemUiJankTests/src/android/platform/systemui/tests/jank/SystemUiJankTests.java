@@ -21,9 +21,12 @@ import android.app.Notification.Builder;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.RemoteInput;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Rect;
+import android.content.res.Resources;
 import android.graphics.drawable.Icon;
 import android.os.Bundle;
 import android.os.Environment;
@@ -254,19 +257,56 @@ public class SystemUiJankTests extends JankTestBase {
         mNotificationManager.cancelAll();
     }
 
+    /**
+     * Returns whether recents (overview) is implemented in Launcher.
+     */
+    private boolean isRecentsInLauncher() {
+        final PackageManager pm = getInstrumentation().getTargetContext().getPackageManager();
+        try {
+            final Resources resources = pm.getResourcesForApplication(SYSTEMUI_PACKAGE);
+            int id = resources.getIdentifier("config_overviewServiceComponent", "string",
+                    SYSTEMUI_PACKAGE);
+            pm.getServiceInfo(
+                    ComponentName.unflattenFromString(resources.getString(id)), 0);
+            return true;
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Returns the package that provides Recents.
+     */
+    public String getPackageForRecents() {
+        return isRecentsInLauncher() ? mDevice.getLauncherPackageName() : SYSTEMUI_PACKAGE;
+    }
+
     /** Starts from the bottom of the recent apps list and measures jank while flinging up. */
     @JankTest(beforeTest = "populateRecentApps", beforeLoop = "resetRecentsToBottom",
             afterTest = "forceStopPackages", expectedFrames = 100, defaultIterationCount = 5)
-    @GfxMonitor(processName = SYSTEMUI_PACKAGE)
+    @GfxMonitor(processName = "#getPackageForRecents")
     public void testRecentAppsFling() {
-        final UiObject2 recents = mDevice.findObject(RECENTS);
-        final Rect r = recents.getVisibleBounds();
-        final int margin = r.height() / 4; // top & bottom edges for fling gesture = 25% height
-        recents.setGestureMargins(0, margin, 0, margin);
+        final UiObject2 recents;
+        final Direction firstFling, secondFling;
+
+        if (isRecentsInLauncher()) {
+            recents = mDevice.findObject(
+                    By.res(mDevice.getLauncherPackageName(), "overview_panel"));
+            firstFling = Direction.RIGHT;
+            secondFling = Direction.LEFT;
+        } else {
+            recents = mDevice.findObject(RECENTS);
+            final Rect r = recents.getVisibleBounds();
+            final int margin = r.height() / 4; // top & bottom edges for fling gesture = 25% height
+            recents.setGestureMargins(0, margin, 0, margin);
+            firstFling = Direction.UP;
+            secondFling = Direction.DOWN;
+        }
+
         for (int i = 0; i < INNER_LOOP; i++) {
-            recents.fling(Direction.UP, DEFAULT_FLING_SPEED);
+            recents.fling(firstFling, DEFAULT_FLING_SPEED);
             mDevice.waitForIdle();
-            recents.fling(Direction.DOWN, DEFAULT_FLING_SPEED);
+            recents.fling(secondFling, DEFAULT_FLING_SPEED);
             mDevice.waitForIdle();
         }
     }
