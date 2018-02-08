@@ -16,10 +16,21 @@
 
 package com.android.notification.functional;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import android.app.AppOpsManager;
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.usage.UsageEvents;
+import android.app.usage.UsageEvents.Event;
+import android.app.usage.UsageStatsManager;
 import android.content.Context;
+import android.content.Intent;
 import android.metrics.LogMaker;
+import android.provider.Settings;
 import android.service.notification.StatusBarNotification;
 import android.support.test.metricshelper.MetricsAsserts;
 import android.support.test.uiautomator.By;
@@ -34,12 +45,14 @@ import android.util.Log;
 import android.metrics.MetricsReader;
 import com.android.internal.logging.nano.MetricsProto.MetricsEvent;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import org.junit.Test;
 
 public class NotificationInteractionTests extends InstrumentationTestCase {
     private static final String LOG_TAG = NotificationInteractionTests.class.getSimpleName();
@@ -49,7 +62,10 @@ public class NotificationInteractionTests extends InstrumentationTestCase {
     private static final int CHILD_NOTIFICATION_ID = 100;
     private static final int SECOND_CHILD_NOTIFICATION_ID = 101;
     private static final String BUNDLE_GROUP_KEY = "group key ";
+    private static final String CHANNEL_ID = "my_channel";
     private final boolean DEBUG = false;
+    private static final String APPOPS_SET_SHELL_COMMAND = "appops set {0} " +
+            AppOpsManager.OPSTR_GET_USAGE_STATS + " {1}";
     private NotificationManager mNotificationManager;
     private UiDevice mDevice = null;
     private Context mContext;
@@ -289,6 +305,64 @@ public class NotificationInteractionTests extends InstrumentationTestCase {
         assertTrue("The notifications can not be redacted",
                 notification.getVisibleCenter().y == currentY);
         mNotificationManager.cancelAll();
+    }
+
+    private void setAppOpsMode(String mode) throws Exception {
+        final String command = MessageFormat.format(APPOPS_SET_SHELL_COMMAND,
+                getInstrumentation().getContext().getPackageName(), mode);
+        mDevice.executeShellCommand(command);
+    }
+
+    @MediumTest
+    public void testNotificationClickedEvents() throws Exception {
+        UsageStatsManager usm = (UsageStatsManager) getInstrumentation()
+                .getContext().getSystemService(Context.USAGE_STATS_SERVICE);
+        setAppOpsMode("allow");
+        final long startTime = System.currentTimeMillis();
+        Context context = getInstrumentation().getContext();
+        NotificationManager mNotificationManager =
+            (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        int importance = NotificationManager.IMPORTANCE_DEFAULT;
+        NotificationChannel mChannel = new NotificationChannel(CHANNEL_ID, "Channel",
+                importance);
+        // Configure the notification channel.
+        mChannel.setDescription("Test channel");
+        mNotificationManager.createNotificationChannel(mChannel);
+        Notification.Builder mBuilder =
+                new Notification.Builder(context, CHANNEL_ID)
+                    .setSmallIcon(R.drawable.stat_notify_email)
+                    .setContentTitle("My notification")
+                    .setContentText("Hello World!");
+        PendingIntent pi = PendingIntent.getActivity(context, 1,
+                new Intent(Settings.ACTION_SETTINGS), 0);
+        mBuilder.setContentIntent(pi);
+        mNotificationManager.notify(1, mBuilder.build());
+        Thread.sleep(500);
+        long endTime = System.currentTimeMillis();
+
+        // Pull down shade
+        mDevice.openNotification();
+        UiObject2 notification = mDevice.wait(
+                Until.findObject(By.text("My notification")),LONG_TIMEOUT * 2);
+        notification.click();
+        boolean found = false;
+
+        outer:
+        for (int i = 0; i < 5; i++) {
+            Thread.sleep(500);
+            endTime = System.currentTimeMillis();
+            UsageEvents events = usm.queryEvents(startTime, endTime);
+            UsageEvents.Event event = new UsageEvents.Event();
+            while (events.hasNextEvent()) {
+                events.getNextEvent(event);
+                if (event.mEventType == Event.USER_INTERACTION) {
+                    found = true;
+                    break outer;
+                }
+            }
+        }
+        mDevice.pressHome();
+        assertTrue(found);
     }
 
     private UiObject2 findByText(String text) throws Exception {
