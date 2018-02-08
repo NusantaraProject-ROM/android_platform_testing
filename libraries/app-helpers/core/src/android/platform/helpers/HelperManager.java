@@ -140,14 +140,36 @@ public class HelperManager {
      * @return a concrete implementation of base
      */
     public <T extends IAppHelper> T get(Class<T> base) {
-        List<T> implementations = getAll(base);
+        return get(base, "");
+    }
 
-        if (implementations.size() > 0) {
-            return implementations.get(0);
-        } else {
-            throw new RuntimeException(
-                    String.format("Failed to find an implementation for %s", base.toString()));
+    /**
+     * Returns a concrete implementation of the helper interface supplied, if available.
+     *
+     * @param base the interface base class to find an implementation for
+     * @param prefix a prefix for matching the helper implementation, if multiple exist
+     * @throws RuntimeException if no implementation is found
+     * @return a concrete implementation of base
+     */
+    public <T extends IAppHelper> T get(Class<T> base, String prefix) {
+        List<T> implementations = getAll(base);
+        List<T> matching = new ArrayList<>();
+        for (T implementation : implementations) {
+            if (implementation.getClass().getSimpleName().startsWith(prefix)) {
+                Log.i(LOG_TAG, "Found matching implementation: "
+                        + implementation.getClass().getSimpleName());
+                matching.add(implementation);
+            }
         }
+
+        if (!matching.isEmpty()) {
+            T result = matching.get(0);
+            Log.i(LOG_TAG, "Selecting implementation: " + result.getClass().getSimpleName());
+            return result;
+        }
+
+        throw new RuntimeException(
+                String.format("Failed to find an implementation for %s", base.toString()));
     }
 
     /**
