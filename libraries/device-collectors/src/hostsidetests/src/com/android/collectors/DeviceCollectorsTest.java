@@ -22,9 +22,9 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
-import com.android.ddmlib.testrunner.TestIdentifier;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.result.CollectingTestListener;
+import com.android.tradefed.result.TestDescription;
 import com.android.tradefed.result.TestResult;
 import com.android.tradefed.result.TestRunResult;
 import com.android.tradefed.testtype.AndroidJUnitTest;
@@ -181,7 +181,7 @@ public class DeviceCollectorsTest extends BaseHostJUnit4Test {
         assertTrue(!result.getTestResults().isEmpty());
         // After filtering none of the test case should contain any of the metrics since it was
         // filtered. Exclusion has priority over inclusion.
-        for (Entry<TestIdentifier, TestResult> testResult : result.getTestResults().entrySet()) {
+        for (Entry<TestDescription, TestResult> testResult : result.getTestResults().entrySet()) {
             // testReportMetrics method is the only one annotated with 'testGroup1' it should be the
             // only one collecting metrics.
             if ("testReportMetrics".equals(testResult.getKey().getTestName())) {
