@@ -155,6 +155,10 @@ public class SystemUiJankTests extends JankTestBase {
         super.afterTest(metrics);
     }
 
+    private BySelector getLauncherOverviewSelector() {
+        return By.res(mDevice.getLauncherPackageName(), "overview_panel");
+    }
+
     public void resetRecentsToBottom() {
         // Rather than trying to scroll back to the bottom, just re-open the recents list
         mDevice.pressHome();
@@ -165,7 +169,11 @@ public class SystemUiJankTests extends JankTestBase {
             throw new RuntimeException(e);
         }
         // use a long timeout to wait until recents populated
-        mDevice.wait(Until.findObject(RECENTS), 10000);
+        if (mDevice.wait(
+                Until.findObject(isRecentsInLauncher() ? getLauncherOverviewSelector() : RECENTS),
+                10000) == null) {
+            fail("Recents didn't appear");
+        }
         mDevice.waitForIdle();
     }
 
@@ -290,8 +298,7 @@ public class SystemUiJankTests extends JankTestBase {
         final Direction firstFling, secondFling;
 
         if (isRecentsInLauncher()) {
-            recents = mDevice.findObject(
-                    By.res(mDevice.getLauncherPackageName(), "overview_panel"));
+            recents = mDevice.findObject(getLauncherOverviewSelector());
             firstFling = Direction.RIGHT;
             secondFling = Direction.LEFT;
         } else {
@@ -319,8 +326,7 @@ public class SystemUiJankTests extends JankTestBase {
     @GfxMonitor(processName = "#getPackageForRecents")
     public void testRecentAppsDismiss() {
         if (isRecentsInLauncher()) {
-            final UiObject2 overviewPanel = mDevice.findObject(
-                    By.res(mDevice.getLauncherPackageName(), "overview_panel"));
+            final UiObject2 overviewPanel = mDevice.findObject(getLauncherOverviewSelector());
             // Bring some task onto the screen.
             overviewPanel.fling(Direction.RIGHT, DEFAULT_FLING_SPEED);
             mDevice.waitForIdle();
