@@ -20,6 +20,8 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := longevity-host-lib
 LOCAL_STATIC_JAVA_LIBRARIES := jsr305lib guavalib junit-host
 LOCAL_SRC_FILES := $(call all-java-files-under, src/android/longevity/core)
+# Some error prone rules for standard quality and checks
+-include tools/tradefederation/core/error_prone_rules.mk
 include $(BUILD_HOST_JAVA_LIBRARY)
 
 ######################################
@@ -30,6 +32,7 @@ LOCAL_SDK_VERSION := 24
 LOCAL_STATIC_JAVA_LIBRARIES := android-support-test
 LOCAL_JAVA_LIBRARIES := guava
 LOCAL_SRC_FILES := $(call all-java-files-under, src/)
+-include tools/tradefederation/core/error_prone_rules.mk
 include $(BUILD_STATIC_JAVA_LIBRARY)
 
 ######################################

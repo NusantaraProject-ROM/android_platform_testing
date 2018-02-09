@@ -15,7 +15,6 @@
  */
 package android.longevity.core.listener;
 
-import org.junit.runner.Description;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunNotifier;
 
