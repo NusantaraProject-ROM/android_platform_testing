@@ -19,10 +19,12 @@ package com.android.apptransition.tests;
 import android.app.ActivityManager;
 import android.app.IActivityManager;
 import android.app.Instrumentation;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
@@ -31,6 +33,7 @@ import android.support.test.launcherhelper.ILauncherStrategy;
 import android.support.test.launcherhelper.LauncherStrategyFactory;
 import android.support.test.rule.logging.AtraceLogger;
 import android.support.test.uiautomator.By;
+import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
@@ -85,6 +88,7 @@ public class AppTransitionTests {
     private static final String DEFAULT_TRACE_DUMP_INTERVAL = "10";
     private static final String DELIMITER = ",";
     private static final String SYSTEMUI_PACKAGE = "com.android.systemui";
+    private static final BySelector RECENTS = By.res(SYSTEMUI_PACKAGE, "recents_view");
     private Context mContext;
     private UiDevice mDevice;
     private PackageManager mPackageManager;
@@ -356,11 +360,42 @@ public class AppTransitionTests {
     }
 
     /**
+     * Returns whether recents (overview) is implemented in Launcher.
+     */
+    private boolean isRecentsInLauncher() {
+        final PackageManager pm = getInstrumentation().getTargetContext().getPackageManager();
+        try {
+            final Resources resources = pm.getResourcesForApplication(SYSTEMUI_PACKAGE);
+            int id = resources.getIdentifier("config_overviewServiceComponent", "string",
+                    SYSTEMUI_PACKAGE);
+            pm.getServiceInfo(
+                    ComponentName.unflattenFromString(resources.getString(id)), 0);
+            return true;
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
+        }
+    }
+
+    private BySelector getLauncherOverviewSelector() {
+        return By.res(mDevice.getLauncherPackageName(), "overview_panel");
+    }
+
+    /**
      * Press on the recents icon
      * @throws RemoteException if press recents is not successful
      */
     private void pressUiRecentApps() throws RemoteException {
-        mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "recent_apps")).click();
+        try {
+            mDevice.pressRecentApps();
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
+        }
+        if (mDevice.wait(
+                Until.findObject(isRecentsInLauncher() ? getLauncherOverviewSelector() : RECENTS),
+                10000) == null) {
+            throw new RuntimeException("Recents didn't appear");
+        }
+        mDevice.waitForIdle();
     }
 
     /**
@@ -377,8 +412,7 @@ public class AppTransitionTests {
      */
     public void openMostRecentTask() throws RemoteException {
         pressUiRecentApps();
-        UiObject2 recentsView = mDevice.wait(Until.findObject(
-                By.res(SYSTEMUI_PACKAGE, "recents_view")), 5000);
+        UiObject2 recentsView = mDevice.wait(Until.findObject(RECENTS), 5000);
         List<UiObject2> recentsTasks = recentsView.getChildren().get(0)
                 .getChildren();
         UiObject2 mostRecentTask = recentsTasks.get(recentsTasks.size() - 1);
