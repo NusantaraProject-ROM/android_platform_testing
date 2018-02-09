@@ -38,7 +38,7 @@ public final class LongevitySuite extends android.longevity.core.LongevitySuite 
     /**
      * Takes a {@link Bundle} and maps all String K/V pairs into a {@link Map<String, String>}.
      *
-     * @param Bundle the input arguments to return in a {@link Map}
+     * @param bundle the input arguments to return in a {@link Map}
      * @return Map<String, String> all String-to-String key, value pairs in the {@link Bundle}
      */
     private static final Map<String, String> toMap(Bundle bundle) {
