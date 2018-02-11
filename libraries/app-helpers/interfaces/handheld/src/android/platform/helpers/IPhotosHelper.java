@@ -117,6 +117,17 @@ public interface IPhotosHelper extends IAppHelper {
      * This method will scroll the picture album in the specified direction.
      *
      * @param direction The direction to scroll, must be LEFT or RIGHT.
+     * @return Returns whether album can be still scrolled in the given direction
      */
-    public void scrollAlbum(Direction direction);
+    public boolean scrollAlbum(Direction direction);
+
+    /**
+     * Setup expectations: Photos is open and a picture folder is open.
+     *
+     * This method will scroll the Photos grid view in the specified direction.
+     *
+     * @param direction The direction of the scroll, must be UP or DOWN.
+     * @return Returns whether the object can still scroll in the given direction
+     */
+    public boolean scrollGridView(Direction direction);
 }

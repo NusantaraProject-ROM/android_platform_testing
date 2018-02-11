@@ -17,6 +17,7 @@ package android.device.collectors;
 
 import android.app.Instrumentation;
 import android.device.collectors.annotations.MetricOption;
+import android.device.collectors.annotations.OptionClass;
 import android.os.Bundle;
 import android.support.test.runner.AndroidJUnit4;
 
@@ -33,6 +34,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Android Unit Tests for {@link BaseMetricListener}.
@@ -321,5 +323,60 @@ public class BaseMetricListenerInstrumentedTest {
         public Class<? extends Annotation> annotationType() {
             return MetricOption.class;
         }
+    }
+
+    /**
+     * Test listener with an {@link OptionClass} specified to be used for arguments testing.
+     */
+    @OptionClass(alias = "test-alias-class")
+    public static class TestListener extends BaseMetricListener {
+
+        public TestListener(Bundle b) {
+            super(b);
+        }
+    }
+
+    /**
+     * Test when the listener does not have an {@link OptionClass} specified, option with alias
+     * are filtered.
+     */
+    @MetricOption(group = "testGroup")
+    @Test
+    public void testArgsAlias_noOptionClass() throws Exception {
+        Bundle args = new Bundle();
+        args.putString("optionalias:optionname", "optionvalue");
+        args.putString("noalias", "noaliasvalue");
+        mListener = createWithArgs(args);
+        mListener.setInstrumentation(mMockInstrumentation);
+        Description runDescription = Description.createSuiteDescription("run");
+        mListener.testRunStarted(runDescription);
+        Bundle filteredArgs = mListener.getArgsBundle();
+        assertFalse(filteredArgs.containsKey("optionalias:optionname"));
+        assertFalse(filteredArgs.containsKey("optionname"));
+        assertTrue(filteredArgs.containsKey("noalias"));
+    }
+
+    /**
+     * Test when a listener does have an {@link OptionClass} specified, in that case only options
+     * matching the alias or with no alias are preserved.
+     */
+    @MetricOption(group = "testGroup")
+    @Test
+    public void testArgsAlias_optionClass() throws Exception {
+        Bundle args = new Bundle();
+        args.putString("test-alias-class:optionname", "optionvalue");
+        args.putString("noalias", "noaliasvalue");
+        args.putString("anotheralias:optionname2", "value");
+        TestListener listener = new TestListener(args);
+        listener.setInstrumentation(mMockInstrumentation);
+        Description runDescription = Description.createSuiteDescription("run");
+        listener.testRunStarted(runDescription);
+        Bundle filteredArgs = listener.getArgsBundle();
+        assertTrue(filteredArgs.containsKey("noalias"));
+        assertTrue(filteredArgs.containsKey("optionname"));
+
+        assertFalse(filteredArgs.containsKey("test-alias-class:optionname"));
+        assertFalse(filteredArgs.containsKey("anotheralias:optionname2"));
+        assertFalse(filteredArgs.containsKey("optionname2"));
     }
 }

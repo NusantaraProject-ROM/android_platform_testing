@@ -13,21 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.longevity.core.listener;
 
-import org.junit.runner.notification.Failure;
-import org.junit.runner.notification.RunNotifier;
+package android.platform.helpers;
+
 
 /**
- * A {@link RunTerminator} for terminating early due to test failures for host suites.
+ * Helper class for functional tests of bluetooth setup.
  */
-public class ErrorTerminator extends RunTerminator {
-    public ErrorTerminator(RunNotifier notifier) {
-        super(notifier);
-    }
+public interface IAutoBluetoothHelper {
 
-    @Override
-    public void testFailure(Failure failure) {
-        kill("a test failed");
-    }
+  /**
+   * Setup expectations: Bluetooth activity is open.
+   *
+   * This will click on skip button to exit wifi setup
+   */
+  void clickSkipButton();
+
+  /**
+   * Setup expectations: Bluetooth activity is open.
+   *
+   * this will check for all the required fields.
+   */
+  void verifyRequiredFields();
 }

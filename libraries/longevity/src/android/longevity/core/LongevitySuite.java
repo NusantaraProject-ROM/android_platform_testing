@@ -19,18 +19,17 @@ import android.longevity.core.listener.ErrorTerminator;
 import android.longevity.core.listener.TimeoutTerminator;
 import android.longevity.core.scheduler.Iterate;
 import android.longevity.core.scheduler.Shuffle;
-import com.google.common.annotations.VisibleForTesting;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.function.BiFunction;
-import java.util.stream.Collectors;
+
 import org.junit.runner.Runner;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.Suite;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
+
+import java.util.List;
+import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 /**
  * Using the {@code LongevitySuite} as a runner allows you to run test sequences repeatedly and with
@@ -122,7 +121,8 @@ public class LongevitySuite extends Suite {
     }
 
     /**
-     * Returns the {@link List<Runner>} children for explicit modification by another class.
+     * Returns the {@link List} of {@link Runner}s children for explicit modification by another
+     * class.
      * <p>
      * Note: using this method is highly discouraged unless explicitly needed.
      */

@@ -21,9 +21,12 @@ import android.app.Notification.Builder;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.RemoteInput;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Rect;
+import android.content.res.Resources;
 import android.graphics.drawable.Icon;
 import android.os.Bundle;
 import android.os.Environment;
@@ -152,6 +155,10 @@ public class SystemUiJankTests extends JankTestBase {
         super.afterTest(metrics);
     }
 
+    private BySelector getLauncherOverviewSelector() {
+        return By.res(mDevice.getLauncherPackageName(), "overview_panel");
+    }
+
     public void resetRecentsToBottom() {
         // Rather than trying to scroll back to the bottom, just re-open the recents list
         mDevice.pressHome();
@@ -162,7 +169,11 @@ public class SystemUiJankTests extends JankTestBase {
             throw new RuntimeException(e);
         }
         // use a long timeout to wait until recents populated
-        mDevice.wait(Until.findObject(RECENTS), 10000);
+        if (mDevice.wait(
+                Until.findObject(isRecentsInLauncher() ? getLauncherOverviewSelector() : RECENTS),
+                10000) == null) {
+            fail("Recents didn't appear");
+        }
         mDevice.waitForIdle();
     }
 
@@ -254,19 +265,55 @@ public class SystemUiJankTests extends JankTestBase {
         mNotificationManager.cancelAll();
     }
 
+    /**
+     * Returns whether recents (overview) is implemented in Launcher.
+     */
+    private boolean isRecentsInLauncher() {
+        final PackageManager pm = getInstrumentation().getTargetContext().getPackageManager();
+        try {
+            final Resources resources = pm.getResourcesForApplication(SYSTEMUI_PACKAGE);
+            int id = resources.getIdentifier("config_overviewServiceComponent", "string",
+                    SYSTEMUI_PACKAGE);
+            pm.getServiceInfo(
+                    ComponentName.unflattenFromString(resources.getString(id)), 0);
+            return true;
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Returns the package that provides Recents.
+     */
+    public String getPackageForRecents() {
+        return isRecentsInLauncher() ? mDevice.getLauncherPackageName() : SYSTEMUI_PACKAGE;
+    }
+
     /** Starts from the bottom of the recent apps list and measures jank while flinging up. */
     @JankTest(beforeTest = "populateRecentApps", beforeLoop = "resetRecentsToBottom",
             afterTest = "forceStopPackages", expectedFrames = 100, defaultIterationCount = 5)
-    @GfxMonitor(processName = SYSTEMUI_PACKAGE)
+    @GfxMonitor(processName = "#getPackageForRecents")
     public void testRecentAppsFling() {
-        final UiObject2 recents = mDevice.findObject(RECENTS);
-        final Rect r = recents.getVisibleBounds();
-        final int margin = r.height() / 4; // top & bottom edges for fling gesture = 25% height
-        recents.setGestureMargins(0, margin, 0, margin);
+        final UiObject2 recents;
+        final Direction firstFling, secondFling;
+
+        if (isRecentsInLauncher()) {
+            recents = mDevice.findObject(getLauncherOverviewSelector());
+            firstFling = Direction.RIGHT;
+            secondFling = Direction.LEFT;
+        } else {
+            recents = mDevice.findObject(RECENTS);
+            final Rect r = recents.getVisibleBounds();
+            final int margin = r.height() / 4; // top & bottom edges for fling gesture = 25% height
+            recents.setGestureMargins(0, margin, 0, margin);
+            firstFling = Direction.UP;
+            secondFling = Direction.DOWN;
+        }
+
         for (int i = 0; i < INNER_LOOP; i++) {
-            recents.fling(Direction.UP, DEFAULT_FLING_SPEED);
+            recents.fling(firstFling, DEFAULT_FLING_SPEED);
             mDevice.waitForIdle();
-            recents.fling(Direction.DOWN, DEFAULT_FLING_SPEED);
+            recents.fling(secondFling, DEFAULT_FLING_SPEED);
             mDevice.waitForIdle();
         }
     }
@@ -276,20 +323,51 @@ public class SystemUiJankTests extends JankTestBase {
      */
     @JankTest(beforeTest = "populateRecentApps", beforeLoop = "resetRecentsToBottom",
             afterTest = "forceStopPackages", expectedFrames = 10, defaultIterationCount = 5)
-    @GfxMonitor(processName = SYSTEMUI_PACKAGE)
+    @GfxMonitor(processName = "#getPackageForRecents")
     public void testRecentAppsDismiss() {
-        // Wait until dismiss views are fully faded in.
-        mDevice.findObject(new UiSelector().resourceId("com.android.systemui:id/dismiss_task"))
-                .waitForExists(5000);
-        for (int i = 0; i < INNER_LOOP; i++) {
-            List<UiObject2> dismissViews = mDevice.findObjects(
-                    By.res(SYSTEMUI_PACKAGE, "dismiss_task"));
-            if (dismissViews.size() == 0) {
-                fail("Unable to find dismiss view");
-            }
-            dismissViews.get(dismissViews.size() - 1).click();
+        if (isRecentsInLauncher()) {
+            final UiObject2 overviewPanel = mDevice.findObject(getLauncherOverviewSelector());
+            // Bring some task onto the screen.
+            overviewPanel.fling(Direction.RIGHT, DEFAULT_FLING_SPEED);
             mDevice.waitForIdle();
-            SystemClock.sleep(500);
+
+            for (int i = 0; i < INNER_LOOP; i++) {
+                final List<UiObject2> taskViews = mDevice.findObjects(
+                        By.res(mDevice.getLauncherPackageName(), "snapshot"));
+
+                if (taskViews.size() == 0) {
+                    fail("Unable to find a task to dismiss");
+                }
+
+                // taskViews contains up to 3 task views: the 'main' (and the tallest) one in the
+                // center, and parts of its right and left siblings. Find the main task view by
+                // its upper edge's coordinate.
+                UiObject2 tallestTask = null;
+                for (UiObject2 o : taskViews) {
+                    if (tallestTask == null
+                            || o.getVisibleBounds().top < tallestTask.getVisibleBounds().top) {
+                        tallestTask = o;
+                    }
+                }
+                // Dismiss the task via flinging it up.
+                tallestTask.fling(Direction.DOWN);
+                mDevice.waitForIdle();
+            }
+
+        } else {
+            // Wait until dismiss views are fully faded in.
+            mDevice.findObject(new UiSelector().resourceId("com.android.systemui:id/dismiss_task"))
+                    .waitForExists(5000);
+            for (int i = 0; i < INNER_LOOP; i++) {
+                List<UiObject2> dismissViews = mDevice.findObjects(
+                        By.res(SYSTEMUI_PACKAGE, "dismiss_task"));
+                if (dismissViews.size() == 0) {
+                    fail("Unable to find dismiss view");
+                }
+                dismissViews.get(dismissViews.size() - 1).click();
+                mDevice.waitForIdle();
+                SystemClock.sleep(500);
+            }
         }
     }
 

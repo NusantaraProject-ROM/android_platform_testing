@@ -16,6 +16,7 @@
 package android.device.collectors;
 
 import android.device.collectors.annotations.MetricOption;
+import android.device.collectors.annotations.OptionClass;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
@@ -35,7 +36,9 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Base implementation of a device metric listener that will capture and output metrics for each
@@ -70,6 +73,8 @@ public class BaseMetricListener extends InstrumentationRunListener {
     // Filter groups, comma separated list of group name to be included or excluded
     public static final String INCLUDE_FILTER_GROUP_KEY = "include-filter-group";
     public static final String EXCLUDE_FILTER_GROUP_KEY = "exclude-filter-group";
+
+    private static final String NAMESPACE_SEPARATOR = ":";
 
     private DataRecord mRunData;
     private DataRecord mTestData;
@@ -292,6 +297,8 @@ public class BaseMetricListener extends InstrumentationRunListener {
 
     private void parseArguments() {
         Bundle args = getArgsBundle();
+        // First filter the arguments with the alias
+        filterAlias(args);
         // Handle filtering
         String includeGroup = args.getString(INCLUDE_FILTER_GROUP_KEY);
         String excludeGroup = args.getString(EXCLUDE_FILTER_GROUP_KEY);
@@ -300,6 +307,42 @@ public class BaseMetricListener extends InstrumentationRunListener {
         }
         if (excludeGroup != null) {
             mExcludeFilters.addAll(Arrays.asList(excludeGroup.split(",")));
+        }
+    }
+
+    /**
+     * Filter the alias-ed options from the bundle, each implementation of BaseMetricListener will
+     * have its own list of arguments.
+     * TODO: Split the filtering logic outside the collector class in a utility/helper.
+     */
+    private void filterAlias(Bundle bundle) {
+        Set<String> keySet = new HashSet<>(bundle.keySet());
+        OptionClass optionClass = this.getClass().getAnnotation(OptionClass.class);
+        if (optionClass == null) {
+            // No @OptionClass was specified, remove all alias-ed options.
+            for (String key : keySet) {
+                if (key.indexOf(NAMESPACE_SEPARATOR) != -1) {
+                    bundle.remove(key);
+                }
+            }
+            return;
+        }
+        // Alias is a required field so if OptionClass is set, alias is set.
+        String alias = optionClass.alias();
+        for (String key : keySet) {
+            if (key.indexOf(NAMESPACE_SEPARATOR) == -1) {
+                continue;
+            }
+            String optionAlias = key.split(NAMESPACE_SEPARATOR)[0];
+            if (alias.equals(optionAlias)) {
+                // Place the option again, without alias.
+                String optionName = key.split(NAMESPACE_SEPARATOR)[1];
+                bundle.putString(optionName, bundle.getString(key));
+                bundle.remove(key);
+            } else {
+                // Remove other aliases.
+                bundle.remove(key);
+            }
         }
     }
 

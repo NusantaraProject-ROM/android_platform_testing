@@ -16,6 +16,7 @@
 package android.device.collectors;
 
 import android.app.UiAutomation;
+import android.device.collectors.annotations.OptionClass;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
@@ -51,6 +52,7 @@ import java.io.OutputStream;
  * Do NOT throw exception anywhere in this class. We don't want to halt the test when metrics
  * collection fails.
  */
+@OptionClass(alias = "battery-stats-collector")
 public class BatteryStatsListener extends BaseMetricListener {
     private static final String MSG_DUMPSYS_RESET_SUCCESS = "Battery stats reset.";
     public  static final String CMD_DUMPSYS = "dumpsys batterystats --proto";
