@@ -72,7 +72,6 @@ ifeq ($(PRODUCT_IOT),true)
 
 instrumentation_tests += \
     AndroidThingsTests \
-    IoTLauncherTests \
     ThingsIntegrationTests \
     WifiSetupUnitTests
 
