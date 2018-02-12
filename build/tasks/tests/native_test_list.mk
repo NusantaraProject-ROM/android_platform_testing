@@ -88,6 +88,8 @@ native_tests := \
     netd_unit_test \
     nfc_test_utils \
     pagemap_test \
+    perfetto_unittests \
+    perfetto_integrationtests \
     perfprofd_test \
     posix_async_io_test \
     prioritydumper_test \
