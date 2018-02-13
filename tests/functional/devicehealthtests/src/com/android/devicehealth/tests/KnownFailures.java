@@ -31,10 +31,10 @@ public class KnownFailures {
     {
         // add known failures per dropbox label below:
         addKnownFailure(
-                "system_app_crash", // dropbox label
-                Pattern.compile("^.*Process:.*com\\.google\\.android\\.videos.*$",
-                        Pattern.MULTILINE), // regex pattern
-                "71898566"); // bug number
+                "system_app_anr",  // dropbox label
+                Pattern.compile("^.*Process:.*com\\.google\\.android\\.googlequicksearchbox"
+                        + ":search.*$", Pattern.MULTILINE),  // regex pattern
+                "73254069");  // bug number
         // add known failures for additional dropbox labels here
         // It's recommended to use multiline matching and a snippet will be matched if it's found
         // to contain the pattern described by regex
