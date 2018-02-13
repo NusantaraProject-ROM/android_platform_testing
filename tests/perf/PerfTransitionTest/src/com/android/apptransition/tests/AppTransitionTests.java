@@ -25,6 +25,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
@@ -385,17 +386,16 @@ public class AppTransitionTests {
      * @throws RemoteException if press recents is not successful
      */
     private void pressUiRecentApps() throws RemoteException {
-        try {
-            mDevice.pressRecentApps();
-        } catch (RemoteException e) {
-            throw new RuntimeException(e);
+        if (isRecentsInLauncher()) {
+            UiObject2 homeButton = mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "home_button"));
+            Point endDrag = homeButton.getVisibleCenter();
+            // We start the drag on the home button, and end over its center at the top of the
+            // screen.
+            endDrag.y = 0;
+            homeButton.drag(endDrag);
+        } else {
+            mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "recent_apps")).click();
         }
-        if (mDevice.wait(
-                Until.findObject(isRecentsInLauncher() ? getLauncherOverviewSelector() : RECENTS),
-                10000) == null) {
-            throw new RuntimeException("Recents didn't appear");
-        }
-        mDevice.waitForIdle();
     }
 
     /**
