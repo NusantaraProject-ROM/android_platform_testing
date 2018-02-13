@@ -25,6 +25,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Point;
 import android.graphics.Rect;
 import android.content.res.Resources;
 import android.graphics.drawable.Icon;
@@ -163,11 +164,21 @@ public class SystemUiJankTests extends JankTestBase {
         // Rather than trying to scroll back to the bottom, just re-open the recents list
         mDevice.pressHome();
         mDevice.waitForIdle();
-        try {
-            mDevice.pressRecentApps();
-        } catch (RemoteException e) {
-            throw new RuntimeException(e);
+        if (isRecentsInLauncher()) {
+            UiObject2 homeButton = mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "home_button"));
+            Point endDrag = homeButton.getVisibleCenter();
+            // We start the drag on the home button, and end over its center at the top of the
+            // screen.
+            endDrag.y = 0;
+            homeButton.drag(endDrag);
+        } else {
+            try {
+                mDevice.pressRecentApps();
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
         }
+
         // use a long timeout to wait until recents populated
         if (mDevice.wait(
                 Until.findObject(isRecentsInLauncher() ? getLauncherOverviewSelector() : RECENTS),
