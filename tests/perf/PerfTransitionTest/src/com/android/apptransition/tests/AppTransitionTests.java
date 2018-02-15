@@ -35,6 +35,7 @@ import android.support.test.launcherhelper.LauncherStrategyFactory;
 import android.support.test.rule.logging.AtraceLogger;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
+import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
@@ -387,12 +388,10 @@ public class AppTransitionTests {
      */
     private void pressUiRecentApps() throws RemoteException {
         if (isRecentsInLauncher()) {
+            // Swipe from the Home button to approximately center of the screen.
             UiObject2 homeButton = mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "home_button"));
-            Point endDrag = homeButton.getVisibleCenter();
-            // We start the drag on the home button, and end over its center at the top of the
-            // screen.
-            endDrag.y = 0;
-            homeButton.drag(endDrag);
+            homeButton.setGestureMargins(0, -homeButton.getVisibleBounds().bottom / 2, 0, 1);
+            homeButton.swipe(Direction.UP, 1);
         } else {
             mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "recent_apps")).click();
         }

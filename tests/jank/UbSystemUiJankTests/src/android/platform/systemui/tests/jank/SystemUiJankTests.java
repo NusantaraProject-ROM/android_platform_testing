@@ -165,12 +165,10 @@ public class SystemUiJankTests extends JankTestBase {
         mDevice.pressHome();
         mDevice.waitForIdle();
         if (isRecentsInLauncher()) {
+            // Swipe from the Home button to approximately center of the screen.
             UiObject2 homeButton = mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "home_button"));
-            Point endDrag = homeButton.getVisibleCenter();
-            // We start the drag on the home button, and end over its center at the top of the
-            // screen.
-            endDrag.y = 0;
-            homeButton.drag(endDrag);
+            homeButton.setGestureMargins(0, -homeButton.getVisibleBounds().bottom / 2, 0, 1);
+            homeButton.swipe(Direction.UP, 1);
         } else {
             try {
                 mDevice.pressRecentApps();
