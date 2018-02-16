@@ -55,7 +55,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class AppTransitionTests {
@@ -79,7 +81,6 @@ public class AppTransitionTests {
     private static final String HOT_LAUNCH = "hot_launch";
     private static final String NOT_SURE = "not_sure";
     private static final String ACTIVITY = "Activity";
-    private static final String NOT_SUCCESSFUL_MESSAGE = "App launch not successful";
     private static final String KEY_TRACE_DIRECTORY = "trace_directory";
     private static final String KEY_TRACE_CATEGORY = "trace_categories";
     private static final String KEY_TRACE_BUFFERSIZE = "trace_bufferSize";
@@ -115,6 +116,7 @@ public class AppTransitionTests {
     private String mComponentName = null;
     private Map<String,String> mPreAppsComponentName = new HashMap<String, String>();
     private float mDisplayDensity;
+    private boolean mHasLeanback = false;
 
     @Before
     public void setUp() throws Exception {
@@ -123,7 +125,16 @@ public class AppTransitionTests {
         mArgs = InstrumentationRegistry.getArguments();
         mActivityManager = ActivityManager.getService();
         mDevice = UiDevice.getInstance(getInstrumentation());
-        mLauncherStrategy = LauncherStrategyFactory.getInstance(mDevice).getLauncherStrategy();
+        LauncherStrategyFactory factory = LauncherStrategyFactory.getInstance(mDevice);
+        mLauncherStrategy = factory.getLauncherStrategy();
+        mHasLeanback = hasLeanback(getInstrumentation().getTargetContext());
+
+        // Inject an instance of instrumentation only if leanback. This enables to launch any app
+        // in the Apps and Games row on leanback launcher.
+        if (mHasLeanback) {
+            factory.getLeanbackLauncherStrategy().setInstrumentation(getInstrumentation());
+        }
+
         createLaunchIntentMappings();
         String mAppsList = mArgs.getString(LAUNCH_APPS);
         mPreAppsList = mArgs.getString(PRE_LAUNCH_APPS);
@@ -204,7 +215,7 @@ public class AppTransitionTests {
                 }
                 sleep(mPostLaunchTimeout);
                 mDevice.pressHome();
-		mDevice.waitForIdle();
+                mDevice.waitForIdle();
                 closeApps(new String[] {
                         appName
                 });
@@ -267,6 +278,7 @@ public class AppTransitionTests {
      */
     @Test
     public void testAppToRecents() throws IOException, InterruptedException, RemoteException {
+        Assume.assumeFalse(mHasLeanback);
         if (isTracesEnabled()) {
             createTraceDirectory("testAppToRecents");
         }
@@ -311,6 +323,7 @@ public class AppTransitionTests {
     @Test
     public void testHotLaunchFromRecents() throws IOException, InterruptedException,
             RemoteException {
+        Assume.assumeFalse(mHasLeanback);
         if (isTracesEnabled()) {
             createTraceDirectory("testHotLaunchFromRecents");
         }
@@ -517,7 +530,9 @@ public class AppTransitionTests {
         PackageManager pm = getInstrumentation().getContext()
                 .getPackageManager();
         Intent intentToResolve = new Intent(Intent.ACTION_MAIN);
-        intentToResolve.addCategory(Intent.CATEGORY_LAUNCHER);
+        intentToResolve.addCategory(mHasLeanback ?
+                        Intent.CATEGORY_LEANBACK_LAUNCHER :
+                        Intent.CATEGORY_LAUNCHER);
         List<ResolveInfo> ris = pm.queryIntentActivities(intentToResolve, 0);
         resolveLoop(ris, intentToResolve, pm);
     }
@@ -706,4 +721,12 @@ public class AppTransitionTests {
     private Instrumentation getInstrumentation() {
         return InstrumentationRegistry.getInstrumentation();
     }
+
+    /**
+     * @return True if we're running on Android TV.
+     */
+    private boolean hasLeanback(Context context) {
+        return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_LEANBACK);
+    }
 }
+
