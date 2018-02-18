@@ -55,6 +55,7 @@ native_tests := \
     libminijail_unittest_gtest \
     libperfmgr_test \
     libtextclassifier_tests \
+    libsurfaceflinger_unittest \
     libvintf_test \
     libwifi-system_tests \
     linker-unit-tests \
@@ -88,7 +89,6 @@ native_tests := \
     netd_unit_test \
     nfc_test_utils \
     pagemap_test \
-    perfetto_unittests \
     perfetto_integrationtests \
     perfprofd_test \
     posix_async_io_test \

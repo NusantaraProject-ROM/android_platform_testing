@@ -91,6 +91,7 @@ public class AppTransitionTests {
     private static final String DELIMITER = ",";
     private static final String SYSTEMUI_PACKAGE = "com.android.systemui";
     private static final BySelector RECENTS = By.res(SYSTEMUI_PACKAGE, "recents_view");
+    private static final int TASK_SWITCH_SWIPE_SPEED = 500;
     private Context mContext;
     private UiDevice mDevice;
     private PackageManager mPackageManager;
@@ -113,6 +114,7 @@ public class AppTransitionTests {
     private AtraceLogger mAtraceLogger = null;
     private String mComponentName = null;
     private Map<String,String> mPreAppsComponentName = new HashMap<String, String>();
+    private float mDisplayDensity;
 
     @Before
     public void setUp() throws Exception {
@@ -135,6 +137,7 @@ public class AppTransitionTests {
         }
         mAppsList = mAppsList.replaceAll("%"," ");
         mAppListArray = mAppsList.split(DELIMITER);
+        mDisplayDensity = mContext.getResources().getDisplayMetrics().density;
 
         // Parse the trace parameters
         mTraceDirectoryStr = mArgs.getString(KEY_TRACE_DIRECTORY);
@@ -383,10 +386,11 @@ public class AppTransitionTests {
     }
 
     /**
-     * Press on the recents icon
+     * Shows and returns the recents view.
+     *
      * @throws RemoteException if press recents is not successful
      */
-    private void pressUiRecentApps() throws RemoteException {
+    private UiObject2 pressUiRecentApps() throws RemoteException {
         if (isRecentsInLauncher()) {
             // Swipe from the Home button to approximately center of the screen.
             UiObject2 homeButton = mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "home_button"));
@@ -395,6 +399,17 @@ public class AppTransitionTests {
         } else {
             mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "recent_apps")).click();
         }
+
+        mDevice.waitForIdle();
+
+        final UiObject2 recentsView = mDevice.wait(
+                Until.findObject(isRecentsInLauncher() ? getLauncherOverviewSelector() : RECENTS),
+                5000);
+
+        if (recentsView == null) {
+            throw new RuntimeException("Recents didn't appear");
+        }
+        return recentsView;
     }
 
     /**
@@ -406,16 +421,43 @@ public class AppTransitionTests {
     }
 
     /**
-     * Open recents task and click on the most recent task.
+     * Open recents view and click on the most recent task.
      * @throws RemoteException if press recents is not successful
      */
     public void openMostRecentTask() throws RemoteException {
-        pressUiRecentApps();
-        UiObject2 recentsView = mDevice.wait(Until.findObject(RECENTS), 5000);
-        List<UiObject2> recentsTasks = recentsView.getChildren().get(0)
-                .getChildren();
-        UiObject2 mostRecentTask = recentsTasks.get(recentsTasks.size() - 1);
-        mostRecentTask.click();
+        final UiObject2 recentsView = pressUiRecentApps();
+
+        if (isRecentsInLauncher()) {
+            final List<UiObject2> taskViews = mDevice.findObjects(
+                    By.res(mDevice.getLauncherPackageName(), "snapshot"));
+
+            switch (taskViews.size()) {
+                case 1:
+                    // We see in the overview: the workspace card in the center, but it's not
+                    // included in 'taskViews', and the edge of the last active task on the right
+                    // (#1). We need to swipe to it before clicking at it.
+                    recentsView.swipe(Direction.LEFT, 1,
+                            (int) (TASK_SWITCH_SWIPE_SPEED * mDisplayDensity));
+                    mDevice.waitForIdle();
+                    break;
+                case 2:
+                    // We see in the overview: the active task in the middle (#0), the next task
+                    // on the right (#1), and the workspace card on the left, but it's not
+                    // included in 'taskViews'.
+                    break;
+                default:
+                    throw new RuntimeException(
+                            "Unexpected number of visible tasks: " + taskViews.size());
+            }
+
+            // Click at the first task.
+            taskViews.get(0).click();
+        } else {
+            List<UiObject2> recentsTasks = recentsView.getChildren().get(0)
+                    .getChildren();
+            UiObject2 mostRecentTask = recentsTasks.get(recentsTasks.size() - 1);
+            mostRecentTask.click();
+        }
     }
 
     /**
