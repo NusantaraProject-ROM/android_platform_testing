@@ -52,7 +52,7 @@ import java.util.List;
  * generate a HelperManager and to instantiate implementations.
  * <li> Dexed file inclusion - if this manager and the helper implementations are bundled into dex
  * files and loaded from a single class loader, then the files can be used to generate a
- * HelperManager and to instantiate implementations.
+ * HelperManager and to instantiate implementations. Use of this is discouraged.
  * </ol>
  * <p>
  * Including and using this strategy will prune the explicit dependency tree for the App Helper
