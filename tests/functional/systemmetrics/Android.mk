@@ -24,6 +24,7 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
     ub-uiautomator \
 
 #LOCAL_SDK_VERSION := current
+LOCAL_PRIVATE_PLATFORM_APIS := true
 
 LOCAL_COMPATIBILITY_SUITE := device-tests
 
