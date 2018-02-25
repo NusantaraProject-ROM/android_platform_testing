@@ -38,6 +38,8 @@ native_tests := \
     incident_helper_test \
     incidentd_test \
     init_tests \
+    inputflinger_tests_InputDispatcher_test \
+    inputflinger_tests_InputReader_test \
     installd_cache_test \
     installd_dexopt_test \
     installd_service_test \
@@ -50,6 +52,10 @@ native_tests := \
     libcutils_test_static \
     libgui_test \
     libhidl_test \
+    libinput_tests_InputChannel_test \
+    libinput_tests_InputEvent_test \
+    libinput_tests_InputPublisherAndConsumer_test \
+    libinput_tests_VelocityTracker_test \
     libjavacore-unit-tests \
     liblog-unit-tests \
     libminijail_unittest_gtest \
