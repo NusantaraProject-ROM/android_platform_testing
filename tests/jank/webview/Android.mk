@@ -16,6 +16,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_PACKAGE_NAME := UbWebViewJankTests
+LOCAL_SDK_VERSION := current
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
 LOCAL_MODULE_TAGS := tests
 
@@ -23,7 +24,7 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
     ub-uiautomator \
     ub-janktesthelper
 
-LOCAL_JAVA_LIBRARIES := android.test.base
+LOCAL_JAVA_LIBRARIES := android.test.base.stubs
 
 LOCAK_SDK_VERSION := current
 
