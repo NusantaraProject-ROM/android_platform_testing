@@ -42,6 +42,7 @@ native_tests := \
     inputflinger_tests_InputReader_test \
     installd_cache_test \
     installd_dexopt_test \
+    installd_otapreopt_test \
     installd_service_test \
     installd_utils_test \
     JniInvocation_test \
