@@ -17,13 +17,21 @@ package com.android.apptransition.tests;
 
 import static android.support.test.InstrumentationRegistry.getInstrumentation;
 
+import android.content.ComponentName;
+import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.os.Bundle;
+import android.os.RemoteException;
 import android.os.SystemClock;
 import android.provider.Settings;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.rule.logging.AtraceLogger;
 import android.support.test.uiautomator.By;
+import android.support.test.uiautomator.BySelector;
+import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
+import android.support.test.uiautomator.UiObject2;
+import android.support.test.uiautomator.Until;
 import android.system.helpers.LockscreenHelper;
 import android.system.helpers.OverviewHelper;
 import android.system.helpers.SettingsHelper;
@@ -68,6 +76,8 @@ public class LatencyTests {
     private static final String TEST_APPTORECENTS = "testAppToRecents";
     private static final String TEST_ROTATION_LATENCY = "testRotationLatency";
     private static final String TEST_SETTINGS_SEARCH = "testSettingsSearch";
+    private static final String SYSTEMUI_PACKAGE = "com.android.systemui";
+    private static final BySelector RECENTS = By.res(SYSTEMUI_PACKAGE, "recents_view");
 
     private String mTraceDirectoryStr = null;
     private Bundle mArgs;
@@ -313,7 +323,6 @@ public class LatencyTests {
                         String.format("%s-%d", TEST_APPTORECENTS, i));
             }
             pressUiRecentApps();
-            mDevice.waitForIdle();
 
             // Make sure all the animations are really done.
             SystemClock.sleep(200);
@@ -349,8 +358,52 @@ public class LatencyTests {
         }
     }
 
-    private void pressUiRecentApps() throws Exception {
-        mDevice.findObject(By.res("com.android.systemui", "recent_apps")).click();
+    /**
+     * Returns whether recents (overview) is implemented in Launcher.
+     */
+    private boolean isRecentsInLauncher() {
+        final PackageManager pm = getInstrumentation().getTargetContext().getPackageManager();
+        try {
+            final Resources resources = pm.getResourcesForApplication(SYSTEMUI_PACKAGE);
+            int id = resources.getIdentifier("config_overviewServiceComponent", "string",
+                    SYSTEMUI_PACKAGE);
+            pm.getServiceInfo(
+                    ComponentName.unflattenFromString(resources.getString(id)), 0);
+            return true;
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
+        }
+    }
+
+    private BySelector getLauncherOverviewSelector() {
+        return By.res(mDevice.getLauncherPackageName(), "overview_panel");
+    }
+
+    /**
+     * Shows and returns the recents view.
+     *
+     * @throws RemoteException if press recents is not successful
+     */
+    private UiObject2 pressUiRecentApps() throws RemoteException {
+        if (isRecentsInLauncher()) {
+            // Swipe from the Home button to approximately center of the screen.
+            UiObject2 homeButton = mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "home_button"));
+            homeButton.setGestureMargins(0, -homeButton.getVisibleBounds().bottom / 2, 0, 1);
+            homeButton.swipe(Direction.UP, 1);
+        } else {
+            mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "recent_apps")).click();
+        }
+
+        mDevice.waitForIdle();
+
+        final UiObject2 recentsView = mDevice.wait(
+                Until.findObject(isRecentsInLauncher() ? getLauncherOverviewSelector() : RECENTS),
+                5000);
+
+        if (recentsView == null) {
+            throw new RuntimeException("Recents didn't appear");
+        }
+        return recentsView;
     }
 
     /**
