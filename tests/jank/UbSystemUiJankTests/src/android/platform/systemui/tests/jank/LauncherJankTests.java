@@ -137,10 +137,18 @@ public class LauncherJankTests extends JankTestBase {
     @GfxMonitor(processName="#getLauncherPackage")
     public void testAllAppsContainerSwipe() {
         UiObject2 allApps = mDevice.findObject(mLauncherStrategy.getAllAppsSelector());
-        allApps.setGestureMargin(300);
+        final int allAppsHeight = allApps.getVisibleBounds().height();
         Direction dir = mLauncherStrategy.getAllAppsScrollDirection();
         for (int i = 0; i < INNER_LOOP * 2; i++) {
+            if (dir == Direction.DOWN) {
+                // Start the gesture in the center to avoid starting at elements near the top.
+                allApps.setGestureMargins(0, 0, 0, allAppsHeight / 2);
+            }
             allApps.fling(dir, FLING_SPEED);
+            if (dir == Direction.DOWN) {
+                // Start the gesture in the center, for symmetry.
+                allApps.setGestureMargins(0, allAppsHeight / 2, 0, 0);
+            }
             allApps.fling(Direction.reverse(dir), FLING_SPEED);
         }
     }
