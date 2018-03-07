@@ -97,7 +97,8 @@ native_tests := \
     wificond_unit_test \
     wifilogd_unit_test \
     ziparchive-tests \
-    SurfaceFlinger_test
+    SurfaceFlinger_test \
+    lmkd_unit_test
 
 # Android Things specific tests
 ifeq ($(PRODUCT_IOT),true)
