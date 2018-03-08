@@ -156,34 +156,43 @@ public class SystemUiJankTests extends JankTestBase {
         super.afterTest(metrics);
     }
 
-    private BySelector getLauncherOverviewSelector() {
-        return By.res(mDevice.getLauncherPackageName(), "overview_panel");
+    private static BySelector getLauncherOverviewSelector(UiDevice device) {
+        return By.res(device.getLauncherPackageName(), "overview_panel");
     }
 
-    public void resetRecentsToBottom() {
-        // Rather than trying to scroll back to the bottom, just re-open the recents list
-        mDevice.pressHome();
-        mDevice.waitForIdle();
-        if (isRecentsInLauncher()) {
+    private BySelector getLauncherOverviewSelector() {
+        return getLauncherOverviewSelector(mDevice);
+    }
+
+    public static void openRecents(Context context, UiDevice device) {
+        if (isRecentsInLauncher(context)) {
             // Swipe from the Home button to approximately center of the screen.
-            UiObject2 homeButton = mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "home_button"));
+            UiObject2 homeButton = device.findObject(By.res(SYSTEMUI_PACKAGE, "home_button"));
             homeButton.setGestureMargins(0, -homeButton.getVisibleBounds().bottom / 2, 0, 1);
             homeButton.swipe(Direction.UP, 1);
         } else {
             try {
-                mDevice.pressRecentApps();
+                device.pressRecentApps();
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
         }
 
         // use a long timeout to wait until recents populated
-        if (mDevice.wait(
-                Until.findObject(isRecentsInLauncher() ? getLauncherOverviewSelector() : RECENTS),
+        if (device.wait(
+                Until.findObject(isRecentsInLauncher(context)
+                        ? getLauncherOverviewSelector(device) : RECENTS),
                 10000) == null) {
             fail("Recents didn't appear");
         }
+        device.waitForIdle();
+    }
+
+    private void resetRecentsToBottom() {
+        // Rather than trying to scroll back to the bottom, just re-open the recents list
+        mDevice.pressHome();
         mDevice.waitForIdle();
+        openRecents(getInstrumentation().getTargetContext(), mDevice);
     }
 
     public void prepareNotifications(int groupMode) throws Exception {
@@ -280,8 +289,8 @@ public class SystemUiJankTests extends JankTestBase {
     /**
      * Returns whether recents (overview) is implemented in Launcher.
      */
-    private boolean isRecentsInLauncher() {
-        final PackageManager pm = getInstrumentation().getTargetContext().getPackageManager();
+    private static boolean isRecentsInLauncher(Context context) {
+        final PackageManager pm = context.getPackageManager();
         try {
             final Resources resources = pm.getResourcesForApplication(SYSTEMUI_PACKAGE);
             int id = resources.getIdentifier("config_overviewServiceComponent", "string",
@@ -292,6 +301,10 @@ public class SystemUiJankTests extends JankTestBase {
         } catch (PackageManager.NameNotFoundException e) {
             return false;
         }
+    }
+
+    private boolean isRecentsInLauncher() {
+        return isRecentsInLauncher(getInstrumentation().getTargetContext());
     }
 
     /**
