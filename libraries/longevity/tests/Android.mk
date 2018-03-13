@@ -33,5 +33,6 @@ LOCAL_PACKAGE_NAME := LongevityPlatformLibTests
 LOCAL_SDK_VERSION := 24
 LOCAL_STATIC_JAVA_LIBRARIES := longevity-device-lib mockito-target truth-prebuilt guava
 LOCAL_SRC_FILES := $(call all-java-files-under, src/android/longevity/platform/)
+LOCAL_COMPATIBILITY_SUITE := device-tests
 
 include $(BUILD_PACKAGE)
