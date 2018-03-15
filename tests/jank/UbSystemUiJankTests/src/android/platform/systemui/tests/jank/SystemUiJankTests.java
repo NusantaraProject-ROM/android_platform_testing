@@ -888,9 +888,9 @@ public class SystemUiJankTests extends JankTestBase {
     }
 
     /**
-     * Measures jank when launching the camera from lockscreen.
+     * Measures jank when swiping up and showing pin on lockscreen.
      */
-    @JankTest(expectedFrames = 30,
+    @JankTest(expectedFrames = 20,
             defaultIterationCount = 5,
             beforeTest = "beforePinAppearance",
             afterTest = "afterPinAppearance",
