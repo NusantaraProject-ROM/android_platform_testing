@@ -188,7 +188,7 @@ public class SystemUiJankTests extends JankTestBase {
         device.waitForIdle();
     }
 
-    private void resetRecentsToBottom() {
+    public void resetRecentsToBottom() {
         // Rather than trying to scroll back to the bottom, just re-open the recents list
         mDevice.pressHome();
         mDevice.waitForIdle();
