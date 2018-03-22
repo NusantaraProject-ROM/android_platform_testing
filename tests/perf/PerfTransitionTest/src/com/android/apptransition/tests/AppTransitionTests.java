@@ -444,23 +444,11 @@ public class AppTransitionTests {
             final List<UiObject2> taskViews = mDevice.findObjects(
                     By.res(mDevice.getLauncherPackageName(), "snapshot"));
 
-            switch (taskViews.size()) {
-                case 1:
-                    // We see in the overview: the workspace card in the center, but it's not
-                    // included in 'taskViews', and the edge of the last active task on the right
-                    // (#1). We need to swipe to it before clicking at it.
-                    recentsView.swipe(Direction.LEFT, 1,
-                            (int) (TASK_SWITCH_SWIPE_SPEED * mDisplayDensity));
-                    mDevice.waitForIdle();
-                    break;
-                case 2:
-                    // We see in the overview: the active task in the middle (#0), the next task
-                    // on the right (#1), and the workspace card on the left, but it's not
-                    // included in 'taskViews'.
-                    break;
-                default:
-                    throw new RuntimeException(
-                            "Unexpected number of visible tasks: " + taskViews.size());
+            if (taskViews.size() != 2) {
+                // We expect to see in the overview: the active task in the middle (#0), the next
+                // task on the right (#1).
+                throw new RuntimeException(
+                        "Unexpected number of visible tasks: " + taskViews.size());
             }
 
             // Click at the first task.
