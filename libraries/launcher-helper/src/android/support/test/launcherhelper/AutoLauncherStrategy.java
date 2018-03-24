@@ -29,7 +29,7 @@ import junit.framework.Assert;
 public class AutoLauncherStrategy implements IAutoLauncherStrategy {
 
     private static final String LOG_TAG = AutoLauncherStrategy.class.getSimpleName();
-    private static final String CAR_LENSPICKER = "com.android.support.car.lenspicker";
+    private static final String CAR_LENSPICKER = "com.android.car.carlauncher";
 
     private static final long APP_INIT_WAIT = 10000;
     private static final int OPEN_FACET_RETRY_TIME = 5;
