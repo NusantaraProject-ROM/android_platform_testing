@@ -16,10 +16,8 @@
 package com.android.apptransition.tests;
 
 import static android.support.test.InstrumentationRegistry.getInstrumentation;
+import static android.system.helpers.OverviewHelper.isRecentsInLauncher;
 
-import android.content.ComponentName;
-import android.content.pm.PackageManager;
-import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.os.SystemClock;
@@ -355,23 +353,6 @@ public class LatencyTests {
             }
             mDevice.pressHome();
             mDevice.waitForIdle();
-        }
-    }
-
-    /**
-     * Returns whether recents (overview) is implemented in Launcher.
-     */
-    private boolean isRecentsInLauncher() {
-        final PackageManager pm = getInstrumentation().getTargetContext().getPackageManager();
-        try {
-            final Resources resources = pm.getResourcesForApplication(SYSTEMUI_PACKAGE);
-            int id = resources.getIdentifier("config_overviewServiceComponent", "string",
-                    SYSTEMUI_PACKAGE);
-            pm.getServiceInfo(
-                    ComponentName.unflattenFromString(resources.getString(id)), 0);
-            return true;
-        } catch (PackageManager.NameNotFoundException e) {
-            return false;
         }
     }
 
