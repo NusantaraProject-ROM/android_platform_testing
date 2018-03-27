@@ -54,6 +54,7 @@ import android.widget.ImageView;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class SystemUiJankTests extends JankTestBase {
@@ -364,18 +365,15 @@ public class SystemUiJankTests extends JankTestBase {
                     fail("Unable to find a task to dismiss");
                 }
 
-                // taskViews contains up to 3 task views: the 'main' (and the tallest) one in the
-                // center, and parts of its right and left siblings. Find the main task view by
-                // its upper edge's coordinate.
-                UiObject2 tallestTask = null;
-                for (UiObject2 o : taskViews) {
-                    if (tallestTask == null
-                            || o.getVisibleBounds().top < tallestTask.getVisibleBounds().top) {
-                        tallestTask = o;
-                    }
-                }
+                // taskViews contains up to 3 task views: the 'main' (having the widest visible
+                // part) one in the center, and parts of its right and left siblings. Find the
+                // main task view by its width.
+                final UiObject2 widestTask = Collections.max(taskViews,
+                        (t1, t2) -> Integer.compare(t1.getVisibleBounds().width(),
+                                t2.getVisibleBounds().width()));
+
                 // Dismiss the task via flinging it up.
-                tallestTask.fling(Direction.DOWN);
+                widestTask.fling(Direction.DOWN);
                 mDevice.waitForIdle();
             }
 
