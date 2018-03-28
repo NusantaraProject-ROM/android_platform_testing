@@ -16,16 +16,15 @@
 
 package com.android.apptransition.tests;
 
+import static android.system.helpers.OverviewHelper.isRecentsInLauncher;
+
 import android.app.ActivityManager;
 import android.app.IActivityManager;
 import android.app.Instrumentation;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.content.res.Resources;
-import android.graphics.Point;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
@@ -41,24 +40,23 @@ import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
 import android.util.Log;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.HashMap;
-import java.util.List;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
-
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class AppTransitionTests {
 
@@ -375,23 +373,6 @@ public class AppTransitionTests {
         mDevice.pressHome();
         sleep(mPostLaunchTimeout);
         return appLaunchTime;
-    }
-
-    /**
-     * Returns whether recents (overview) is implemented in Launcher.
-     */
-    private boolean isRecentsInLauncher() {
-        final PackageManager pm = getInstrumentation().getTargetContext().getPackageManager();
-        try {
-            final Resources resources = pm.getResourcesForApplication(SYSTEMUI_PACKAGE);
-            int id = resources.getIdentifier("config_overviewServiceComponent", "string",
-                    SYSTEMUI_PACKAGE);
-            pm.getServiceInfo(
-                    ComponentName.unflattenFromString(resources.getString(id)), 0);
-            return true;
-        } catch (PackageManager.NameNotFoundException e) {
-            return false;
-        }
     }
 
     private BySelector getLauncherOverviewSelector() {
