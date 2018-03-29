@@ -16,8 +16,10 @@
 package android.support.test.launcherhelper;
 
 import android.graphics.Point;
+import android.os.Build;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
+import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
 
@@ -29,6 +31,7 @@ import junit.framework.Assert;
 public class NexusLauncherStrategy extends BaseLauncher3Strategy {
 
     private static final String LAUNCHER_PKG = "com.google.android.apps.nexuslauncher";
+    private static final String SYSTEMUI_PACKAGE = "com.android.systemui";
 
     @Override
     public String getSupportedLauncherPackage() {
@@ -59,15 +62,37 @@ public class NexusLauncherStrategy extends BaseLauncher3Strategy {
         return By.res(getSupportedLauncherPackage(), "hotseat");
     }
 
+    private BySelector getLauncherOverviewSelector() {
+        return By.res(LAUNCHER_PKG, "overview_panel");
+    }
+
+    private void pressUiRecentApps() {
+        // Swipe from the Home button to approximately center of the screen.
+        UiObject2 homeButton = mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "home_button"));
+        homeButton.setGestureMargins(0, -homeButton.getVisibleBounds().bottom / 2, 0, 1);
+        homeButton.swipe(Direction.UP, 1);
+
+        mDevice.waitForIdle();
+
+        final UiObject2 recentsView = mDevice.wait(Until.findObject(getLauncherOverviewSelector()),
+                5000);
+        Assert.assertNotNull("Recents didn't appear", recentsView);
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public UiObject2 openAllApps(boolean reset) {
         // If not on all apps or to reset, then go to launcher and re-open all apps.
-        if (!mDevice.hasObject(getAllAppsSelector()) || reset) {
+        if (!mDevice.hasObject(getAllAppsSelector()) || mDevice.hasObject(
+                getLauncherOverviewSelector()) || reset) {
             // Restart from the launcher home screen.
             open();
+            if (Build.VERSION.FIRST_SDK_INT >= Build.VERSION_CODES.O) {
+                // First swipe to open Recents for Pixel 2 and above.
+                pressUiRecentApps();
+            }
             // Swipe from the hotseat to near the top, e.g. 10% of the screen.
             UiObject2 hotseat = mDevice.wait(Until.findObject(getHotSeatSelector()), 2500);
             Point start = hotseat.getVisibleCenter();
