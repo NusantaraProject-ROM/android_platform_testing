@@ -16,10 +16,8 @@
 package com.android.apptransition.tests;
 
 import static android.support.test.InstrumentationRegistry.getInstrumentation;
+import static android.system.helpers.OverviewHelper.isRecentsInLauncher;
 
-import android.content.ComponentName;
-import android.content.pm.PackageManager;
-import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.os.SystemClock;
@@ -358,23 +356,6 @@ public class LatencyTests {
         }
     }
 
-    /**
-     * Returns whether recents (overview) is implemented in Launcher.
-     */
-    private boolean isRecentsInLauncher() {
-        final PackageManager pm = getInstrumentation().getTargetContext().getPackageManager();
-        try {
-            final Resources resources = pm.getResourcesForApplication(SYSTEMUI_PACKAGE);
-            int id = resources.getIdentifier("config_overviewServiceComponent", "string",
-                    SYSTEMUI_PACKAGE);
-            pm.getServiceInfo(
-                    ComponentName.unflattenFromString(resources.getString(id)), 0);
-            return true;
-        } catch (PackageManager.NameNotFoundException e) {
-            return false;
-        }
-    }
-
     private BySelector getLauncherOverviewSelector() {
         return By.res(mDevice.getLauncherPackageName(), "overview_panel");
     }
@@ -385,13 +366,14 @@ public class LatencyTests {
      * @throws RemoteException if press recents is not successful
      */
     private UiObject2 pressUiRecentApps() throws RemoteException {
-        if (isRecentsInLauncher()) {
+        final UiObject2 recentsButton = mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "recent_apps"));
+        if (recentsButton == null) {
             // Swipe from the Home button to approximately center of the screen.
             UiObject2 homeButton = mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "home_button"));
             homeButton.setGestureMargins(0, -homeButton.getVisibleBounds().bottom / 2, 0, 1);
             homeButton.swipe(Direction.UP, 1);
         } else {
-            mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "recent_apps")).click();
+            recentsButton.click();
         }
 
         mDevice.waitForIdle();

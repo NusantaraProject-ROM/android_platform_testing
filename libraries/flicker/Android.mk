@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2015 The Android Open Source Project
+# Copyright (C) 2018 The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,12 +17,17 @@
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
-LOCAL_MODULE := launcher-helper-lib
-LOCAL_JAVA_LIBRARIES := ub-uiautomator \
-    android-support-test \
-    activity-helper
-LOCAL_STATIC_JAVA_LIBRARIES := dpad-util commands-helper activity-helper
-LOCAL_SDK_VERSION := test_current
+LOCAL_MODULE := flickerlib
+LOCAL_MODULE_TAGS := tests optional
+# sign this with platform cert, so this test is allowed to call private platform apis
+LOCAL_CERTIFICATE := platform
+LOCAL_PRIVATE_PLATFORM_APIS := true
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
+LOCAL_STATIC_JAVA_LIBRARIES := \
+   ub-janktesthelper \
+   cts-amwm-util \
+   platformprotosnano \
+   layersprotosnano \
 
 include $(BUILD_STATIC_JAVA_LIBRARY)
+include $(call all-makefiles-under,$(LOCAL_PATH))

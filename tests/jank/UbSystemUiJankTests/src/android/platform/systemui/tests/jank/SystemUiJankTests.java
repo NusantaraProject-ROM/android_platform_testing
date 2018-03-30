@@ -16,18 +16,16 @@
 
 package android.platform.systemui.tests.jank;
 
+import static android.system.helpers.OverviewHelper.isRecentsInLauncher;
+
 import android.app.Notification.Action;
 import android.app.Notification.Builder;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.RemoteInput;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.graphics.Point;
 import android.graphics.Rect;
-import android.content.res.Resources;
 import android.graphics.drawable.Icon;
 import android.os.Bundle;
 import android.os.Environment;
@@ -166,7 +164,7 @@ public class SystemUiJankTests extends JankTestBase {
     }
 
     public static void openRecents(Context context, UiDevice device) {
-        if (isRecentsInLauncher(context)) {
+        if (isRecentsInLauncher()) {
             // Swipe from the Home button to approximately center of the screen.
             UiObject2 homeButton = device.findObject(By.res(SYSTEMUI_PACKAGE, "home_button"));
             homeButton.setGestureMargins(0, -homeButton.getVisibleBounds().bottom / 2, 0, 1);
@@ -181,7 +179,7 @@ public class SystemUiJankTests extends JankTestBase {
 
         // use a long timeout to wait until recents populated
         if (device.wait(
-                Until.findObject(isRecentsInLauncher(context)
+                Until.findObject(isRecentsInLauncher()
                         ? getLauncherOverviewSelector(device) : RECENTS),
                 10000) == null) {
             fail("Recents didn't appear");
@@ -285,27 +283,6 @@ public class SystemUiJankTests extends JankTestBase {
 
     public void cancelNotifications() throws Exception {
         mNotificationManager.cancelAll();
-    }
-
-    /**
-     * Returns whether recents (overview) is implemented in Launcher.
-     */
-    private static boolean isRecentsInLauncher(Context context) {
-        final PackageManager pm = context.getPackageManager();
-        try {
-            final Resources resources = pm.getResourcesForApplication(SYSTEMUI_PACKAGE);
-            int id = resources.getIdentifier("config_overviewServiceComponent", "string",
-                    SYSTEMUI_PACKAGE);
-            pm.getServiceInfo(
-                    ComponentName.unflattenFromString(resources.getString(id)), 0);
-            return true;
-        } catch (PackageManager.NameNotFoundException e) {
-            return false;
-        }
-    }
-
-    private boolean isRecentsInLauncher() {
-        return isRecentsInLauncher(getInstrumentation().getTargetContext());
     }
 
     /**
