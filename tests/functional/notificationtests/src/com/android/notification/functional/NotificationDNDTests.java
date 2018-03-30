@@ -122,7 +122,7 @@ public class NotificationDNDTests extends InstrumentationTestCase {
                 .setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_PRIORITY);
         try {
             mHelper.showAppNotificationSettings(mContext);
-            mDevice.wait(Until.findObject(By.textContains("Miscellaneous")), LONG_TIMEOUT)
+            mDevice.wait(Until.findObject(By.textContains("Uncategorized")), LONG_TIMEOUT)
                     .click();
             mDevice.wait(Until.findObject(By.textContains("Override Do Not Disturb")), LONG_TIMEOUT)
                     .click();
@@ -136,7 +136,9 @@ public class NotificationDNDTests extends InstrumentationTestCase {
             assertFalse(zF.shouldIntercept(mZenHelper.getZenMode(), mConfig, nr));
         } finally {
             mHelper.showAppNotificationSettings(mContext);
-            mDevice.wait(Until.findObject(By.textContains("Miscellaneous")), LONG_TIMEOUT)
+            mDevice.wait(Until.findObject(By.textContains("Uncategorized")), LONG_TIMEOUT)
+                    .click();
+            mDevice.wait(Until.findObject(By.textContains("Advanced")), LONG_TIMEOUT)
                     .click();
             mDevice.wait(Until.findObject(By.textContains("Override Do Not Disturb")), LONG_TIMEOUT)
                     .click();
@@ -151,7 +153,8 @@ public class NotificationDNDTests extends InstrumentationTestCase {
     public void testBlockNotification() throws Exception {
         try {
             mHelper.showAppNotificationSettings(mContext);
-            mDevice.wait(Until.findObject(By.textContains("Block all")), LONG_TIMEOUT).click();
+            mDevice.wait(Until.findObject(
+                    By.textContains("Show notifications")), LONG_TIMEOUT).click();
             Thread.sleep(LONG_TIMEOUT);
             mHelper.sendNotificationsWithInlineReply(NOTIFICATION_ID, true);
             Thread.sleep(LONG_TIMEOUT);
@@ -160,22 +163,25 @@ public class NotificationDNDTests extends InstrumentationTestCase {
             }
         } finally {
             mHelper.showAppNotificationSettings(mContext);
-            mDevice.wait(Until.findObject(By.textContains("Block all")), LONG_TIMEOUT).click();
+            mDevice.wait(Until.findObject(
+                    By.textContains("Show notifications")), LONG_TIMEOUT).click();
         }
     }
 
-    private void grantPolicyAccess(boolean isGranted) throws Exception {
+    private void grantPolicyAccess(boolean grant) throws Exception {
         NotificationHelper.launchSettingsPage(mContext,
                 android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
         Thread.sleep(LONG_TIMEOUT);
-        if (isGranted) {
-            mDevice.wait(Until.findObject(By.text("OFF")), LONG_TIMEOUT).click();
+        if (grant) {
+            mDevice.wait(Until.findObject(
+                    By.text("com.android.notification.functional")), LONG_TIMEOUT).click();
             Thread.sleep(SHORT_TIMEOUT);
-            mDevice.wait(Until.findObject(By.text("ALLOW")), LONG_TIMEOUT).click();
+            mDevice.wait(Until.findObject(By.text("Allow")), LONG_TIMEOUT).click();
         } else {
-            mDevice.wait(Until.findObject(By.text("ON")), LONG_TIMEOUT).click();
+            mDevice.wait(Until.findObject(
+                    By.text("com.android.notification.functional")), LONG_TIMEOUT).click();
             Thread.sleep(SHORT_TIMEOUT);
-            mDevice.wait(Until.findObject(By.text("OK")), LONG_TIMEOUT).click();
+            mDevice.wait(Until.findObject(By.text("Turn off")), LONG_TIMEOUT).click();
         }
         Thread.sleep(LONG_TIMEOUT);
         mDevice.pressHome();
