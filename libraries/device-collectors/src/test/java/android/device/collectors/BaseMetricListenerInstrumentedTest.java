@@ -18,6 +18,7 @@ package android.device.collectors;
 import android.app.Instrumentation;
 import android.device.collectors.annotations.MetricOption;
 import android.device.collectors.annotations.OptionClass;
+import android.device.collectors.util.SendToInstrumentation;
 import android.os.Bundle;
 import android.support.test.runner.AndroidJUnit4;
 
@@ -112,7 +113,7 @@ public class BaseMetricListenerInstrumentedTest {
         ArgumentCaptor<Bundle> capture = ArgumentCaptor.forClass(Bundle.class);
         Mockito.verify(mMockInstrumentation)
                 .sendStatus(Mockito.eq(
-                        BaseMetricListener.INST_STATUS_IN_PROGRESS), capture.capture());
+                        SendToInstrumentation.INST_STATUS_IN_PROGRESS), capture.capture());
         List<Bundle> capturedBundle = capture.getAllValues();
         assertEquals(1, capturedBundle.size());
         Bundle check = capturedBundle.get(0);
@@ -158,7 +159,7 @@ public class BaseMetricListenerInstrumentedTest {
         ArgumentCaptor<Bundle> capture = ArgumentCaptor.forClass(Bundle.class);
         Mockito.verify(mMockInstrumentation, Mockito.times(2))
                 .sendStatus(Mockito.eq(
-                        BaseMetricListener.INST_STATUS_IN_PROGRESS), capture.capture());
+                        SendToInstrumentation.INST_STATUS_IN_PROGRESS), capture.capture());
         // Check that only method2 did not generate any metrics since it was filtered.
         List<Bundle> capturedBundle = capture.getAllValues();
         assertEquals(2, capturedBundle.size());
@@ -206,7 +207,7 @@ public class BaseMetricListenerInstrumentedTest {
         ArgumentCaptor<Bundle> capture = ArgumentCaptor.forClass(Bundle.class);
         Mockito.verify(mMockInstrumentation, Mockito.times(1))
                 .sendStatus(Mockito.eq(
-                        BaseMetricListener.INST_STATUS_IN_PROGRESS), capture.capture());
+                        SendToInstrumentation.INST_STATUS_IN_PROGRESS), capture.capture());
         // Check that only method2 did generate metrics since it was included.
         List<Bundle> capturedBundle = capture.getAllValues();
         assertEquals(1, capturedBundle.size());
@@ -250,7 +251,7 @@ public class BaseMetricListenerInstrumentedTest {
         ArgumentCaptor<Bundle> capture = ArgumentCaptor.forClass(Bundle.class);
         Mockito.verify(mMockInstrumentation, Mockito.times(1))
                 .sendStatus(Mockito.eq(
-                        BaseMetricListener.INST_STATUS_IN_PROGRESS), capture.capture());
+                        SendToInstrumentation.INST_STATUS_IN_PROGRESS), capture.capture());
         // Check that only method2 generates some metrics
         List<Bundle> capturedBundle = capture.getAllValues();
         assertEquals(1, capturedBundle.size());
@@ -294,7 +295,7 @@ public class BaseMetricListenerInstrumentedTest {
         ArgumentCaptor<Bundle> capture = ArgumentCaptor.forClass(Bundle.class);
         Mockito.verify(mMockInstrumentation, Mockito.times(1))
                 .sendStatus(Mockito.eq(
-                        BaseMetricListener.INST_STATUS_IN_PROGRESS), capture.capture());
+                        SendToInstrumentation.INST_STATUS_IN_PROGRESS), capture.capture());
         // Check that only method2 generates some metrics
         List<Bundle> capturedBundle = capture.getAllValues();
         assertEquals(1, capturedBundle.size());
