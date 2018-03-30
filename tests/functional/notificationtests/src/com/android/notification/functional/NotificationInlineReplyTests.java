@@ -77,7 +77,7 @@ public class NotificationInlineReplyTests extends InstrumentationTestCase {
             mDevice.swipe(obj.getVisibleBounds().centerX(), obj.getVisibleBounds().centerY(),
                     obj.getVisibleBounds().centerX(),
                     mDevice.getDisplayHeight(), 5);
-            mDevice.wait(Until.findObject(By.text("REPLY")), LONG_TIMEOUT).click();
+            mDevice.wait(Until.findObject(By.text("Reply")), LONG_TIMEOUT).click();
             UiObject2 replyBox = mDevice.wait(
                     Until.findObject(By.res("com.android.systemui:id/remote_input_send")),
                     LONG_TIMEOUT);
@@ -97,7 +97,7 @@ public class NotificationInlineReplyTests extends InstrumentationTestCase {
         Thread.sleep(SHORT_TIMEOUT);
         mDevice.openQuickSettings();
         mDevice.openNotification();
-        mDevice.wait(Until.findObject(By.text("REPLY")), LONG_TIMEOUT).click();
+        mDevice.wait(Until.findObject(By.text("Reply")), LONG_TIMEOUT).click();
         UiObject2 replyBox = mDevice.wait(
                 Until.findObject(By.res("com.android.systemui:id/remote_input_send")),
                 LONG_TIMEOUT);
