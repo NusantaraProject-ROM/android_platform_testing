@@ -113,7 +113,7 @@ public class NotificationInteractionTests extends InstrumentationTestCase {
     /** send out multiple notifications in order to test CLEAR ALL function */
     @MediumTest
     public void testDismissAll() throws Exception {
-        String text = "CLEAR ALL";
+        String text = "Clear all";
         Map<Integer, String> lists = new HashMap<Integer, String>();
         StatusBarNotification[] sbns = mNotificationManager.getActiveNotifications();
         int currentSbns = sbns.length;
