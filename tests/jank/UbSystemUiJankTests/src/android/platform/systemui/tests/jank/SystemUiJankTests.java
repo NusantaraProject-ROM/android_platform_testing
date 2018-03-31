@@ -164,7 +164,7 @@ public class SystemUiJankTests extends JankTestBase {
     }
 
     public static void openRecents(Context context, UiDevice device) {
-        if (isRecentsInLauncher()) {
+        if (device.findObject(By.res(SYSTEMUI_PACKAGE, "recent_apps")) == null) {
             // Swipe from the Home button to approximately center of the screen.
             UiObject2 homeButton = device.findObject(By.res(SYSTEMUI_PACKAGE, "home_button"));
             homeButton.setGestureMargins(0, -homeButton.getVisibleBounds().bottom / 2, 0, 1);
