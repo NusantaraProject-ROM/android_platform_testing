@@ -27,6 +27,7 @@ instrumentation_tests := \
     ConnTestApp \
     FrameworksServicesTests \
     JobTestApp \
+    SuspendTestApp \
     FrameworksUtilTests \
     MtpDocumentsProviderTests \
     MtpTests \

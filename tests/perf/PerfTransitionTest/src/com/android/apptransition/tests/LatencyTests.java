@@ -366,13 +366,14 @@ public class LatencyTests {
      * @throws RemoteException if press recents is not successful
      */
     private UiObject2 pressUiRecentApps() throws RemoteException {
-        if (isRecentsInLauncher()) {
+        final UiObject2 recentsButton = mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "recent_apps"));
+        if (recentsButton == null) {
             // Swipe from the Home button to approximately center of the screen.
             UiObject2 homeButton = mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "home_button"));
             homeButton.setGestureMargins(0, -homeButton.getVisibleBounds().bottom / 2, 0, 1);
             homeButton.swipe(Direction.UP, 1);
         } else {
-            mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "recent_apps")).click();
+            recentsButton.click();
         }
 
         mDevice.waitForIdle();
