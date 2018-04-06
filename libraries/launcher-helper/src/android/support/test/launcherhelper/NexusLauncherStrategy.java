@@ -79,6 +79,11 @@ public class NexusLauncherStrategy extends BaseLauncher3Strategy {
         Assert.assertNotNull("Recents didn't appear", recentsView);
     }
 
+    @Override
+    public void open() {
+        mDevice.pressHome();
+    }
+
     /**
      * {@inheritDoc}
      */
