@@ -64,7 +64,6 @@ native_tests := \
     libtextclassifier_tests \
     libsurfaceflinger_unittest \
     libvintf_test \
-    libwifi-system_tests \
     linker-unit-tests \
     logcat-unit-tests \
     logd-unit-tests \
