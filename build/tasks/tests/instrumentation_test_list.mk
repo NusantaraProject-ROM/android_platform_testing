@@ -46,8 +46,6 @@ instrumentation_tests := \
     AndroidVCardTests \
     PermissionFunctionalTests \
     BlockedNumberProviderTest \
-    SettingsFunctionalTests \
-    LauncherFunctionalTests \
     DownloadAppFunctionalTests \
     NotificationFunctionalTests \
     DexLoggerIntegrationTests \

@@ -19,7 +19,6 @@ import android.graphics.Point;
 import android.os.Build;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
-import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
 
@@ -67,10 +66,12 @@ public class NexusLauncherStrategy extends BaseLauncher3Strategy {
     }
 
     private void pressUiRecentApps() {
-        // Swipe from the Home button to approximately center of the screen.
+        // Swipe from the Home button to 3/4 down the screen.
         UiObject2 homeButton = mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "home_button"));
-        homeButton.setGestureMargins(0, -homeButton.getVisibleBounds().bottom / 2, 0, 1);
-        homeButton.swipe(Direction.UP, 1);
+        mDevice.swipe(
+                homeButton.getVisibleBounds().centerX(), homeButton.getVisibleBounds().centerY(),
+                homeButton.getVisibleBounds().centerX(), mDevice.getDisplayHeight() * 3 / 4,
+                100);
 
         mDevice.waitForIdle();
 
