@@ -68,7 +68,7 @@ public class WindowManagerTraceMonitorTest {
     public void captureWindowTrace() throws Exception {
         mWindowManagerTraceMonitor.start();
         mWindowManagerTraceMonitor.stop();
-        File testFile = mWindowManagerTraceMonitor.saveTraceFile("captureWindowTrace", 0).toFile();
+        File testFile = mWindowManagerTraceMonitor.save("captureWindowTrace", 0).toFile();
         assertThat(testFile.exists()).isTrue();
         byte[] trace = Files.toByteArray(testFile);
         assertThat(trace.length).isGreaterThan(0);

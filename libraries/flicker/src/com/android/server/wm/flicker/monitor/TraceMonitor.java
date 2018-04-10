@@ -32,7 +32,7 @@ import java.util.Locale;
  * Base class for monitors containing common logic to read the trace
  * as a byte array and save the trace to another location.
  */
-public abstract class TraceMonitor {
+public abstract class TraceMonitor implements ITransitionMonitor {
     public static final String TAG = "FLICKER";
     private static final String TRACE_DIR = "/data/misc/wmtrace/";
     private static final String OUTPUT_DIR =
@@ -40,9 +40,6 @@ public abstract class TraceMonitor {
 
     String traceFileName;
 
-    abstract void start();
-
-    abstract void stop();
 
     abstract boolean isEnabled() throws RemoteException;
 
@@ -56,7 +53,8 @@ public abstract class TraceMonitor {
      * @param iteration suffix added to trace name used to identify trace
      * @return Path to saved trace file
      */
-    public Path saveTraceFile(String testTag, int iteration) {
+    @Override
+    public Path save(String testTag, int iteration) {
         Path traceFileCopy = getOutputTraceFilePath(testTag, iteration);
         String copyCommand = String.format(Locale.getDefault(), "mv %s%s %s", TRACE_DIR,
                 traceFileName, traceFileCopy.toString());
