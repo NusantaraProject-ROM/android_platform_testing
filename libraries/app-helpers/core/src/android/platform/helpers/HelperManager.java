@@ -21,6 +21,7 @@ import static java.lang.reflect.Modifier.isInterface;
 
 import android.app.Instrumentation;
 import android.content.Context;
+import android.support.test.uiautomator.UiDevice;
 import android.util.Log;
 
 import dalvik.system.DexFile;
@@ -130,6 +131,23 @@ public class HelperManager {
         } catch (IOException e) {
             throw new RuntimeException("Failed to retrieve the dex file.");
         }
+    }
+
+    /*
+     * Returns a concrete helper for the {@link ILauncherHelper}.
+     *
+     * @throws RuntimeException if no implementation is found
+     * @return a concrete implementation of {@link ILauncherHelper}
+     */
+    public ILauncherHelper getLauncherHelper() {
+        UiDevice device = UiDevice.getInstance(mInstrumentation);
+        for (ILauncherHelper implementation : getAll(ILauncherHelper.class)) {
+            if (implementation.getLauncherName().equals(device.getLauncherPackageName())) {
+              return implementation;
+            }
+        }
+
+        throw new RuntimeException("Unable to find a supported launcher implementation.");
     }
 
     /**
