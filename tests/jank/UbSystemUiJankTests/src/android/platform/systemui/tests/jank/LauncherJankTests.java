@@ -16,9 +16,7 @@
 
 package android.platform.systemui.tests.jank;
 
-import android.content.ComponentName;
 import android.content.pm.PackageManager;
-import android.content.res.Resources;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Bundle;
@@ -31,11 +29,13 @@ import android.support.test.launcherhelper.ILauncherStrategy;
 import android.support.test.launcherhelper.LauncherStrategyFactory;
 import android.support.test.timeresulthelper.TimeResultLogger;
 import android.support.test.uiautomator.By;
+import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.Until;
+import android.system.helpers.OverviewHelper;
 
 import java.io.File;
 import java.io.IOException;
@@ -86,14 +86,55 @@ public class LauncherJankTests extends JankTestBase {
         mLauncherStrategy.open();
     }
 
-    public void resetAllApps() throws UiObjectNotFoundException {
-        mLauncherStrategy.openAllApps(true);
-        mLauncherStrategy.open();
+    private BySelector getAppListViewSelector() {
+        return By.res(getLauncherPackage(), "apps_list_view");
+    }
+
+    /** Swipes from Recents to All Apps. */
+    private void fromRecentsToAllApps() {
+        assertTrue(mDevice.hasObject(SystemUiJankTests.getLauncherOverviewSelector(mDevice)));
+        assertTrue(!mDevice.hasObject(getAppListViewSelector()));
+
+        // Swipe from the hotseat to near the top, e.g. 10% of the screen.
+        UiObject2 predictionRow = mDevice.wait(
+                Until.findObject(By.res(getLauncherPackage(), "prediction_row")),
+                2500);
+        Point start = predictionRow.getVisibleCenter();
+        int endY = (int) (mDevice.getDisplayHeight() * 0.1f);
+        mDevice.swipe(start.x, start.y, start.x, endY, (start.y - endY) / 100); // 100 px/step
+
+        UiObject2 allAppsContainer = mDevice.wait(Until.findObject(getAppListViewSelector()), 2500);
+        assertNotNull("openAllApps: did not find all apps container", allAppsContainer);
+        assertTrue(!mDevice.hasObject(SystemUiJankTests.getLauncherOverviewSelector(mDevice)));
+    }
+
+    /** Swipes from All Apps to Recents. */
+    private void fromAllAppsToRecents() { // add state assertions
+        assertTrue(!mDevice.hasObject(SystemUiJankTests.getLauncherOverviewSelector(mDevice)));
+        assertTrue(mDevice.hasObject(getAppListViewSelector()));
+
+        // Swipe from the search box to the bottom.
+        UiObject2 qsb = mDevice.wait(
+                Until.findObject(By.res(getLauncherPackage(), "search_container_all_apps")), 2500);
+        Point start = qsb.getVisibleCenter();
+        int endY = (int) (mDevice.getDisplayHeight() * 0.6);
+        mDevice.swipe(start.x, start.y, start.x, endY, (endY - start.y) / 100); // 100 px/step
+
+        UiObject2 recentsView = mDevice.wait(
+                Until.findObject(SystemUiJankTests.getLauncherOverviewSelector(mDevice)), 2500);
+        assertNotNull(recentsView);
+        assertTrue(!mDevice.hasObject(getAppListViewSelector()));
+    }
+
+    public void resetAndOpenRecents() throws UiObjectNotFoundException, RemoteException {
+        goHome();
+        mDevice.pressRecentApps();
     }
 
     public void prepareOpenAllAppsContainer() throws IOException {
         TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
                 getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+        OverviewHelper.getInstance().populateManyRecentApps();
     }
 
     public void afterTestOpenAllAppsContainer(Bundle metrics) throws IOException {
@@ -106,13 +147,13 @@ public class LauncherJankTests extends JankTestBase {
 
     /** Starts from the home screen, and measures jank while opening the all apps container. */
     @JankTest(expectedFrames=100, beforeTest="prepareOpenAllAppsContainer",
-            beforeLoop="resetAllApps", afterTest="afterTestOpenAllAppsContainer")
+            beforeLoop="resetAndOpenRecents", afterTest="afterTestOpenAllAppsContainer")
     @GfxMonitor(processName="#getLauncherPackage")
     public void testOpenAllAppsContainer() throws UiObjectNotFoundException {
         for (int i = 0; i < INNER_LOOP * 2; i++) {
-            mLauncherStrategy.openAllApps(false);
+            fromRecentsToAllApps();
             mDevice.waitForIdle();
-            mLauncherStrategy.open();
+            fromAllAppsToRecents();
             mDevice.waitForIdle();
         }
     }
@@ -154,7 +195,7 @@ public class LauncherJankTests extends JankTestBase {
     }
 
     public void makeHomeScrollable() throws UiObjectNotFoundException, IOException {
-        mLauncherStrategy.open();
+        goHome();
         UiObject2 homeScreen = mDevice.findObject(mLauncherStrategy.getWorkspaceSelector());
         Rect r = homeScreen.getVisibleBounds();
         if (!homeScreen.isScrollable()) {
