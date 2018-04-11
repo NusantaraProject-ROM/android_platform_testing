@@ -118,3 +118,7 @@ platform_tests += \
     VersatileTestApp_Internal \
     VersatileTestApp_None \
     VoiceInteraction \
+
+ifneq ($(strip $(BOARD_PERFSETUP_SCRIPT)),)
+platform_tests += perf-setup.sh
+endif
