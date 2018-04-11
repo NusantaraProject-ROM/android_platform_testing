@@ -41,7 +41,7 @@ public interface ITransitionMonitor {
      * @return Path to saved artifact
      */
     default Path save(String testTag, int iteration) {
-        throw new UnsupportedOperationException("Save not implemented for this monitor");
+        return save(testTag + "_" + iteration);
     }
 
     /**

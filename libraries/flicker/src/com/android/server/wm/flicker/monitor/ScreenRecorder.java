@@ -45,10 +45,6 @@ public class ScreenRecorder implements ITransitionMonitor {
         return Paths.get(OUTPUT_DIR, testTag + ".mp4");
     }
 
-    private static Path getPath(String testTag, int iteration) {
-        return Paths.get(OUTPUT_DIR, testTag + "_" + Integer.toString(iteration) + ".mp4");
-    }
-
     @Override
     public void start() {
         String command = "screenrecord " + DEFAULT_OUTPUT_PATH;
@@ -73,22 +69,10 @@ public class ScreenRecorder implements ITransitionMonitor {
     }
 
     @Override
-    public Path save(String testTag, int iteration) {
-        try {
-            Path savedFilePath = Files.move(DEFAULT_OUTPUT_PATH, getPath(testTag, iteration),
-                    REPLACE_EXISTING);
-            return savedFilePath;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
     public Path save(String testTag) {
         try {
-            Path savedFilePath = Files.move(DEFAULT_OUTPUT_PATH, getPath(testTag),
+            return Files.move(DEFAULT_OUTPUT_PATH, getPath(testTag),
                     REPLACE_EXISTING);
-            return savedFilePath;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
