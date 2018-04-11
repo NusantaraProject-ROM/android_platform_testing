@@ -155,7 +155,7 @@ public class SystemUiJankTests extends JankTestBase {
         super.afterTest(metrics);
     }
 
-    private static BySelector getLauncherOverviewSelector(UiDevice device) {
+    public static BySelector getLauncherOverviewSelector(UiDevice device) {
         return By.res(device.getLauncherPackageName(), "overview_panel");
     }
 
