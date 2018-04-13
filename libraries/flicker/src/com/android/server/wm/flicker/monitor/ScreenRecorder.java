@@ -32,12 +32,12 @@ import java.nio.file.Paths;
 /**
  * Captures screen contents and saves it as a mp4 video file.
  */
-public class ScreenRecorder {
+public class ScreenRecorder implements ITransitionMonitor {
     private static final String TAG = "FLICKER";
     private static final String OUTPUT_DIR =
             Environment.getExternalStorageDirectory().getPath();
     @VisibleForTesting
-    static final Path DEFAULT_OUTPUT_PATH = Paths.get(OUTPUT_DIR ,  "transition.mp4");
+    static final Path DEFAULT_OUTPUT_PATH = Paths.get(OUTPUT_DIR, "transition.mp4");
     private Thread recorderThread;
 
     @VisibleForTesting
@@ -49,6 +49,7 @@ public class ScreenRecorder {
         return Paths.get(OUTPUT_DIR, testTag + "_" + Integer.toString(iteration) + ".mp4");
     }
 
+    @Override
     public void start() {
         String command = "screenrecord " + DEFAULT_OUTPUT_PATH;
         recorderThread = new Thread(() -> {
@@ -61,6 +62,7 @@ public class ScreenRecorder {
         recorderThread.start();
     }
 
+    @Override
     public void stop() {
         runShellCommand("killall -s 2 screenrecord");
         try {
@@ -70,12 +72,25 @@ public class ScreenRecorder {
         }
     }
 
-    public Path save(String testTag, int iteration) throws IOException {
-        return Files.move(DEFAULT_OUTPUT_PATH, getPath(testTag, iteration),
-                REPLACE_EXISTING);
+    @Override
+    public Path save(String testTag, int iteration) {
+        try {
+            Path savedFilePath = Files.move(DEFAULT_OUTPUT_PATH, getPath(testTag, iteration),
+                    REPLACE_EXISTING);
+            return savedFilePath;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public Path save(String testTag) throws IOException {
-        return Files.move(DEFAULT_OUTPUT_PATH, getPath(testTag), REPLACE_EXISTING);
+    @Override
+    public Path save(String testTag) {
+        try {
+            Path savedFilePath = Files.move(DEFAULT_OUTPUT_PATH, getPath(testTag),
+                    REPLACE_EXISTING);
+            return savedFilePath;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

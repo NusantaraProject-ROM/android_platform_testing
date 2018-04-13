@@ -19,7 +19,6 @@ platform_tests += \
     BluetoothTests \
     BootHelperApp \
     CalculatorFunctionalTests \
-    CalculatorTests \
     CalendarTests \
     camera_client_test \
     camera_metadata_tests \
@@ -119,3 +118,7 @@ platform_tests += \
     VersatileTestApp_Internal \
     VersatileTestApp_None \
     VoiceInteraction \
+
+ifneq ($(strip $(BOARD_PERFSETUP_SCRIPT)),)
+platform_tests += perf-setup.sh
+endif
