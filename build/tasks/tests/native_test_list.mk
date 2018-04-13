@@ -32,6 +32,8 @@ native_tests := \
     dumpstate_test_fixture \
     dumpsys_test \
     dvr_api-test \
+    dvr_buffer_queue-test \
+    dvr_display-test \
     gatekeeperd-unit-tests \
     hello_world_test \
     hwui_unit_tests \
