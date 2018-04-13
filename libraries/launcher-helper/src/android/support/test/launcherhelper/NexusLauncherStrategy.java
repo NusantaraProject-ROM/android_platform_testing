@@ -30,7 +30,6 @@ import junit.framework.Assert;
 public class NexusLauncherStrategy extends BaseLauncher3Strategy {
 
     private static final String LAUNCHER_PKG = "com.google.android.apps.nexuslauncher";
-    private static final String SYSTEMUI_PACKAGE = "com.android.systemui";
 
     @Override
     public String getSupportedLauncherPackage() {
@@ -65,21 +64,6 @@ public class NexusLauncherStrategy extends BaseLauncher3Strategy {
         return By.res(LAUNCHER_PKG, "overview_panel");
     }
 
-    private void pressUiRecentApps() {
-        // Swipe from the Home button to 3/4 down the screen.
-        UiObject2 homeButton = mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "home_button"));
-        mDevice.swipe(
-                homeButton.getVisibleBounds().centerX(), homeButton.getVisibleBounds().centerY(),
-                homeButton.getVisibleBounds().centerX(), mDevice.getDisplayHeight() * 3 / 4,
-                100);
-
-        mDevice.waitForIdle();
-
-        final UiObject2 recentsView = mDevice.wait(Until.findObject(getLauncherOverviewSelector()),
-                5000);
-        Assert.assertNotNull("Recents didn't appear", recentsView);
-    }
-
     @Override
     public void open() {
         mDevice.pressHome();
@@ -96,14 +80,27 @@ public class NexusLauncherStrategy extends BaseLauncher3Strategy {
             // Restart from the launcher home screen.
             open();
             if (Build.VERSION.FIRST_SDK_INT >= Build.VERSION_CODES.O) {
-                // First swipe to open Recents for Pixel 2 and above.
-                pressUiRecentApps();
+                int midX = mDevice.getDisplayWidth() / 2;
+                int height = mDevice.getDisplayHeight();
+                // Swipe from 5/6ths down the screen to 1/6th down the screen.
+                mDevice.swipe(
+                        midX,
+                        height * 5 / 6,
+                        midX,
+                        height / 6,
+                        (height * 2 / 3) / 100); // 100 px/step
+            } else {
+                // Swipe from the hotseat to near the top, e.g. 10% of the screen.
+                UiObject2 hotseat = mDevice.wait(Until.findObject(getHotSeatSelector()), 2500);
+                Point start = hotseat.getVisibleCenter();
+                int endY = (int) (mDevice.getDisplayHeight() * 0.1f);
+                mDevice.swipe(
+                        start.x,
+                        start.y,
+                        start.x,
+                        endY,
+                        (start.y - endY) / 100); // 100 px/step
             }
-            // Swipe from the hotseat to near the top, e.g. 10% of the screen.
-            UiObject2 hotseat = mDevice.wait(Until.findObject(getHotSeatSelector()), 2500);
-            Point start = hotseat.getVisibleCenter();
-            int endY = (int) (mDevice.getDisplayHeight() * 0.1f);
-            mDevice.swipe(start.x, start.y, start.x, endY, (start.y - endY) / 100); // 100 px/step
         }
         UiObject2 allAppsContainer = mDevice.wait(Until.findObject(getAllAppsSelector()), 2500);
         Assert.assertNotNull("openAllApps: did not find all apps container", allAppsContainer);
