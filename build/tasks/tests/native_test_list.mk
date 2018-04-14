@@ -100,6 +100,7 @@ native_tests := \
     perfprofd_test \
     posix_async_io_test \
     prioritydumper_test \
+    puffin_unittest \
     recovery_component_test \
     recovery_unit_test \
     scrape_mmap_addr \
