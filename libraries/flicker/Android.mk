@@ -28,6 +28,7 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
    cts-amwm-util \
    platformprotosnano \
    layersprotosnano \
+   truth-prebuilt \
 
 include $(BUILD_STATIC_JAVA_LIBRARY)
 include $(call all-makefiles-under,$(LOCAL_PATH))
