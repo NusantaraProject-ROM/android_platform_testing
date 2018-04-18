@@ -17,6 +17,7 @@ package android.device.collectors;
 
 import android.device.collectors.annotations.MetricOption;
 import android.device.collectors.annotations.OptionClass;
+import android.device.collectors.util.SendToInstrumentation;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
@@ -62,11 +63,6 @@ import java.util.Set;
  */
 public class BaseMetricListener extends InstrumentationRunListener {
 
-    /**
-     * Metrics will be reported under the "status in progress" for test cases to be associated with
-     * the running use cases.
-     */
-    public static final int INST_STATUS_IN_PROGRESS = 2;
     public static final int BUFFER_SIZE = 1024;
 
     /** Options keys that the collector can receive. */
@@ -161,7 +157,8 @@ public class BaseMetricListener extends InstrumentationRunListener {
             }
             if (mTestData.hasMetrics()) {
                 // Only send the status progress if there are metrics
-                sendStatus(INST_STATUS_IN_PROGRESS, mTestData.createBundleFromMetrics());
+                SendToInstrumentation.sendBundle(getInstrumentation(),
+                        mTestData.createBundleFromMetrics());
             }
         }
         super.testFinished(description);
