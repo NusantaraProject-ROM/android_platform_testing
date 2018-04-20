@@ -16,6 +16,7 @@
 package android.device.collectors;
 
 import android.app.Instrumentation;
+import android.device.collectors.util.SendToInstrumentation;
 import android.os.Bundle;
 import android.support.test.runner.AndroidJUnit4;
 
@@ -169,7 +170,7 @@ public class BatteryStatsListenerTest {
         ArgumentCaptor<Bundle> capture = ArgumentCaptor.forClass(Bundle.class);
         Mockito.verify(mInstrumentation, times(numTestCase))
                 .sendStatus(Mockito.eq(
-                        BaseMetricListener.INST_STATUS_IN_PROGRESS), capture.capture());
+                        SendToInstrumentation.INST_STATUS_IN_PROGRESS), capture.capture());
         List<Bundle> capturedBundle = capture.getAllValues();
         assertEquals(numTestCase, capturedBundle.size());
 
@@ -215,7 +216,7 @@ public class BatteryStatsListenerTest {
         ArgumentCaptor<Bundle> capture = ArgumentCaptor.forClass(Bundle.class);
         Mockito.verify(mInstrumentation, times(numTestCase))
                 .sendStatus(Mockito.eq(
-                        BaseMetricListener.INST_STATUS_IN_PROGRESS), capture.capture());
+                        SendToInstrumentation.INST_STATUS_IN_PROGRESS), capture.capture());
         List<Bundle> capturedBundle = capture.getAllValues();
         assertEquals(numTestCase, capturedBundle.size());
 
