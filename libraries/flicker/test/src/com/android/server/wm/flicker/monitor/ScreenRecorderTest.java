@@ -59,7 +59,7 @@ public class ScreenRecorderTest {
     }
 
     @Test
-    public void videoCanBeSaved() throws IOException {
+    public void videoCanBeSaved() {
         mScreenRecorder.start();
         sleep(100);
         mScreenRecorder.stop();
