@@ -46,8 +46,7 @@ public class WindowManagerTraceMonitorTest {
     @After
     public void teardown() {
         mWindowManagerTraceMonitor.stop();
-        mWindowManagerTraceMonitor.getOutputTraceFilePath("captureWindowTrace",
-                0).toFile().delete();
+        mWindowManagerTraceMonitor.getOutputTraceFilePath("captureWindowTrace").toFile().delete();
     }
 
     @Test
@@ -68,7 +67,7 @@ public class WindowManagerTraceMonitorTest {
     public void captureWindowTrace() throws Exception {
         mWindowManagerTraceMonitor.start();
         mWindowManagerTraceMonitor.stop();
-        File testFile = mWindowManagerTraceMonitor.save("captureWindowTrace", 0).toFile();
+        File testFile = mWindowManagerTraceMonitor.save("captureWindowTrace").toFile();
         assertThat(testFile.exists()).isTrue();
         byte[] trace = Files.toByteArray(testFile);
         assertThat(trace.length).isGreaterThan(0);
