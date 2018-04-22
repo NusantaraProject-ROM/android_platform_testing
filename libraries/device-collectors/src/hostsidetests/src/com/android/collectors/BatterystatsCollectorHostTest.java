@@ -28,6 +28,8 @@ import com.android.tradefed.config.OptionSetter;
 import com.android.tradefed.device.metric.DeviceMetricData;
 import com.android.tradefed.device.metric.FilePullerDeviceMetricCollector;
 import com.android.tradefed.invoker.IInvocationContext;
+import com.android.tradefed.metrics.proto.MetricMeasurement.Measurements;
+import com.android.tradefed.metrics.proto.MetricMeasurement.Metric;
 import com.android.tradefed.result.CollectingTestListener;
 import com.android.tradefed.result.TestRunResult;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
@@ -90,7 +92,10 @@ public class BatterystatsCollectorHostTest extends BaseHostJUnit4Test {
             @Override
             public void processMetricFile(String key, File metricFile, DeviceMetricData runData) {
                 assertTrue(metricFile.getName().contains(BATTERYSTATS_PROTO));
-                runData.addStringMetric(key, metricFile.getAbsolutePath());
+
+                runData.addMetric(key, Metric.newBuilder().setMeasurements(
+                        Measurements.newBuilder().setSingleString(metricFile.getAbsolutePath())
+                                .build()));
                 try (
                         InputStream is = new BufferedInputStream(new FileInputStream(metricFile))
                 ) {
