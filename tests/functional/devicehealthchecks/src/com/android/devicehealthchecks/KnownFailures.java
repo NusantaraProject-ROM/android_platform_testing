@@ -44,11 +44,6 @@ public class KnownFailures {
                 Pattern.compile("^.*Process:.*com\\.android\\.vending.*$",
                     Pattern.MULTILINE),  // regex pattern
                 "77533385");  // bug number
-        addKnownFailure(
-                "system_app_anr",  // dropbox label
-                Pattern.compile("^.*Process:.*com\\.google\\.android\\.inputmethod\\.latin.*$",
-                    Pattern.MULTILINE),  // regex pattern
-                "72710325");  // bug number
      }
 
     /**
