@@ -26,6 +26,7 @@ import org.junit.Before;
 abstract class CrashCheckBase {
 
     private static final int MAX_DROPBOX_READ = 4096; // read up to 4K from a dropbox entry
+    private static final int MAX_CRASH_SNIPPET_LINES = 40;
     private static final String INCLUDE_KNOWN_FAILURES = "include_known_failures";
     private static final String LOG_TAG = CrashCheckBase.class.getSimpleName();
     private Context mContext;
@@ -70,11 +71,33 @@ abstract class CrashCheckBase {
                 crashCount++;
                 errorDetails.append(label);
                 errorDetails.append(": ");
-                errorDetails.append(dropboxSnippet.substring(0, 70));
+                errorDetails.append(truncate(dropboxSnippet, MAX_CRASH_SNIPPET_LINES));
                 errorDetails.append("    ...\n");
             }
             timestamp = entry.getTimeMillis();
         }
         Assert.assertEquals(errorDetails.toString(), 0, crashCount);
+    }
+
+    /**
+     * Truncate the text to at most the specified number of lines, and append a marker at the end
+     * when truncated
+     * @param text
+     * @param maxLines
+     * @return
+     */
+    private static String truncate(String text, int maxLines) {
+        String[] lines = text.split("\\r?\\n");
+        StringBuilder ret = new StringBuilder();
+        for (int i = 0; i < maxLines && i < lines.length; i++) {
+            ret.append(lines[i]);
+            ret.append('\n');
+        }
+        if (lines.length > maxLines) {
+            ret.append("... ");
+            ret.append(lines.length - maxLines);
+            ret.append(" more lines truncated ...\n");
+        }
+        return ret.toString();
     }
 }
