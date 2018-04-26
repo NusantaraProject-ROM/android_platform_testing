@@ -34,7 +34,8 @@ public interface IAutoSUWHelper {
     OTA_ACTIVITY("update.OtaUpdateActivity"),
     DATETIME_ACTIVITY("datetime.DateTimeActivity"),
     NAME_ACTIVITY("user.NameActivity"),
-    DONE_ACTIVITY("DoneActivity");
+    DONE_ACTIVITY("DoneActivity"),
+    CHOOSE_LOCK_TYPE_ACTIVITY("security.ChooseLockTypeActivity");
 
     private final String activityName;
 
