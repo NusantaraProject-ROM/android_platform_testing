@@ -27,7 +27,7 @@ import org.junit.runner.Runner;
  * A {@link Scheduler} for repeating tests a configurable number of times.
  */
 public class Iterate implements Scheduler {
-    static final String OPTION_NAME = "iterations";
+    public static final String OPTION_NAME = "iterations";
     private static final int DEFAULT_VALUE = 1;
 
     @Override
