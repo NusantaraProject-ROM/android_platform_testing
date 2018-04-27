@@ -14,6 +14,7 @@
 
 native_tests := \
     adbd_test \
+    backtrace_test \
     bionic-unit-tests \
     bionic-unit-tests-static \
     bluetoothtbd_test \
@@ -53,6 +54,7 @@ native_tests := \
     libbase_test \
     libcutils_test \
     libcutils_test_static \
+    libdemangle_test \
     libgui_test \
     libhidl_test \
     libinput_tests_InputChannel_test \
@@ -63,8 +65,10 @@ native_tests := \
     liblog-unit-tests \
     libminijail_unittest_gtest \
     libperfmgr_test \
+    libprocinfo_test \
     libtextclassifier_tests \
     libsurfaceflinger_unittest \
+    libunwindstack_test \
     libvintf_test \
     libwifi-system_tests \
     linker-unit-tests \
