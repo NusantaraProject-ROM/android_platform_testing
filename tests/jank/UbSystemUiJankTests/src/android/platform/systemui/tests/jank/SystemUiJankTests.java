@@ -166,17 +166,18 @@ public class SystemUiJankTests extends JankTestBase {
     }
 
     public static void openRecents(Context context, UiDevice device) {
-        if (device.findObject(By.res(SYSTEMUI_PACKAGE, "recent_apps")) == null) {
-            // Swipe from the Home button to approximately center of the screen.
-            UiObject2 homeButton = device.findObject(By.res(SYSTEMUI_PACKAGE, "home_button"));
-            homeButton.setGestureMargins(0, -homeButton.getVisibleBounds().bottom / 2, 0, 1);
-            homeButton.swipe(Direction.UP, 1);
+        final UiObject2 recentsButton = device.findObject(By.res(SYSTEMUI_PACKAGE, "recent_apps"));
+        if (recentsButton == null) {
+            int height = device.getDisplayHeight();
+            UiObject2 navBar = device.findObject(By.res(SYSTEMUI_PACKAGE, "navigation_bar_frame"));
+
+            // Swipe from nav bar to 2/3rd down the screen.
+            device.swipe(
+                    navBar.getVisibleBounds().centerX(), navBar.getVisibleBounds().centerY(),
+                    navBar.getVisibleBounds().centerX(), height * 2 / 3,
+                    (navBar.getVisibleBounds().centerY() - height * 2 / 3) / 100); // 100 px/step
         } else {
-            try {
-                device.pressRecentApps();
-            } catch (RemoteException e) {
-                throw new RuntimeException(e);
-            }
+            recentsButton.click();
         }
 
         // use a long timeout to wait until recents populated
