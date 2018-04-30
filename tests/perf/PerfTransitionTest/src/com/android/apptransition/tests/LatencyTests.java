@@ -368,15 +368,17 @@ public class LatencyTests {
     private UiObject2 pressUiRecentApps() throws RemoteException {
         final UiObject2 recentsButton = mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "recent_apps"));
         if (recentsButton == null) {
-            // Swipe from the Home button to approximately center of the screen.
-            UiObject2 homeButton = mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "home_button"));
-            homeButton.setGestureMargins(0, -homeButton.getVisibleBounds().bottom / 2, 0, 1);
-            homeButton.swipe(Direction.UP, 1);
+            int height = mDevice.getDisplayHeight();
+            UiObject2 navBar = mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "navigation_bar_frame"));
+
+            // Swipe from nav bar to 2/3rd down the screen.
+            mDevice.swipe(
+                    navBar.getVisibleBounds().centerX(), navBar.getVisibleBounds().centerY(),
+                    navBar.getVisibleBounds().centerX(), height * 2 / 3,
+                    (navBar.getVisibleBounds().centerY() - height * 2 / 3) / 100); // 100 px/step
         } else {
             recentsButton.click();
         }
-
-        mDevice.waitForIdle();
 
         final UiObject2 recentsView = mDevice.wait(
                 Until.findObject(isRecentsInLauncher() ? getLauncherOverviewSelector() : RECENTS),
@@ -385,6 +387,7 @@ public class LatencyTests {
         if (recentsView == null) {
             throw new RuntimeException("Recents didn't appear");
         }
+        mDevice.waitForIdle();
         return recentsView;
     }
 

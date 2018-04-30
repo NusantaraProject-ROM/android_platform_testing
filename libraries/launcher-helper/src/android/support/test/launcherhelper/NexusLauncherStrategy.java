@@ -19,6 +19,7 @@ import android.graphics.Point;
 import android.os.Build;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
+import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
 
@@ -105,5 +106,30 @@ public class NexusLauncherStrategy extends BaseLauncher3Strategy {
         UiObject2 allAppsContainer = mDevice.wait(Until.findObject(getAllAppsSelector()), 2500);
         Assert.assertNotNull("openAllApps: did not find all apps container", allAppsContainer);
         return allAppsContainer;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public UiObject2 openAllWidgets(boolean reset) {
+        if (!mDevice.hasObject(getAllWidgetsSelector())) {
+            open();
+            // trigger the wallpapers/widgets/settings view
+            mDevice.pressMenu();
+            mDevice.waitForIdle();
+            UiObject2 optionsPopup = mDevice.findObject(
+                    By.res(getSupportedLauncherPackage(), "deep_shortcuts_container"));
+            optionsPopup.findObject(By.text("Widgets")).click();
+        }
+        UiObject2 allWidgetsContainer = mDevice.wait(
+                Until.findObject(getAllWidgetsSelector()), 2000);
+        Assert.assertNotNull("openAllWidgets: did not find all widgets container",
+                allWidgetsContainer);
+        if (reset) {
+            CommonLauncherHelper.getInstance(mDevice).scrollBackToBeginning(
+                    allWidgetsContainer, Direction.reverse(getAllWidgetsScrollDirection()));
+        }
+        return allWidgetsContainer;
     }
 }
