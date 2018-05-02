@@ -80,6 +80,10 @@ public class NexusLauncherStrategy extends BaseLauncher3Strategy {
                 getLauncherOverviewSelector()) || reset) {
             // Restart from the launcher home screen.
             open();
+            mDevice.waitForIdle();
+            Assert.assertTrue("openAllApps: can't go to home screen",
+                    !mDevice.hasObject(getAllAppsSelector()) && !mDevice.hasObject(
+                            getLauncherOverviewSelector()));
             if (Build.VERSION.FIRST_SDK_INT >= Build.VERSION_CODES.O) {
                 int midX = mDevice.getDisplayWidth() / 2;
                 int height = mDevice.getDisplayHeight();
