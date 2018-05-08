@@ -15,14 +15,22 @@
  */
 package android.longevity.platform;
 
+import android.app.Instrumentation;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.longevity.platform.listener.BatteryTerminator;
 import android.longevity.platform.listener.ErrorTerminator;
 import android.longevity.platform.listener.TimeoutTerminator;
+import android.os.BatteryManager;
 import android.os.Bundle;
+import android.support.annotation.VisibleForTesting;
 import android.support.test.InstrumentationRegistry;
 import android.util.Log;
+
 import java.util.HashMap;
 import java.util.Map;
+
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
@@ -34,6 +42,9 @@ import org.junit.runners.model.RunnerBuilder;
  */
 public final class LongevitySuite extends android.longevity.core.LongevitySuite {
     private static final String LOG_TAG = LongevitySuite.class.getSimpleName();
+
+    private Instrumentation mInstrumentation;
+    private Context mContext;
 
     /**
      * Takes a {@link Bundle} and maps all String K/V pairs into a {@link Map<String, String>}.
@@ -59,14 +70,28 @@ public final class LongevitySuite extends android.longevity.core.LongevitySuite 
      */
     public LongevitySuite(Class<?> klass, RunnerBuilder builder)
             throws InitializationError {
-        super(klass, builder, toMap(InstrumentationRegistry.getArguments()));
+        this(klass, builder, InstrumentationRegistry.getInstrumentation(),
+                InstrumentationRegistry.getContext(), InstrumentationRegistry.getArguments());
+    }
+
+    /**
+     * Used to pass in mock-able Android features for testing.
+     */
+    @VisibleForTesting
+    public LongevitySuite(Class<?> klass, RunnerBuilder builder,
+            Instrumentation instrumentation, Context context, Bundle arguments)
+            throws InitializationError {
+        super(klass, builder, toMap(arguments));
+        mInstrumentation = instrumentation;
+        mContext = context;
     }
 
     @Override
     public void run(final RunNotifier notifier) {
-        // Register the battery terminator available only on the platform library.
-        notifier.addListener(
-                new BatteryTerminator(notifier, mArguments, InstrumentationRegistry.getContext()));
+        // Register the battery terminator available only on the platform library, if present.
+        if (hasBattery()) {
+            notifier.addListener(new BatteryTerminator(notifier, mArguments, mContext));
+        }
         // Register other listeners and continue with standard longevity run.
         super.run(notifier);
     }
@@ -87,5 +112,14 @@ public final class LongevitySuite extends android.longevity.core.LongevitySuite 
     public android.longevity.core.listener.TimeoutTerminator getTimeoutTerminator(
             final RunNotifier notifier) {
         return new TimeoutTerminator(notifier, mArguments);
+    }
+
+    /**
+     * Determines if the device has a battery attached.
+     */
+    private boolean hasBattery () {
+        final Intent batteryInfo =
+                mContext.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        return batteryInfo.getBooleanExtra(BatteryManager.EXTRA_PRESENT, true);
     }
 }
