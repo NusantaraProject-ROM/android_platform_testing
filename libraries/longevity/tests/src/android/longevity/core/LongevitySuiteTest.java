@@ -54,7 +54,7 @@ public class LongevitySuiteTest {
     private static class NoSuiteClassesSuite { }
 
     /**
-     *
+     * Tests that the {@link LongevitySuite} properly accounts for the number of tests in children.
      */
     @Test
     public void testChildAccounting() throws InitializationError {
