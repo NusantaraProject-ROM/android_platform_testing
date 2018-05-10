@@ -27,5 +27,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD, ElementType.TYPE})
 public @interface AppModeFull {
+    /**
+     * The reason why the test has to be run in full mode
+     */
+    String reason() default "";
 }
 
