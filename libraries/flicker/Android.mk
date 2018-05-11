@@ -29,6 +29,8 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
    platformprotosnano \
    layersprotosnano \
    truth-prebuilt \
+   sysui-helper \
+   launcher-helper-lib \
 
 include $(BUILD_STATIC_JAVA_LIBRARY)
 include $(call all-makefiles-under,$(LOCAL_PATH))

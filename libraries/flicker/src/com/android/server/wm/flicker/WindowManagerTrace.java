@@ -16,6 +16,8 @@
 
 package com.android.server.wm.flicker;
 
+import android.annotation.Nullable;
+
 import com.android.server.wm.flicker.Assertions.Result;
 import com.android.server.wm.nano.AppWindowTokenProto;
 import com.android.server.wm.nano.StackProto;
@@ -27,6 +29,7 @@ import com.android.server.wm.nano.WindowTokenProto;
 
 import com.google.protobuf.nano.InvalidProtocolBufferNanoException;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -40,18 +43,22 @@ import java.util.Optional;
 public class WindowManagerTrace {
     private static final int DEFAULT_DISPLAY = 0;
     private final List<Entry> mEntries;
+    @Nullable
+    final private Path mSource;
 
-    private WindowManagerTrace(List<Entry> entries) {
+    private WindowManagerTrace(List<Entry> entries, Path source) {
         this.mEntries = entries;
+        this.mSource = source;
     }
 
     /**
      * Parses {@code WindowManagerTraceFileProto} from {@code data} and uses the proto to
      * generates a list of trace entries.
      *
-     * @param data binary proto data
+     * @param data   binary proto data
+     * @param source Path to source of data for additional debug information
      */
-    static WindowManagerTrace parseFrom(byte[] data) {
+    static WindowManagerTrace parseFrom(byte[] data, Path source) {
         List<Entry> entries = new ArrayList<>();
 
         WindowManagerTraceFileProto fileProto;
@@ -63,7 +70,11 @@ public class WindowManagerTrace {
         for (WindowManagerTraceProto entryProto : fileProto.entry) {
             entries.add(new Entry(entryProto));
         }
-        return new WindowManagerTrace(entries);
+        return new WindowManagerTrace(entries, source);
+    }
+
+    static WindowManagerTrace parseFrom(byte[] data) {
+        return parseFrom(data, null);
     }
 
     public List<Entry> getEntries() {
@@ -78,6 +89,10 @@ public class WindowManagerTrace {
             throw new RuntimeException("Entry does not exist for timestamp " + timestamp);
         }
         return entry.get();
+    }
+
+    Optional<Path> getSource() {
+        return Optional.ofNullable(mSource);
     }
 
     /**
@@ -126,13 +141,17 @@ public class WindowManagerTrace {
         /**
          * Returns window title of the top most visible app window.
          */
-        private String getTopAppWindow() {
+        private String getTopVisibleAppWindow() {
             StackProto[] stacks = mProto.windowManagerService.rootWindowContainer
                     .displays[DEFAULT_DISPLAY].stacks;
             for (StackProto stack : stacks) {
                 for (TaskProto task : stack.tasks) {
-                    if (task.appWindowTokens.length > 0) {
-                        return task.appWindowTokens[0].name;
+                    for (AppWindowTokenProto token : task.appWindowTokens) {
+                        for (WindowStateProto windowState : token.windowToken.windows) {
+                            if (windowState.windowContainer.visible) {
+                                return task.appWindowTokens[0].name;
+                            }
+                        }
                     }
                 }
             }
@@ -178,8 +197,8 @@ public class WindowManagerTrace {
         /**
          * Checks if app window with {@code windowTitle} is on top.
          */
-        Result isAppWindowOnTop(String windowTitle) {
-            String topAppWindow = getTopAppWindow();
+        Result isVisibleAppWindowOnTop(String windowTitle) {
+            String topAppWindow = getTopVisibleAppWindow();
             boolean success = topAppWindow.contains(windowTitle);
             String reason = "wanted=" + windowTitle + " found=" + topAppWindow;
             return new Result(success, getTimestamp(), "isAppWindowOnTop", reason);
