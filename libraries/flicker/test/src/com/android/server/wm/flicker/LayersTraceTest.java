@@ -47,7 +47,7 @@ public class LayersTraceTest {
         }
     }
 
-    private static Rect getDisplaySize() {
+    private static Rect getDisplayBounds() {
         Point display = new Point();
         WindowManager wm =
                 (WindowManager) InstrumentationRegistry.getContext().getSystemService(
@@ -125,7 +125,7 @@ public class LayersTraceTest {
                 "layers_trace_emptyregion.pb");
         LayersTrace.Entry entry = trace.getEntry(2308008331271L);
 
-        Assertions.Result result = entry.coversRegion(getDisplaySize());
+        Assertions.Result result = entry.coversRegion(getDisplayBounds());
 
         assertThat(result.failed()).isTrue();
         assertThat(result.reason).contains("Region to test: Rect(0, 0 - 1440, 2880)");

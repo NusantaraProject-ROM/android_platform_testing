@@ -92,14 +92,14 @@ public class WindowManagerTraceTest {
     @Test
     public void canDetectAppZOrder() {
         WindowManagerTrace.Entry entry = mTrace.getEntry(241778130296410L);
-        Result result = entry.isAppWindowOnTop("com.google.android.apps.chrome");
+        Result result = entry.isVisibleAppWindowOnTop("com.google.android.apps.chrome");
         assertThat(result.passed()).isTrue();
     }
 
     @Test
     public void canFailWithReasonForZOrderChecks_windowNotOnTop() {
         WindowManagerTrace.Entry entry = mTrace.getEntry(241778130296410L);
-        Result result = entry.isAppWindowOnTop("com.google.android.apps.nexuslauncher");
+        Result result = entry.isVisibleAppWindowOnTop("com.google.android.apps.nexuslauncher");
         assertThat(result.failed()).isTrue();
         assertThat(result.reason).contains("wanted=com.google.android.apps.nexuslauncher");
         assertThat(result.reason).contains("found=com.android.chrome/"

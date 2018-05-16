@@ -27,6 +27,8 @@ import android.graphics.Rect;
 
 import org.junit.Test;
 
+import java.nio.file.Paths;
+
 /**
  * Contains {@link LayersTraceSubject} tests.
  * To run this test: {@code atest FlickerLibTest:LayersTraceSubjectTest}
@@ -36,7 +38,7 @@ public class LayersTraceSubjectTest {
 
     private static LayersTrace readLayerTraceFromFile(String relativePath) {
         try {
-            return LayersTrace.parseFrom(readTestFile(relativePath));
+            return LayersTrace.parseFrom(readTestFile(relativePath), Paths.get(relativePath));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -49,6 +51,8 @@ public class LayersTraceSubjectTest {
             assertThat(layersTraceEntries).coversRegion(displayRect).forAllEntries();
             fail("Assertion passed");
         } catch (AssertionError e) {
+            assertWithMessage("Contains path to trace")
+                    .that(e.getMessage()).contains("layers_trace_emptyregion.pb");
             assertWithMessage("Contains timestamp")
                     .that(e.getMessage()).contains("2308008331271");
             assertWithMessage("Contains assertion function")

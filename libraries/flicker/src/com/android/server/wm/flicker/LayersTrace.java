@@ -27,6 +27,7 @@ import android.util.SparseArray;
 
 import com.android.server.wm.flicker.Assertions.Result;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -41,18 +42,22 @@ import java.util.stream.Collectors;
  */
 public class LayersTrace {
     final private List<Entry> mEntries;
+    @Nullable
+    final private Path mSource;
 
-    private LayersTrace(List<Entry> entries) {
+    private LayersTrace(List<Entry> entries, Path source) {
         this.mEntries = entries;
+        this.mSource = source;
     }
 
     /**
      * Parses {@code LayersTraceFileProto} from {@code data} and uses the proto to generates a list
      * of trace entries, storing the flattened layers into its hierarchical structure.
      *
-     * @param data binary proto data
+     * @param data   binary proto data
+     * @param source Path to source of data for additional debug information
      */
-    static LayersTrace parseFrom(byte[] data) {
+    static LayersTrace parseFrom(byte[] data, Path source) {
         List<Entry> entries = new ArrayList<>();
         LayersTraceFileProto fileProto;
         try {
@@ -65,7 +70,17 @@ public class LayersTrace {
                     traceProto.layers.layers);
             entries.add(entry);
         }
-        return new LayersTrace(entries);
+        return new LayersTrace(entries, source);
+    }
+
+    /**
+     * Parses {@code LayersTraceFileProto} from {@code data} and uses the proto to generates a list
+     * of trace entries, storing the flattened layers into its hierarchical structure.
+     *
+     * @param data binary proto data
+     */
+    static LayersTrace parseFrom(byte[] data) {
+        return parseFrom(data, null);
     }
 
     List<Entry> getEntries() {
@@ -80,6 +95,10 @@ public class LayersTrace {
             throw new RuntimeException("Entry does not exist for timestamp " + timestamp);
         }
         return entry.get();
+    }
+
+    Optional<Path> getSource() {
+        return Optional.ofNullable(mSource);
     }
 
     /**
