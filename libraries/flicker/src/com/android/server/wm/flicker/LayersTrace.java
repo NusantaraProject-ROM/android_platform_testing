@@ -229,17 +229,14 @@ public class LayersTrace {
             String reason = "Could not find " + layerName;
             for (Layer layer : asFlattenedLayers()) {
                 if (layer.mProto.name.contains(layerName)) {
-                    if (layer.isInvisible()) {
-                        reason = "Layer " + layer.mProto.name + " is not visible: "
-                                + layer.getVisibilityReason();
-                        continue;
-                    }
                     if (layer.isHiddenByParent()) {
-                        reason = "Layer " + layer.mProto.name + " is hidden by parent: "
-                                + layer.mParent.mProto.name;
+                        reason = layer.getHiddenByParentReason();
                         continue;
                     }
-
+                    if (layer.isInvisible()) {
+                        reason = layer.getVisibilityReason();
+                        continue;
+                    }
                     Rect visibleRegion = extract(layer.mProto.visibleRegion);
                     if (visibleRegion.equals(expectedVisibleRegion)) {
                         return new Result(true /* success */, this.mTimestamp, assertionName,
@@ -247,6 +244,29 @@ public class LayersTrace {
                     }
                     reason = layer.mProto.name + " has visible region:" + visibleRegion + " "
                             + "expected:" + expectedVisibleRegion;
+                }
+            }
+            return new Result(false /* success */, this.mTimestamp, assertionName, reason);
+        }
+
+        /**
+         * Checks if a layer with name {@code layerName} is visible.
+         */
+        Result isVisible(String layerName) {
+            String assertionName = "isVisible";
+            String reason = "Could not find " + layerName;
+            for (Layer layer : asFlattenedLayers()) {
+                if (layer.mProto.name.contains(layerName)) {
+                    if (layer.isHiddenByParent()) {
+                        reason = layer.getHiddenByParentReason();
+                        continue;
+                    }
+                    if (layer.isInvisible()) {
+                        reason = layer.getVisibilityReason();
+                        continue;
+                    }
+                    return new Result(true /* success */, this.mTimestamp, assertionName,
+                            layer.mProto.name + " is visible");
                 }
             }
             return new Result(false /* success */, this.mTimestamp, assertionName, reason);
@@ -307,13 +327,21 @@ public class LayersTrace {
                     || this.mProto.activeBuffer.width == 0;
         }
 
+        boolean isVisibleRegionEmpty() {
+            if (this.mProto.visibleRegion == null) {
+                return true;
+            }
+            Rect visibleRect = Entry.extract(this.mProto.visibleRegion);
+            return visibleRect.height() == 0 || visibleRect.width() == 0;
+        }
+
         boolean isHidden() {
             return (this.mProto.flags & /* FLAG_HIDDEN */ 0x1) != 0x0;
         }
 
         boolean isVisible() {
             return (!isActiveBufferEmpty() || isColorLayer()) &&
-                    !isHidden() && this.mProto.color.a > 0;
+                    !isHidden() && this.mProto.color.a > 0 && !isVisibleRegionEmpty();
         }
 
         boolean isColorLayer() {
@@ -332,12 +360,22 @@ public class LayersTrace {
             return !isRootLayer() && (mParent.isHidden() || mParent.isHiddenByParent());
         }
 
-        String getVisibilityReason() {
-            String reason;
-            if (isVisible()) {
-                reason = "Visible";
+        String getHiddenByParentReason() {
+            String reason = "Layer " + mProto.name;
+            if (isHiddenByParent()) {
+                reason += " is hidden by parent: " + mParent.mProto.name;
             } else {
-                reason = "Invisible ";
+                reason += " is not hidden by parent: " + mParent.mProto.name;
+            }
+            return reason;
+        }
+
+        String getVisibilityReason() {
+            String reason = "Layer " + mProto.name;
+            if (isVisible()) {
+                reason += " is visible:";
+            } else {
+                reason += " is invisible:";
                 if (this.mProto.activeBuffer == null) {
                     reason += " activeBuffer=null";
                 } else if (this.mProto.activeBuffer.height == 0) {
@@ -353,6 +391,9 @@ public class LayersTrace {
                 }
                 if (this.mProto.color.a == 0) {
                     reason += " color.a=0";
+                }
+                if (isVisibleRegionEmpty()) {
+                    reason += " visible region is empty";
                 }
             }
             return reason;

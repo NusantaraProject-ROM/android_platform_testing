@@ -63,4 +63,26 @@ public class LayersTraceSubjectTest {
                     .that(e.getMessage()).contains("first empty point: 0, 99");
         }
     }
+
+    @Test
+    public void testCanDetectIncorrectVisibilityFromLayerTrace() {
+        LayersTrace layersTraceEntries = readLayerTraceFromFile(
+                "layers_trace_invalid_layer_visibility.pb");
+        try {
+            assertThat(layersTraceEntries).showsLayer("com.android.server.wm.flicker.testapp")
+                    .then().hidesLayer("com.android.server.wm.flicker.testapp").forAllEntries();
+            fail("Assertion passed");
+        } catch (AssertionError e) {
+            assertWithMessage("Contains path to trace")
+                    .that(e.getMessage()).contains("layers_trace_invalid_layer_visibility.pb");
+            assertWithMessage("Contains timestamp")
+                    .that(e.getMessage()).contains("252794303064971");
+            assertWithMessage("Contains assertion function")
+                    .that(e.getMessage()).contains("!isVisible");
+            assertWithMessage("Contains debug info")
+                    .that(e.getMessage()).contains(
+                    "com.android.server.wm.flicker.testapp/com.android.server.wm.flicker.testapp"
+                            + ".SimpleActivity#0 is visible");
+        }
+    }
 }

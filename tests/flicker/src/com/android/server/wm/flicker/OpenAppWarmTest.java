@@ -79,4 +79,25 @@ public class OpenAppWarmTest extends FlickerTestBase {
         checkResults(result -> LayersTraceSubject.assertThat(result).coversRegion(
                 getDisplayBounds()).forAllEntries());
     }
+
+    @Test
+    public void checkVisibility_navBarLayerIsAlwaysVisible() {
+        checkResults(result -> LayersTraceSubject.assertThat(result)
+                .showsLayer(NAVIGATION_BAR_WINDOW_TITLE).forAllEntries());
+    }
+
+    @Test
+    public void checkVisibility_statusBarLayerIsAlwaysVisible() {
+        checkResults(result -> LayersTraceSubject.assertThat(result)
+                .showsLayer(STATUS_BAR_WINDOW_TITLE).forAllEntries());
+    }
+
+    @Test
+    public void checkVisibility_wallpaperLayerBecomesInvisible() {
+        checkResults(result -> LayersTraceSubject.assertThat(result)
+                .showsLayer("wallpaper")
+                .then()
+                .hidesLayer("wallpaper")
+                .forAllEntries());
+    }
 }

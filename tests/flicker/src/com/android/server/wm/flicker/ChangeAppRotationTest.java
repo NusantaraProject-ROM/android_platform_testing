@@ -81,19 +81,19 @@ public class ChangeAppRotationTest extends FlickerTestBase {
     }
 
     @Test
-    public void checkVisibility_navBarIsAlwaysVisible() {
+    public void checkVisibility_navBarWindowIsAlwaysVisible() {
         checkResults(result -> assertThat(result)
                 .showsAboveAppWindow(NAVIGATION_BAR_WINDOW_TITLE).forAllEntries());
     }
 
     @Test
-    public void checkVisibility_statusBarIsAlwaysVisible() {
+    public void checkVisibility_statusBarWindowIsAlwaysVisible() {
         checkResults(result -> assertThat(result)
                 .showsAboveAppWindow(STATUS_BAR_WINDOW_TITLE).forAllEntries());
     }
 
     @Test
-    public void checkPosition_navBarRotatesAndScales() {
+    public void checkPosition_navBarLayerRotatesAndScales() {
         Rect startingPos = getNavigationBarPosition(beginRotation);
         Rect endingPos = getNavigationBarPosition(endRotation);
         checkResults(result -> {
@@ -107,7 +107,7 @@ public class ChangeAppRotationTest extends FlickerTestBase {
     }
 
     @Test
-    public void checkPosition_appRotates() {
+    public void checkPosition_appLayerRotates() {
         Rect startingPos = getAppPosition(beginRotation);
         Rect endingPos = getAppPosition(endRotation);
         Log.e(TAG, "startingPos=" + startingPos + " endingPos=" + endingPos);
@@ -121,7 +121,7 @@ public class ChangeAppRotationTest extends FlickerTestBase {
     }
 
     @Test
-    public void checkPosition_statusBarScales() {
+    public void checkPosition_statusBarLayerScales() {
         Rect startingPos = getStatusBarPosition(beginRotation);
         Rect endingPos = getStatusBarPosition(endRotation);
         checkResults(result -> {
@@ -132,5 +132,17 @@ public class ChangeAppRotationTest extends FlickerTestBase {
                             .hasVisibleRegion(STATUS_BAR_WINDOW_TITLE, endingPos).atTheEnd();
                 }
         );
+    }
+
+    @Test
+    public void checkVisibility_navBarLayerIsAlwaysVisible() {
+        checkResults(result -> LayersTraceSubject.assertThat(result)
+                .showsLayer(NAVIGATION_BAR_WINDOW_TITLE).forAllEntries());
+    }
+
+    @Test
+    public void checkVisibility_statusBarLayerIsAlwaysVisible() {
+        checkResults(result -> LayersTraceSubject.assertThat(result)
+                .showsLayer(STATUS_BAR_WINDOW_TITLE).forAllEntries());
     }
 }
