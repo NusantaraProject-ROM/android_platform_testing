@@ -60,7 +60,8 @@ public class LayersTraceSubject extends Subject<LayersTraceSubject, LayersTrace>
 
     // User-defined entry point
     public static LayersTraceSubject assertThat(@Nullable TransitionResult result) {
-        LayersTrace entries = LayersTrace.parseFrom(result.getLayersTrace());
+        LayersTrace entries = LayersTrace.parseFrom(result.getLayersTrace(),
+                result.getLayersTracePath());
         return assertWithMessage(result.toString()).about(FACTORY).that(entries);
     }
 
@@ -102,7 +103,14 @@ public class LayersTraceSubject extends Subject<LayersTraceSubject, LayersTrace>
     private void test() {
         List<Result> failures = mChecker.test(getSubject().getEntries());
         if (!failures.isEmpty()) {
-            fail(failures.stream().map(Result::toString).collect(Collectors.joining("\n")));
+            String failureLogs = failures.stream().map(Result::toString)
+                    .collect(Collectors.joining("\n"));
+            String tracePath = "";
+            if (getSubject().getSource().isPresent()) {
+                tracePath = "\nLayers Trace can be found in: "
+                        + getSubject().getSource().get().toAbsolutePath() + "\n";
+            }
+            fail(tracePath + failureLogs);
         }
     }
 

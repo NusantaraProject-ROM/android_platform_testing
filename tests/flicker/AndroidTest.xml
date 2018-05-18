@@ -2,7 +2,7 @@
 <!--
  * Copyright 2018 Google Inc. All Rights Reserved.
  -->
-<configuration description="Config for WindowManager Flicker Tests">
+<configuration description="Runs WindowManager Flicker Tests">
     <target_preparer class="com.google.android.tradefed.targetprep.GoogleDeviceSetup">
         <!-- keeps the screen on during tests -->
         <option name="screen-always-on" value="on" />
@@ -11,7 +11,8 @@
     </target_preparer>
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
-        <option name="test-file-name" value="FlickerLibTest.apk"/>
+        <option name="test-file-name" value="FlickerTest.apk"/>
+        <option name="test-file-name" value="FlickerApp.apk" />
     </target_preparer>
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
         <option name="package" value="com.android.server.wm.flicker"/>

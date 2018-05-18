@@ -217,6 +217,10 @@ class TransitionRunner {
         return mPerRunMonitors.contains(mFrameStatsMonitor);
     }
 
+    public String getTestTag() {
+        return mTestTag;
+    }
+
     /**
      * Stores paths to all test artifacts.
      */

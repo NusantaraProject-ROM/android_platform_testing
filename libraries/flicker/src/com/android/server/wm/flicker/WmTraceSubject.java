@@ -28,7 +28,9 @@ import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
 
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -58,7 +60,8 @@ public class WmTraceSubject extends Subject<WmTraceSubject, WindowManagerTrace> 
 
     // User-defined entry point
     public static WmTraceSubject assertThat(@Nullable TransitionResult result) {
-        WindowManagerTrace entries = WindowManagerTrace.parseFrom(result.getWindowManagerTrace());
+        WindowManagerTrace entries = WindowManagerTrace.parseFrom(result.getWindowManagerTrace(),
+                result.getWindowManagerTracePath());
         return assertWithMessage(result.toString()).about(FACTORY).that(entries);
     }
 
@@ -100,7 +103,15 @@ public class WmTraceSubject extends Subject<WmTraceSubject, WindowManagerTrace> 
     private void test() {
         List<Result> failures = mChecker.test(getSubject().getEntries());
         if (!failures.isEmpty()) {
-            fail(failures.stream().map(Result::toString).collect(Collectors.joining("\n")));
+            Optional<Path> failureTracePath = getSubject().getSource();
+            String failureLogs = failures.stream().map(Result::toString)
+                    .collect(Collectors.joining("\n"));
+            String tracePath = "";
+            if (failureTracePath.isPresent()) {
+                tracePath = "\nWindowManager Trace can be found in: "
+                        + failureTracePath.get().toAbsolutePath() + "\n";
+            }
+            fail(tracePath + failureLogs);
         }
     }
 
@@ -145,7 +156,7 @@ public class WmTraceSubject extends Subject<WmTraceSubject, WindowManagerTrace> 
                 entry -> {
                     Result result = entry.isAppWindowVisible(partialWindowTitle);
                     if (result.passed()) {
-                        result = entry.isAppWindowOnTop(partialWindowTitle);
+                        result = entry.isVisibleAppWindowOnTop(partialWindowTitle);
                     }
                     return result;
                 },
@@ -158,8 +169,8 @@ public class WmTraceSubject extends Subject<WmTraceSubject, WindowManagerTrace> 
         mChecker.add(
                 entry -> {
                     Result result = entry.isAppWindowVisible(partialWindowTitle).negate();
-                    if (result.passed()) {
-                        result = entry.isAppWindowOnTop(partialWindowTitle).negate();
+                    if (result.failed()) {
+                        result = entry.isVisibleAppWindowOnTop(partialWindowTitle).negate();
                     }
                     return result;
                 },

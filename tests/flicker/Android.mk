@@ -17,20 +17,18 @@
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
-LOCAL_MODULE := flickerlib
+LOCAL_PACKAGE_NAME := FlickerTest
 LOCAL_MODULE_TAGS := tests optional
-# sign this with platform cert, so this test is allowed to call private platform apis
-LOCAL_CERTIFICATE := platform
-LOCAL_PRIVATE_PLATFORM_APIS := true
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
-LOCAL_STATIC_JAVA_LIBRARIES := \
-   ub-janktesthelper \
-   cts-amwm-util \
-   platformprotosnano \
-   layersprotosnano \
-   truth-prebuilt \
-   sysui-helper \
-   launcher-helper-lib \
+LOCAL_PRIVATE_PLATFORM_APIS := true
+LOCAL_CERTIFICATE := platform
+LOCAL_COMPATIBILITY_SUITE := tests
 
-include $(BUILD_STATIC_JAVA_LIBRARY)
+LOCAL_JAVA_LIBRARIES := android.test.runner
+LOCAL_STATIC_JAVA_LIBRARIES := \
+    flickerlib \
+    truth-prebuilt \
+    app-helpers-core
+
+include $(BUILD_PACKAGE)
 include $(call all-makefiles-under,$(LOCAL_PATH))
