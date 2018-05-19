@@ -44,19 +44,19 @@ public class OpenAppColdTest extends FlickerTestBase {
     }
 
     @Test
-    public void checkVisibility_navBarIsAlwaysVisible() {
+    public void checkVisibility_navBarWindowIsAlwaysVisible() {
         checkResults(result -> assertThat(result)
                 .showsAboveAppWindow(NAVIGATION_BAR_WINDOW_TITLE).forAllEntries());
     }
 
     @Test
-    public void checkVisibility_statusBarIsAlwaysVisible() {
+    public void checkVisibility_statusBarWindowIsAlwaysVisible() {
         checkResults(result -> assertThat(result)
                 .showsAboveAppWindow(STATUS_BAR_WINDOW_TITLE).forAllEntries());
     }
 
     @Test
-    public void checkVisibility_wallpaperBecomesInvisible() {
+    public void checkVisibility_wallpaperWindowBecomesInvisible() {
         checkResults(result -> assertThat(result)
                 .showsBelowAppWindow("wallpaper")
                 .then()
@@ -78,5 +78,26 @@ public class OpenAppColdTest extends FlickerTestBase {
     public void checkCoveredRegion_noUncoveredRegions() {
         checkResults(result -> LayersTraceSubject.assertThat(result).coversRegion(
                 getDisplayBounds()).forAllEntries());
+    }
+
+    @Test
+    public void checkVisibility_navBarLayerIsAlwaysVisible() {
+        checkResults(result -> LayersTraceSubject.assertThat(result)
+                .showsLayer(NAVIGATION_BAR_WINDOW_TITLE).forAllEntries());
+    }
+
+    @Test
+    public void checkVisibility_statusBarLayerIsAlwaysVisible() {
+        checkResults(result -> LayersTraceSubject.assertThat(result)
+                .showsLayer(STATUS_BAR_WINDOW_TITLE).forAllEntries());
+    }
+
+    @Test
+    public void checkVisibility_wallpaperLayerBecomesInvisible() {
+        checkResults(result -> LayersTraceSubject.assertThat(result)
+                .showsLayer("wallpaper")
+                .then()
+                .hidesLayer("wallpaper")
+                .forAllEntries());
     }
 }

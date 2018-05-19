@@ -122,7 +122,19 @@ public class LayersTraceSubject extends Subject<LayersTraceSubject, LayersTrace>
 
     public LayersTraceSubject hasVisibleRegion(String layerName, Rect size) {
         mChecker.add(entry -> entry.hasVisibleRegion(layerName, size),
-                "hasVisibleRegion(" + size + ")");
+                "hasVisibleRegion(" + layerName + size + ")");
+        return this;
+    }
+
+    public LayersTraceSubject showsLayer(String layerName) {
+        mChecker.add(entry -> entry.isVisible(layerName),
+                "showsLayer(" + layerName + ")");
+        return this;
+    }
+
+    public LayersTraceSubject hidesLayer(String layerName) {
+        mChecker.add(entry -> entry.isVisible(layerName).negate(),
+                "hidesLayer(" + layerName + ")");
         return this;
     }
 }

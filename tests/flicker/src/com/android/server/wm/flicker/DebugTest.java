@@ -80,4 +80,14 @@ public class DebugTest {
         CommonTransitions.appToSplitScreen(testApp, uiDevice).includeJankyRuns().recordAllRuns()
                 .build().run();
     }
+
+    /**
+     * atest FlickerTest:DebugTest#splitScreenToLauncher
+     */
+    @Test
+    public void splitScreenToLauncher() {
+        CommonTransitions.splitScreenToLauncher(testApp,
+                uiDevice).includeJankyRuns().recordAllRuns()
+                .build().run();
+    }
 }

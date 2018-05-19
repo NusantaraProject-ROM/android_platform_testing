@@ -18,7 +18,6 @@ package com.android.server.wm.flicker;
 
 import static com.android.server.wm.flicker.CommonTransitions.appToSplitScreen;
 import static com.android.server.wm.flicker.WindowUtils.getDisplayBounds;
-import static com.android.server.wm.flicker.WmTraceSubject.assertThat;
 
 import android.support.test.InstrumentationRegistry;
 
@@ -44,20 +43,20 @@ public class OpenAppToSplitScreenTest extends FlickerTestBase {
     }
 
     @Test
-    public void checkVisibility_navBarIsAlwaysVisible() {
-        checkResults(result -> assertThat(result)
+    public void checkVisibility_navBarWindowIsAlwaysVisible() {
+        checkResults(result -> WmTraceSubject.assertThat(result)
                 .showsAboveAppWindow(NAVIGATION_BAR_WINDOW_TITLE).forAllEntries());
     }
 
     @Test
-    public void checkVisibility_statusBarIsAlwaysVisible() {
-        checkResults(result -> assertThat(result)
+    public void checkVisibility_statusBarWindowIsAlwaysVisible() {
+        checkResults(result -> WmTraceSubject.assertThat(result)
                 .showsAboveAppWindow(STATUS_BAR_WINDOW_TITLE).forAllEntries());
     }
 
     @Test
-    public void checkVisibility_dividerBecomesVisible() {
-        checkResults(result -> assertThat(result)
+    public void checkVisibility_dividerWindowBecomesVisible() {
+        checkResults(result -> WmTraceSubject.assertThat(result)
                 .hidesAboveAppWindow("DockedStackDivider")
                 .then()
                 .showsAboveAppWindow("DockedStackDivider")
@@ -69,5 +68,26 @@ public class OpenAppToSplitScreenTest extends FlickerTestBase {
         checkResults(result ->
                 LayersTraceSubject.assertThat(result)
                         .coversRegion(getDisplayBounds()).forAllEntries());
+    }
+
+    @Test
+    public void checkVisibility_navBarLayerIsAlwaysVisible() {
+        checkResults(result -> LayersTraceSubject.assertThat(result)
+                .showsLayer(NAVIGATION_BAR_WINDOW_TITLE).forAllEntries());
+    }
+
+    @Test
+    public void checkVisibility_statusBarLayerIsAlwaysVisible() {
+        checkResults(result -> LayersTraceSubject.assertThat(result)
+                .showsLayer(STATUS_BAR_WINDOW_TITLE).forAllEntries());
+    }
+
+    @Test
+    public void checkVisibility_dividerLayerBecomesVisible() {
+        checkResults(result -> LayersTraceSubject.assertThat(result)
+                .hidesLayer("DockedStackDivider")
+                .then()
+                .showsLayer("DockedStackDivider")
+                .forAllEntries());
     }
 }

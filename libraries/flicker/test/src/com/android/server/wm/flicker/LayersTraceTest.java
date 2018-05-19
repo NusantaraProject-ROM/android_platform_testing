@@ -151,7 +151,7 @@ public class LayersTraceTest {
     }
 
     @Test
-    public void canTestLayerVisibleRegion_layerIsNotVisible() {
+    public void canTestLayerVisibleRegion_layerDoesNotHaveExpectedVisibleRegion() {
         LayersTrace trace = readLayerTraceFromFile(
                 "layers_trace_emptyregion.pb");
         LayersTrace.Entry entry = trace.getEntry(2307993020072L);
@@ -163,8 +163,8 @@ public class LayersTraceTest {
         assertThat(result.failed()).isTrue();
         assertThat(result.reason).contains(
                 "Layer com.google.android.apps.nexuslauncher/com.google.android.apps"
-                        + ".nexuslauncher.NexusLauncherActivity#2 is not visible: Invisible  "
-                        + "activeBuffer=null type != ColorLayer flags=1 (FLAG_HIDDEN set)");
+                        + ".nexuslauncher.NexusLauncherActivity#2 is invisible: activeBuffer=null"
+                        + " type != ColorLayer flags=1 (FLAG_HIDDEN set) visible region is empty");
     }
 
     @Test
@@ -211,5 +211,19 @@ public class LayersTraceTest {
         Assertions.Result result = entry.hasVisibleRegion("StatusBar", expectedVisibleRegion);
 
         assertThat(result.passed()).isTrue();
+    }
+
+    @Test
+    public void canTestLayerVisibleRegion_layerIsNotVisible() {
+        LayersTrace trace = readLayerTraceFromFile(
+                "layers_trace_invalid_layer_visibility.pb");
+        LayersTrace.Entry entry = trace.getEntry(252794268378458L);
+
+        Assertions.Result result = entry.isVisible("com.android.server.wm.flicker.testapp");
+        assertThat(result.failed()).isTrue();
+        assertThat(result.reason).contains(
+                "Layer com.android.server.wm.flicker.testapp/com.android.server.wm.flicker"
+                        + ".testapp.SimpleActivity#0 is invisible: type != ColorLayer visible "
+                        + "region is empty");
     }
 }
