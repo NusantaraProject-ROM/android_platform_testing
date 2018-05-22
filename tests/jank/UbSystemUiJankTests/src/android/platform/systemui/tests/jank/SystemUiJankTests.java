@@ -112,6 +112,9 @@ public class SystemUiJankTests extends JankTestBase {
      */
     private static final int GROUP_MODE_UNGROUPED = 2;
 
+    private final UiSelector clearAllSelector =
+                        new UiSelector().className(Button.class).descriptionContains("CLEAR ALL");
+
     private UiDevice mDevice;
     private ArrayList<String> mLaunchedPackages;
     private NotificationManager mNotificationManager;
@@ -205,8 +208,7 @@ public class SystemUiJankTests extends JankTestBase {
         mDevice.waitForIdle();
 
         // CLEAR ALL might not be visible in case we don't have any clearable notifications.
-        UiObject clearAll =
-                mDevice.findObject(new UiSelector().className(Button.class).text("CLEAR ALL"));
+        UiObject clearAll = mDevice.findObject(clearAllSelector);
         if (clearAll.exists()) {
             clearAll.click();
         }
@@ -589,8 +591,7 @@ public class SystemUiJankTests extends JankTestBase {
             afterTest = "afterClearAll")
     @GfxMonitor(processName = SYSTEMUI_PACKAGE)
     public void testClearAll() throws Exception {
-        UiObject clearAll =
-                mDevice.findObject(new UiSelector().className(Button.class).text("CLEAR ALL"));
+        UiObject clearAll = mDevice.findObject(clearAllSelector);
         while (!clearAll.exists()) {
             scrollDown();
         }
@@ -828,7 +829,8 @@ public class SystemUiJankTests extends JankTestBase {
             afterTest = "afterInlineReply")
     @GfxMonitor(processName = SYSTEMUI_PACKAGE)
     public void testInlineReply() throws Exception {
-        UiObject2 replyButton = mDevice.findObject(By.clazz(Button.class).text(REPLY_TEXT));
+        UiObject2 replyButton = mDevice.findObject(
+                By.clazz(Button.class).descStartsWith(REPLY_TEXT));
         assertNotNull("Could not find button with text '" + REPLY_TEXT + "'.", replyButton);
         for (int i = 0; i < INNER_LOOP; i++) {
             replyButton.click();
