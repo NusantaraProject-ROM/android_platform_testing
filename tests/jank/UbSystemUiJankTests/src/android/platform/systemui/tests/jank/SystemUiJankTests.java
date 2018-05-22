@@ -829,8 +829,11 @@ public class SystemUiJankTests extends JankTestBase {
             afterTest = "afterInlineReply")
     @GfxMonitor(processName = SYSTEMUI_PACKAGE)
     public void testInlineReply() throws Exception {
-        UiObject2 replyButton = mDevice.findObject(
-                By.clazz(Button.class).descStartsWith(REPLY_TEXT));
+
+        UiSelector replySelector = new UiSelector().className(ImageView.class)
+                .descriptionContains(REPLY_TEXT);
+        UiObject replyButton = mDevice.findObject(replySelector);
+
         assertNotNull("Could not find button with text '" + REPLY_TEXT + "'.", replyButton);
         for (int i = 0; i < INNER_LOOP; i++) {
             replyButton.click();
