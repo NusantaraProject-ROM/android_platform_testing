@@ -377,6 +377,20 @@ public class SystemUiJankTests extends JankTestBase {
         }
     }
 
+    private void scrollListUp() {
+        mDevice.swipe(mDevice.getDisplayWidth() / 2,
+                mDevice.getDisplayHeight() / 2, mDevice.getDisplayWidth() / 2,
+                0,
+                DEFAULT_SCROLL_STEPS);
+    }
+
+    private void scrollListDown() {
+        mDevice.swipe(mDevice.getDisplayWidth() / 2,
+                mDevice.getDisplayHeight() / 2, mDevice.getDisplayWidth() / 2,
+                mDevice.getDisplayHeight(),
+                DEFAULT_SCROLL_STEPS);
+    }
+
     private void swipeDown() {
         mDevice.swipe(mDevice.getDisplayWidth() / 2,
                 SWIPE_MARGIN, mDevice.getDisplayWidth() / 2,
@@ -417,6 +431,41 @@ public class SystemUiJankTests extends JankTestBase {
             swipeDown();
             mDevice.waitForIdle();
             swipeUp();
+            mDevice.waitForIdle();
+        }
+    }
+
+    public void beforeNotificationListScroll() throws Exception {
+        prepareNotifications(GROUP_MODE_UNGROUPED);
+        mDevice.waitForIdle();
+        TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+        swipeDown();
+        mDevice.waitForIdle();
+    }
+
+    public void afterNotificationListScroll(Bundle metrics) throws Exception {
+        TimeResultLogger.writeTimeStampLogEnd(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
+        cancelNotifications();
+        mDevice.waitForIdle();
+        swipeUp();
+        mDevice.waitForIdle();
+        TimeResultLogger.writeResultToFile(String.format("%s-%s",
+                getClass().getSimpleName(), getName()), RESULTS_FILE, metrics);
+        super.afterTest(metrics);
+    }
+
+    /** Measures jank while scrolling notification list */
+    @JankTest(expectedFrames = 100,
+            defaultIterationCount = 5,
+            beforeTest = "beforeNotificationListScroll", afterTest = "afterNotificationListScroll")
+    @GfxMonitor(processName = SYSTEMUI_PACKAGE)
+    public void testNotificationListScroll() {
+        for (int i = 0; i < INNER_LOOP; i++) {
+            scrollListUp();
+            mDevice.waitForIdle();
+            scrollListDown();
             mDevice.waitForIdle();
         }
     }
@@ -829,8 +878,11 @@ public class SystemUiJankTests extends JankTestBase {
             afterTest = "afterInlineReply")
     @GfxMonitor(processName = SYSTEMUI_PACKAGE)
     public void testInlineReply() throws Exception {
-        UiObject2 replyButton = mDevice.findObject(
-                By.clazz(Button.class).descStartsWith(REPLY_TEXT));
+
+        UiSelector replySelector = new UiSelector().className(ImageView.class)
+                .descriptionContains(REPLY_TEXT);
+        UiObject replyButton = mDevice.findObject(replySelector);
+
         assertNotNull("Could not find button with text '" + REPLY_TEXT + "'.", replyButton);
         for (int i = 0; i < INNER_LOOP; i++) {
             replyButton.click();
