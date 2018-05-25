@@ -54,7 +54,7 @@ public class LayersTraceSubjectTest {
             assertWithMessage("Contains path to trace")
                     .that(e.getMessage()).contains("layers_trace_emptyregion.pb");
             assertWithMessage("Contains timestamp")
-                    .that(e.getMessage()).contains("2308008331271");
+                    .that(e.getMessage()).contains("0h38m28s8ms");
             assertWithMessage("Contains assertion function")
                     .that(e.getMessage()).contains("coversRegion");
             assertWithMessage("Contains debug info")
@@ -76,7 +76,7 @@ public class LayersTraceSubjectTest {
             assertWithMessage("Contains path to trace")
                     .that(e.getMessage()).contains("layers_trace_invalid_layer_visibility.pb");
             assertWithMessage("Contains timestamp")
-                    .that(e.getMessage()).contains("252794303064971");
+                    .that(e.getMessage()).contains("70h13m14s303ms");
             assertWithMessage("Contains assertion function")
                     .that(e.getMessage()).contains("!isVisible");
             assertWithMessage("Contains debug info")

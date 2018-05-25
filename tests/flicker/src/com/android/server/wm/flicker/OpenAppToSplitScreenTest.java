@@ -29,8 +29,6 @@ import org.junit.Test;
  * To run this test: {@code atest FlickerTest:OpenAppToSplitScreenTest}
  */
 public class OpenAppToSplitScreenTest extends FlickerTestBase {
-    private static final String NAVIGATION_BAR_WINDOW_TITLE = "NavigationBar";
-    private static final String STATUS_BAR_WINDOW_TITLE = "StatusBar";
 
     public OpenAppToSplitScreenTest() {
         this.testApp = new StandardAppHelper(InstrumentationRegistry.getInstrumentation(),
@@ -57,9 +55,9 @@ public class OpenAppToSplitScreenTest extends FlickerTestBase {
     @Test
     public void checkVisibility_dividerWindowBecomesVisible() {
         checkResults(result -> WmTraceSubject.assertThat(result)
-                .hidesAboveAppWindow("DockedStackDivider")
+                .hidesAboveAppWindow(DOCKED_STACK_DIVIDER)
                 .then()
-                .showsAboveAppWindow("DockedStackDivider")
+                .showsAboveAppWindow(DOCKED_STACK_DIVIDER)
                 .forAllEntries());
     }
 
@@ -85,9 +83,9 @@ public class OpenAppToSplitScreenTest extends FlickerTestBase {
     @Test
     public void checkVisibility_dividerLayerBecomesVisible() {
         checkResults(result -> LayersTraceSubject.assertThat(result)
-                .hidesLayer("DockedStackDivider")
+                .hidesLayer(DOCKED_STACK_DIVIDER)
                 .then()
-                .showsLayer("DockedStackDivider")
+                .showsLayer(DOCKED_STACK_DIVIDER)
                 .forAllEntries());
     }
 }

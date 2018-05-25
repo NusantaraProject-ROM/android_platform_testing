@@ -19,16 +19,19 @@ package com.android.server.wm.flicker;
 import static android.os.SystemClock.sleep;
 import static android.view.Surface.rotationToString;
 
-import static org.junit.Assert.assertNotNull;
+import static com.android.server.wm.flicker.AutomationUtils.clearRecents;
+import static com.android.server.wm.flicker.AutomationUtils.closePipWindow;
+import static com.android.server.wm.flicker.AutomationUtils.exitSplitScreen;
+import static com.android.server.wm.flicker.AutomationUtils.expandPipWindow;
+import static com.android.server.wm.flicker.AutomationUtils.launchSplitScreen;
 
 import android.os.RemoteException;
 import android.platform.helpers.IAppHelper;
+import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.By;
-import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
-import android.support.test.uiautomator.Until;
-import android.util.Log;
+import android.util.Rational;
 import android.view.Surface;
 
 import com.android.server.wm.flicker.TransitionRunner.TransitionBuilder;
@@ -46,19 +49,33 @@ class CommonTransitions {
             switch (rotation) {
                 case Surface.ROTATION_270:
                     device.setOrientationLeft();
-                    return;
+                    break;
 
                 case Surface.ROTATION_90:
                     device.setOrientationRight();
-                    return;
+                    break;
 
                 case Surface.ROTATION_0:
                 default:
                     device.setOrientationNatural();
             }
+            // Wait for animation to complete
+            sleep(3000);
         } catch (RemoteException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static void clickEditTextWidget(UiDevice device, IAppHelper testApp) {
+        UiObject2 editText = device.findObject(By.res(testApp.getPackage(), "plain_text_input"));
+        editText.click();
+        sleep(500);
+    }
+
+    private static void clickEnterPipButton(UiDevice device, IAppHelper testApp) {
+        UiObject2 enterPipButton = device.findObject(By.res(testApp.getPackage(), "enter_pip"));
+        enterPipButton.click();
+        sleep(500);
     }
 
     static TransitionBuilder openAppWarm(IAppHelper testApp, UiDevice
@@ -125,11 +142,7 @@ class CommonTransitions {
                 .runBeforeAll(AutomationUtils::wakeUpAndGoToHomeScreen)
                 .runBeforeAll(testApp::open)
                 .runBefore(() -> setRotation(device, beginRotation))
-                .runBefore(device::waitForIdle)
-                .runBefore(() -> sleep(2000))
                 .run(() -> setRotation(device, endRotation))
-                .run(device::waitForIdle)
-                .run(() -> sleep(3000))
                 .runAfterAll(testApp::exit)
                 .runAfterAll(() -> setRotation(device, Surface.ROTATION_0))
                 .repeat(ITERATIONS);
@@ -141,10 +154,9 @@ class CommonTransitions {
                 .runBeforeAll(AutomationUtils::wakeUpAndGoToHomeScreen)
                 .runBefore(testApp::open)
                 .runBefore(device::waitForIdle)
-                .run(AutomationUtils::launchSplitscreen)
-                .run(device::waitForIdle)
-                .run(() -> sleep(2000))
-                .runAfter(AutomationUtils::exitSplitscreen)
+                .runBefore(() -> sleep(500))
+                .run(() -> launchSplitScreen(device))
+                .runAfter(() -> exitSplitScreen(device))
                 .runAfterAll(testApp::exit)
                 .repeat(ITERATIONS);
     }
@@ -154,11 +166,125 @@ class CommonTransitions {
                 .withTag("splitScreenToLauncher_" + testApp.getLauncherName())
                 .runBeforeAll(AutomationUtils::wakeUpAndGoToHomeScreen)
                 .runBefore(testApp::open)
-                .runBefore(AutomationUtils::launchSplitscreen)
-                .runBefore(() -> sleep(2000))
-                .run(AutomationUtils::exitSplitscreen)
+                .runBefore(device::waitForIdle)
+                .runBefore(() -> launchSplitScreen(device))
+                .run(() -> exitSplitScreen(device))
+                .runAfterAll(testApp::exit)
+                .repeat(ITERATIONS);
+    }
+
+    static TransitionBuilder editTextSetFocus(UiDevice device) {
+        IAppHelper testApp = new StandardAppHelper(InstrumentationRegistry.getInstrumentation(),
+                "com.android.server.wm.flicker.testapp", "ImeApp");
+        return TransitionRunner.newBuilder()
+                .withTag("editTextSetFocus_" + testApp.getLauncherName())
+                .runBeforeAll(AutomationUtils::wakeUpAndGoToHomeScreen)
+                .runBefore(device::pressHome)
+                .runBefore(testApp::open)
+                .run(() -> clickEditTextWidget(device, testApp))
+                .runAfterAll(testApp::exit)
+                .repeat(ITERATIONS);
+    }
+
+    static TransitionBuilder resizeSplitScreen(IAppHelper testAppTop, IAppHelper testAppBottom,
+            UiDevice device, Rational startRatio, Rational stopRatio) {
+        String testTag = "resizeSplitScreen_" + testAppTop.getLauncherName() + "_" +
+                testAppBottom.getLauncherName() + "_" +
+                startRatio.toString().replace("/", ":") + "_to_" +
+                stopRatio.toString().replace("/", ":");
+        return TransitionRunner.newBuilder()
+                .withTag(testTag)
+                .runBeforeAll(AutomationUtils::wakeUpAndGoToHomeScreen)
+                .runBeforeAll(() -> clearRecents(device))
+                .runBefore(testAppBottom::open)
+                .runBefore(device::pressHome)
+                .runBefore(testAppTop::open)
+                .runBefore(device::waitForIdle)
+                .runBefore(() -> launchSplitScreen(device))
+                .runBefore(() -> {
+                    UiObject2 snapshot = device.findObject(
+                            By.res("com.google.android.apps.nexuslauncher", "snapshot"));
+                    snapshot.click();
+                })
+                .runBefore(() -> AutomationUtils.resizeSplitScreen(device, startRatio))
+                .run(() -> AutomationUtils.resizeSplitScreen(device, stopRatio))
+                .runAfter(() -> exitSplitScreen(device))
+                .runAfter(device::pressHome)
+                .runAfterAll(testAppTop::exit)
+                .runAfterAll(testAppBottom::exit)
+                .repeat(ITERATIONS);
+    }
+
+    static TransitionBuilder editTextLoseFocusToHome(UiDevice device) {
+        IAppHelper testApp = new StandardAppHelper(InstrumentationRegistry.getInstrumentation(),
+                "com.android.server.wm.flicker.testapp", "ImeApp");
+        return TransitionRunner.newBuilder()
+                .withTag("editTextLoseFocusToHome_" + testApp.getLauncherName())
+                .runBeforeAll(AutomationUtils::wakeUpAndGoToHomeScreen)
+                .runBefore(device::pressHome)
+                .runBefore(testApp::open)
+                .runBefore(() -> clickEditTextWidget(device, testApp))
+                .run(device::pressHome)
                 .run(device::waitForIdle)
-                .run(() -> sleep(2000))
+                .runAfterAll(testApp::exit)
+                .repeat(ITERATIONS);
+    }
+
+    static TransitionBuilder editTextLoseFocusToApp(UiDevice device) {
+        IAppHelper testApp = new StandardAppHelper(InstrumentationRegistry.getInstrumentation(),
+                "com.android.server.wm.flicker.testapp", "ImeApp");
+        return TransitionRunner.newBuilder()
+                .withTag("editTextLoseFocusToApp_" + testApp.getLauncherName())
+                .runBeforeAll(AutomationUtils::wakeUpAndGoToHomeScreen)
+                .runBefore(device::pressHome)
+                .runBefore(testApp::open)
+                .runBefore(() -> clickEditTextWidget(device, testApp))
+                .run(device::pressBack)
+                .run(device::waitForIdle)
+                .runAfterAll(testApp::exit)
+                .repeat(ITERATIONS);
+    }
+
+    static TransitionBuilder enterPipMode(UiDevice device) {
+        IAppHelper testApp = new StandardAppHelper(InstrumentationRegistry.getInstrumentation(),
+                "com.android.server.wm.flicker.testapp", "PipApp");
+        return TransitionRunner.newBuilder()
+                .withTag("enterPipMode_" + testApp.getLauncherName())
+                .runBeforeAll(AutomationUtils::wakeUpAndGoToHomeScreen)
+                .runBefore(device::pressHome)
+                .runBefore(testApp::open)
+                .run(() -> clickEnterPipButton(device, testApp))
+                .runAfter(() -> closePipWindow(device))
+                .runAfterAll(testApp::exit)
+                .repeat(ITERATIONS);
+    }
+
+    static TransitionBuilder exitPipModeToHome(UiDevice device) {
+        IAppHelper testApp = new StandardAppHelper(InstrumentationRegistry.getInstrumentation(),
+                "com.android.server.wm.flicker.testapp", "PipApp");
+        return TransitionRunner.newBuilder()
+                .withTag("exitPipModeToHome_" + testApp.getLauncherName())
+                .runBeforeAll(AutomationUtils::wakeUpAndGoToHomeScreen)
+                .runBefore(device::pressHome)
+                .runBefore(testApp::open)
+                .runBefore(() -> clickEnterPipButton(device, testApp))
+                .run(() -> closePipWindow(device))
+                .run(device::waitForIdle)
+                .runAfterAll(testApp::exit)
+                .repeat(ITERATIONS);
+    }
+
+    static TransitionBuilder exitPipModeToApp(UiDevice device) {
+        IAppHelper testApp = new StandardAppHelper(InstrumentationRegistry.getInstrumentation(),
+                "com.android.server.wm.flicker.testapp", "PipApp");
+        return TransitionRunner.newBuilder()
+                .withTag("exitPipModeToApp_" + testApp.getLauncherName())
+                .runBeforeAll(AutomationUtils::wakeUpAndGoToHomeScreen)
+                .runBefore(device::pressHome)
+                .runBefore(testApp::open)
+                .runBefore(() -> clickEnterPipButton(device, testApp))
+                .run(() -> expandPipWindow(device))
+                .run(device::waitForIdle)
                 .runAfterAll(testApp::exit)
                 .repeat(ITERATIONS);
     }

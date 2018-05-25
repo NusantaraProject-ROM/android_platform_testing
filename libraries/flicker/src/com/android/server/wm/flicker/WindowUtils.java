@@ -107,4 +107,17 @@ class WindowUtils {
             }
         }
     }
+
+    static int getNavigationBarHeight() {
+        Resources resources = InstrumentationRegistry.getContext().getResources();
+        int resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
+        return resources.getDimensionPixelSize(resourceId);
+    }
+
+    static int getDockedStackDividerInset() {
+        Resources resources = InstrumentationRegistry.getContext().getResources();
+        int resourceId = resources.getIdentifier("docked_stack_divider_insets", "dimen",
+                "android");
+        return resources.getDimensionPixelSize(resourceId);
+    }
 }

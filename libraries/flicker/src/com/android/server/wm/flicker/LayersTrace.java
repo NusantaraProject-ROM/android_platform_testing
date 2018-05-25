@@ -293,6 +293,16 @@ public class LayersTrace {
             }
             return mFlattenedLayers;
         }
+
+        Rect getVisibleBounds(String layerName) {
+            List<Layer> layers = asFlattenedLayers();
+            for (Layer layer : layers) {
+                if (layer.mProto.name.contains(layerName) && layer.isVisible()) {
+                    return extract(layer.mProto.visibleRegion);
+                }
+            }
+            return new Rect(0, 0, 0, 0);
+        }
     }
 
     /**

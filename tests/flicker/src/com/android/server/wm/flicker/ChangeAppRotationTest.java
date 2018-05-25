@@ -44,9 +44,6 @@ import java.util.Collection;
  */
 @RunWith(Parameterized.class)
 public class ChangeAppRotationTest extends FlickerTestBase {
-    private static final String NAVIGATION_BAR_WINDOW_TITLE = "NavigationBar";
-    private static final String STATUS_BAR_WINDOW_TITLE = "StatusBar";
-
     private int beginRotation;
     private int endRotation;
 
