@@ -16,10 +16,6 @@
 
 package android.platform.systemui.tests.jank;
 
-import static android.system.helpers.OverviewHelper.isRecentsInLauncher;
-
-import static org.junit.Assert.assertNotNull;
-
 import android.app.Notification.Action;
 import android.app.Notification.Builder;
 import android.app.NotificationManager;
@@ -37,6 +33,7 @@ import android.support.test.InstrumentationRegistry;
 import android.support.test.jank.GfxMonitor;
 import android.support.test.jank.JankTest;
 import android.support.test.jank.JankTestBase;
+import android.support.test.launcherhelper.LauncherStrategyFactory;
 import android.support.test.timeresulthelper.TimeResultLogger;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
@@ -56,6 +53,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import static android.system.helpers.OverviewHelper.isRecentsInLauncher;
+import static org.junit.Assert.assertNotNull;
 
 public class SystemUiJankTests extends JankTestBase {
 
@@ -130,6 +130,8 @@ public class SystemUiJankTests extends JankTestBase {
                 NotificationManager.class);
         InstrumentationRegistry.registerInstance(getInstrumentation(), getArguments());
         blockNotifications();
+        // Need to run strategy initialization code as a precondition for tests.
+        LauncherStrategyFactory.getInstance(mDevice);
     }
 
     public void goHome() {
