@@ -23,5 +23,4 @@ cc_test {
 
     tags: ["tests"],
     test_suites: ["device-tests"],
-    host_supported: true,
 }
