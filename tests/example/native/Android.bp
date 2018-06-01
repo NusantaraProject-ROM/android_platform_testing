@@ -22,5 +22,4 @@ cc_test {
     ],
 
     test_suites: ["device-tests"],
-    host_supported: true,
 }
