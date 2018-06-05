@@ -30,8 +30,6 @@ import org.junit.Test;
  * To run this test: {@code atest FlickerTest:OpenAppColdTest}
  */
 public class OpenAppColdTest extends FlickerTestBase {
-    private static final String NAVIGATION_BAR_WINDOW_TITLE = "NavigationBar";
-    private static final String STATUS_BAR_WINDOW_TITLE = "StatusBar";
 
     public OpenAppColdTest() {
         this.testApp = new StandardAppHelper(InstrumentationRegistry.getInstrumentation(),
@@ -67,10 +65,10 @@ public class OpenAppColdTest extends FlickerTestBase {
     @Test
     public void checkZOrder_appWindowReplacesLauncherAsTopWindow() {
         checkResults(result -> assertThat(result)
-                .showsAppWindow(
+                .showsAppWindowOnTop(
                         "com.google.android.apps.nexuslauncher/.NexusLauncherActivity")
                 .then()
-                .showsAppWindow(testApp.getPackage())
+                .showsAppWindowOnTop(testApp.getPackage())
                 .forAllEntries());
     }
 
