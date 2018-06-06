@@ -44,22 +44,6 @@ Run the transition to get a list of `TransitionResult` for each time the transit
 ```
 `TransitionResult` contains paths to test artifacts such as Winscope traces and screen recordings.
 
-<details><summary>Monitors</summary>
-<p>
-
-Monitors capture test artifacts for each transition run. They are started before each iteration of the test transition (after the <code>runBefore</code> calls) and stopped after the transition is completed. Each iteration will produce a new test artifact. The following monitors are available:
-
-<h5>LayersTraceMonitor</h5>
-Captures Layers trace. This monitor is started by default. Build a transition with <code>skipLayersTrace()</code> to disable this monitor.
-<h5>WindowManagerTraceMonitor</h5>
-Captures Window Manager trace. This monitor is started by default. Build a transition with <code>skipWindowManagerTrace()</code> to disable this monitor.
-<h5>WindowAnimationFrameStatsMonitor</h5>
-Captures WindowAnimationFrameStats for the transition. This monitor is started by default and is used to eliminate *janky* runs. If an iteration has skipped frames, as determined by WindowAnimationFrameStats, the results for the iteration is skipped. If the list of results is empty after all iterations are completed, then the test should fail. Build a transition with <code>includeJankyRuns()</code> to disable this monitor.
-<h5>ScreenRecorder</h5>
-Captures screen to a video file. This monitor is disabled by default. Build a transition with <code>recordEachRun()</code> to capture each transition or build with <code>recordAllRuns()</code> to capture every transition including setup and teardown.
-
-</p>
-</details>
 
 ### Checking Assertions
 Each `TransitionResult` can be tested using an extension of the Google Truth library, `LayersTraceSubject` and `WmTraceSubject`. They try to balance test principles set out by Google Truth (not supporting nested assertions, keeping assertions simple) with providing support for common assertion use cases.
@@ -109,40 +93,54 @@ All assertions return `Result` which contains a `success` flag, `assertionName` 
         ...
 ```
 
-<details><summary>Extending Assertions</summary>
-<p>
+---
 
-To add a new assertion, add a function to one of the trace entry classes, <code>LayersTrace.Entry</code> or <code>WindowManagerTrace.Entry</code>.
+## Running Tests
 
-<pre>
+The tests can be run as any other Android JUnit tests. `platform_testing/tests/flicker` uses the library to test common UI transitions. Run `atest FlickerTest` to execute these tests.
+
+---
+
+## Other Topics
+### Monitors
+Monitors capture test artifacts for each transition run. They are started before each iteration of the test transition (after the `runBefore` calls) and stopped after the transition is completed. Each iteration will produce a new test artifact. The following monitors are available:
+
+#### LayersTraceMonitor
+Captures Layers trace. This monitor is started by default. Build a transition with `skipLayersTrace()` to disable this monitor.
+#### WindowManagerTraceMonitor
+Captures Window Manager trace. This monitor is started by default. Build a transition with `skipWindowManagerTrace()` to disable this monitor.
+#### WindowAnimationFrameStatsMonitor
+Captures WindowAnimationFrameStats for the transition. This monitor is started by default and is used to eliminate *janky* runs. If an iteration has skipped frames, as determined by WindowAnimationFrameStats, the results for the iteration is skipped. If the list of results is empty after all iterations are completed, then the test should fail. Build a transition with `includeJankyRuns()` to disable this monitor.
+#### ScreenRecorder
+Captures screen to a video file. This monitor is disabled by default. Build a transition with `recordEachRun()` to capture each transition or build with `recordAllRuns()` to capture every transition including setup and teardown.
+
+---
+
+### Extending Assertions
+
+To add a new assertion, add a function to one of the trace entry classes, `LayersTrace.Entry` or `WindowManagerTrace.Entry`.
+
+```java
     // Example adds an assertion to the check if layer is hidden by parent.
     Result isHiddenByParent(String layerName) {
         // Result should contain a details if assertion fails for any reason
         // such as if layer is not found or layer is not hidden by parent
         // or layer has no parent.
-        ...
+        // ...
     }
-</pre>
-Then add a function to the trace subject <code>LayersTraceSubject</code> or <code>WmTraceSubject</code> which will add the assertion for testing. When the assertion is evaluated, the trace will first be filtered then the assertion will be applied to the remaining entries.
-<pre>
+```
+Then add a function to the trace subject `LayersTraceSubject` or `WmTraceSubject` which will add the assertion for testing. When the assertion is evaluated, the trace will first be filtered then the assertion will be applied to the remaining entries.
+
+```java
     public LayersTraceSubject isHiddenByParent(String layerName) {
         mChecker.add(entry -> entry.isHiddenByParent(layerName),
                 "isHiddenByParent(" + layerName + ")");
         return this;
     }
-</pre>
-
+```
 
 To use the new assertion:
-<pre>
+```java
     // Check if "Chrome" layer is hidden by parent in the first trace entry.
     assertThat(result).isHiddenByParent("Chrome").inTheBeginning();
-</pre>
-
-</p>
-</details>
-
-
-## Running Tests
-
-The tests can be run as any other Android JUnit tests. `platform_testing/tests/flicker` uses the library to test common UI transitions. Run `atest FlickerTest` to execute these tests.
+```
