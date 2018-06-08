@@ -15,13 +15,15 @@
 instrumentation_metric_tests := \
     crashcollector \
     CorePerfTests \
-    DocumentsUIPerfTests \
     DocumentsUIAppPerfTests \
     MtpDocumentsProviderPerfTests \
-    SurfaceComposition \
     RsBlasBenchmark \
     ImageProcessingJB \
-    MultiUserPerfTests
+    MultiUserPerfTests \
+    NeuralNetworksApiBenchmark
+
+    # TODO(b/72332760): Uncomment when fixed
+    #DocumentsUIPerfTests
 
 ifneq ($(strip $(BOARD_PERFSETUP_SCRIPT)),)
 instrumentation_metric_tests += perf-setup.sh

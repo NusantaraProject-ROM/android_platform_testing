@@ -15,13 +15,16 @@
 native_metric_tests := \
     binderAddInts \
     bionic-benchmarks \
+    buffer_transport_benchmark \
     crashcollector \
     hwuimacro \
     hwuimicro \
+    libandroidfw_benchmarks \
     libjavacore-benchmarks \
     minikin_perftests \
     mmapPerf \
-    netd_benchmark
+    netd_benchmark \
+    skia_nanobench
 
 ifneq ($(strip $(BOARD_PERFSETUP_SCRIPT)),)
 native_metric_tests += perf-setup.sh
