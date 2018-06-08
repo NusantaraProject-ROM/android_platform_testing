@@ -29,9 +29,6 @@ import org.junit.Test;
  * To run this test: {@code atest FlickerTest:SplitScreenToLauncherTest}
  */
 public class SplitScreenToLauncherTest extends FlickerTestBase {
-    public static final String DOCKED_STACK_DIVIDER = "DockedStackDivider";
-    private static final String NAVIGATION_BAR_WINDOW_TITLE = "NavigationBar";
-    private static final String STATUS_BAR_WINDOW_TITLE = "StatusBar";
 
     public SplitScreenToLauncherTest() {
         this.testApp = new StandardAppHelper(InstrumentationRegistry.getInstrumentation(),

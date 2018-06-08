@@ -16,27 +16,27 @@
 
 package com.android.server.wm.flicker;
 
+import static android.os.SystemClock.sleep;
 import static android.system.helpers.OverviewHelper.isRecentsInLauncher;
+import static android.view.Surface.ROTATION_0;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import android.app.Instrumentation;
-import android.content.ComponentName;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.res.Resources;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.os.RemoteException;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.launcherhelper.LauncherStrategyFactory;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.Configurator;
-import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
+import android.util.Log;
+import android.util.Rational;
 import android.view.View;
 import android.view.ViewConfiguration;
 
@@ -47,6 +47,7 @@ public class AutomationUtils {
     private static final String SYSTEMUI_PACKAGE = "com.android.systemui";
     private static final long FIND_TIMEOUT = 10000;
     private static final long LONG_PRESS_TIMEOUT = ViewConfiguration.getLongPressTimeout() * 2L;
+    private static final String TAG = "FLICKER";
 
     public static void wakeUpAndGoToHomeScreen() {
         UiDevice device = UiDevice.getInstance(InstrumentationRegistry
@@ -85,11 +86,21 @@ public class AutomationUtils {
             int height = device.getDisplayHeight();
             UiObject2 navBar = device.findObject(By.res(SYSTEMUI_PACKAGE, "navigation_bar_frame"));
 
+            Rect navBarVisibleBounds;
+
+            // TODO(vishnun) investigate why this object cannot be found.
+            if (navBar != null) {
+                navBarVisibleBounds = navBar.getVisibleBounds();
+            } else {
+                Log.e(TAG, "Could not find nav bar, infer location");
+                navBarVisibleBounds = WindowUtils.getNavigationBarPosition(ROTATION_0);
+            }
+
             // Swipe from nav bar to 2/3rd down the screen.
             device.swipe(
-                    navBar.getVisibleBounds().centerX(), navBar.getVisibleBounds().centerY(),
-                    navBar.getVisibleBounds().centerX(), height * 2 / 3,
-                    (navBar.getVisibleBounds().centerY() - height * 2 / 3) / 100); // 100 px/step
+                    navBarVisibleBounds.centerX(), navBarVisibleBounds.centerY(),
+                    navBarVisibleBounds.centerX(), height * 2 / 3,
+                    (navBarVisibleBounds.centerY() - height * 2 / 3) / 100); // 100 px/step
         } else {
             try {
                 device.pressRecentApps();
@@ -109,19 +120,39 @@ public class AutomationUtils {
         device.waitForIdle();
     }
 
+    static void clearRecents(UiDevice device) {
+        if (isQuickstepEnabled(device)) {
+            openQuickstep(device);
+
+            for (int i = 0; i < 5; i++) {
+                device.swipe(device.getDisplayWidth() / 2,
+                        device.getDisplayHeight() / 2, device.getDisplayWidth(),
+                        device.getDisplayHeight() / 2,
+                        5);
+
+                BySelector clearAllSelector = By.res("com.google.android.apps.nexuslauncher",
+                        "clear_all_button");
+                UiObject2 clearAllButton = device.wait(Until.findObject(clearAllSelector), 100);
+                if (clearAllButton != null) {
+                    clearAllButton.click();
+                    return;
+                }
+            }
+        }
+    }
+
     private static BySelector getLauncherOverviewSelector(UiDevice device) {
         return By.res(device.getLauncherPackageName(), "overview_panel");
     }
 
-    private static void longpressRecents(UiDevice device) {
+    private static void longPressRecents(UiDevice device) {
         BySelector recentsSelector = By.res(SYSTEMUI_PACKAGE, "recent_apps");
         UiObject2 recentsButton = device.wait(Until.findObject(recentsSelector), FIND_TIMEOUT);
         assertNotNull("Unable to find recents button", recentsButton);
         recentsButton.click(LONG_PRESS_TIMEOUT);
     }
 
-    static void launchSplitscreen() {
-        UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+    static void launchSplitScreen(UiDevice device) {
         Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
         String mLauncherPackage = LauncherStrategyFactory.getInstance(UiDevice.getInstance(
                 instrumentation)).getLauncherStrategy().getSupportedLauncherPackage();
@@ -144,23 +175,61 @@ public class AutomationUtils {
             splitscreenButton.click();
         } else {
             // Classic long press recents
-            longpressRecents(device);
+            longPressRecents(device);
         }
+        // Wait for animation to complete.
+        sleep(2000);
     }
 
-    static void exitSplitscreen() {
-        UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+    static void exitSplitScreen(UiDevice device) {
         if (isQuickstepEnabled(device)) {
             // Quickstep enabled
             BySelector dividerSelector = By.res(SYSTEMUI_PACKAGE, "docked_divider_handle");
             UiObject2 divider = device.wait(Until.findObject(dividerSelector), FIND_TIMEOUT);
             assertNotNull("Unable to find Split screen divider", divider);
 
-            // Drag the splitscreen divider to the top of the screen
+            // Drag the split screen divider to the top of the screen
             divider.drag(new Point(device.getDisplayWidth() / 2, 0), 400);
         } else {
-            // Classic longpress recents
-            longpressRecents(device);
+            // Classic long press recents
+            longPressRecents(device);
         }
+        // Wait for animation to complete.
+        sleep(2000);
+    }
+
+    static void resizeSplitScreen(UiDevice device, Rational windowHeightRatio) {
+        BySelector dividerSelector = By.res(SYSTEMUI_PACKAGE, "docked_divider_handle");
+        UiObject2 divider = device.wait(Until.findObject(dividerSelector), FIND_TIMEOUT);
+        assertNotNull("Unable to find Split screen divider", divider);
+        int destHeight =
+                (int) (WindowUtils.getDisplayBounds().height() * windowHeightRatio.floatValue());
+        // Drag the split screen divider to so that the ratio of top window height and bottom
+        // window height is windowHeightRatio
+        device.drag(divider.getVisibleBounds().centerX(), divider.getVisibleBounds().centerY(),
+                device.getDisplayWidth() / 2, destHeight, 10);
+        //divider.drag(new Point(device.getDisplayWidth() / 2, destHeight), 400)
+        divider = device.wait(Until.findObject(dividerSelector), FIND_TIMEOUT);
+
+        // Wait for animation to complete.
+        sleep(2000);
+    }
+
+    static void closePipWindow(UiDevice device) {
+        UiObject2 pipWindow = device.findObject(
+                By.res(SYSTEMUI_PACKAGE, "background"));
+        pipWindow.click();
+        UiObject2 exitPipObject = device.findObject(
+                By.res(SYSTEMUI_PACKAGE, "dismiss"));
+        exitPipObject.click();
+        // Wait for animation to complete.
+        sleep(2000);
+    }
+
+    static void expandPipWindow(UiDevice device) {
+        UiObject2 pipWindow = device.findObject(
+                By.res(SYSTEMUI_PACKAGE, "background"));
+        pipWindow.click();
+        pipWindow.click();
     }
 }

@@ -36,7 +36,7 @@ import java.util.function.Consumer;
 
 /**
  * Base class of all Flicker test that performs common functions for all flicker tests:
- *
+ * <p>
  * - Caches transitions so that a transition is run once and the transition results are used by
  * tests multiple times. This is needed for parameterized tests which call the BeforeClass methods
  * multiple times.
@@ -45,6 +45,9 @@ import java.util.function.Consumer;
  */
 public class FlickerTestBase {
     public static final String TAG = "FLICKER";
+    static final String NAVIGATION_BAR_WINDOW_TITLE = "NavigationBar";
+    static final String STATUS_BAR_WINDOW_TITLE = "StatusBar";
+    static final String DOCKED_STACK_DIVIDER = "DockedStackDivider";
     private static HashMap<String, List<TransitionResult>> transitionResults =
             new HashMap<>();
     IAppHelper testApp;

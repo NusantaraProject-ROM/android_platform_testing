@@ -4,14 +4,16 @@
  -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          xmlns:tools="http://schemas.android.com/tools"
-          android:sharedUserId="android.uid.system"
           package="com.android.server.wm.flicker">
 
     <uses-sdk android:minSdkVersion="27" android:targetSdkVersion="27"/>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <!-- Read and write traces from external storage -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.HARDWARE_TEST" tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <!-- Capture screen contents -->
+    <uses-permission android:name="android.permission.ACCESS_SURFACE_FLINGER" />
+    <!-- Run layers trace -->
+    <uses-permission android:name="android.permission.HARDWARE_TEST"/>
     <application android:label="FlickerLibTest">
         <uses-library android:name="android.test.runner"/>
     </application>

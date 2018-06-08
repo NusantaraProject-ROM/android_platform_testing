@@ -19,6 +19,7 @@ package com.android.server.wm.flicker;
 import android.platform.helpers.IAppHelper;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.UiDevice;
+import android.util.Rational;
 import android.view.Surface;
 
 import org.junit.Test;
@@ -88,6 +89,74 @@ public class DebugTest {
     public void splitScreenToLauncher() {
         CommonTransitions.splitScreenToLauncher(testApp,
                 uiDevice).includeJankyRuns().recordAllRuns()
+                .build().run();
+    }
+
+    /**
+     * atest FlickerTest:DebugTest#resizeSplitScreen
+     */
+    @Test
+    public void resizeSplitScreen() {
+        IAppHelper bottomApp = new StandardAppHelper(InstrumentationRegistry.getInstrumentation(),
+                "com.android.server.wm.flicker.testapp", "ImeApp");
+        CommonTransitions.resizeSplitScreen(testApp, bottomApp, uiDevice, new Rational(1, 3),
+                new Rational(2, 3)).includeJankyRuns().recordEachRun().build().run();
+    }
+
+    // IME tests
+
+    /**
+     * atest FlickerTest:DebugTest#editTextSetFocus
+     */
+    @Test
+    public void editTextSetFocus() {
+        CommonTransitions.editTextSetFocus(uiDevice).includeJankyRuns().recordEachRun()
+                .build().run();
+    }
+
+    /**
+     * atest FlickerTest:DebugTest#editTextLoseFocusToHome
+     */
+    @Test
+    public void editTextLoseFocusToHome() {
+        CommonTransitions.editTextLoseFocusToHome(uiDevice).includeJankyRuns().recordEachRun()
+                .build().run();
+    }
+
+    /**
+     * atest FlickerTest:DebugTest#editTextLoseFocusToApp
+     */
+    @Test
+    public void editTextLoseFocusToApp() {
+        CommonTransitions.editTextLoseFocusToHome(uiDevice).includeJankyRuns().recordEachRun()
+                .build().run();
+    }
+
+    // PIP tests
+
+    /**
+     * atest FlickerTest:DebugTest#enterPipMode
+     */
+    @Test
+    public void enterPipMode() {
+        CommonTransitions.enterPipMode(uiDevice).includeJankyRuns().recordEachRun().build().run();
+    }
+
+    /**
+     * atest FlickerTest:DebugTest#exitPipModeToHome
+     */
+    @Test
+    public void exitPipModeToHome() {
+        CommonTransitions.exitPipModeToHome(uiDevice).includeJankyRuns().recordEachRun()
+                .build().run();
+    }
+
+    /**
+     * atest FlickerTest:DebugTest#exitPipModeToApp
+     */
+    @Test
+    public void exitPipModeToApp() {
+        CommonTransitions.exitPipModeToApp(uiDevice).includeJankyRuns().recordEachRun()
                 .build().run();
     }
 }

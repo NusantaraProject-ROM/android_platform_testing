@@ -151,7 +151,7 @@ public class WmTraceSubject extends Subject<WmTraceSubject, WindowManagerTrace> 
         return this;
     }
 
-    public WmTraceSubject showsAppWindow(String partialWindowTitle) {
+    public WmTraceSubject showsAppWindowOnTop(String partialWindowTitle) {
         mChecker.add(
                 entry -> {
                     Result result = entry.isAppWindowVisible(partialWindowTitle);
@@ -160,12 +160,12 @@ public class WmTraceSubject extends Subject<WmTraceSubject, WindowManagerTrace> 
                     }
                     return result;
                 },
-                "showsAppWindow(" + partialWindowTitle + ")"
+                "showsAppWindowOnTop(" + partialWindowTitle + ")"
         );
         return this;
     }
 
-    public WmTraceSubject hidesAppWindow(String partialWindowTitle) {
+    public WmTraceSubject hidesAppWindowOnTop(String partialWindowTitle) {
         mChecker.add(
                 entry -> {
                     Result result = entry.isAppWindowVisible(partialWindowTitle).negate();
@@ -174,8 +174,20 @@ public class WmTraceSubject extends Subject<WmTraceSubject, WindowManagerTrace> 
                     }
                     return result;
                 },
-                "hidesAppWindow(" + partialWindowTitle + ")"
+                "hidesAppWindowOnTop(" + partialWindowTitle + ")"
         );
+        return this;
+    }
+
+    public WmTraceSubject showsAppWindow(String partialWindowTitle) {
+        mChecker.add(entry -> entry.isAppWindowVisible(partialWindowTitle),
+                "showsAppWindow(" + partialWindowTitle + ")");
+        return this;
+    }
+
+    public WmTraceSubject hidesAppWindow(String partialWindowTitle) {
+        mChecker.add(entry -> entry.isAppWindowVisible(partialWindowTitle).negate(),
+                "hidesAppWindow(" + partialWindowTitle + ")");
         return this;
     }
 }

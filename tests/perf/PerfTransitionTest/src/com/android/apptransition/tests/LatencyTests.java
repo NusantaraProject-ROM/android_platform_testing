@@ -15,18 +15,15 @@
  */
 package com.android.apptransition.tests;
 
-import static android.support.test.InstrumentationRegistry.getInstrumentation;
-import static android.system.helpers.OverviewHelper.isRecentsInLauncher;
-
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.os.SystemClock;
 import android.provider.Settings;
 import android.support.test.InstrumentationRegistry;
+import android.support.test.launcherhelper.LauncherStrategyFactory;
 import android.support.test.rule.logging.AtraceLogger;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
-import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
@@ -43,6 +40,9 @@ import org.junit.Test;
 import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
+
+import static android.support.test.InstrumentationRegistry.getInstrumentation;
+import static android.system.helpers.OverviewHelper.isRecentsInLauncher;
 
 /**
  * Tests to test various latencies in the system.
@@ -113,6 +113,8 @@ public class LatencyTests {
                 }
             }
         }
+        // Need to run strategy initialization code as a precondition for tests.
+        LauncherStrategyFactory.getInstance(mDevice);
     }
 
     /**
