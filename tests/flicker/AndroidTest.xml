@@ -11,8 +11,8 @@
     </target_preparer>
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
-        <option name="test-file-name" value="FlickerTest.apk"/>
-        <option name="test-file-name" value="FlickerApp.apk" />
+        <option name="test-file-name" value="FlickerTests.apk"/>
+        <option name="test-file-name" value="FlickerTestApp.apk" />
     </target_preparer>
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
         <option name="package" value="com.android.server.wm.flicker"/>
