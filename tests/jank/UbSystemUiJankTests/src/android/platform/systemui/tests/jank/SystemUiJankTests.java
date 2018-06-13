@@ -407,6 +407,8 @@ public class SystemUiJankTests extends JankTestBase {
     }
 
     public void beforeNotificationListPull() throws Exception {
+        mDevice.wakeUp();
+        mDevice.waitForIdle();
         prepareNotifications(GROUP_MODE_LEGACY);
         TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
                 getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
