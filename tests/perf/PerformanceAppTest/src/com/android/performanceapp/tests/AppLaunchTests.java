@@ -32,6 +32,7 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
@@ -61,6 +62,8 @@ public class AppLaunchTests extends InstrumentationTestCase {
     private static final String ATRACE_DUMP = "atrace --async_dump";
     private static final String ATRACE_STOP = "atrace --async_stop";
     private static final String FORCE_STOP = "am force-stop ";
+    private static final String TARGET_URL = "instanturl";
+    private static final String URL_PREFIX = "http://";
 
     private Context mContext;
     private Bundle mResult;
@@ -71,9 +74,10 @@ public class AppLaunchTests extends InstrumentationTestCase {
     private String mDispatcher;
     private int mLaunchCount;
     private String mCustomActivityList;
+    private String mTargetUrl;
     private PackageInfo mPackageInfo;
     private boolean mRecordTrace = true;
-    private List<String> mActivityList;
+    private List<String> mActivityList = new ArrayList<>();
 
     /**
      * {@inheritDoc}
@@ -96,8 +100,14 @@ public class AppLaunchTests extends InstrumentationTestCase {
         }
         mCustomActivityList = args.getString(ACTIVITYLIST);
         if (mCustomActivityList == null || mCustomActivityList.isEmpty()) {
-            // Get full list of activities from the target package
-            mActivityList = getActivityList("");
+            // Look for instant app configs exist.
+            mTargetUrl = args.getString(TARGET_URL);
+            if (mTargetUrl != null && !mTargetUrl.isEmpty()) {
+                mActivityList.add(args.getString(TARGET_URL));
+            } else {
+                // Get full list of activities from the target package
+                mActivityList = getActivityList("");
+            }
         } else {
             // Get only the user defined list of activities from the target package
             mActivityList = getActivityList(mCustomActivityList);
@@ -127,18 +137,24 @@ public class AppLaunchTests extends InstrumentationTestCase {
         }
         for (int count = 0; count < mLaunchCount; count++) {
             for (String activityName : mActivityList) {
-                ComponentName cn = new ComponentName(mTargetPackageName,
-                        mDispatcher != null ? mDispatcher : activityName);
                 Intent intent = new Intent(Intent.ACTION_MAIN);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                intent.setComponent(cn);
+                if (activityName.startsWith(URL_PREFIX)) {
+                    intent = new Intent(Intent.ACTION_VIEW, Uri.parse(activityName));
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                } else {
+                    ComponentName cn = new ComponentName(mTargetPackageName,
+                            mDispatcher != null ? mDispatcher : activityName);
+                    intent = new Intent(Intent.ACTION_MAIN);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    intent.setComponent(cn);
 
-                if (mDispatcher != null) {
-                    intent.putExtra("ACTIVITY_NAME", activityName);
-                    intent.putExtra("SIMPLEPERF_DIR", mSimpleperfDir);
-                    intent.putExtra("SIMPLEPERF_EVT", mSimpleperfEvt);
-                    intent.putExtra("SIMPLEPERF_BIN", mSimpleperfBin);
+                    if (mDispatcher != null) {
+                        intent.putExtra("ACTIVITY_NAME", activityName);
+                        intent.putExtra("SIMPLEPERF_DIR", mSimpleperfDir);
+                        intent.putExtra("SIMPLEPERF_EVT", mSimpleperfEvt);
+                        intent.putExtra("SIMPLEPERF_BIN", mSimpleperfBin);
+                    }
                 }
 
                 // Start the atrace
@@ -170,7 +186,13 @@ public class AppLaunchTests extends InstrumentationTestCase {
                     int processId = getProcessId(mTargetPackageName);
                     assertTrue("Not able to retrive the process id for the package:"
                             + mTargetPackageName, processId > 0);
-                    String fileName = String.format("%s-%d-%d", activityName, count, processId);
+                    String fileName = new String();
+                    if (!activityName.startsWith(URL_PREFIX)) {
+                        fileName = String.format("%s-%d-%d", activityName, count, processId);
+                    } else {
+                        fileName = String.format("%s-%d-%d", Uri.parse(activityName).getHost(),
+                                count, processId);
+                    }
                     ParcelFileDescriptor parcelFile =
                             getInstrumentation().getUiAutomation().executeShellCommand(ATRACE_DUMP);
                     assertNotNull("Unable to get the File descriptor to standard out",
@@ -196,7 +218,11 @@ public class AppLaunchTests extends InstrumentationTestCase {
                             getInstrumentation().getUiAutomation().executeShellCommand(ATRACE_STOP));
 
                     // To keep track of the activity name,list of atrace file name
-                    registerTraceFileNames(activityName, fileName);
+                    if (!activityName.startsWith(URL_PREFIX)) {
+                        registerTraceFileNames(activityName, fileName);
+                    } else {
+                        registerTraceFileNames(Uri.parse(activityName).getHost(), fileName);
+                    }
                 }
                 assertNotNull("Unable to stop recent activity launched",
                         getInstrumentation().getUiAutomation().executeShellCommand(
@@ -283,4 +309,3 @@ public class AppLaunchTests extends InstrumentationTestCase {
         }
     }
 }
-
