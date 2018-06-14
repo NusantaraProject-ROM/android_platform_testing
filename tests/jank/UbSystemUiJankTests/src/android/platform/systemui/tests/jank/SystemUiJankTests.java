@@ -890,8 +890,6 @@ public class SystemUiJankTests extends JankTestBase {
             Thread.sleep(1000);
             mDevice.pressBack();
             mDevice.waitForIdle();
-            mDevice.pressBack();
-            mDevice.waitForIdle();
         }
     }
 
