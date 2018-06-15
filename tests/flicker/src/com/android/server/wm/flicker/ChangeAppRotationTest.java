@@ -26,6 +26,7 @@ import static com.android.server.wm.flicker.WmTraceSubject.assertThat;
 
 import android.graphics.Rect;
 import android.support.test.InstrumentationRegistry;
+import android.support.test.filters.LargeTest;
 import android.util.Log;
 import android.view.Surface;
 
@@ -43,6 +44,7 @@ import java.util.Collection;
  * To run this test: {@code atest FlickerTest:ChangeAppRotationTest}
  */
 @RunWith(Parameterized.class)
+@LargeTest
 public class ChangeAppRotationTest extends FlickerTestBase {
     private int beginRotation;
     private int endRotation;

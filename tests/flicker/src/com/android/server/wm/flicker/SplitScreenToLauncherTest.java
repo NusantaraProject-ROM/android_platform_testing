@@ -20,6 +20,7 @@ import static com.android.server.wm.flicker.CommonTransitions.splitScreenToLaunc
 import static com.android.server.wm.flicker.WindowUtils.getDisplayBounds;
 
 import android.support.test.InstrumentationRegistry;
+import android.support.test.filters.LargeTest;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -28,6 +29,7 @@ import org.junit.Test;
  * Test open app to split screen.
  * To run this test: {@code atest FlickerTest:SplitScreenToLauncherTest}
  */
+@LargeTest
 public class SplitScreenToLauncherTest extends FlickerTestBase {
 
     public SplitScreenToLauncherTest() {

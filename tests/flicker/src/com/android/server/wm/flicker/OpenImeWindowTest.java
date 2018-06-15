@@ -19,6 +19,8 @@ package com.android.server.wm.flicker;
 import static com.android.server.wm.flicker.CommonTransitions.editTextSetFocus;
 import static com.android.server.wm.flicker.WindowUtils.getDisplayBounds;
 
+import android.support.test.filters.LargeTest;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -26,6 +28,7 @@ import org.junit.Test;
  * Test IME window opening transitions.
  * To run this test: {@code atest FlickerTest:OpenImeWindowTest}
  */
+@LargeTest
 public class OpenImeWindowTest extends FlickerTestBase {
 
     private static final String IME_WINDOW_TITLE = "InputMethod";
