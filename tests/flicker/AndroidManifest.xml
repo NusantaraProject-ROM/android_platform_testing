@@ -31,6 +31,6 @@
 
     <instrumentation android:name="android.support.test.runner.AndroidJUnitRunner"
                      android:targetPackage="com.android.server.wm.flicker"
-                     android:label="WindowManager Flicker Test">
+                     android:label="WindowManager Flicker Tests">
     </instrumentation>
 </manifest>
