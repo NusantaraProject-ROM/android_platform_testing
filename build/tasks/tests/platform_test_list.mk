@@ -43,8 +43,6 @@ platform_tests += \
     ExternalSharedPermsFLTestApp \
     ExternalSharedPermsTestApp \
     flatland \
-    FlickerTestApp \
-    FlickerTests \
     FrameworksCoreTests \
     FrameworkCoreTests_install \
     FrameworkCoreTests_install_bad_dex \

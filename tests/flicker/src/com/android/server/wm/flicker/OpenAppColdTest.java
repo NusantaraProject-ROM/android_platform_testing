@@ -21,6 +21,7 @@ import static com.android.server.wm.flicker.WindowUtils.getDisplayBounds;
 import static com.android.server.wm.flicker.WmTraceSubject.assertThat;
 
 import android.support.test.InstrumentationRegistry;
+import android.support.test.filters.LargeTest;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -29,6 +30,7 @@ import org.junit.Test;
  * Test cold launch app from launcher.
  * To run this test: {@code atest FlickerTest:OpenAppColdTest}
  */
+@LargeTest
 public class OpenAppColdTest extends FlickerTestBase {
 
     public OpenAppColdTest() {

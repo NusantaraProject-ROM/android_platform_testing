@@ -21,6 +21,7 @@ import static com.android.server.wm.flicker.WindowUtils.getDisplayBounds;
 
 import android.platform.helpers.IAppHelper;
 import android.support.test.InstrumentationRegistry;
+import android.support.test.filters.LargeTest;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -29,6 +30,7 @@ import org.junit.Test;
  * Test IME window closing to home transitions.
  * To run this test: {@code atest FlickerTest:CloseImeWindowToHomeTest}
  */
+@LargeTest
 public class CloseImeWindowToHomeTest extends FlickerTestBase {
 
     private static final String IME_WINDOW_TITLE = "InputMethod";
