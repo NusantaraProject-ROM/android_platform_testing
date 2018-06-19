@@ -121,6 +121,8 @@ native_tests := \
     wificond_unit_test \
     wifilogd_unit_test \
     ziparchive-tests \
+    NeuralNetworksTest_mt_static \
+    NeuralNetworksTest_operations \
     NeuralNetworksTest_static \
     SurfaceFlinger_test \
     lmkd_unit_test
