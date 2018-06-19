@@ -724,45 +724,6 @@ public class SystemUiJankTests extends JankTestBase {
         }
     }
 
-    public void beforeCameraFromLockscreen() throws Exception {
-        TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
-                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
-    }
-
-    public void beforeCameraFromLockscreenLoop() throws Exception {
-        mDevice.pressHome();
-        mDevice.sleep();
-        // Make sure we don't trigger the camera launch double-tap shortcut
-        SystemClock.sleep(300);
-        mDevice.wakeUp();
-        mDevice.waitForIdle();
-    }
-
-    public void afterCameraFromLockscreen(Bundle metrics) throws Exception {
-        TimeResultLogger.writeTimeStampLogEnd(String.format("%s-%s",
-                getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
-        mDevice.pressHome();
-        TimeResultLogger.writeResultToFile(String.format("%s-%s",
-                getClass().getSimpleName(), getName()), RESULTS_FILE, metrics);
-        super.afterTest(metrics);
-    }
-
-    /**
-     * Measures jank when launching the camera from lockscreen.
-     */
-    @JankTest(expectedFrames = 10,
-            defaultIterationCount = 5,
-            beforeTest = "beforeCameraFromLockscreen",
-            afterTest = "afterCameraFromLockscreen",
-            beforeLoop = "beforeCameraFromLockscreenLoop")
-    @GfxMonitor(processName = SYSTEMUI_PACKAGE)
-    public void testCameraFromLockscreen() throws Exception {
-        mDevice.swipe(mDevice.getDisplayWidth() - SWIPE_MARGIN,
-                mDevice.getDisplayHeight() - SWIPE_MARGIN, SWIPE_MARGIN, SWIPE_MARGIN,
-                DEFAULT_SCROLL_STEPS);
-        mDevice.waitForIdle();
-    }
-
     public void beforeAmbientWakeUp() throws Exception {
         postNotifications(GROUP_MODE_UNGROUPED);
         mDevice.sleep();
