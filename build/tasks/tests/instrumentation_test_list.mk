@@ -64,7 +64,9 @@ instrumentation_tests := \
     SettingsProviderTest \
     FrameworksLocationTests \
     FrameworksPrivacyLibraryTests \
-    SettingsUITests
+    SettingsUITests \
+    FlickerTestApp \
+    FlickerTests
 
 # Android Things specific tests
 ifeq ($(PRODUCT_IOT),true)

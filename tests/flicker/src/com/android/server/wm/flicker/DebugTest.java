@@ -18,6 +18,7 @@ package com.android.server.wm.flicker;
 
 import android.platform.helpers.IAppHelper;
 import android.support.test.InstrumentationRegistry;
+import android.support.test.filters.Suppress;
 import android.support.test.uiautomator.UiDevice;
 import android.util.Rational;
 import android.view.Surface;
@@ -27,6 +28,7 @@ import org.junit.Test;
 /**
  * Tests to help debug individual transitions, capture video recordings and create test cases.
  */
+@Suppress
 public class DebugTest {
     private IAppHelper testApp = new StandardAppHelper(InstrumentationRegistry.getInstrumentation(),
             "com.android.server.wm.flicker.testapp", "SimpleApp");
