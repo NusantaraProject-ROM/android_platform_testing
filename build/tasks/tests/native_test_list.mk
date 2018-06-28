@@ -128,12 +128,18 @@ native_tests := \
 ifeq ($(PRODUCT_IOT),true)
 
 native_tests += \
+    audiomap_test \
     crash_reporter_tests \
     libandroidthings_pio_tests \
+    libaudiodevicedriver_test \
+    libbootanimation_iot_test \
     libbrillo_test \
     libchrome_test \
     libusersensors_binder_test \
+    metricsd_tests \
     peripheralman_unittests \
+    pio_unittests \
+    realtimeman_tests \
     sensors_userdriver_test \
     userinputdriver_test
 
