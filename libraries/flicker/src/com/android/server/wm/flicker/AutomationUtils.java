@@ -20,10 +20,13 @@ import static android.os.SystemClock.sleep;
 import static android.system.helpers.OverviewHelper.isRecentsInLauncher;
 import static android.view.Surface.ROTATION_0;
 
+import static com.android.compatibility.common.util.SystemUtil.runShellCommand;
+
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
-import android.app.Instrumentation;
+import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.RemoteException;
@@ -77,11 +80,11 @@ public class AutomationUtils {
         Configurator.getInstance().setWaitForIdleTimeout(10000);
     }
 
-    private static boolean isQuickstepEnabled(UiDevice device) {
+    public static boolean isQuickstepEnabled(UiDevice device) {
         return device.findObject(By.res(SYSTEMUI_PACKAGE, "recent_apps")) == null;
     }
 
-    private static void openQuickstep(UiDevice device) {
+    public static void openQuickstep(UiDevice device) {
         if (isQuickstepEnabled(device)) {
             int height = device.getDisplayHeight();
             UiObject2 navBar = device.findObject(By.res(SYSTEMUI_PACKAGE, "navigation_bar_frame"));
@@ -152,10 +155,9 @@ public class AutomationUtils {
         recentsButton.click(LONG_PRESS_TIMEOUT);
     }
 
-    static void launchSplitScreen(UiDevice device) {
-        Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
-        String mLauncherPackage = LauncherStrategyFactory.getInstance(UiDevice.getInstance(
-                instrumentation)).getLauncherStrategy().getSupportedLauncherPackage();
+    public static void launchSplitScreen(UiDevice device) {
+        String mLauncherPackage = LauncherStrategyFactory.getInstance(device)
+                .getLauncherStrategy().getSupportedLauncherPackage();
 
         if (isQuickstepEnabled(device)) {
             // Quickstep enabled
@@ -181,7 +183,7 @@ public class AutomationUtils {
         sleep(2000);
     }
 
-    static void exitSplitScreen(UiDevice device) {
+    public static void exitSplitScreen(UiDevice device) {
         if (isQuickstepEnabled(device)) {
             // Quickstep enabled
             BySelector dividerSelector = By.res(SYSTEMUI_PACKAGE, "docked_divider_handle");
@@ -231,5 +233,28 @@ public class AutomationUtils {
                 By.res(SYSTEMUI_PACKAGE, "background"));
         pipWindow.click();
         pipWindow.click();
+    }
+
+    public static void stopPackage(Context context, String packageName) {
+        runShellCommand("am force-stop " + packageName);
+        int packageUid;
+        try {
+            packageUid = context.getPackageManager().getPackageUid(packageName, /* flags= */0);
+        } catch (PackageManager.NameNotFoundException e) {
+            return;
+        }
+        while (targetPackageIsRunning(packageUid)) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                //ignore
+            }
+        }
+    }
+
+    private static boolean targetPackageIsRunning(int uid) {
+        final String result = runShellCommand(
+                String.format("cmd activity get-uid-state %d", uid));
+        return !result.contains("(NONEXISTENT)");
     }
 }

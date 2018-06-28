@@ -33,4 +33,16 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
    launcher-helper-lib \
 
 include $(BUILD_STATIC_JAVA_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := flickerautomationhelperlib
+LOCAL_SDK_VERSION := current
+LOCAL_SRC_FILES := src/com/android/server/wm/flicker/AutomationUtils.java \
+    src/com/android/server/wm/flicker/WindowUtils.java
+LOCAL_STATIC_JAVA_LIBRARIES := sysui-helper \
+    launcher-helper-lib \
+    compatibility-device-util
+
+include $(BUILD_STATIC_JAVA_LIBRARY)
+
 include $(call all-makefiles-under,$(LOCAL_PATH))
