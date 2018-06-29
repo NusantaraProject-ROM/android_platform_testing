@@ -45,6 +45,26 @@ class WindowUtils {
         return wm.getDefaultDisplay().getRotation();
     }
 
+    static Rect getDisplayBounds(int requestedRotation) {
+        Rect displayBounds = getDisplayBounds();
+        int currentDisplayRotation = getCurrentRotation();
+
+        boolean displayIsRotated = (currentDisplayRotation == Surface.ROTATION_90 ||
+                currentDisplayRotation == Surface.ROTATION_270);
+
+        boolean requestedDisplayIsRotated = requestedRotation == Surface.ROTATION_90 ||
+                requestedRotation == Surface.ROTATION_270;
+
+        // if the current orientation changes with the requested rotation,
+        // flip height and width of display bounds.
+        if (displayIsRotated != requestedDisplayIsRotated) {
+            return new Rect(0, 0, displayBounds.height(), displayBounds.width());
+        }
+
+        return new Rect(0, 0, displayBounds.width(), displayBounds.height());
+    }
+
+
     static Rect getAppPosition(int requestedRotation) {
         Rect displayBounds = getDisplayBounds();
         int currentDisplayRotation = getCurrentRotation();

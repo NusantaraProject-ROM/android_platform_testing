@@ -24,13 +24,17 @@ import static com.android.server.wm.flicker.AutomationUtils.closePipWindow;
 import static com.android.server.wm.flicker.AutomationUtils.exitSplitScreen;
 import static com.android.server.wm.flicker.AutomationUtils.expandPipWindow;
 import static com.android.server.wm.flicker.AutomationUtils.launchSplitScreen;
+import static com.android.server.wm.flicker.AutomationUtils.stopPackage;
 
+import android.content.Context;
+import android.content.Intent;
 import android.os.RemoteException;
 import android.platform.helpers.IAppHelper;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
+import android.support.test.uiautomator.Until;
 import android.util.Rational;
 import android.view.Surface;
 
@@ -43,6 +47,7 @@ class CommonTransitions {
 
     public static final int ITERATIONS = 1;
     private static final String TAG = "FLICKER";
+    private static final long APP_LAUNCH_TIMEOUT = 10000;
 
     private static void setRotation(UiDevice device, int rotation) {
         try {
@@ -144,6 +149,27 @@ class CommonTransitions {
                 .runBefore(() -> setRotation(device, beginRotation))
                 .run(() -> setRotation(device, endRotation))
                 .runAfterAll(testApp::exit)
+                .runAfterAll(() -> setRotation(device, Surface.ROTATION_0))
+                .repeat(ITERATIONS);
+    }
+
+    static TransitionBuilder changeAppRotation(Intent intent, String intentId, Context context,
+            UiDevice
+                    device, int beginRotation, int endRotation) {
+        final String testTag = "changeAppRotation_" + intentId + "_" +
+                rotationToString(beginRotation) + "_" + rotationToString(endRotation);
+        return TransitionRunner.newBuilder()
+                .withTag(testTag)
+                .runBeforeAll(AutomationUtils::wakeUpAndGoToHomeScreen)
+                .runBeforeAll(() -> {
+                            context.startActivity(intent);
+                            device.wait(Until.hasObject(By.pkg(intent.getComponent()
+                                        .getPackageName()).depth(0)), APP_LAUNCH_TIMEOUT);
+                        }
+                )
+                .runBefore(() -> setRotation(device, beginRotation))
+                .run(() -> setRotation(device, endRotation))
+                .runAfterAll(() -> stopPackage(context, intent.getComponent().getPackageName()))
                 .runAfterAll(() -> setRotation(device, Surface.ROTATION_0))
                 .repeat(ITERATIONS);
     }
