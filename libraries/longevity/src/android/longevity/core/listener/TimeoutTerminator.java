@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
  * A {@link RunTerminator} for terminating early on test end due to long duration for host suites.
  */
 public class TimeoutTerminator extends RunTerminator {
-    protected static final String OPTION = "suite-timeout_msec";
+    public static final String OPTION = "suite-timeout_msec";
     protected static final long DEFAULT = TimeUnit.MINUTES.toMillis(30L);
     protected static final long UNSET_TIMESTAMP = -1;
 
