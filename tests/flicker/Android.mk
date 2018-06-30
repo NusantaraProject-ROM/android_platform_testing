@@ -26,6 +26,7 @@ LOCAL_COMPATIBILITY_SUITE := tests
 
 LOCAL_JAVA_LIBRARIES := android.test.runner
 LOCAL_STATIC_JAVA_LIBRARIES := \
+    flickertestapplib \
     flickerlib \
     truth-prebuilt \
     app-helpers-core
