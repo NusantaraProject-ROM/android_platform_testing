@@ -16,12 +16,17 @@
 
 package com.android.server.wm.flicker.monitor;
 
+import android.os.Environment;
+
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Collects test artifacts during a UI transition.
  */
 public interface ITransitionMonitor {
+    Path OUTPUT_DIR = Paths.get(Environment.getExternalStorageDirectory().toString(), "flicker");
+
     /**
      * Starts monitor.
      */
@@ -36,8 +41,9 @@ public interface ITransitionMonitor {
      * Saves any monitor artifacts to file adding {@code testTag} and {@code iteration}
      * to the file name.
      *
-     * @param testTag suffix added to artifact name
+     * @param testTag   suffix added to artifact name
      * @param iteration suffix added to artifact name
+     *
      * @return Path to saved artifact
      */
     default Path save(String testTag, int iteration) {
@@ -48,6 +54,7 @@ public interface ITransitionMonitor {
      * Saves any monitor artifacts to file adding {@code testTag} to the file name.
      *
      * @param testTag suffix added to artifact name
+     *
      * @return Path to saved artifact
      */
     default Path save(String testTag) {
