@@ -27,16 +27,19 @@ import android.graphics.Rect;
 import android.platform.helpers.IAppHelper;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.filters.LargeTest;
+import android.support.test.runner.AndroidJUnit4;
 import android.util.Rational;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
  * Test split screen resizing window transitions.
- * To run this test: {@code atest FlickerTest:ResizeSplitScreenTest}
+ * To run this test: {@code atest FlickerTests:ResizeSplitScreenTest}
  */
 @LargeTest
+@RunWith(AndroidJUnit4.class)
 public class ResizeSplitScreenTest extends FlickerTestBase {
 
     public ResizeSplitScreenTest() {

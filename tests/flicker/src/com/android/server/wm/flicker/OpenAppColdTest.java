@@ -22,15 +22,18 @@ import static com.android.server.wm.flicker.WmTraceSubject.assertThat;
 
 import android.support.test.InstrumentationRegistry;
 import android.support.test.filters.LargeTest;
+import android.support.test.runner.AndroidJUnit4;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
  * Test cold launch app from launcher.
- * To run this test: {@code atest FlickerTest:OpenAppColdTest}
+ * To run this test: {@code atest FlickerTests:OpenAppColdTest}
  */
 @LargeTest
+@RunWith(AndroidJUnit4.class)
 public class OpenAppColdTest extends FlickerTestBase {
 
     public OpenAppColdTest() {

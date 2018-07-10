@@ -22,15 +22,18 @@ import static com.android.server.wm.flicker.WindowUtils.getDisplayBounds;
 import android.platform.helpers.IAppHelper;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.filters.LargeTest;
+import android.support.test.runner.AndroidJUnit4;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
  * Test IME window closing back to app window transitions.
- * To run this test: {@code atest FlickerTest:CloseImeWindowToAppTest}
+ * To run this test: {@code atest FlickerTests:CloseImeWindowToAppTest}
  */
 @LargeTest
+@RunWith(AndroidJUnit4.class)
 public class CloseImeWindowToAppTest extends FlickerTestBase {
 
     private static final String IME_WINDOW_TITLE = "InputMethod";
