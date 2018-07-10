@@ -19,23 +19,26 @@ package com.android.server.wm.flicker;
 import android.platform.helpers.IAppHelper;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.filters.Suppress;
+import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiDevice;
 import android.util.Rational;
 import android.view.Surface;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
  * Tests to help debug individual transitions, capture video recordings and create test cases.
  */
 @Suppress
+@RunWith(AndroidJUnit4.class)
 public class DebugTest {
     private IAppHelper testApp = new StandardAppHelper(InstrumentationRegistry.getInstrumentation(),
             "com.android.server.wm.flicker.testapp", "SimpleApp");
     private UiDevice uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
     /**
-     * atest FlickerTest:DebugTest#openAppCold
+     * atest FlickerTest:DebugTests#openAppCold
      */
     @Test
     public void openAppCold() {
@@ -43,7 +46,7 @@ public class DebugTest {
     }
 
     /**
-     * atest FlickerTest:DebugTest#openAppWarm
+     * atest FlickerTest:DebugTests#openAppWarm
      */
     @Test
     public void openAppWarm() {
@@ -51,7 +54,7 @@ public class DebugTest {
     }
 
     /**
-     * atest FlickerTest:DebugTest#changeOrientationFromNaturalToLeft
+     * atest FlickerTest:DebugTests#changeOrientationFromNaturalToLeft
      */
     @Test
     public void changeOrientationFromNaturalToLeft() {
@@ -60,7 +63,7 @@ public class DebugTest {
     }
 
     /**
-     * atest FlickerTest:DebugTest#closeAppWithBackKey
+     * atest FlickerTest:DebugTests#closeAppWithBackKey
      */
     @Test
     public void closeAppWithBackKey() {
@@ -68,7 +71,7 @@ public class DebugTest {
     }
 
     /**
-     * atest FlickerTest:DebugTest#closeAppWithHomeKey
+     * atest FlickerTest:DebugTests#closeAppWithHomeKey
      */
     @Test
     public void closeAppWithHomeKey() {
@@ -76,7 +79,7 @@ public class DebugTest {
     }
 
     /**
-     * atest FlickerTest:DebugTest#openAppToSplitScreen
+     * atest FlickerTest:DebugTests#openAppToSplitScreen
      */
     @Test
     public void openAppToSplitScreen() {
@@ -85,7 +88,7 @@ public class DebugTest {
     }
 
     /**
-     * atest FlickerTest:DebugTest#splitScreenToLauncher
+     * atest FlickerTest:DebugTests#splitScreenToLauncher
      */
     @Test
     public void splitScreenToLauncher() {
@@ -95,7 +98,7 @@ public class DebugTest {
     }
 
     /**
-     * atest FlickerTest:DebugTest#resizeSplitScreen
+     * atest FlickerTest:DebugTests#resizeSplitScreen
      */
     @Test
     public void resizeSplitScreen() {
@@ -108,7 +111,7 @@ public class DebugTest {
     // IME tests
 
     /**
-     * atest FlickerTest:DebugTest#editTextSetFocus
+     * atest FlickerTest:DebugTests#editTextSetFocus
      */
     @Test
     public void editTextSetFocus() {
@@ -117,7 +120,7 @@ public class DebugTest {
     }
 
     /**
-     * atest FlickerTest:DebugTest#editTextLoseFocusToHome
+     * atest FlickerTest:DebugTests#editTextLoseFocusToHome
      */
     @Test
     public void editTextLoseFocusToHome() {
@@ -126,7 +129,7 @@ public class DebugTest {
     }
 
     /**
-     * atest FlickerTest:DebugTest#editTextLoseFocusToApp
+     * atest FlickerTest:DebugTests#editTextLoseFocusToApp
      */
     @Test
     public void editTextLoseFocusToApp() {
@@ -137,7 +140,7 @@ public class DebugTest {
     // PIP tests
 
     /**
-     * atest FlickerTest:DebugTest#enterPipMode
+     * atest FlickerTest:DebugTests#enterPipMode
      */
     @Test
     public void enterPipMode() {
@@ -145,7 +148,7 @@ public class DebugTest {
     }
 
     /**
-     * atest FlickerTest:DebugTest#exitPipModeToHome
+     * atest FlickerTest:DebugTests#exitPipModeToHome
      */
     @Test
     public void exitPipModeToHome() {
@@ -154,7 +157,7 @@ public class DebugTest {
     }
 
     /**
-     * atest FlickerTest:DebugTest#exitPipModeToApp
+     * atest FlickerTest:DebugTests#exitPipModeToApp
      */
     @Test
     public void exitPipModeToApp() {

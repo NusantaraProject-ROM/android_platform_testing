@@ -21,15 +21,18 @@ import static com.android.server.wm.flicker.WindowUtils.getDisplayBounds;
 
 import android.support.test.InstrumentationRegistry;
 import android.support.test.filters.LargeTest;
+import android.support.test.runner.AndroidJUnit4;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
  * Test open app to split screen.
- * To run this test: {@code atest FlickerTest:OpenAppToSplitScreenTest}
+ * To run this test: {@code atest FlickerTests:OpenAppToSplitScreenTest}
  */
 @LargeTest
+@RunWith(AndroidJUnit4.class)
 public class OpenAppToSplitScreenTest extends FlickerTestBase {
 
     public OpenAppToSplitScreenTest() {
