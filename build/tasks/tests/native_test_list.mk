@@ -122,7 +122,8 @@ native_tests := \
     NeuralNetworksTest_static \
     NeuralNetworksTest_static_asan \
     SurfaceFlinger_test \
-    lmkd_unit_test
+    lmkd_unit_test \
+    vrflinger_test
 
 # Android Things specific tests
 ifeq ($(PRODUCT_IOT),true)
