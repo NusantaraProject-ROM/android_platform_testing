@@ -129,6 +129,7 @@ public class LauncherJankTests extends JankTestBase {
     public void resetAndOpenRecents() throws UiObjectNotFoundException, RemoteException {
         goHome();
         mDevice.pressRecentApps();
+        mDevice.waitForIdle();
     }
 
     public void prepareOpenAllAppsContainer() throws IOException {
@@ -257,6 +258,7 @@ public class LauncherJankTests extends JankTestBase {
     @GfxMonitor(processName="#getLauncherPackage")
     public void testWidgetsContainerFling() {
         UiObject2 allWidgets = mDevice.findObject(mLauncherStrategy.getAllWidgetsSelector());
+        allWidgets.setGestureMargin(100);
         Direction dir = mLauncherStrategy.getAllWidgetsScrollDirection();
         for (int i = 0; i < INNER_LOOP; i++) {
             allWidgets.fling(dir, FLING_SPEED);

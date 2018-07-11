@@ -45,8 +45,8 @@ import java.util.Collection;
  * Cycle through supported app rotations using seamless rotations.
  * To run this test: {@code atest FlickerTests:SeamlessAppRotationTest}
  */
-@RunWith(Parameterized.class)
 @LargeTest
+@RunWith(Parameterized.class)
 public class SeamlessAppRotationTest extends FlickerTestBase {
     private int mBeginRotation;
     private int mEndRotation;
