@@ -18,6 +18,7 @@ LOCAL_PACKAGE_NAME := FlickerTestApp
 LOCAL_MODULE_TAGS := tests optional
 LOCAL_SRC_FILES := $(call all-subdir-java-files)
 LOCAL_SDK_VERSION := current
+LOCAL_COMPATIBILITY_SUITE := device-tests
 include $(BUILD_PACKAGE)
 
 include $(CLEAR_VARS)
