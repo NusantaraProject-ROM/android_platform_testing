@@ -97,6 +97,7 @@ native_tests := \
     net_test_types \
     netd_integration_test \
     netd_unit_test \
+    netdutils_test \
     nfc_test_utils \
     pagemap_test \
     perfetto_integrationtests \
