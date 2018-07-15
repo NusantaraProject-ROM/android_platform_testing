@@ -21,8 +21,8 @@
         <option name="test-timeout" value="6000s" />
         <option name="hidden-api-checks" value="false" />
     </test>
-    <test class="com.android.tradefed.result.LogFilesReporter">
-        <option name="upload-dir" value="/sdcard/flicker/" />
-        <option name="clean-upload-pattern" value="true" />
-    </test>
+    <metrics_collector class="com.android.tradefed.device.metric.FilePullerLogCollector">
+        <option name="directory-keys" value="/sdcard/flicker" />
+        <option name="collect-on-run-ended-only" value="true" />
+    </metrics_collector>
 </configuration>
