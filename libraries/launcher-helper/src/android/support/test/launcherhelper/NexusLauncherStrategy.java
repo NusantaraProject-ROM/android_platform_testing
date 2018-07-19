@@ -87,12 +87,12 @@ public class NexusLauncherStrategy extends BaseLauncher3Strategy {
             if (Build.VERSION.FIRST_SDK_INT >= Build.VERSION_CODES.O) {
                 int midX = mDevice.getDisplayWidth() / 2;
                 int height = mDevice.getDisplayHeight();
-                // Swipe from 5/6ths down the screen to 1/6th down the screen.
+                // Swipe from 6/7ths down the screen to 1/7th down the screen.
                 mDevice.swipe(
                         midX,
-                        height * 5 / 6,
+                        height * 6 / 7,
                         midX,
-                        height / 6,
+                        height / 7,
                         (height * 2 / 3) / 100); // 100 px/step
             } else {
                 // Swipe from the hotseat to near the top, e.g. 10% of the screen.
