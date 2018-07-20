@@ -143,7 +143,8 @@ public class ActivityHelper {
             Thread.sleep(ONE_SECOND);
         }
         int maxTries = 20;
-        while (!mDevice.hasObject(By.text("No recent items")) && maxTries-- >= 0) {
+        while (mDevice.findObject(By.res(NEXUS_LAUNCHER, "overview_panel"))
+                .isScrollable() && maxTries-- >= 0) {
             UiScrollable thumbnailScrollable = new UiScrollable(new UiSelector().resourceId(
                     NEXUS_LAUNCHER + ":id/overview_panel"));
             thumbnailScrollable.setAsHorizontalList();
