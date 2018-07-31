@@ -263,8 +263,9 @@ file for Android's test harness, [TradeFederation](https://source.android.com/de
 The test configuration can specify special device setup options and default
 arguments to supply the test class.
 
-The config can be found:
-frameworks/base/packages/Shell/tests/src/com/android/shell/BugreportReceiverTest.javast.java
+Latest version of the config file for the sample gerrit change can be accessed
+at:
+https://android.googlesource.com/platform/frameworks/base/+/master/packages/Shell/tests/AndroidTest.xml
 
 A snapshot is included here for convenience:
 
