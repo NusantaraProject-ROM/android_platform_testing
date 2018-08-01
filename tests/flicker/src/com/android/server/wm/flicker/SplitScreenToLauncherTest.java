@@ -24,6 +24,7 @@ import android.support.test.filters.LargeTest;
 import android.support.test.runner.AndroidJUnit4;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -61,7 +62,7 @@ public class SplitScreenToLauncherTest extends FlickerTestBase {
                 .forAllEntries());
     }
 
-    // b/79686616
+    @Ignore("b/79686616")
     @Test
     public void checkVisibility_appLayerBecomesInVisible() {
         checkResults(result -> LayersTraceSubject.assertThat(result)

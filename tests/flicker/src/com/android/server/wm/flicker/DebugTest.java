@@ -18,19 +18,19 @@ package com.android.server.wm.flicker;
 
 import android.platform.helpers.IAppHelper;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.filters.Suppress;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiDevice;
 import android.util.Rational;
 import android.view.Surface;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
  * Tests to help debug individual transitions, capture video recordings and create test cases.
  */
-@Suppress
+@Ignore("Used for debugging transitions used in FlickerTests.")
 @RunWith(AndroidJUnit4.class)
 public class DebugTest {
     private IAppHelper testApp = new StandardAppHelper(InstrumentationRegistry.getInstrumentation(),

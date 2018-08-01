@@ -23,8 +23,7 @@ import static com.android.server.wm.flicker.WindowUtils.getAppPosition;
 import static com.android.server.wm.flicker.WindowUtils.getDisplayBounds;
 import static com.android.server.wm.flicker.WindowUtils.getNavigationBarPosition;
 import static com.android.server.wm.flicker.testapp.ActivityOptions.EXTRA_STARVE_UI_THREAD;
-import static com.android.server.wm.flicker.testapp.ActivityOptions
-        .SEAMLESS_ACTIVITY_COMPONENT_NAME;
+import static com.android.server.wm.flicker.testapp.ActivityOptions.SEAMLESS_ACTIVITY_COMPONENT_NAME;
 
 import android.content.Intent;
 import android.graphics.Rect;
