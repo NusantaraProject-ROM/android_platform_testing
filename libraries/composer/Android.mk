@@ -1,4 +1,4 @@
-# Copyright (C) 2015 The Android Open Source Project
+# Copyright (C) 2018 The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,18 +13,15 @@
 # limitations under the License.
 
 LOCAL_PATH := $(call my-dir)
+
 include $(CLEAR_VARS)
-
-LOCAL_PACKAGE_NAME := UbSystemUiJankTests
-LOCAL_PRIVATE_PLATFORM_APIS := true
+LOCAL_MODULE := platform-test-composers
+LOCAL_SDK_VERSION := current
+LOCAL_STATIC_JAVA_LIBRARIES := androidx-test
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
-LOCAL_MODULE_TAGS := tests
 
-LOCAL_STATIC_JAVA_LIBRARIES := ub-janktesthelper ub-uiautomator launcher-helper-lib \
-    timeresult-helper-lib sysui-helper collector-device-lib ub-launcher-aosp-tapl
+include $(BUILD_STATIC_JAVA_LIBRARY)
 
-LOCAL_JAVA_LIBRARIES := android.test.base
+######################################
 
-LOCAL_COMPATIBILITY_SUITE := device-tests
-
-include $(BUILD_PACKAGE)
+include $(call all-makefiles-under, $(LOCAL_PATH))
