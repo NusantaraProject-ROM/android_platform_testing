@@ -27,7 +27,9 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
     android-support-test \
     ub-uiautomator \
     launcher-helper-lib \
-    sysui-helper
+    sysui-helper \
+    collector-device-lib \
+    settings-helper
 
 LOCAL_COMPATIBILITY_SUITE := device-tests
 

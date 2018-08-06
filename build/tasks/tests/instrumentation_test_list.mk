@@ -16,15 +16,21 @@ instrumentation_tests := \
     HelloWorldTests \
     BluetoothInstrumentationTests \
     crashcollector \
-    LongevityLibTests \
+    LongevityPlatformLibTests \
     ManagedProvisioningTests \
     FrameworksCoreTests \
+    BinderProxyCountingTestApp \
+    BinderProxyCountingTestService \
     FrameworksNetTests \
-    FrameworksNotificationTests \
+    FrameworksUiServicesTests \
+    BstatsTestApp \
     ConnTestApp \
     FrameworksServicesTests \
+    JobTestApp \
+    SuspendTestApp \
     FrameworksUtilTests \
     MtpDocumentsProviderTests \
+    MtpTests \
     DocumentsUITests \
     ShellTests \
     SystemUITests \
@@ -42,6 +48,8 @@ instrumentation_tests := \
     BlockedNumberProviderTest \
     DownloadAppFunctionalTests \
     NotificationFunctionalTests \
+    DexLoggerIntegrationTests \
+    UsbTests \
     DownloadProviderTests \
     EmergencyInfoUnitTests \
     CalendarProviderTests \
@@ -54,14 +62,16 @@ instrumentation_tests := \
     TeleServiceTests \
     PresencePollingTests \
     SettingsProviderTest \
-    SettingsTests
+    FrameworksLocationTests \
+    FrameworksPrivacyLibraryTests \
+    SettingsUITests
 
 # Android Things specific tests
 ifeq ($(PRODUCT_IOT),true)
 
 instrumentation_tests += \
     AndroidThingsTests \
-    IoTLauncherTests \
+    ThingsIntegrationTests \
     WifiSetupUnitTests
 
 endif  # PRODUCT_IOT == true

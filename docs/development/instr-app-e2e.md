@@ -263,8 +263,9 @@ file for Android's test harness, [TradeFederation](https://source.android.com/de
 The test configuration can specify special device setup options and default
 arguments to supply the test class.
 
-The config can be found:
-frameworks/base/packages/Shell/tests/src/com/android/shell/BugreportReceiverTest.javast.java
+Latest version of the config file for the sample gerrit change can be accessed
+at:
+https://android.googlesource.com/platform/frameworks/base/+/master/packages/Shell/tests/AndroidTest.xml
 
 A snapshot is included here for convenience:
 
@@ -305,7 +306,7 @@ This specifies the TradeFederation test class to use to execute the test and
 passes in the package on the device to be executed and the test runner
 framework which is JUnit in this case.
 
-Look here for more information on [Test Module Configs](../test-config.md)
+Look here for more information on [Test Module Configs](test-config.md)
 
 ## JUnit4 Features
 
@@ -380,4 +381,4 @@ stored. Through this class, you can also call:
 
 ## Build & Test Locally
 
-Follow these [Instructions](../instrumentation.md)
+Follow these [Instructions](instrumentation.md)
