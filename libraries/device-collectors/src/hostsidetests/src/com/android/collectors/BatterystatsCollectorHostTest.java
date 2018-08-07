@@ -59,7 +59,7 @@ import java.util.Collection;
 public class BatterystatsCollectorHostTest extends BaseHostJUnit4Test {
     private static final String TEST_APK = "CollectorDeviceLibTest.apk";
     private static final String PACKAGE_NAME = "android.device.collectors";
-    private static final String AJUR_RUNNER = "android.support.test.runner.AndroidJUnitRunner";
+    private static final String AJUR_RUNNER = "androidx.test.runner.AndroidJUnitRunner";
 
     private static final String BATTERYSTATS_COLLECTOR =
             "android.device.collectors.BatteryStatsListener";
