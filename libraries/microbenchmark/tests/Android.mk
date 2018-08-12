@@ -1,5 +1,4 @@
-#
-# Copyright (C) 2016 The Android Open Source Project
+# Copyright (C) 2018 The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,16 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
 
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 
-LOCAL_MODULE := metrics-helper-lib
-LOCAL_SRC_FILES := $(call all-java-files-under, src)
-LOCAL_STATIC_JAVA_LIBRARIES := junit
+LOCAL_MODULE_TAGS := tests
+LOCAL_PACKAGE_NAME := MicrobenchmarkRunnerTests
+LOCAL_SDK_VERSION := current
+LOCAL_STATIC_JAVA_LIBRARIES := microbenchmark-device-lib truth-prebuilt
+LOCAL_SRC_FILES := $(call all-java-files-under, src/)
+LOCAL_COMPATIBILITY_SUITE := device-tests
 
-include $(BUILD_STATIC_JAVA_LIBRARY)
-
-include $(call all-makefiles-under,$(LOCAL_PATH))
+include $(BUILD_PACKAGE)
