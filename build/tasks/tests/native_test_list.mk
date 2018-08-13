@@ -131,6 +131,7 @@ ifeq ($(PRODUCT_IOT),true)
 
 native_tests += \
     audiomap_test \
+    coprocman_tests \
     crash_reporter_tests \
     libandroidthings_pio_tests \
     libaudiodevicedriver_test \
@@ -141,7 +142,6 @@ native_tests += \
     metricsd_tests \
     peripheralman_unittests \
     pio_unittests \
-    realtimeman_tests \
     sensors_userdriver_test \
     userinputdriver_test
 
