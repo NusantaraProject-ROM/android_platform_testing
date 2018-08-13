@@ -19,7 +19,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-java-files-under, java)
 
 LOCAL_STATIC_JAVA_LIBRARIES := \
-    android-support-test \
+    androidx-test \
     junit
 
 LOCAL_MODULE_TAGS := optional

@@ -22,9 +22,10 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.support.annotation.VisibleForTesting;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.internal.runner.listener.InstrumentationRunListener;
 import android.util.Log;
+
+import androidx.test.InstrumentationRegistry;
+import androidx.test.internal.runner.listener.InstrumentationRunListener;
 
 import org.junit.runner.Description;
 import org.junit.runner.Result;
