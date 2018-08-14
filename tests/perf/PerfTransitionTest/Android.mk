@@ -29,7 +29,8 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
     launcher-helper-lib \
     sysui-helper \
     collector-device-lib \
-    settings-helper
+    settings-helper \
+    ub-launcher-aosp-tapl
 
 LOCAL_COMPATIBILITY_SUITE := device-tests
 
