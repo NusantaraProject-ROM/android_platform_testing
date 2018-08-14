@@ -16,6 +16,7 @@
 package com.android.collectors;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -50,7 +51,7 @@ import java.util.Arrays;
 public class ScreenshotCollectorHostTest extends BaseHostJUnit4Test {
     private static final String TEST_APK = "CollectorDeviceLibTest.apk";
     private static final String PACKAGE_NAME = "android.device.collectors";
-    private static final String AJUR_RUNNER = "android.support.test.runner.AndroidJUnitRunner";
+    private static final String AJUR_RUNNER = "androidx.test.runner.AndroidJUnitRunner";
 
     private static final String SCREENSHOT_COLLECTOR =
             "android.device.collectors.ScreenshotListener";
@@ -101,5 +102,6 @@ public class ScreenshotCollectorHostTest extends BaseHostJUnit4Test {
         optionSetter.setOptionValue("pull-pattern-keys", pattern);
         collector.init(mContext, listener);
         assertTrue(getDevice().runInstrumentationTests(mTestRunner, collector));
+        assertFalse(listener.getRunResults().iterator().next().isRunFailure());
     }
 }
