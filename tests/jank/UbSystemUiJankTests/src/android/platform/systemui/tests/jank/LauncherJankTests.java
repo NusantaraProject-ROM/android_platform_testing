@@ -58,13 +58,13 @@ public class LauncherJankTests extends JankTestBase {
     @Override
     public void setUp() {
         mDevice = UiDevice.getInstance(getInstrumentation());
-        mLauncher = new LauncherInstrumentation(mDevice);
         try {
             mDevice.setOrientationNatural();
         } catch (RemoteException e) {
             throw new RuntimeException("failed to freeze device orientaion", e);
         }
         mLauncherStrategy = LauncherStrategyFactory.getInstance(mDevice).getLauncherStrategy();
+        mLauncher = new LauncherInstrumentation(mDevice);
     }
 
     public String getLauncherPackage() {
