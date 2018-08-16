@@ -22,7 +22,7 @@ import static org.mockito.Mockito.verify;
 
 import android.content.Context;
 import android.content.Intent;
-import android.support.test.filters.SmallTest;
+import androidx.test.filters.SmallTest;
 
 import java.util.HashMap;
 import java.util.Map;
