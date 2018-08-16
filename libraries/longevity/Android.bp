@@ -32,7 +32,7 @@ java_library_static {
     ],
     defaults: [ "tradefed_errorprone_defaults" ],
     static_libs: [
-        "android-support-test",
+        "androidx-test",
     ],
     libs: [
         "guava",

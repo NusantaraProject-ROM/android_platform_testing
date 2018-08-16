@@ -25,7 +25,7 @@ import android.longevity.platform.listener.TimeoutTerminator;
 import android.os.BatteryManager;
 import android.os.Bundle;
 import android.support.annotation.VisibleForTesting;
-import android.support.test.InstrumentationRegistry;
+import androidx.test.InstrumentationRegistry;
 import android.util.Log;
 
 import java.util.HashMap;
