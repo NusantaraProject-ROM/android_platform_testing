@@ -85,7 +85,6 @@ public class LatencyTests {
     @Before
     public void setUp() throws Exception {
         mDevice = UiDevice.getInstance(getInstrumentation());
-        mLauncher = new LauncherInstrumentation(mDevice);
         Bundle mArgs = InstrumentationRegistry.getArguments();
         mIterationCount = Integer.parseInt(mArgs.getString(KEY_ITERATION_COUNT,
                 Integer.toString(DEFAULT_ITERATION_COUNT)));
@@ -110,6 +109,7 @@ public class LatencyTests {
         }
         // Need to run strategy initialization code as a precondition for tests.
         LauncherStrategyFactory.getInstance(mDevice);
+        mLauncher = new LauncherInstrumentation(mDevice);
     }
 
     /**
