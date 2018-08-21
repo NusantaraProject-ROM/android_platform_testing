@@ -64,7 +64,7 @@ public class LauncherJankTests extends JankTestBase {
             throw new RuntimeException("failed to freeze device orientaion", e);
         }
         mLauncherStrategy = LauncherStrategyFactory.getInstance(mDevice).getLauncherStrategy();
-        mLauncher = new LauncherInstrumentation(mDevice);
+        mLauncher = new LauncherInstrumentation(getInstrumentation());
     }
 
     public String getLauncherPackage() {
