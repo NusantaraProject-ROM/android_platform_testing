@@ -111,7 +111,7 @@ public class LauncherJankTests extends JankTestBase {
     }
 
     public void openAllApps() throws UiObjectNotFoundException, IOException {
-        mLauncherStrategy.openAllApps(false);
+        mLauncher.pressHome().switchToAllApps();
         TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
                 getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
     }
