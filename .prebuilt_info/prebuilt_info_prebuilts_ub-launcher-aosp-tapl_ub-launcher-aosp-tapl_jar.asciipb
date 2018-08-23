@@ -1,6 +1,6 @@
 drops {
   android_build_drop {
-    build_id: "4941164"
+    build_id: "4973746"
     target: "Launcher3"
     source_file: "ub-launcher-aosp-tapl.jar"
   }
