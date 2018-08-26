@@ -110,7 +110,7 @@ public class AppTransitionTests {
         mDevice = UiDevice.getInstance(getInstrumentation());
         LauncherStrategyFactory factory = LauncherStrategyFactory.getInstance(mDevice);
         mLauncherStrategy = factory.getLauncherStrategy();
-        mLauncher = new LauncherInstrumentation(mDevice);
+        mLauncher = new LauncherInstrumentation(getInstrumentation());
         mHasLeanback = hasLeanback(getInstrumentation().getTargetContext());
 
         // Inject an instance of instrumentation only if leanback. This enables to launch any app

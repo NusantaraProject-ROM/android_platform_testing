@@ -109,7 +109,7 @@ public class LatencyTests {
         }
         // Need to run strategy initialization code as a precondition for tests.
         LauncherStrategyFactory.getInstance(mDevice);
-        mLauncher = new LauncherInstrumentation(mDevice);
+        mLauncher = new LauncherInstrumentation(getInstrumentation());
     }
 
     /**
