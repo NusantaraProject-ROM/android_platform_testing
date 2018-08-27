@@ -18,6 +18,7 @@ native_tests := \
     bionic-unit-tests \
     bionic-unit-tests-static \
     bluetoothtbd_test \
+    bluetooth_test_common \
     bootstat_tests \
     boringssl_crypto_test \
     boringssl_ssl_test \
@@ -83,6 +84,7 @@ native_tests := \
     mj_system_unittest_gtest \
     mj_util_unittest_gtest \
     mtp_ffs_handle_test \
+    net_test_audio_a2dp_hw \
     net_test_avrcp \
     net_test_bluetooth \
     net_test_bta \
@@ -98,6 +100,7 @@ native_tests := \
     net_test_stack \
     net_test_stack_ad_parser \
     net_test_stack_multi_adv \
+    net_test_stack_rfcomm \
     net_test_stack_smp \
     net_test_types \
     netd_integration_test \
