@@ -17,12 +17,15 @@ package android.support.test.launcherhelper;
 
 import android.graphics.Point;
 import android.os.Build;
+import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
+
+import com.android.launcher3.tapl.LauncherInstrumentation;
 
 import junit.framework.Assert;
 
@@ -34,6 +37,7 @@ import java.io.IOException;
 public class NexusLauncherStrategy extends BaseLauncher3Strategy {
 
     private static final String LAUNCHER_PKG = "com.google.android.apps.nexuslauncher";
+    private LauncherInstrumentation mLauncher;
 
     @Override
     public void setUiDevice(UiDevice uiDevice) {
@@ -45,6 +49,7 @@ public class NexusLauncherStrategy extends BaseLauncher3Strategy {
         } catch (IOException e) {
             Assert.fail("Failed to set swipe_up_to_switch_apps_enabled, caused by: " + e);
         }
+        mLauncher = new LauncherInstrumentation(InstrumentationRegistry.getInstrumentation());
     }
 
     @Override
@@ -154,5 +159,13 @@ public class NexusLauncherStrategy extends BaseLauncher3Strategy {
                     allWidgetsContainer, Direction.reverse(getAllWidgetsScrollDirection()));
         }
         return allWidgetsContainer;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public long launch(String appName, String packageName) {
+        return CommonLauncherHelper.getInstance(mDevice).launchApp(mLauncher, appName, packageName);
     }
 }
