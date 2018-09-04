@@ -25,7 +25,7 @@ java_library {
         "dpad-util",
         "commands-helper",
         "activity-helper",
-        "ub-launcher-aosp-tapl",
+        "launcher-aosp-tapl",
     ],
     sdk_version: "test_current",
     srcs: ["src/**/*.java"],
