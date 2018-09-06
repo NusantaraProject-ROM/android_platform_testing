@@ -71,7 +71,6 @@ native_tests := \
     libsurfaceflinger_unittest \
     libunwindstack_test \
     libvintf_test \
-    libwifi-system_tests \
     linker-unit-tests \
     logcat-unit-tests \
     logd-unit-tests \
