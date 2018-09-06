@@ -19,7 +19,6 @@ platform_tests += \
     BluetoothTests \
     BootHelperApp \
     CalculatorFunctionalTests \
-    CalculatorTests \
     CalendarTests \
     camera_client_test \
     camera_metadata_tests \
