@@ -1,5 +1,4 @@
-//
-// Copyright (C) 2015 The Android Open Source Project
+// Copyright (C) 2018 The Android Open Source Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,21 +11,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
 
 java_library {
-    name: "launcher-helper-lib",
-    libs: [
-        "ub-uiautomator",
-        "android-support-test",
-        "activity-helper",
-    ],
-    static_libs: [
-        "dpad-util",
-        "commands-helper",
-        "activity-helper",
-        "launcher-aosp-tapl",
-    ],
-    sdk_version: "test_current",
+    name: "collectors-helper",
+    defaults: ["tradefed_errorprone_defaults"],
+
     srcs: ["src/**/*.java"],
+
+    static_libs: [
+        "platformprotoslite",
+        "statsdprotolite",
+        "androidx-test",
+    ],
+
+    platform_apis: true,
 }

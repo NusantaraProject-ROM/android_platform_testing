@@ -20,8 +20,9 @@ java_library {
 
     static_libs: [
         "androidx-test",
+        "collectors-helper",
         "junit",
     ],
 
-    sdk_version: "current",
+    platform_apis: true,
 }

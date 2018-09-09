@@ -12,7 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-java_import {
-    name: "ub-launcher-aosp-tapl",
-    jars: ["ub-launcher-aosp-tapl.jar"],
+java_library {
+    name: "collectors-helper-test",
+    defaults: ["tradefed_errorprone_defaults"],
+
+    srcs: ["src/**/*.java"],
+
+    static_libs: [
+        "androidx-test",
+        "collectors-helper",
+        "app-helpers-handheld-interfaces",
+        "junit",
+        "ub-uiautomator",
+    ],
+
+    platform_apis: true,
 }
