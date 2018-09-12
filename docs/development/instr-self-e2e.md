@@ -9,7 +9,7 @@ demonstrate the typical workflow involved.
 Note that this guide assumes that you already have some knowledge in the
 platform source tree workflow. If not, please refer to
 https://source.android.com/source/requirements. The example
-covered here is writing an new instrumentation test with target package set at
+covered here is writing a new instrumentation test with target package set at
 its own test application package. If you are unfamiliar with the concept, please
 read through the [testing basics](../basics/index.md) page.
 
@@ -170,7 +170,7 @@ e.g. `${OUT}/data/app/HelloWorldTests/HelloWorldTests.apk`
 
 Just like a regular application, each instrumentation test module needs a
 manifest file. If you name the file as `AndroidManifest.xml` and provide it next
-to `Android.mk` for your test tmodule, it will get included automatically by the
+to `Android.mk` for your test module, it will get included automatically by the
 `BUILD_PACKAGE` core makefile.
 
 Before proceeding further, it's highly recommended to go through the external
