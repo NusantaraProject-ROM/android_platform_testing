@@ -1,2 +1,0 @@
-// allow other projects to directly use 'ub-launcher-aosp-tapl.jar'
-artifacts.add("default", file('ub-launcher-aosp-tapl.jar'))
