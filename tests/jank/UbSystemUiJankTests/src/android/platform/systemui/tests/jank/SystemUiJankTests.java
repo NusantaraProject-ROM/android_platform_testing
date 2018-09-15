@@ -144,6 +144,7 @@ public class SystemUiJankTests extends JankTestBase {
         Settings.Secure.putInt(contentResolver, Settings.Secure.DOZE_ALWAYS_ON, 1);
 
         mLauncher = new LauncherInstrumentation(getInstrumentation());
+        mDevice.executeShellCommand("pm disable com.google.android.music");
     }
 
     public void goHome() {
@@ -153,6 +154,7 @@ public class SystemUiJankTests extends JankTestBase {
 
     @Override
     protected void tearDown() throws Exception {
+        mDevice.executeShellCommand("pm enable com.google.android.music");
         mDevice.unfreezeRotation();
         unblockNotifications();
         ContentResolver contentResolver = getInstrumentation().getContext().getContentResolver();

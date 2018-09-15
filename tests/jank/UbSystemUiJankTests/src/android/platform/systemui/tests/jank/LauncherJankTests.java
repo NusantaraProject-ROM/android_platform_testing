@@ -56,7 +56,7 @@ public class LauncherJankTests extends JankTestBase {
             .getAbsolutePath(),"results.log");
 
     @Override
-    public void setUp() {
+    public void setUp() throws Exception {
         mDevice = UiDevice.getInstance(getInstrumentation());
         try {
             mDevice.setOrientationNatural();
@@ -65,6 +65,7 @@ public class LauncherJankTests extends JankTestBase {
         }
         mLauncherStrategy = LauncherStrategyFactory.getInstance(mDevice).getLauncherStrategy();
         mLauncher = new LauncherInstrumentation(getInstrumentation());
+        mDevice.executeShellCommand("pm disable com.google.android.music");
     }
 
     public String getLauncherPackage() {
@@ -73,6 +74,7 @@ public class LauncherJankTests extends JankTestBase {
 
     @Override
     protected void tearDown() throws Exception {
+        mDevice.executeShellCommand("pm enable com.google.android.music");
         mDevice.unfreezeRotation();
         super.tearDown();
     }
