@@ -28,6 +28,7 @@ platform_tests += \
     CtsCameraTestCases \
     CtsHardwareTestCases \
     DataIdleTest \
+    Development \
     DeviceHealthChecks \
     DeviceHealthTests \
     DexLoggerIntegrationTests \
