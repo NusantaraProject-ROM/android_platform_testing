@@ -13,9 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.platform.test.composer;
-
-import android.os.Bundle;
+package android.host.test.composer;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -23,35 +21,31 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * A {@link Compose} function for repeating objects a configurable number of times.
+ * A {@link Compose} function base class for repeating objects a configurable number of times.
  */
-public class Iterate<T> implements Compose<T> {
-    private static final String DEFAULT_OPTION_NAME = "iterations";
-    private static final int DEFAULT_VALUE = 1;
+public abstract class IterateBase<T, U> implements Compose<T, U> {
+    protected static final String ITERATIONS_OPTION_NAME = "iterations";
+    protected static final int ITERATIONS_DEFAULT_VALUE = 1;
 
-    private final String mOptionName;
-    private final int mDefaultValue;
+    protected final int mDefaultValue;
 
-    public Iterate() {
-        this(DEFAULT_OPTION_NAME);
+    public IterateBase() {
+        this(ITERATIONS_DEFAULT_VALUE);
     }
 
-    public Iterate(String optionName) {
-        this(optionName, DEFAULT_VALUE);
-    }
-
-    public Iterate(String optionName, int defaultValue) {
-        mOptionName = optionName;
-        mDefaultValue = defaultValue;
+    public IterateBase(int defaultIterations) {
+        mDefaultValue = defaultIterations;
     }
 
     @Override
-    public List<T> apply(Bundle args, List<T> input) {
-        int iterations = Integer.parseInt(
-                args.getString(mOptionName, String.valueOf(mDefaultValue)));
+    public List<U> apply(T args, List<U> input) {
+        int iterations = getIterationsArgument(args);
         return Collections.nCopies(iterations, input)
                 .stream()
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
     }
+
+    /** Returns the number of iterations to run from {@code args}. */
+    protected abstract int getIterationsArgument(T args);
 }

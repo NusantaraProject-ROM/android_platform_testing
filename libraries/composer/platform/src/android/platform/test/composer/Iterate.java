@@ -15,17 +15,16 @@
  */
 package android.platform.test.composer;
 
+import android.host.test.composer.IterateBase;
 import android.os.Bundle;
 
-import java.util.List;
-import java.util.function.BiFunction;
-
 /**
- * A {@code BiFunction} for composing the {@code List<T>} based on a {@code Bundle}.
+ * An extension of {@link android.host.test.composer.IterateBase} for device-side testing.
  */
-@FunctionalInterface
-public interface Compose<T> extends BiFunction<Bundle, List<T>, List<T>> {
-    default Compose<T> andThen(Compose<T> next) {
-        return (args, list) -> next.apply(args, this.apply(args, list));
+public class Iterate<U> extends IterateBase<Bundle, U> {
+    @Override
+    protected int getIterationsArgument(Bundle args) {
+        return Integer.parseInt(
+                args.getString(ITERATIONS_OPTION_NAME, String.valueOf(mDefaultValue)));
     }
 }
