@@ -17,8 +17,8 @@ package android.longevity.core;
 
 import android.longevity.core.listener.ErrorTerminator;
 import android.longevity.core.listener.TimeoutTerminator;
-import android.longevity.core.scheduler.Iterate;
-import android.longevity.core.scheduler.Shuffle;
+import android.host.test.composer.Iterate;
+import android.host.test.composer.Shuffle;
 
 import org.junit.runner.Runner;
 import org.junit.runner.notification.RunNotifier;
@@ -86,7 +86,7 @@ public class LongevitySuite extends Suite {
         }
         // Construct and store custom runners for the full suite.
         BiFunction<Map<String, String>, List<Runner>, List<Runner>> modifier =
-                new Iterate().andThen(new Shuffle());
+                new Iterate<Runner>().andThen(new Shuffle<Runner>());
         return modifier.apply(args, builder.runners(suite, annotation.value()));
     }
 
