@@ -26,6 +26,7 @@ instrumentation_tests := \
     BstatsTestApp \
     ConnTestApp \
     FrameworksServicesTests \
+    WmTests \
     JobTestApp \
     SuspendTestApp \
     FrameworksUtilTests \
