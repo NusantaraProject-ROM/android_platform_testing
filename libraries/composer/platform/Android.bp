@@ -12,11 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-java_library {
+java_library_static {
     name: "platform-test-composers",
+    srcs: [ "src/**/*.java" ],
     sdk_version: "current",
-    static_libs: ["androidx-test"],
-    srcs: ["src/**/*.java"],
+    libs: [ "androidx-test" ],
+    static_libs: ["test-composers"],
 }
-
-//#####################################
