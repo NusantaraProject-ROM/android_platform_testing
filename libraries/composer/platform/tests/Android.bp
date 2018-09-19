@@ -15,15 +15,15 @@
 //
 
 android_test {
-    name: "PlatformComposerTests",
-    defaults: ["tradefed_errorprone_defaults"],
-
+    name: "PlatformTestComposersTests",
     sdk_version: "current",
     static_libs: [
+        "androidx-test",
+        "junit",
         "platform-test-composers",
+        "test-composers-tests",
         "truth-prebuilt",
-        "guava",
     ],
-    srcs: ["src/**/*.java"],
-    test_suites: ["device-tests"],
+    srcs: [ "src/**/*.java" ],
+    test_suites: [ "device-tests" ],
 }
