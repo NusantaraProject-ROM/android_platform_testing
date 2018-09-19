@@ -20,9 +20,10 @@ import android.os.Bundle;
 import android.platform.helpers.HelperManager;
 import android.platform.helpers.IAppHelper;
 import android.platform.helpers.listeners.FailureScreenshotTestWatcher;
-import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.UiDevice;
 import android.util.Log;
+
+import androidx.test.InstrumentationRegistry;
 
 import org.junit.After;
 import org.junit.Before;
