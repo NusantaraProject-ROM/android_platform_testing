@@ -13,19 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.platform.test.composer;
+package android.device.collectors;
 
-import android.os.Bundle;
+import android.device.collectors.annotations.OptionClass;
 
-import java.util.List;
-import java.util.function.BiFunction;
+import com.android.helpers.CpuUsageHelper;
 
 /**
- * A {@code BiFunction} for composing the {@code List<T>} based on a {@code Bundle}.
+ * A {@link CpuUsageListener} that captures cpu usage during the test method.
+ *
+ * Do NOT throw exception anywhere in this class. We don't want to halt the test when metrics
+ * collection fails.
  */
-@FunctionalInterface
-public interface Compose<T> extends BiFunction<Bundle, List<T>, List<T>> {
-    default Compose<T> andThen(Compose<T> next) {
-        return (args, list) -> next.apply(args, this.apply(args, list));
+@OptionClass(alias = "cpuusage-collector")
+public class CpuUsageListener extends BaseCollectionListener<Long> {
+    public CpuUsageListener() {
+        createHelperInstance(new CpuUsageHelper());
     }
 }
+

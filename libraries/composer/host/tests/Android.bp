@@ -12,18 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-java_library {
-    name: "collectors-helper",
-    defaults: ["tradefed_errorprone_defaults"],
-
-    srcs: ["src/**/*.java"],
-
-    static_libs: [
-        "platformprotoslite",
-        "statsdprotolite",
-        "androidx-test",
-        "guava",
+java_library_static {
+    name: "test-composers-tests",
+    srcs: [ "src/**/*.java" ],
+    sdk_version: "current",
+    host_supported: true,
+    libs: [
+        "junit",
+        "test-composers",
+        "truth-prebuilt",
     ],
+}
 
-    platform_apis: true,
+//#####################################
+
+java_test_host {
+    name: "HostTestComposersTests",
+    static_libs: [
+        "junit-host",
+        "test-composers",
+        "test-composers-tests",
+        "truth-host-prebuilt",
+    ],
 }
