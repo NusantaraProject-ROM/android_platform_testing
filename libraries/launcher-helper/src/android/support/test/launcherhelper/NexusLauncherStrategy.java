@@ -17,14 +17,13 @@ package android.support.test.launcherhelper;
 
 import android.graphics.Point;
 import android.os.Build;
+import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
-
-import androidx.test.InstrumentationRegistry;
 
 import com.android.launcher3.tapl.LauncherInstrumentation;
 

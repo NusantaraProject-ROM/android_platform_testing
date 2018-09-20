@@ -21,7 +21,7 @@ android_test {
     static_libs: [
         "ub-uiautomator",
         "launcher-helper-lib",
-        "androidx-test",
+        "android-support-test",
     ],
     certificate: "platform",
 
