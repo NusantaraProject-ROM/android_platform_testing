@@ -26,7 +26,6 @@ import android.content.Intent;
 import android.os.BatteryManager;
 import android.os.Bundle;
 
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.internal.builders.AllDefaultPossibilitiesBuilder;
