@@ -35,4 +35,21 @@ public class Iterate<U> extends IterateBase<Map<String, String>, U> {
             return ITERATIONS_DEFAULT_VALUE;
         }
     }
+
+    @Override
+    protected OrderOptions getOrdersArgument(Map<String, String> args) {
+        OrderOptions order = ORDER_DEFAULT_VALUE;
+        if (args.containsKey(ORDER_OPTION_NAME)) {
+            String orderStr = args.get(ORDER_OPTION_NAME);
+            try {
+                order = OrderOptions.valueOf(orderStr.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new
+                    IllegalArgumentException(
+                            String.format("The supplied order option \"%s\" is not supported.",
+                                    orderStr));
+            }
+        }
+        return order;
+    }
 }
