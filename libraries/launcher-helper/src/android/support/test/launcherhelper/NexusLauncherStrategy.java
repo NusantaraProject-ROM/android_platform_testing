@@ -49,7 +49,14 @@ public class NexusLauncherStrategy extends BaseLauncher3Strategy {
         } catch (IOException e) {
             Assert.fail("Failed to set swipe_up_to_switch_apps_enabled, caused by: " + e);
         }
-        mLauncher = new LauncherInstrumentation(InstrumentationRegistry.getInstrumentation());
+        try {
+            mLauncher = new LauncherInstrumentation(InstrumentationRegistry.getInstrumentation());
+
+        } catch (IllegalStateException e) {
+            mLauncher =
+                    new LauncherInstrumentation(
+                            androidx.test.InstrumentationRegistry.getInstrumentation());
+        }
     }
 
     @Override
