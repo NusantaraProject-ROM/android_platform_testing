@@ -14,28 +14,24 @@
 
 java_library_host {
     name: "longevity-host-lib",
-    srcs: [
-        "src/android/longevity/core/**/*.java",
-    ],
+    srcs: [ "src/android/longevity/core//**/*.java" ],
     defaults: [ "tradefed_errorprone_defaults" ],
     static_libs: [
-        "jsr305lib",
         "guava",
+        "jsr305lib",
         "junit",
+        "test-composers",
     ],
 }
 
 java_library_static {
     name: "longevity-device-lib",
-    srcs: [
-        "src/**/*.java",
-    ],
+    srcs: [ "src/**/*.java" ],
     defaults: [ "tradefed_errorprone_defaults" ],
-    static_libs: [
-        "androidx-test",
-    ],
+    static_libs: [ "androidx-test" ],
     libs: [
         "guava",
+        "platform-test-composers",
     ],
     sdk_version: "24",
 }
