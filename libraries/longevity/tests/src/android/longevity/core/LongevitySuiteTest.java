@@ -18,8 +18,6 @@ package android.longevity.core;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import android.longevity.core.scheduler.Iterate;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,7 +33,7 @@ import org.junit.runners.Suite.SuiteClasses;
  */
 @RunWith(JUnit4.class)
 public class LongevitySuiteTest {
-    private static final int TEST_ITERATIONS = 10000;
+    private static final String ITERATIONS_OPTION_NAME = "iterations";
 
     /**
      * Unit test that the {@link SuiteClasses} annotation is required.
@@ -58,11 +56,12 @@ public class LongevitySuiteTest {
      */
     @Test
     public void testChildAccounting() throws InitializationError {
+        int expectedIterations = 10000;
         Map<String, String> args = new HashMap();
-        args.put(Iterate.OPTION_NAME, String.valueOf(TEST_ITERATIONS));
+        args.put(ITERATIONS_OPTION_NAME, String.valueOf(expectedIterations));
         LongevitySuite suite =
                 new LongevitySuite(TestSuite.class, new AllDefaultPossibilitiesBuilder(true), args);
-        assertEquals(suite.testCount(), TEST_ITERATIONS * 3);
+        assertEquals(suite.testCount(), expectedIterations * 3);
     }
 
 

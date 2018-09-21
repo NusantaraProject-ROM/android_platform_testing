@@ -22,6 +22,7 @@ java_test_host {
         "truth-host-prebuilt",
         "guavalib",
         "objenesis-host",
+        "test-composers",
     ],
     srcs: ["src/android/longevity/core//**/*.java"],
 }
@@ -37,6 +38,7 @@ android_test {
         "mockito-target",
         "truth-prebuilt",
         "guava",
+        "platform-test-composers",
     ],
     srcs: ["src/android/longevity/platform//**/*.java"],
     test_suites: ["device-tests"],
