@@ -17,14 +17,13 @@ package android.support.test.launcherhelper;
 
 import android.graphics.Point;
 import android.os.Build;
+import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
-
-import androidx.test.InstrumentationRegistry;
 
 import com.android.launcher3.tapl.LauncherInstrumentation;
 
@@ -50,7 +49,14 @@ public class NexusLauncherStrategy extends BaseLauncher3Strategy {
         } catch (IOException e) {
             Assert.fail("Failed to set swipe_up_to_switch_apps_enabled, caused by: " + e);
         }
-        mLauncher = new LauncherInstrumentation(InstrumentationRegistry.getInstrumentation());
+        try {
+            mLauncher = new LauncherInstrumentation(InstrumentationRegistry.getInstrumentation());
+
+        } catch (IllegalStateException e) {
+            mLauncher =
+                    new LauncherInstrumentation(
+                            androidx.test.InstrumentationRegistry.getInstrumentation());
+        }
     }
 
     @Override

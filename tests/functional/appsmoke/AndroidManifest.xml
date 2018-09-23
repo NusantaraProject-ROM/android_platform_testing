@@ -25,7 +25,7 @@
         <uses-library android:name="android.test.runner" />
     </application>
 
-    <instrumentation android:name="androidx.test.runner.AndroidJUnitRunner"
+    <instrumentation android:name="android.support.test.runner.AndroidJUnitRunner"
                      android:targetPackage="android.test.appsmoke"
                      android:label="Prebuilt App Smoke Test"/>
 

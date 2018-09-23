@@ -18,6 +18,7 @@ java_library {
     name: "launcher-helper-lib",
     libs: [
         "ub-uiautomator",
+        "android-support-test",
         "androidx-test",
         "activity-helper",
     ],
