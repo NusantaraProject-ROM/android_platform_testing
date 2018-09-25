@@ -256,7 +256,14 @@ public class StatsdHelper {
      * @return
      */
     public String getPackageName(int uid) {
-        return InstrumentationRegistry.getTargetContext().getPackageManager().getNameForUid(uid);
+        String pkgName = InstrumentationRegistry.getTargetContext().getPackageManager()
+                .getNameForUid(uid);
+        // Remove the UID appended at the end of the package name.
+        if (pkgName != null) {
+            String pkgNameSplit[] = pkgName.split(String.format("\\:%d", uid));
+            return pkgNameSplit[0];
+        }
+        return pkgName;
     }
 
     /**
