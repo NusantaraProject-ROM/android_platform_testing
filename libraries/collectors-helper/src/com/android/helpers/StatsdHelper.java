@@ -56,24 +56,26 @@ public class StatsdHelper {
     private StatsManager mStatsManager;
 
     /**
-     * Add simple event configuration using atom id.
+     * Add simple event configurations using a list of atom ids.
      *
-     * @param atomId uniquely identifies the information that we need to track by StatsManger.
-     * @return true if the configuration is added successfully otherwise false.
+     * @param atomIdList uniquely identifies the information that we need to track by statsManager.
+     * @return true if the configuration is added successfully other wise false.
      */
-    public boolean addEventConfig(int atomId) {
+    public boolean addEventConfig(List<Integer> atomIdList) {
         long configId = System.currentTimeMillis();
-        int atomUniqueId = getUniqueId();
-        StatsdConfig config = getSimpleSources(configId)
-                .addEventMetric(
-                        EventMetric.newBuilder()
-                                .setId(getUniqueId())
-                                .setWhat(atomUniqueId)
-                )
-                .addAtomMatcher(getSimpleAtomMatcher(atomUniqueId, atomId))
-                .build();
+        StatsdConfig.Builder statsConfigBuilder = getSimpleSources(configId);
+
+        for (Integer atomId : atomIdList) {
+            int atomUniqueId = getUniqueId();
+            statsConfigBuilder
+                    .addEventMetric(
+                            EventMetric.newBuilder()
+                                    .setId(getUniqueId())
+                                    .setWhat(atomUniqueId))
+                    .addAtomMatcher(getSimpleAtomMatcher(atomUniqueId, atomId));
+        }
         try {
-            getStatsManager().addConfig(configId, config.toByteArray());
+            getStatsManager().addConfig(configId, statsConfigBuilder.build().toByteArray());
         } catch (Exception e) {
             Log.e(LOG_TAG, "Not able to setup the event config.", e);
             return false;

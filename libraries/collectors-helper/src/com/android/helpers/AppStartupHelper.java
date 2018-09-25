@@ -23,6 +23,7 @@ import com.android.os.AtomsProto.AppStartOccurred.TransitionType;
 import com.android.os.AtomsProto.Atom;
 import com.android.os.StatsLog.EventMetricData;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +47,9 @@ public class AppStartupHelper implements ICollectorHelper<StringBuilder> {
     @Override
     public boolean startCollecting() {
         Log.i(LOG_TAG, "Adding AppStartOccured config to statsd.");
-        return mStatsdHelper.addEventConfig(Atom.APP_START_OCCURRED_FIELD_NUMBER);
+        List<Integer> atomIdList = new ArrayList<>();
+        atomIdList.add(Atom.APP_START_OCCURRED_FIELD_NUMBER);
+        return mStatsdHelper.addEventConfig(atomIdList);
     }
 
     /**

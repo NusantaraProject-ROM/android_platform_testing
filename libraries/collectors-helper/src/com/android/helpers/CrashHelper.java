@@ -18,11 +18,12 @@ package com.android.helpers;
 
 import android.util.Log;
 
+import com.android.os.AtomsProto.ANROccurred;
 import com.android.os.AtomsProto.AppCrashOccurred;
-import com.android.os.AtomsProto.AppCrashOccurred.ForegroundState;
 import com.android.os.AtomsProto.Atom;
 import com.android.os.StatsLog.EventMetricData;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,8 +36,10 @@ import java.util.Map;
 public class CrashHelper implements ICollectorHelper<Integer> {
 
     private static final String LOG_TAG = CrashHelper.class.getSimpleName();
-    private static final String TOTAL_JAVA_CRASHES = "crash";
-    private static final String TOTAL_NATIVE_CRASHES = "native_crash";
+    private static final String TOTAL_PREFIX = "total_";
+    private static final String EVENT_JAVA_CRASH = "crash";
+    private static final String EVENT_NATIVE_CRASH = "native_crash";
+    private static final String EVENT_ANR = "anr";
 
     private StatsdHelper mStatsdHelper = new StatsdHelper();
 
@@ -46,7 +49,10 @@ public class CrashHelper implements ICollectorHelper<Integer> {
     @Override
     public boolean startCollecting() {
         Log.i(LOG_TAG, "Adding AppCrashOccured config to statsd.");
-        return mStatsdHelper.addEventConfig(Atom.APP_CRASH_OCCURRED_FIELD_NUMBER);
+        List<Integer> atomIdList = new ArrayList<>();
+        atomIdList.add(Atom.APP_CRASH_OCCURRED_FIELD_NUMBER);
+        atomIdList.add(Atom.ANR_OCCURRED_FIELD_NUMBER);
+        return mStatsdHelper.addEventConfig(atomIdList);
     }
 
     /**
@@ -57,23 +63,41 @@ public class CrashHelper implements ICollectorHelper<Integer> {
         List<EventMetricData> eventMetricData = mStatsdHelper.getEventMetrics();
         Map<String, Integer> appCrashResultMap = new HashMap<>();
         // We need this because even if there are no crashes we need to report 0 count
-        // in the dashboard for the total crash and native crash.
-        appCrashResultMap.put(TOTAL_JAVA_CRASHES, 0);
-        appCrashResultMap.put(TOTAL_NATIVE_CRASHES, 0);
+        // in the dashboard for the total crash, native crash and ANR.
+        appCrashResultMap.put(TOTAL_PREFIX + EVENT_JAVA_CRASH, 0);
+        appCrashResultMap.put(TOTAL_PREFIX + EVENT_NATIVE_CRASH, 0);
+        appCrashResultMap.put(TOTAL_PREFIX + EVENT_ANR, 0);
         for (EventMetricData dataItem : eventMetricData) {
-            AppCrashOccurred appCrashAtom = dataItem.getAtom().getAppCrashOccurred();
-            String eventType = appCrashAtom.getEventType();
-            String pkgName = appCrashAtom.getPackageName();
-            ForegroundState foregroundState = appCrashAtom.getForegroundState();
-            Log.i(LOG_TAG, String.format("Event Type:%s Pkg Name: %s "
-                    + " ForegroundState: %s", eventType, pkgName, foregroundState.toString()));
+            if (dataItem.getAtom().hasAppCrashOccurred()) {
+                AppCrashOccurred appCrashAtom = dataItem.getAtom().getAppCrashOccurred();
+                String eventType = appCrashAtom.getEventType();
+                String pkgName = appCrashAtom.getPackageName();
+                AppCrashOccurred.ForegroundState foregroundState =
+                        appCrashAtom.getForegroundState();
+                Log.i(LOG_TAG, String.format("Event Type:%s Pkg Name: %s "
+                        + " ForegroundState: %s", eventType, pkgName, foregroundState.toString()));
 
-            // Track the total crash and native crash count.
-            MetricUtility.addMetric(eventType, appCrashResultMap);
-            // Add more detailed crash count key metrics.
-            String finalKey = MetricUtility.constructKey(eventType, pkgName,
-                    foregroundState.toString());
-            MetricUtility.addMetric(finalKey, appCrashResultMap);
+                // Track the total crash and native crash count.
+                MetricUtility.addMetric(TOTAL_PREFIX + eventType, appCrashResultMap);
+                // Add more detailed crash count key metrics.
+                String detailKey = MetricUtility.constructKey(eventType, pkgName,
+                        foregroundState.toString());
+                MetricUtility.addMetric(detailKey, appCrashResultMap);
+            } else if (dataItem.getAtom().hasAnrOccurred()) {
+                ANROccurred anrAtom = dataItem.getAtom().getAnrOccurred();
+                String processName = anrAtom.getProcessName();
+                String reason = anrAtom.getReason();
+                ANROccurred.ForegroundState foregoundState = anrAtom.getForegroundState();
+                Log.i(LOG_TAG,
+                        String.format("ANR occurred in process %s due to %s; foregound state is %s",
+                                processName, reason, foregoundState.toString()));
+
+                // Track the total ANR count.
+                MetricUtility.addMetric(TOTAL_PREFIX + EVENT_ANR, appCrashResultMap);
+                String detailKey = MetricUtility.constructKey(
+                            EVENT_ANR, processName, reason, foregoundState.toString());
+                MetricUtility.addMetric(detailKey, appCrashResultMap);
+            }
         }
         return appCrashResultMap;
     }
