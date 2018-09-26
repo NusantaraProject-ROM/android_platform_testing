@@ -208,8 +208,8 @@ public class CommonLauncherHelper {
         }
 
         final long ready = SystemClock.uptimeMillis();
-        icon.launch();
-        return verifyAppStart(packageName, ready);
+        icon.launch(packageName);
+        return ready;
     }
 
     private long verifyAppStart(String packageName, long appStartTime) {
