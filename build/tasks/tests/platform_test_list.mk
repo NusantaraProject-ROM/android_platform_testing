@@ -18,6 +18,7 @@ platform_tests += \
     BandwidthTests \
     BluetoothTests \
     BootHelperApp \
+    BusinessCard \
     CalculatorFunctionalTests \
     CalendarTests \
     camera_client_test \
