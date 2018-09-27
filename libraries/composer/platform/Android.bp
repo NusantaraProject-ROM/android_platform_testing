@@ -17,5 +17,5 @@ java_library_static {
     srcs: [ "src/**/*.java" ],
     sdk_version: "current",
     libs: [ "androidx.test.runner" ],
-    static_libs: ["test-composers"],
+    static_libs: ["test-composers", "guava"],
 }
