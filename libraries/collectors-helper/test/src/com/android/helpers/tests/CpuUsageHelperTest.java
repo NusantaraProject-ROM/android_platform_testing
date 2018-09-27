@@ -100,9 +100,9 @@ public class CpuUsageHelperTest {
                     isUIDUsed = true;
                 }
             }
-            assertTrue(isFreqIndexPresent && isFreqUsed);
-            assertTrue(isPkgorUidPresent && isUIDUsed);
         }
+        assertTrue(isFreqIndexPresent && isFreqUsed);
+        assertTrue(isPkgorUidPresent && isUIDUsed);
         assertTrue(mCpuUsageHelper.stopCollecting());
         mHelper.get().exit();
     }
