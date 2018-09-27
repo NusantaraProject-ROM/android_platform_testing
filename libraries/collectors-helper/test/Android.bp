@@ -20,6 +20,7 @@ java_library {
 
     static_libs: [
         "androidx-test",
+        "android-support-test",
         "collectors-helper",
         "app-helpers-handheld-interfaces",
         "junit",
