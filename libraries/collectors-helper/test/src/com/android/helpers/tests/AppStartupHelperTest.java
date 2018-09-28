@@ -35,6 +35,7 @@ import static org.junit.Assert.assertEquals;
  * Android Unit tests for {@link AppStartupHelper}.
  *
  * To run:
+ * Connect to wifi and login to gmail.
  * atest CollectorsHelperTest:com.android.helpers.tests.AppStartupHelperTest
  */
 @RunWith(AndroidJUnit4.class)
