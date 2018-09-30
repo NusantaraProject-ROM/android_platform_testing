@@ -48,18 +48,29 @@ public class CrashHelperTest {
     // Package name of the development app.
     private static final String PKG_NAME = "com.android.development";
     // Key used to store the crash count.
-    private static final String CRASH_KEY = "crash";
+    private static final String TOTAL_CRASHES_KEY = "total_crash";
     // Key used to store the native crash.
-    private static final String NATIVE_CRASH_KEY = "native_crash";
+    private static final String TOTAL_NATIVE_CRASHES_KEY = "total_native_crash";
+    // Key used to store the ANR.
+    private static final String TOTAL_ANRS_KEY = "total_anr";
     // Detailed crash key associated with the package name and the foreground status.
     private static final String CRASH_PKG_KEY = "crash_com.android.development_FOREGROUND";
     // Detailed native crash key associated with the package name and the foreground status.
     private static final String NATIVE_CRASH_PKG_KEY =
             "native_crash_com.android.development_FOREGROUND";
+    // Detailed event key associated with the ANR: process, reason and foreground status.
+    private static final String ANR_DETAIL_KEY = "anr_com.android.development"
+            + "_executing service com.android.development/.BadBehaviorActivity$BadService"
+            + "_FOREGROUND";
     // Button id to cause the crash.
     private static final String CRASH_BTN_NAME = "bad_behavior_crash_main";
     // Button id to cause the native crash.
     private static final String NATIVE_CRASH_BTN_NAME = "bad_behavior_crash_native";
+    // Button id to cause the an ANR (not all ANR-related buttons work, but this one does).
+    private static final String ANR_SERVICE_BTN_NAME = "bad_behavior_anr_service";
+    // This delay ensures that an ANR is actually logged.
+    // For details, see BadBehaviorActivity.BadService.
+    private static final int ANR_DELAY = 40000;
 
     private CrashHelper mCrashHelper = new CrashHelper();
 
@@ -86,10 +97,11 @@ public class CrashHelperTest {
     public void testEmptyCrashMetric() throws Exception {
         assertTrue(mCrashHelper.startCollecting());
         Map<String, Integer> crashMap = mCrashHelper.getMetrics();
-        // "crash" and "native_crash" keys with value 0
-        assertEquals(2, crashMap.size());
-        assertEquals(0, crashMap.get(CRASH_KEY).intValue());
-        assertEquals(0, crashMap.get(NATIVE_CRASH_KEY).intValue());
+        // "crash", "native_crash" and "anr" keys with value 0
+        assertEquals(3, crashMap.size());
+        assertEquals(0, crashMap.get(TOTAL_CRASHES_KEY).intValue());
+        assertEquals(0, crashMap.get(TOTAL_NATIVE_CRASHES_KEY).intValue());
+        assertEquals(0, crashMap.get(TOTAL_ANRS_KEY).intValue());
         assertTrue(mCrashHelper.stopCollecting());
 
     }
@@ -101,12 +113,14 @@ public class CrashHelperTest {
     public void testCrashMetric() throws Exception {
         assertTrue(mCrashHelper.startCollecting());
         HelperTestUtility.executeShellCommand(START_APP);
-        invokeCrash(CRASH_BTN_NAME);
+        invokeBehavior(CRASH_BTN_NAME);
         Map<String, Integer> crashMap = mCrashHelper.getMetrics();
-        assertEquals(3, crashMap.size());
-        assertEquals(1, crashMap.get(CRASH_KEY).intValue());
-        assertEquals(0, crashMap.get(NATIVE_CRASH_KEY).intValue());
+        // An empty ANR key in addition to the crash keys.
+        assertEquals(4, crashMap.size());
+        assertEquals(1, crashMap.get(TOTAL_CRASHES_KEY).intValue());
+        assertEquals(0, crashMap.get(TOTAL_NATIVE_CRASHES_KEY).intValue());
         assertEquals(1, crashMap.get(CRASH_PKG_KEY).intValue());
+        assertEquals(0, crashMap.get(TOTAL_ANRS_KEY).intValue());
         assertTrue(mCrashHelper.stopCollecting());
 
     }
@@ -118,14 +132,36 @@ public class CrashHelperTest {
     public void testNativeCrashMetric() throws Exception {
         assertTrue(mCrashHelper.startCollecting());
         HelperTestUtility.executeShellCommand(START_APP);
-        invokeCrash(NATIVE_CRASH_BTN_NAME);
+        invokeBehavior(NATIVE_CRASH_BTN_NAME);
         Map<String, Integer> crashMap = mCrashHelper.getMetrics();
-        assertEquals(3, crashMap.size());
-        assertEquals(0, crashMap.get(CRASH_KEY).intValue());
-        assertEquals(1, crashMap.get(NATIVE_CRASH_KEY).intValue());
+        // An empty ANR key in addition to the crash keys.
+        assertEquals(4, crashMap.size());
+        assertEquals(0, crashMap.get(TOTAL_CRASHES_KEY).intValue());
+        assertEquals(1, crashMap.get(TOTAL_NATIVE_CRASHES_KEY).intValue());
         assertEquals(1, crashMap.get(NATIVE_CRASH_PKG_KEY).intValue());
+        assertEquals(0, crashMap.get(TOTAL_ANRS_KEY).intValue());
         assertTrue(mCrashHelper.stopCollecting());
 
+    }
+
+    /**
+     * Test ANR metric.
+     */
+    @Test
+    public void testAnrMetric() throws Exception {
+        assertTrue(mCrashHelper.startCollecting());
+        HelperTestUtility.executeShellCommand(START_APP);
+        // The 30100ms sleep time guarantees that an ANR is indeed triggered.
+        // See BadBehaviorActivity.BadService for details.
+        invokeBehavior(ANR_SERVICE_BTN_NAME, ANR_DELAY);
+        Map<String, Integer> crashMap = mCrashHelper.getMetrics();
+        // Two ANR keys and two empty crash keys.
+        assertEquals(4, crashMap.size());
+        assertEquals(1, crashMap.get(TOTAL_ANRS_KEY).intValue());
+        assertEquals(1, crashMap.get(ANR_DETAIL_KEY).intValue());
+        assertEquals(0, crashMap.get(TOTAL_CRASHES_KEY).intValue());
+        assertEquals(0, crashMap.get(TOTAL_NATIVE_CRASHES_KEY).intValue());
+        assertTrue(mCrashHelper.stopCollecting());
     }
 
     /**
@@ -137,29 +173,39 @@ public class CrashHelperTest {
 
         // Invoke the crash
         HelperTestUtility.executeShellCommand(START_APP);
-        invokeCrash(CRASH_BTN_NAME);
+        invokeBehavior(CRASH_BTN_NAME);
 
         // Invoke the native crash
         HelperTestUtility.executeShellCommand(START_APP);
-        invokeCrash(NATIVE_CRASH_BTN_NAME);
+        invokeBehavior(NATIVE_CRASH_BTN_NAME);
+
+        // Invoke the ANR.
+        HelperTestUtility.executeShellCommand(START_APP);
+        invokeBehavior(ANR_SERVICE_BTN_NAME, ANR_DELAY);
 
         Map<String, Integer> crashMap = mCrashHelper.getMetrics();
-        assertEquals(4, crashMap.size());
-        assertEquals(1, crashMap.get(CRASH_KEY).intValue());
-        assertEquals(1, crashMap.get(NATIVE_CRASH_KEY).intValue());
+        // Two keys for each crash metric, totaling 6.
+        assertEquals(6, crashMap.size());
+        assertEquals(1, crashMap.get(TOTAL_CRASHES_KEY).intValue());
+        assertEquals(1, crashMap.get(CRASH_PKG_KEY).intValue());
+        assertEquals(1, crashMap.get(TOTAL_NATIVE_CRASHES_KEY).intValue());
         assertEquals(1, crashMap.get(NATIVE_CRASH_PKG_KEY).intValue());
+        assertEquals(1, crashMap.get(TOTAL_ANRS_KEY).intValue());
+        assertEquals(1, crashMap.get(ANR_DETAIL_KEY).intValue());
         assertTrue(mCrashHelper.stopCollecting());
     }
 
     /**
-     * Cause the crash by clicking on the button in bad behaviour activity.
+     * Cause the behavior by clicking on the button in bad behaviour activity.
      */
-    private void invokeCrash(String resourceName) {
-        UiObject2 nativeCrashButton = HelperTestUtility.getUiDevice().findObject(
+    private void invokeBehavior(String resourceName, int delayAfterAction) {
+        UiObject2 behaviorButton = HelperTestUtility.getUiDevice().findObject(
                 By.res(PKG_NAME, resourceName));
-        nativeCrashButton.click();
+        behaviorButton.click();
+        // Some actions, e.g. service ANR, requires a delay to register.
+        SystemClock.sleep(delayAfterAction);
 
-        // Native crash sometimes have crash dialog pop up
+        // Dismiss the crash dialog which sometimes appear.
         UiObject2 closeButton = HelperTestUtility.getUiDevice().findObject(
                 By.res("android", "aerr_close"));
         if (closeButton != null) {
@@ -168,5 +214,10 @@ public class CrashHelperTest {
         SystemClock.sleep(HelperTestUtility.ACTION_DELAY);
     }
 
+    /**
+     * Convenience function for "immediate" actions such as crashes.
+     */
+    private void invokeBehavior(String resourceName) {
+        invokeBehavior(resourceName, 0);
+    }
 }
-

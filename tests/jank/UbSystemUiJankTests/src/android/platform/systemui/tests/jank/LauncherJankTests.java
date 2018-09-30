@@ -66,6 +66,7 @@ public class LauncherJankTests extends JankTestBase {
         mLauncherStrategy = LauncherStrategyFactory.getInstance(mDevice).getLauncherStrategy();
         mLauncher = new LauncherInstrumentation(getInstrumentation());
         mDevice.executeShellCommand("pm disable com.google.android.music");
+        mDevice.pressHome();
     }
 
     public String getLauncherPackage() {
