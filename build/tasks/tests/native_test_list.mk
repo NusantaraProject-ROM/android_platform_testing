@@ -42,8 +42,7 @@ native_tests := \
     incident_helper_test \
     incidentd_test \
     init_tests \
-    inputflinger_tests_InputDispatcher_test \
-    inputflinger_tests_InputReader_test \
+    inputflinger_tests \
     installd_cache_test \
     installd_dexopt_test \
     installd_otapreopt_test \
@@ -58,10 +57,7 @@ native_tests := \
     libdemangle_test \
     libgui_test \
     libhidl_test \
-    libinput_tests_InputChannel_test \
-    libinput_tests_InputEvent_test \
-    libinput_tests_InputPublisherAndConsumer_test \
-    libinput_tests_VelocityTracker_test \
+    libinput_tests \
     libjavacore-unit-tests \
     liblog-unit-tests \
     libminijail_unittest_gtest \
