@@ -40,6 +40,8 @@ public class CpuUsageHelper implements ICollectorHelper<Long> {
     private static final String LOG_TAG = CpuUsageHelper.class.getSimpleName();
     private static final String CPU_USAGE_PKG_UID = "cpu_usage_pkg_or_uid";
     private static final String CPU_USAGE_FREQ = "cpu_usage_freq";
+    private static final String TOTAL_CPU_USAGE = "total_cpu_usage";
+    private static final String TOTAL_CPU_USAGE_FREQ = "total_cpu_usage_freq";
     private static final String CLUSTER_ID = "cluster";
     private static final String FREQ_INDEX = "freq_index";
     private static final String USER_TIME = "user_time";
@@ -115,6 +117,8 @@ public class CpuUsageHelper implements ICollectorHelper<Long> {
         }
 
         // Compute the final result map
+        Long totalCpuUsage = 0L;
+        Long totalCpuFreq = 0L;
         for (String key : cpuUsageMap.keySet()) {
             List<Long> cpuUsageList = cpuUsageMap.get(key);
             if (cpuUsageList.size() > 1) {
@@ -125,8 +129,17 @@ public class CpuUsageHelper implements ICollectorHelper<Long> {
                 if (cpuUsage > 0) {
                     cpuUsageFinalMap.put(key, cpuUsage);
                 }
+                // Add the CPU time to their respective (usage or frequency) total metric.
+                if (key.startsWith(CPU_USAGE_PKG_UID)) {
+                    totalCpuUsage += cpuUsage;
+                } else if (key.startsWith(CPU_USAGE_FREQ)) {
+                    totalCpuFreq += cpuUsage;
+                }
             }
         }
+        // Put the total results into the final result map.
+        cpuUsageFinalMap.put(TOTAL_CPU_USAGE, totalCpuUsage);
+        cpuUsageFinalMap.put(TOTAL_CPU_USAGE_FREQ, totalCpuFreq);
         return cpuUsageFinalMap;
     }
 
