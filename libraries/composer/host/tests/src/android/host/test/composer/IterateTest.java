@@ -26,15 +26,27 @@ import org.junit.runners.JUnit4;
  */
 @RunWith(JUnit4.class)
 public class IterateTest extends IterateTestBase<Map<String, String>> {
-    @Override
-    protected IterateBase<Map<String, String>, Integer> getIterate() {
-        return new Iterate<Integer>();
+    protected class MapArgumentsBuilder extends ArgumentsBuilder {
+        @Override
+        public Map<String, String> build() {
+            Map<String, String> args = new HashMap<>();
+            if (mIterations != null) {
+                args.put(IterateTestBase.ITERATIONS_OPTION_NAME, String.valueOf(mIterations));
+            }
+            if (mOrder != null) {
+                args.put(IterateTestBase.ORDER_OPTION_NAME, mOrder);
+            }
+            return args;
+        }
     }
 
     @Override
-    protected Map<String, String> getArguments(int iterations) {
-        Map<String, String> args = new HashMap<>();
-        args.put(ITERATIONS_OPTION_NAME, String.valueOf(iterations));
-        return args;
+    protected ArgumentsBuilder getArgumentsBuilder() {
+        return new MapArgumentsBuilder();
+    }
+
+    @Override
+    protected IterateBase<Map<String, String>, Integer> getIterate() {
+        return new Iterate<Integer>();
     }
 }
