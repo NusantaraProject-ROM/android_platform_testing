@@ -27,4 +27,17 @@ public class Iterate<U> extends IterateBase<Bundle, U> {
         return Integer.parseInt(
                 args.getString(ITERATIONS_OPTION_NAME, String.valueOf(mDefaultValue)));
     }
+
+    @Override
+    protected OrderOptions getOrdersArgument(Bundle args) {
+        String orderStr = args.getString(ORDER_OPTION_NAME, ORDER_DEFAULT_VALUE.toString());
+        try {
+            return OrderOptions.valueOf(orderStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new
+                IllegalArgumentException(
+                        String.format("The supplied order option \"%s\" is not supported.",
+                                orderStr));
+        }
+    }
 }
