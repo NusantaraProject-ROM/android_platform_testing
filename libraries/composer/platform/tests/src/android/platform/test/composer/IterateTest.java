@@ -27,15 +27,27 @@ import org.junit.runners.JUnit4;
  */
 @RunWith(JUnit4.class)
 public class IterateTest extends IterateTestBase<Bundle> {
-    @Override
-    protected IterateBase<Bundle, Integer> getIterate() {
-        return new Iterate<Integer>();
+    protected class BundleArgumentsBuilder extends ArgumentsBuilder {
+        @Override
+        public Bundle build() {
+            Bundle args = new Bundle();
+            if (mIterations != null) {
+                args.putString(IterateTestBase.ITERATIONS_OPTION_NAME, String.valueOf(mIterations));
+            }
+            if (mOrder != null) {
+                args.putString(IterateTestBase.ORDER_OPTION_NAME, String.valueOf(mOrder));
+            }
+            return args;
+        }
     }
 
     @Override
-    protected Bundle getArguments(int iterations) {
-        Bundle args = new Bundle();
-        args.putString(ITERATIONS_OPTION_NAME, String.valueOf(iterations));
-        return args;
+    protected ArgumentsBuilder getArgumentsBuilder() {
+        return new BundleArgumentsBuilder();
+    }
+
+    @Override
+    protected IterateBase<Bundle, Integer> getIterate() {
+        return new Iterate<Integer>();
     }
 }

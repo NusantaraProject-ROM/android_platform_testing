@@ -52,6 +52,15 @@ public class HelperTestUtility {
     }
 
     /**
+     * Clears the cache.
+     */
+    public static void clearCache() {
+        SystemClock.sleep(HelperTestUtility.ACTION_DELAY);
+        executeShellCommand(CLEAR_CACHE);
+        SystemClock.sleep(HelperTestUtility.ACTION_DELAY);
+    }
+
+    /**
      * Close the test app and clear the cache.
      * TODO: Replace it with the rules.
      */

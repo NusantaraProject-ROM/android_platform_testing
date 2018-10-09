@@ -19,7 +19,6 @@ package com.android.helpers;
 import android.util.Log;
 
 import com.android.os.AtomsProto.AppStartOccurred;
-import com.android.os.AtomsProto.AppStartOccurred.TransitionType;
 import com.android.os.AtomsProto.Atom;
 import com.android.os.StatsLog.EventMetricData;
 
@@ -38,6 +37,8 @@ public class AppStartupHelper implements ICollectorHelper<StringBuilder> {
 
     private static final String LOG_TAG = AppStartupHelper.class.getSimpleName();
     private static final String COLD_STARTUP = "cold_startup";
+    private static final String WARM_STARTUP = "warm_startup";
+    private static final String HOT_STARTUP = "hot_startup";
 
     private StatsdHelper mStatsdHelper = new StatsdHelper();
 
@@ -67,12 +68,22 @@ public class AppStartupHelper implements ICollectorHelper<StringBuilder> {
             Log.i(LOG_TAG, String.format("Pkg Name: %s, Transition Type: %s,"
                     + " WindowDrawnDelayMillis:%s", pkgName, transitionType, windowsDrawnMillis));
 
-            // Track the cold app startup time.
-            if (appStartAtom.getType().equals(TransitionType.COLD)) {
-                String metricKey = MetricUtility.constructKey(COLD_STARTUP,
-                        appStartAtom.getPkgName());
-                MetricUtility
-                        .addMetric(metricKey.toString(), windowsDrawnMillis, appStartResultMap);
+            String metricKey = "";
+            switch (appStartAtom.getType()) {
+                case COLD:
+                    metricKey = MetricUtility.constructKey(COLD_STARTUP, appStartAtom.getPkgName());
+                    break;
+                case WARM:
+                    metricKey = MetricUtility.constructKey(WARM_STARTUP, appStartAtom.getPkgName());
+                    break;
+                case HOT:
+                    metricKey = MetricUtility.constructKey(HOT_STARTUP, appStartAtom.getPkgName());
+                    break;
+                case UNKNOWN:
+                    break;
+            }
+            if (!metricKey.isEmpty()) {
+                MetricUtility.addMetric(metricKey, windowsDrawnMillis, appStartResultMap);
             }
         }
         return appStartResultMap;
