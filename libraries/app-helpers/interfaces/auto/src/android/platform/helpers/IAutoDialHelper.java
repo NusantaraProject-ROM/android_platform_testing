@@ -29,7 +29,7 @@ public interface IAutoDialHelper extends IAppHelper {
     /**
      * Setup expectations: The app is open and there is an ongoing call.
      *
-     * This method is used to end call.
+     * This method is used to end call using softkey.
      */
     void endCall();
 
@@ -71,7 +71,7 @@ public interface IAutoDialHelper extends IAppHelper {
     /**
      * Setup expectations: The app is open and phonenumber is entered on the dialpad
      *
-     * This method is used to make a call
+     * This method is used to make/receive a call using softkey
      *
      */
     void makeCall();
