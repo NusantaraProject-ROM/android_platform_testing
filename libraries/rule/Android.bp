@@ -16,7 +16,7 @@ java_library {
     name: "platform-test-rules",
     sdk_version: "current",
     static_libs: [
-        "androidx-test",
+        "androidx.test.runner",
         "ub-uiautomator",
     ],
     srcs: ["src/**/*.java"],
