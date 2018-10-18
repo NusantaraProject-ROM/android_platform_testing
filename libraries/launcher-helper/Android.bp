@@ -19,7 +19,7 @@ java_library {
     libs: [
         "ub-uiautomator",
         "android-support-test",
-        "androidx-test",
+        "androidx.test.runner",
         "activity-helper",
     ],
     static_libs: [

@@ -19,7 +19,7 @@ java_library {
     srcs: ["src/**/*.java"],
 
     static_libs: [
-        "androidx-test",
+        "androidx.test.runner",
         "android-support-test",
         "collectors-helper",
         "app-helpers-handheld-interfaces",

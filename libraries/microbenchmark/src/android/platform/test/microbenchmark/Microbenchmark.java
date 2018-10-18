@@ -17,7 +17,7 @@ package android.platform.test.microbenchmark;
 
 import android.os.Bundle;
 import android.platform.test.composer.Iterate;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.VisibleForTesting;
 import androidx.test.InstrumentationRegistry;
 
 import java.lang.annotation.ElementType;

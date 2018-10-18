@@ -21,7 +21,7 @@ java_library {
     static_libs: [
         "platformprotoslite",
         "statsdprotolite",
-        "androidx-test",
+        "androidx.test.runner",
         "guava",
     ],
 

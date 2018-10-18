@@ -16,7 +16,7 @@ java_library {
     name: "microbenchmark-device-lib",
     sdk_version: "current",
     static_libs: [
-        "androidx-test",
+        "androidx.test.runner",
         "platform-test-composers",
     ],
 
