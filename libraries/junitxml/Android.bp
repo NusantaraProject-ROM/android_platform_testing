@@ -18,4 +18,5 @@ java_library {
     name: "junitxml",
     static_libs: ["junit"],
     srcs: ["src/**/*.java"],
+    sdk_version: "core_current",
 }
