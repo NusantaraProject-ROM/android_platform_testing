@@ -70,6 +70,8 @@ public class BaseMetricListener extends InstrumentationRunListener {
     // Filter groups, comma separated list of group name to be included or excluded
     public static final String INCLUDE_FILTER_GROUP_KEY = "include-filter-group";
     public static final String EXCLUDE_FILTER_GROUP_KEY = "exclude-filter-group";
+    // Argument passed to AndroidJUnitRunner to make it log-only, we shouldn't collect on log only.
+    public static final String ARGUMENT_LOG_ONLY = "log";
 
     private static final String NAMESPACE_SEPARATOR = ":";
 
@@ -79,6 +81,7 @@ public class BaseMetricListener extends InstrumentationRunListener {
     private Bundle mArgsBundle = null;
     private final List<String> mIncludeFilters;
     private final List<String> mExcludeFilters;
+    private boolean mLogOnly = false;
 
     public BaseMetricListener() {
         mIncludeFilters = new ArrayList<>();
@@ -98,23 +101,27 @@ public class BaseMetricListener extends InstrumentationRunListener {
     @Override
     public final void testRunStarted(Description description) throws Exception {
         parseArguments();
-        try {
-            mRunData = createDataRecord();
-            onTestRunStart(mRunData, description);
-        } catch (RuntimeException e) {
-            // Prevent exception from reporting events.
-            Log.e(getTag(), "Exception during onTestRunStart.", e);
+        if (!mLogOnly) {
+            try {
+                mRunData = createDataRecord();
+                onTestRunStart(mRunData, description);
+            } catch (RuntimeException e) {
+                // Prevent exception from reporting events.
+                Log.e(getTag(), "Exception during onTestRunStart.", e);
+            }
         }
         super.testRunStarted(description);
     }
 
     @Override
     public final void testRunFinished(Result result) throws Exception {
-        try {
-            onTestRunEnd(mRunData, result);
-        } catch (RuntimeException e) {
-            // Prevent exception from reporting events.
-            Log.e(getTag(), "Exception during onTestRunEnd.", e);
+        if (!mLogOnly) {
+            try {
+                onTestRunEnd(mRunData, result);
+            } catch (RuntimeException e) {
+                // Prevent exception from reporting events.
+                Log.e(getTag(), "Exception during onTestRunEnd.", e);
+            }
         }
         super.testRunFinished(result);
     }
@@ -306,6 +313,10 @@ public class BaseMetricListener extends InstrumentationRunListener {
         if (excludeGroup != null) {
             mExcludeFilters.addAll(Arrays.asList(excludeGroup.split(",")));
         }
+        String logOnly = args.getString(ARGUMENT_LOG_ONLY);
+        if (logOnly != null) {
+            mLogOnly = Boolean.parseBoolean(logOnly);
+        }
     }
 
     /**
@@ -351,6 +362,9 @@ public class BaseMetricListener extends InstrumentationRunListener {
      * @return True if the collector should run.
      */
     private boolean shouldRun(Description desc) {
+        if (mLogOnly) {
+            return false;
+        }
         MetricOption annotation = desc.getAnnotation(MetricOption.class);
         List<String> groups = new ArrayList<>();
         if (annotation != null) {
