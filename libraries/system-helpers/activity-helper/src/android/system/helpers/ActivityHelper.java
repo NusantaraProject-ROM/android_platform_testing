@@ -133,22 +133,22 @@ public class ActivityHelper {
     /**
      * Clear recent apps by click 'CLEAR ALL' button in the recents view.
      *
+     * @param maxScroll max number of scroll in recents view.
      * @throws Exception
      */
-    public void clearRecentsByClearAll() throws Exception {
+    public void clearRecentsByClearAll(int maxScroll) throws Exception {
         int retry = 5;
         while (!mDevice.wait(Until.hasObject(By.res(NEXUS_LAUNCHER, "overview_panel")),
                 ONE_SECOND * 5) && --retry > 0) {
             mDevice.pressRecentApps();
             Thread.sleep(ONE_SECOND);
         }
-        int maxTries = 20;
         while (mDevice.findObject(By.res(NEXUS_LAUNCHER, "overview_panel"))
-                .isScrollable() && maxTries-- >= 0) {
+                .isScrollable() && maxScroll-- >= 0) {
             UiScrollable thumbnailScrollable = new UiScrollable(new UiSelector().resourceId(
                     NEXUS_LAUNCHER + ":id/overview_panel"));
             thumbnailScrollable.setAsHorizontalList();
-            thumbnailScrollable.scrollToBeginning(100);
+            thumbnailScrollable.scrollBackward();
             if (!mDevice.wait(Until.hasObject(By.text(
                     Pattern.compile("CLEAR ALL", Pattern.CASE_INSENSITIVE))), ONE_SECOND * 2)) {
                 continue;
@@ -163,6 +163,15 @@ public class ActivityHelper {
                 break;
             }
         }
+    }
+
+    /**
+     * Clear recents apps by click 'CLEAR ALL' button in recents view, default max scroll 20.
+     *
+     * @throws Exception
+     */
+    public void clearRecentsByClearAll() throws Exception {
+        clearRecentsByClearAll(20);
     }
 
     /**
