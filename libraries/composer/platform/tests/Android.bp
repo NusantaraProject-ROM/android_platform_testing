@@ -18,7 +18,7 @@ android_test {
     name: "PlatformTestComposersTests",
     sdk_version: "current",
     static_libs: [
-        "androidx-test",
+        "androidx.test.runner",
         "junit",
         "platform-test-composers",
         "test-composers-tests",
