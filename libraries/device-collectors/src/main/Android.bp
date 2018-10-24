@@ -19,8 +19,8 @@ java_library {
     srcs: ["java/**/*.java"],
 
     static_libs: [
-        "androidx-test",
         "collectors-helper",
+        "androidx.test.runner",
         "junit",
     ],
 
