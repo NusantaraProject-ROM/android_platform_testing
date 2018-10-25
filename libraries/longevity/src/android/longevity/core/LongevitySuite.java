@@ -19,6 +19,7 @@ import android.longevity.core.listener.ErrorTerminator;
 import android.longevity.core.listener.TimeoutTerminator;
 import android.host.test.composer.Iterate;
 import android.host.test.composer.Shuffle;
+import android.host.test.composer.Profile;
 
 import org.junit.runner.Runner;
 import org.junit.runner.notification.RunNotifier;
@@ -78,6 +79,7 @@ public class LongevitySuite extends Suite {
     private static List<Runner> constructClassRunners(
                 Class<?> suite, RunnerBuilder builder, Map<String, String> args)
             throws InitializationError {
+        // Note: until b/118340229 is resolved, keep the platform class method in sync as necessary.
         // Retrieve annotated suite classes.
         SuiteClasses annotation = suite.getAnnotation(SuiteClasses.class);
         if (annotation == null) {
@@ -86,7 +88,7 @@ public class LongevitySuite extends Suite {
         }
         // Construct and store custom runners for the full suite.
         BiFunction<Map<String, String>, List<Runner>, List<Runner>> modifier =
-                new Iterate<Runner>().andThen(new Shuffle<Runner>());
+                new Iterate<Runner>().andThen(new Shuffle<Runner>()).andThen(new Profile());
         return modifier.apply(args, builder.runners(suite, annotation.value()));
     }
 
