@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
  */
 public abstract class ProfileBase<T> implements Compose<T, Runner> {
     protected static final String PROFILE_OPTION_NAME = "profile";
+    protected static final String PROFILE_EXTENSION = ".pb";
 
     private static final String LOG_TAG = ProfileBase.class.getSimpleName();
 
@@ -109,10 +110,10 @@ public abstract class ProfileBase<T> implements Compose<T, Runner> {
     /**
      * Parses the arguments, reads the configuration file and returns the Configuraiton object.
      *
-     * The configuration should be passed as a path to the configuration file. If no profile option
-     * is found in the arguments, function should return null, in which case the input sequence is
-     * returned without modification. Otherwise, parse the file at the specified path and returns
-     * the Configuration object or throws an exception if the path is not available.
+     * If no profile option is found in the arguments, function should return null, in which case
+     * the input sequence is returned without modification. Otherwise, function should parse the
+     * profile according to the supplied argument and return the Configuration object or throw an
+     * exception if the file is not available or cannot be parsed.
      */
     protected abstract Configuration getConfigurationArgument(T args);
 
