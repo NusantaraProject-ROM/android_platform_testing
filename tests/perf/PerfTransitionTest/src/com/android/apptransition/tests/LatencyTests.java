@@ -17,6 +17,7 @@ package com.android.apptransition.tests;
 
 import static android.support.test.InstrumentationRegistry.getInstrumentation;
 
+import android.app.Instrumentation;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.provider.Settings;
@@ -43,7 +44,7 @@ import java.util.Set;
 /**
  * Tests to test various latencies in the system.
  */
-public class LatencyTests {
+public class LatencyTests extends Instrumentation {
 
     private static final int DEFAULT_ITERATION_COUNT = 10;
     private static final String KEY_ITERATION_COUNT = "iteration_count";
@@ -84,6 +85,7 @@ public class LatencyTests {
 
     @Before
     public void setUp() throws Exception {
+        androidx.test.InstrumentationRegistry.registerInstance(this, new Bundle());
         mDevice = UiDevice.getInstance(getInstrumentation());
         Bundle mArgs = InstrumentationRegistry.getArguments();
         mIterationCount = Integer.parseInt(mArgs.getString(KEY_ITERATION_COUNT,
