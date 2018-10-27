@@ -38,7 +38,7 @@ public class DropCachesRuleTest {
     public void testDropCachesCommand() throws Throwable {
         TestableDropCachesRule rule = new TestableDropCachesRule();
         rule.apply(rule.getTestStatement(), Description.createTestDescription("clzz", "mthd"))
-                .evaluate();
+            .evaluate();
         assertThat(rule.getOperations()).containsExactly(
                 "echo 3 > /proc/sys/vm/drop_caches", "test")
             .inOrder();

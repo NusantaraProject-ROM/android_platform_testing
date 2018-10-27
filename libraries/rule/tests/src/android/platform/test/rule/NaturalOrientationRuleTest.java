@@ -45,7 +45,7 @@ public class NaturalOrientationRuleTest {
             public void evaluate() throws Throwable {
                 // Assert that the device has been locked in natural orientation.
                 verify(rule.getUiDevice(), times(1)).setOrientationNatural();
-        verify(rule.getUiDevice(), never()).unfreezeRotation();
+                verify(rule.getUiDevice(), never()).unfreezeRotation();
             }
         };
         rule.apply(testStatement, Description.createTestDescription("clzz", "mthd")).evaluate();
@@ -63,15 +63,6 @@ public class NaturalOrientationRuleTest {
         @Override
         protected UiDevice getUiDevice() {
             return mUiDevice;
-        }
-
-        public Statement getTestStatement() {
-            return new Statement() {
-                @Override
-                public void evaluate() throws Throwable {
-                    // mOperations.add("test");
-                }
-            };
         }
     }
 }
