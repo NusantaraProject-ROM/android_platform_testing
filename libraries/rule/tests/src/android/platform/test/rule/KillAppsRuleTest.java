@@ -53,7 +53,7 @@ public class KillAppsRuleTest {
     public void testOneAppToKill() throws Throwable {
         TestableKillAppsRule rule = new TestableKillAppsRule("example.package.name");
         rule.apply(rule.getTestStatement(), Description.createTestDescription("clzz", "mthd"))
-                .evaluate();
+            .evaluate();
         assertThat(rule.getOperations()).containsExactly(
                 "am force-stop example.package.name", "test")
             .inOrder();
@@ -69,7 +69,7 @@ public class KillAppsRuleTest {
                 "package.name2",
                 "package.name3");
         rule.apply(rule.getTestStatement(), Description.createTestDescription("clzz", "mthd"))
-                .evaluate();
+            .evaluate();
         assertThat(rule.getOperations()).containsExactly(
                 "am force-stop package.name1",
                 "am force-stop package.name2",
