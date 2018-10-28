@@ -52,7 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class AppTransitionTests {
+public class AppTransitionTests extends Instrumentation {
 
     private static final String TAG = AppTransitionTests.class.getSimpleName();
     private static final int JOIN_TIMEOUT = 10000;
@@ -106,6 +106,7 @@ public class AppTransitionTests {
 
     @Before
     public void setUp() throws Exception {
+        androidx.test.InstrumentationRegistry.registerInstance(this, new Bundle());
         mArgs = InstrumentationRegistry.getArguments();
         mDevice = UiDevice.getInstance(getInstrumentation());
         LauncherStrategyFactory factory = LauncherStrategyFactory.getInstance(mDevice);
