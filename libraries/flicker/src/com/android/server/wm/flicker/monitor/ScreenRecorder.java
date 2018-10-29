@@ -21,7 +21,7 @@ import static com.android.compatibility.common.util.SystemUtil.runShellCommand;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 import android.os.Environment;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.VisibleForTesting;
 import android.util.Log;
 
 import java.io.IOException;

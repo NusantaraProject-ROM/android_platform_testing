@@ -21,7 +21,7 @@ import android.device.collectors.util.SendToInstrumentation;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.VisibleForTesting;
 import android.util.Log;
 
 import androidx.test.InstrumentationRegistry;
