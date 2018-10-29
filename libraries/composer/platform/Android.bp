@@ -16,6 +16,6 @@ java_library_static {
     name: "platform-test-composers",
     srcs: [ "src/**/*.java" ],
     sdk_version: "current",
-    libs: [ "androidx-test" ],
+    libs: [ "androidx.test.runner" ],
     static_libs: ["test-composers"],
 }
