@@ -27,6 +27,4 @@ android_test {
     libs: ["android.test.base.stubs"],
 
     sdk_version: "test_current",
-
-    test_suites: ["device-tests"],
 }
