@@ -17,6 +17,7 @@ package android.platform.test.microbenchmark;
 
 import android.os.Bundle;
 import android.platform.test.composer.Iterate;
+import android.platform.test.rule.TracePointRule;
 import androidx.annotation.VisibleForTesting;
 import androidx.test.InstrumentationRegistry;
 
@@ -37,7 +38,7 @@ import org.junit.runners.model.Statement;
  * TightMethodRule}s in order to reliably measure a specific test method in isolation. Samples are
  * soon to follow.
  */
-public final class Microbenchmark extends BlockJUnit4ClassRunner {
+public class Microbenchmark extends BlockJUnit4ClassRunner {
     private Bundle mArguments;
 
     /**
@@ -64,6 +65,8 @@ public final class Microbenchmark extends BlockJUnit4ClassRunner {
     @Override
     protected Statement methodInvoker(FrameworkMethod method, Object test) {
         Statement start = super.methodInvoker(method, test);
+        // Wrap the inner-most test method with trace points.
+        start = getTracePointRule().apply(start, describeChild(method));
         // Invoke special @TightMethodRules that wrap @Test methods.
         List<MethodRule> tightMethodRules = getTestClass()
                 .getAnnotatedFieldValues(test, TightMethodRule.class, MethodRule.class);
@@ -71,6 +74,19 @@ public final class Microbenchmark extends BlockJUnit4ClassRunner {
             start = tightMethodRule.apply(start, method, test);
         }
         return start;
+    }
+
+    @VisibleForTesting
+    protected TracePointRule getTracePointRule() {
+        return new TracePointRule();
+    }
+
+    /**
+     * Returns a list of repeated {@link FrameworkMethod}s to execute.
+     */
+    @Override
+    protected List<FrameworkMethod> getChildren() {
+       return new Iterate<FrameworkMethod>().apply(mArguments, super.getChildren());
     }
 
     /**
@@ -99,12 +115,4 @@ public final class Microbenchmark extends BlockJUnit4ClassRunner {
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.FIELD, ElementType.METHOD})
     public @interface TightMethodRule { }
-
-    /**
-     * Returns a list of repeated {@link FrameworkMethod}s to execute.
-     */
-    @Override
-    protected List<FrameworkMethod> getChildren() {
-       return new Iterate<FrameworkMethod>().apply(mArguments, super.getChildren());
-    }
 }
