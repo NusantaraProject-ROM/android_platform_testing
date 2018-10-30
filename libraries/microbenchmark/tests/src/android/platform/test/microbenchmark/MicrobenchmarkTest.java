@@ -20,11 +20,13 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assert.fail;
 
 import android.os.Bundle;
+import android.platform.test.rule.TracePointRule;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.rules.MethodRule;
+import org.junit.runner.Description;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.RunWith;
@@ -32,6 +34,9 @@ import org.junit.runners.JUnit4;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Unit tests for the {@link Microbenchmark} runner.
@@ -55,43 +60,107 @@ public final class MicrobenchmarkTest {
     }
 
     /**
-     * Tests that {@link TightMethodRule}s are ordered properly.
+     * Tests that {@link TracePointRule} and {@link TightMethodRule}s are properly ordered.
      *
-     * <p>@Before --> @Tight Before --> @Test --> @Tight After --> @After.
+     * Before --> TightBefore --> Trace (begin) --> Test --> Trace(end) --> TightAfter --> After
      */
     @Test
-    public void testTightMethodRuleOrder() {
-        try {
-            Result result = new JUnitCore().run(OrderTest.class);
-            assertThat(result.wasSuccessful()).isTrue();
-            assertThat(result.getRunCount()).isAtLeast(1);
-        } catch (Exception e) {
-            fail("This test should not throw.");
+    public void testFeatureExecutionOrder() throws InitializationError {
+        LoggingMicrobenchmark loggingRunner = new LoggingMicrobenchmark(LoggingTest.class);
+        loggingRunner.setOperationLog(new ArrayList<String>());
+        Result result = new JUnitCore().run(loggingRunner);
+        assertThat(result.wasSuccessful()).isTrue();
+        assertThat(loggingRunner.getOperationLog()).containsExactly(
+                "before",
+                "tight before",
+                "begin: testMethod("
+                    + "android.platform.test.microbenchmark.MicrobenchmarkTest$LoggingTest)",
+                "test",
+                "end",
+                "tight after",
+                "after")
+            .inOrder();
+    }
+
+    /**
+     * An extensions of the {@link Microbenchmark} runner that logs the start and end of collecting
+     * traces. It also passes the operation log to the provided test {@code Class}, if it is a
+     * {@link LoggingTest}. This is used for ensuring the proper order for evaluating test {@link
+     * Statement}s.
+     */
+    public static class LoggingMicrobenchmark extends Microbenchmark {
+        private List<String> mOperationLog;
+
+        public LoggingMicrobenchmark(Class<?> klass) throws InitializationError {
+            super(klass);
+        }
+
+        LoggingMicrobenchmark(Class<?> klass, Bundle arguments) throws InitializationError {
+            super(klass, arguments);
+        }
+
+        protected Object createTest() throws Exception {
+            Object test = super.createTest();
+            if (test instanceof LoggingTest) {
+                ((LoggingTest)test).setOperationLog(mOperationLog);
+            }
+            return test;
+        }
+
+        void setOperationLog(List<String> log) {
+            mOperationLog = log;
+        }
+
+        List<String> getOperationLog() {
+            return mOperationLog;
+        }
+
+        @Override
+        protected TracePointRule getTracePointRule() {
+            return new LoggingTracePointRule();
+        }
+
+        class LoggingTracePointRule extends TracePointRule {
+            @Override
+            protected void beginSection(String sectionTag) {
+                mOperationLog.add(String.format("begin: %s", sectionTag));
+            }
+
+            @Override
+            protected void endSection() {
+                mOperationLog.add("end");
+            }
         }
     }
 
-    @RunWith(Microbenchmark.class)
-    public static class OrderTest {
+    /**
+     * A test that logs {@link Before}, {@link After}, {@link Test}, and the logging {@link
+     * TightMethodRule} included, used in conjunction with {@link LoggingMicrobenchmark} to
+     * determine all {@link Statement}s are evaluated in the proper order.
+     */
+    public static class LoggingTest {
         @Microbenchmark.TightMethodRule
         public TightRule orderRule = new TightRule();
 
-        private boolean hasCalledBefore = false;
-        private boolean hasCalledAfter = false;
-        private boolean hasCalledTest = false;
+        private List<String> mOperationLog;
+
+        void setOperationLog(List<String> log) {
+            mOperationLog = log;
+        }
 
         @Before
         public void beforeMethod() {
-            hasCalledBefore = true;
+            mOperationLog.add("before");
         }
 
         @Test
         public void testMethod() {
-            hasCalledTest = true;
+            mOperationLog.add("test");
         }
 
         @After
         public void afterMethod() {
-            hasCalledAfter = true;
+            mOperationLog.add("after");
         }
 
         class TightRule implements MethodRule {
@@ -100,16 +169,9 @@ public final class MicrobenchmarkTest {
                 return new Statement() {
                     @Override
                     public void evaluate() throws Throwable {
-                        // Tight before statement.
-                        assertWithMessage("Before was not called before rule evaluation.")
-                                .that(hasCalledBefore).isTrue();
-                        // Test method evaluation.
+                        mOperationLog.add("tight before");
                         base.evaluate();
-                        // Tight after statement.
-                        assertWithMessage("Test not called before base evaluation.")
-                                .that(hasCalledTest).isTrue();
-                        assertWithMessage("After was called before rule evaluation.")
-                                .that(hasCalledAfter).isFalse();
+                        mOperationLog.add("tight after");
                     }
                 };
             }
