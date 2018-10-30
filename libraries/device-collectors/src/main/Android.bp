@@ -19,10 +19,9 @@ java_library {
     srcs: ["java/**/*.java"],
 
     static_libs: [
-        "collectors-helper",
         "androidx.test.runner",
         "junit",
     ],
 
-    platform_apis: true,
+    sdk_version: "current",
 }

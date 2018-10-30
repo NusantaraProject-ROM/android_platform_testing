@@ -27,7 +27,7 @@ android_test {
         "mockito-target-minus-junit4",
     ],
 
-    platform_apis: true,
+    sdk_version: "current",
 
     test_suites: ["general-tests"],
 }
