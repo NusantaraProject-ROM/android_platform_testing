@@ -1,4 +1,4 @@
-// Copyright (C) 2017 The Android Open Source Project
+// Copyright (C) 2018 The Android Open Source Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,33 +13,18 @@
 // limitations under the License.
 
 java_library {
-    name: "collector-device-lib",
+    name: "collectors-helper-test",
     defaults: ["tradefed_errorprone_defaults"],
 
-    srcs: ["java/**/*.java"],
+    srcs: ["src/**/*.java"],
 
     static_libs: [
         "androidx.test.runner",
-        "junit",
-    ],
-
-    sdk_version: "current",
-}
-
-// This library enables additional listeners dependent on platform apis.
-java_library {
-    name: "collector-device-lib-platform",
-    defaults: ["tradefed_errorprone_defaults"],
-
-    srcs: [
-        "java/**/*.java",
-        "platform-helpers/**/*.java",
-    ],
-
-    static_libs: [
-        "androidx.test.runner",
+        "android-support-test",
         "collectors-helper",
+        "app-helpers-handheld-interfaces",
         "junit",
+        "ub-uiautomator",
     ],
 
     platform_apis: true,
