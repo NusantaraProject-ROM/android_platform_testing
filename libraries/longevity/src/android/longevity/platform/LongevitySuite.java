@@ -24,13 +24,19 @@ import android.longevity.platform.listener.ErrorTerminator;
 import android.longevity.platform.listener.TimeoutTerminator;
 import android.os.BatteryManager;
 import android.os.Bundle;
+import android.platform.test.composer.Iterate;
+import android.platform.test.composer.Shuffle;
+import android.platform.test.composer.Profile;
+import android.util.Log;
 import androidx.annotation.VisibleForTesting;
 import androidx.test.InstrumentationRegistry;
-import android.util.Log;
 
+import java.util.function.BiFunction;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.junit.runner.Runner;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
@@ -81,9 +87,29 @@ public final class LongevitySuite extends android.longevity.core.LongevitySuite 
     public LongevitySuite(Class<?> klass, RunnerBuilder builder,
             Instrumentation instrumentation, Context context, Bundle arguments)
             throws InitializationError {
-        super(klass, builder, toMap(arguments));
+        super(klass, constructClassRunners(klass, builder, arguments), toMap(arguments));
         mInstrumentation = instrumentation;
         mContext = context;
+    }
+
+    /**
+     * Constructs the sequence of {@link Runner}s using platform composers.
+     */
+    private static List<Runner> constructClassRunners(
+                Class<?> suite, RunnerBuilder builder, Bundle args)
+            throws InitializationError {
+        // TODO(b/118340229): Refactor to share logic with base class. In the meanwhile, keep the
+        // logic here in sync with the base class.
+        // Retrieve annotated suite classes.
+        SuiteClasses annotation = suite.getAnnotation(SuiteClasses.class);
+        if (annotation == null) {
+            throw new InitializationError(String.format(
+                    "Longevity suite, '%s', must have a SuiteClasses annotation", suite.getName()));
+        }
+        // Construct and store custom runners for the full suite.
+        BiFunction<Bundle, List<Runner>, List<Runner>> modifier =
+                new Iterate<Runner>().andThen(new Shuffle<Runner>()).andThen(new Profile());
+        return modifier.apply(args, builder.runners(suite, annotation.value()));
     }
 
     @Override
