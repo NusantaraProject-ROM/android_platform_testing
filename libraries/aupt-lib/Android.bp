@@ -17,6 +17,7 @@
 java_library {
     name: "AuptLib",
     libs: [
+        "androidx.test.runner",
         "ub-uiautomator",
         "junit",
         "android.test.runner.stubs",
@@ -32,6 +33,7 @@ android_test {
 
     platform_apis: true,
     static_libs: [
+        "androidx.test.runner",
         "ub-uiautomator",
         "junit",
     ],
