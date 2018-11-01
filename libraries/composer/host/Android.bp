@@ -12,9 +12,47 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+java_genrule {
+    name: "profile-text-protos",
+    host_supported: true,
+    tools: ["aprotoc"],
+    srcs: [
+        "src/**/profile.proto",
+        "res/*.textpb",
+    ],
+    out: ["profiles.jar"],
+    /*
+     * Loops over all *.textpb files under res/ and serializes them into binary protos with ".pb"
+     * extension using aprotoc. The generated *.pb files are put under an assets/ directory, which
+     * gets packed into a .jar file and ends being under the assets/ directory in the apk package,
+     * which can then be read by the app's asset manager.
+     *
+     * If a profile fails to parse, an error is thrown and the build will fail.
+     */
+    cmd: "out_dir=$$(dirname $(out)) && assets_dir=\"assets\" && mkdir -p $$out_dir/$$assets_dir " +
+        "&& src_protos=($(locations res/*.textpb)) && red='\033[0;31m' && no_color='\033[0m' " +
+        "&& for file in $${src_protos[@]} ; do fname=$$(basename $$file) " +
+        "&& if ! ($(location aprotoc) --encode=composer.profile.Configuration " +
+        "$(location src/**/profile.proto) < $$file > " +
+        "$$out_dir/$$assets_dir/$${fname//.textpb/.pb}) ; then " +
+        "echo \"$${red}Failed to parse profile $$file. See above for errors.$${no_color}\" " +
+        "&& exit 1 ; fi ; done && jar cf $(out) -C $$(dirname $(out)) $$assets_dir",
+}
+
 java_library_static {
     name: "test-composers",
-    srcs: [ "src/**/*.java" ],
+    static_libs: [
+        "junit",
+        "profile-text-protos",
+    ],
+    srcs: [
+        "src/**/*.java",
+        "src/**/*.proto",
+    ],
+    proto: {
+        type: "lite",
+        include_dirs: ["external/protobuf/src"],
+    },
     sdk_version: "current",
     host_supported: true,
 }
