@@ -23,6 +23,7 @@ android_test {
         "platform-test-composers",
         "test-composers-tests",
         "truth-prebuilt",
+        "guava",
     ],
     srcs: [ "src/**/*.java" ],
     test_suites: [ "device-tests" ],

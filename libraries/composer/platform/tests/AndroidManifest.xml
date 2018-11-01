@@ -19,8 +19,11 @@
     <application>
         <uses-library android:name="android.test.runner"/>
     </application>
+    <uses-permission android:name="android.platform.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.platform.WRITE_EXTERNAL_STORAGE"/>
     <instrumentation
         android:name="androidx.test.runner.AndroidJUnitRunner"
         android:targetPackage="android.platform.test.composer.tests"
         android:label="Platform Composer Library Tests" />
 </manifest>
+
