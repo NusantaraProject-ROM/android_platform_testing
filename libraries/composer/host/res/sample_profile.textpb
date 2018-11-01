@@ -1,0 +1,19 @@
+scheduled {
+    if_early: IDLE
+}
+scenarios [{
+    at: "00:00:10"
+    journey: "android.platform.test.scenario.calendar.FlingDayPage"
+}, {
+    at: "00:01:00"
+    journey: "android.platform.test.scenario.calendar.FlingWeekPage"
+}, {
+    at: "00:02:00"
+    journey: "android.platform.test.scenario.gmail.OpenApp"
+}, {
+    at: "00:03:00"
+    journey: "android.platform.test.scenario.quicksettings.ToggleWifiOff"
+}, {
+    at: "00:04:00"
+    journey: "android.platform.test.scenario.quicksettings.ToggleWifiOn"
+}]

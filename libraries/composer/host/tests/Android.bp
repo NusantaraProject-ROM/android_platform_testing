@@ -22,6 +22,17 @@ java_library_static {
         "test-composers",
         "truth-prebuilt",
     ],
+    target: {
+        android: {
+            static_libs: ["mockito-target"]
+        },
+        host: {
+            static_libs: ["mockito", "objenesis"]
+        }
+    },
+    static_libs: [
+        "guava",
+    ]
 }
 
 //#####################################
