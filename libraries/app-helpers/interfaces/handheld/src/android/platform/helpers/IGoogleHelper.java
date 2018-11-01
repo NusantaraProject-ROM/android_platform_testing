@@ -61,10 +61,10 @@ public interface IGoogleHelper extends IAppHelper {
     /**
      * Setup expectations: Google app open and a search keyword input.
      *
-     * This method clicks the search button.
+     * This method clicks the search button and waits for the results.
      *
      */
-    default public void clickSearchButton() {
+    default public void clickSearchButtonAndWaitForResults() {
         throw new UnsupportedOperationException("Not yet implemented.");
     }
 
