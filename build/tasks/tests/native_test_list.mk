@@ -14,6 +14,8 @@
 
 native_tests := \
     adbd_test \
+    apex_file_test \
+    apex_manifest_test \
     backtrace_test \
     bionic-unit-tests \
     bionic-unit-tests-static \
