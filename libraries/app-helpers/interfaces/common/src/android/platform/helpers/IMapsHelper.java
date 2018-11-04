@@ -45,4 +45,22 @@ public interface IMapsHelper extends IAppHelper {
      * Best effort attempt to stop navigation, and go back to the directions screen.
      */
     public void stopNavigation();
+
+    /**
+     * Setup expectation: Destination is selected.
+     *
+     * Goes to the details screen for the selected destination.
+     */
+    default public void openAddressDetails() {
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
+
+    /**
+     * Setup expectation: On the destination details screen.
+     *
+     * Flings down the destination details screen.
+     */
+    default public void flingAddressDetails() {
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
 }
