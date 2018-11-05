@@ -22,16 +22,21 @@ import org.junit.runner.Description;
 import org.junit.runner.Runner;
 
 import java.lang.IllegalArgumentException;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * A {@link Compose} function base class for taking a profile and returning the tests in the specified sequence.
+ * A {@link Compose} function base class for taking a profile and returning the tests in the
+ * specified sequence.
  */
 public abstract class ProfileBase<T> implements Compose<T, Runner> {
     protected static final String PROFILE_OPTION_NAME = "profile";
@@ -39,8 +44,34 @@ public abstract class ProfileBase<T> implements Compose<T, Runner> {
 
     private static final String LOG_TAG = ProfileBase.class.getSimpleName();
 
-    // Store the configuration to be read by the test runner.
-    private Configuration mConfiguration;
+    // Parser for parsing "at" timestamps in profiles.
+    private static final SimpleDateFormat TIMESTAMP_FORMATTER = new SimpleDateFormat("HH:mm:ss");
+
+    // Keeps track of the current scenario to run.
+    private int mScenarioIndex = 0;
+    // A list of scenarios in the order that they will be run.
+    private List<Scenario> mOrderedScenariosList;
+    // Timestamp when the test run starts, defaults to time when the ProfileBase object is
+    // constructed. Can be overridden by {@link setTestRunStartTimeMillis}.
+    // TODO(b/118843085): Clarify whether timestamps are relative to run start time or device clock.
+    private long mRunStartTimeMillis = System.currentTimeMillis();
+
+    public ProfileBase(T args) {
+        super();
+        // Set the timestamp parser to UTC to get test timstamps as "time elapsed since zero".
+        TIMESTAMP_FORMATTER.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+        // Load configuration from arguments and stored the list of scenarios sorted according to
+        // their timestamps.
+        Configuration config = getConfigurationArgument(args);
+        if (config == null) {
+            return;
+        }
+        mOrderedScenariosList = new ArrayList<Scenario>(config.getScenariosList());
+        if (config.hasScheduled()) {
+            Collections.sort(mOrderedScenariosList, new ScenarioTimestampComparator());
+        }
+    }
 
     // Comparator for sorting timstamped CUJs.
     private static class ScenarioTimestampComparator implements Comparator<Scenario> {
@@ -55,19 +86,11 @@ public abstract class ProfileBase<T> implements Compose<T, Runner> {
 
     @Override
     public List<Runner> apply(T args, List<Runner> input) {
-        mConfiguration = getConfigurationArgument(args);
-        if (mConfiguration == null) {
+        Configuration config = getConfigurationArgument(args);
+        if (config == null) {
             return input;
         }
-        return getTestSequenceFromConfiguration(mConfiguration, input);
-    }
-
-    public boolean isConfigurationLoaded() {
-        return (mConfiguration == null);
-    }
-
-    public Configuration getLoadedConfiguration() {
-        return mConfiguration;
+        return getTestSequenceFromConfiguration(config, input);
     }
 
     protected List<Runner> getTestSequenceFromConfiguration(
@@ -77,13 +100,9 @@ public abstract class ProfileBase<T> implements Compose<T, Runner> {
                         Collectors.toMap(
                                 r -> r.getDescription().getDisplayName(), Function.identity()));
         logInfo(LOG_TAG, String.format(
-                "Available scenarios: %s",
+                "Available journeys: %s",
                 nameToRunner.keySet().stream().collect(Collectors.joining(", "))));
-        List<Scenario> scenarios = new ArrayList<Scenario>(config.getScenariosList());
-        if (config.hasScheduled()) {
-            Collections.sort(scenarios, new ScenarioTimestampComparator());
-        }
-        List<Runner> result = scenarios
+        List<Runner> result = mOrderedScenariosList
                 .stream()
                 .map(Configuration.Scenario::getJourney)
                 .map(
@@ -93,7 +112,8 @@ public abstract class ProfileBase<T> implements Compose<T, Runner> {
                             } else {
                                 throw new IllegalArgumentException(
                                         String.format(
-                                                "Journey %s in profile does not exist.",
+                                                "Journey %s in profile not found. "
+                                                + "Check logcat to see available journeys.",
                                                 journeyName));
                             }
                         })
@@ -105,6 +125,55 @@ public abstract class ProfileBase<T> implements Compose<T, Runner> {
                             .map(Description::getDisplayName)
                             .collect(Collectors.toList())));
         return result;
+    }
+
+    /**
+     * Enables classes using the profile composer to set the test run start time.
+     */
+    public void setTestRunStartTimeMillis(long timestamp) {
+        mRunStartTimeMillis = timestamp;
+    }
+
+    /**
+     * Called by suite runners to signal that a scenario/test has ended; increments the scenario
+     * index.
+     */
+    public void scenarioEnded() {
+        mScenarioIndex += 1;
+    }
+
+    /**
+     * Returns true if there is a next scheduled scenario to run. If no profile is supplied, returns
+     * false.
+     */
+    public boolean hasNextScheduledScenario() {
+        return (mOrderedScenariosList != null) && (mScenarioIndex < mOrderedScenariosList.size());
+    }
+
+    /**
+     * Returns time in milliseconds until the next scenario.
+     */
+    public long getMillisecondsUntilNextScenario() {
+        Scenario nextScenario = mOrderedScenariosList.get(mScenarioIndex);
+        if (nextScenario.hasAt()) {
+            try {
+                long startTimeMillis = TIMESTAMP_FORMATTER.parse(nextScenario.getAt()).getTime();
+                // Time in milliseconds from the start of the test run to the current point in time.
+                long currentTimeMillis = System.currentTimeMillis() - mRunStartTimeMillis;
+                // If the next test should not start yet, sleep until its start time. Otherwise,
+                // start it immediately.
+                // TODO(b/118495360): Deal with the IfLate situation.
+                if (startTimeMillis > currentTimeMillis) {
+                    return startTimeMillis - currentTimeMillis;
+                }
+            } catch (ParseException e) {
+                throw new IllegalArgumentException(
+                        String.format("Time %s from scenario %s could not be parsed",
+                                nextScenario.getAt(), nextScenario.getJourney()));
+            }
+        }
+        // For non-scheduled profiles (not a priority at this point), simply return 0.
+        return 0L;
     }
 
     /**

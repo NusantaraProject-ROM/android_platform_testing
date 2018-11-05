@@ -3,17 +3,17 @@ scheduled {
 }
 scenarios [{
     at: "00:00:10"
-    journey: "android.platform.test.scenario.calendar.FlingDayPage"
+    journey: "android.longevity.platform.samples.SimpleSuite$PassingTest"
 }, {
     at: "00:01:00"
-    journey: "android.platform.test.scenario.calendar.FlingWeekPage"
+    journey: "android.longevity.platform.samples.SimpleSuite$FailingTest"
 }, {
     at: "00:02:00"
-    journey: "android.platform.test.scenario.gmail.OpenApp"
+    journey: "android.longevity.platform.samples.SimpleSuite$PassingTest"
 }, {
     at: "00:03:00"
-    journey: "android.platform.test.scenario.quicksettings.ToggleWifiOff"
+    journey: "android.longevity.platform.samples.SimpleSuite$PassingTest"
 }, {
     at: "00:04:00"
-    journey: "android.platform.test.scenario.quicksettings.ToggleWifiOn"
+    journey: "android.longevity.platform.samples.SimpleSuite$FailingTest"
 }]

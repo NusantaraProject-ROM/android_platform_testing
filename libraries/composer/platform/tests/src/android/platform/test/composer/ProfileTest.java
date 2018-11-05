@@ -30,6 +30,10 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class ProfileTest extends ProfileTestBase<Bundle> {
     protected class TestableProfile extends ProfileBase<Bundle> {
+        public TestableProfile(Bundle args) {
+            super(args);
+        }
+
         @Override
         protected Configuration getConfigurationArgument(Bundle args) {
             return TEST_CONFIGS.get(args.getString(PROFILE_OPTION_NAME));
@@ -37,8 +41,8 @@ public class ProfileTest extends ProfileTestBase<Bundle> {
     }
 
     @Override
-    protected ProfileBase<Bundle> getProfile() {
-        return new TestableProfile();
+    protected ProfileBase<Bundle> getProfile(Bundle args) {
+        return new TestableProfile(args);
     }
 
     @Override
