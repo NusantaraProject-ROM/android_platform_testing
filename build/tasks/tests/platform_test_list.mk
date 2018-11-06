@@ -126,3 +126,9 @@ platform_tests += \
 ifneq ($(strip $(BOARD_PERFSETUP_SCRIPT)),)
 platform_tests += perf-setup.sh
 endif
+
+ifneq ($(filter vsoc_x86 vsoc_x86_64, $(TARGET_DEVICE)),)
+  platform_tests += \
+    CuttlefishRilTests \
+    CuttlefishWifiTests
+endif
