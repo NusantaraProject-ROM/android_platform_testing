@@ -28,10 +28,12 @@ java_library_static {
     name: "longevity-device-lib",
     srcs: [ "src/**/*.java" ],
     defaults: [ "tradefed_errorprone_defaults" ],
-    static_libs: [ "androidx.test.runner" ],
+    static_libs: [
+        "androidx.test.runner",
+        "platform-test-composers",
+    ],
     libs: [
         "guava",
-        "platform-test-composers",
     ],
     sdk_version: "24",
 }
