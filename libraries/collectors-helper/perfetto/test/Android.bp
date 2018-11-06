@@ -12,34 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Used for collecting metrics from statsd.
 java_library {
-    name: "collectors-helper",
+    name: "perfetto-helper-test",
     defaults: ["tradefed_errorprone_defaults"],
 
-    srcs: ["statsd/src/**/*.java"],
-
-    static_libs: [
-        "platformprotoslite",
-        "statsdprotolite",
-        "androidx.test.runner",
-        "guava",
-    ],
-
-    platform_apis: true,
-}
-
-
-// Used for collecting perfetto traces.
-java_library {
-    name: "perfetto-helper",
-    defaults: ["tradefed_errorprone_defaults"],
-
-    srcs: ["perfetto/src/**/*.java"],
+    srcs: ["src/**/*.java"],
 
     static_libs: [
         "androidx.test.runner",
-        "ub-uiautomator",
+        "android-support-test",
+        "perfetto-helper",
+        "junit",
+
     ],
 
     sdk_version: "current",
