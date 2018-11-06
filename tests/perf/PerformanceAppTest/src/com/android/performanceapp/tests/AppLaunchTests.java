@@ -57,7 +57,7 @@ public class AppLaunchTests extends InstrumentationTestCase {
     private static final String ACTIVITYLIST = "activitylist";
     private static final String LAUNCHCOUNT = "launchcount";
     private static final String RECORDTRACE = "recordtrace";
-    private static final String ATRACE_START = "atrace --async_start am view gfx";
+    private static final String ATRACE_START = "atrace --async_start am view gfx sched";
     private static final String ATRACE_DUMP = "atrace --async_dump";
     private static final String ATRACE_STOP = "atrace --async_stop";
     private static final String FORCE_STOP = "am force-stop ";
