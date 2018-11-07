@@ -1,4 +1,6 @@
 platform_tests += \
+    apex_file_test \
+    apex_manifest_test \
     ActivityManagerPerfTests \
     ActivityManagerPerfTestsTestApp \
     AndroidTVJankTests \
