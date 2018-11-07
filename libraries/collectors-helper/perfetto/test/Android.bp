@@ -1,4 +1,4 @@
-// Copyright (C) 2017 The Android Open Source Project
+// Copyright (C) 2018 The Android Open Source Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,28 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-java_library_host {
-    name: "longevity-host-lib",
-    srcs: [ "src/android/longevity/core//**/*.java" ],
-    defaults: [ "tradefed_errorprone_defaults" ],
-    static_libs: [
-        "guava",
-        "jsr305lib",
-        "junit",
-        "test-composers",
-    ],
-}
+java_library {
+    name: "perfetto-helper-test",
+    defaults: ["tradefed_errorprone_defaults"],
 
-java_library_static {
-    name: "longevity-device-lib",
-    srcs: [ "src/**/*.java" ],
-    defaults: [ "tradefed_errorprone_defaults" ],
+    srcs: ["src/**/*.java"],
+
     static_libs: [
         "androidx.test.runner",
-        "platform-test-composers",
+        "android-support-test",
+        "perfetto-helper",
+        "junit",
+
     ],
-    libs: [
-        "guava",
-    ],
-    sdk_version: "24",
+
+    sdk_version: "current",
 }

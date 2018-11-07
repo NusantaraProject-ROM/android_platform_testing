@@ -23,6 +23,7 @@ import android.host.test.composer.Profile;
 
 import org.junit.runner.Runner;
 import org.junit.runner.notification.RunNotifier;
+import org.junit.runner.notification.StoppedByUserException;
 import org.junit.runners.Suite;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
@@ -38,8 +39,13 @@ import java.util.stream.Collectors;
  * look at the bundled samples package.
  */
 public class LongevitySuite extends Suite {
-    private static final String QUITTER_OPTION = "quitter";
+    static final String QUITTER_OPTION = "quitter";
     private static final boolean QUITTER_DEFAULT = false; // don't quit
+
+    // If this option is true, a test interruption is reported as a test run failure, as opposed to
+    // a successful test run end with a truncated set of tests that were actually run.
+    static final String INVALIDATE_OPTION = "invalidate-if-early";
+    private static final boolean INVALIDATE_DEFAULT = false;
 
     protected Map<String, String> mArguments;
 
@@ -101,7 +107,17 @@ public class LongevitySuite extends Suite {
         }
         notifier.addListener(getTimeoutTerminator(notifier));
         // Invoke tests to run through super call.
-        super.run(notifier);
+        try {
+            super.run(notifier);
+        } catch (StoppedByUserException e) {
+            // Invalidate the test run if terminated early and the option is set.
+            if (mArguments.containsKey(INVALIDATE_OPTION) ?
+                Boolean.parseBoolean(mArguments.get(INVALIDATE_OPTION)) : INVALIDATE_DEFAULT) {
+                throw e;
+            } else {
+                return;
+            }
+        }
     }
 
     /**
