@@ -27,6 +27,10 @@ import java.util.Map;
  * An extension of {@link android.host.test.composer.ProfileBase} for host-side testing.
  */
 public class Profile extends ProfileBase<Map<String, String>> {
+    public Profile(Map<String, String> args) {
+        super(args);
+    }
+
     @Override
     protected Configuration getConfigurationArgument(Map<String, String> args) {
         if (!args.containsKey(PROFILE_OPTION_NAME)) {

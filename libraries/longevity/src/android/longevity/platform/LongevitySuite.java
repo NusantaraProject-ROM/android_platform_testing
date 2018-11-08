@@ -24,6 +24,7 @@ import android.longevity.platform.listener.ErrorTerminator;
 import android.longevity.platform.listener.TimeoutTerminator;
 import android.os.BatteryManager;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.platform.test.composer.Iterate;
 import android.platform.test.composer.Shuffle;
 import android.platform.test.composer.Profile;
@@ -51,6 +52,9 @@ public final class LongevitySuite extends android.longevity.core.LongevitySuite 
 
     private Instrumentation mInstrumentation;
     private Context mContext;
+
+    // Platform Profile instance for scheduling tests.
+    private Profile mProfile;
 
     /**
      * Takes a {@link Bundle} and maps all String K/V pairs into a {@link Map<String, String>}.
@@ -90,6 +94,7 @@ public final class LongevitySuite extends android.longevity.core.LongevitySuite 
         super(klass, constructClassRunners(klass, builder, arguments), toMap(arguments));
         mInstrumentation = instrumentation;
         mContext = context;
+        mProfile = new Profile(arguments);
     }
 
     /**
@@ -108,7 +113,7 @@ public final class LongevitySuite extends android.longevity.core.LongevitySuite 
         }
         // Construct and store custom runners for the full suite.
         BiFunction<Bundle, List<Runner>, List<Runner>> modifier =
-                new Iterate<Runner>().andThen(new Shuffle<Runner>()).andThen(new Profile());
+                new Iterate<Runner>().andThen(new Shuffle<Runner>()).andThen(new Profile(args));
         return modifier.apply(args, builder.runners(suite, annotation.value()));
     }
 
@@ -118,8 +123,26 @@ public final class LongevitySuite extends android.longevity.core.LongevitySuite 
         if (hasBattery()) {
             notifier.addListener(new BatteryTerminator(notifier, mArguments, mContext));
         }
+        // Set the test run start time in the profile composer and sleep until the first scheduled
+        // test starts. When no profile is supplied, hasNextScheduledScenario() returns false and
+        // no sleep is performed.
+        if (mProfile.hasNextScheduledScenario()) {
+            mProfile.setTestRunStartTimeMillis(System.currentTimeMillis());
+            SystemClock.sleep(mProfile.getMillisecondsUntilNextScenario());
+        }
         // Register other listeners and continue with standard longevity run.
         super.run(notifier);
+    }
+
+    @Override
+    protected void runChild(Runner runner, final RunNotifier notifier) {
+        super.runChild(runner, notifier);
+        mProfile.scenarioEnded();
+        // If there are remaining scenarios, Sleep until the next one starts.
+        // When no profile is supplied, allScenariosDone() returns true and no sleep is performed.
+        if (mProfile.hasNextScheduledScenario()) {
+            SystemClock.sleep(mProfile.getMillisecondsUntilNextScenario());
+        }
     }
 
     /**

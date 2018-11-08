@@ -40,6 +40,11 @@ public class Profile extends ProfileBase<Bundle> {
      *
      * TODO(harrytczhang@): Write tests for this logic.
      */
+
+    public Profile(Bundle args) {
+        super(args);
+    }
+
     @Override
     protected Configuration getConfigurationArgument(Bundle args) {
         // profileValue is either the name of a profile bundled with an APK or a path to a
