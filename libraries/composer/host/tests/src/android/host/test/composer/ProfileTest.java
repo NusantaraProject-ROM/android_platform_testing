@@ -30,6 +30,10 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class ProfileTest extends ProfileTestBase<Map<String, String>> {
     protected class TestableProfile extends ProfileBase<Map<String, String>> {
+        public TestableProfile(Map<String, String> args) {
+            super(args);
+        }
+
         @Override
         protected Configuration getConfigurationArgument(Map<String, String> args) {
             return TEST_CONFIGS.get(args.get(PROFILE_OPTION_NAME));
@@ -37,8 +41,8 @@ public class ProfileTest extends ProfileTestBase<Map<String, String>> {
     }
 
     @Override
-    protected ProfileBase<Map<String, String>> getProfile() {
-        return new TestableProfile();
+    protected ProfileBase<Map<String, String>> getProfile(Map<String, String> args) {
+        return new TestableProfile(args);
     }
 
     @Override

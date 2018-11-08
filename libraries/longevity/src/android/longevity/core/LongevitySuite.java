@@ -94,7 +94,7 @@ public class LongevitySuite extends Suite {
         }
         // Construct and store custom runners for the full suite.
         BiFunction<Map<String, String>, List<Runner>, List<Runner>> modifier =
-                new Iterate<Runner>().andThen(new Shuffle<Runner>()).andThen(new Profile());
+                new Iterate<Runner>().andThen(new Shuffle<Runner>()).andThen(new Profile(args));
         return modifier.apply(args, builder.runners(suite, annotation.value()));
     }
 
