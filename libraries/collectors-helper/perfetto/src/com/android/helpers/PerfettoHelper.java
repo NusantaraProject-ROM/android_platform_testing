@@ -173,12 +173,14 @@ public class PerfettoHelper {
      */
     private boolean copyFileOutput(String destinationFile) {
         Path path = Paths.get(destinationFile);
+        String destDirectory = path.getParent().toString();
         // Check if the directory already exists
-        File directory = new File(path.getParent().toString());
+        File directory = new File(destDirectory);
         if (!directory.exists()) {
             boolean success = directory.mkdirs();
             if (!success) {
-                Log.e(LOG_TAG, "Result output directory not created successfully.");
+                Log.e(LOG_TAG, String.format(
+                        "Result output directory %s not created successfully.", destDirectory));
                 return false;
             }
         }
