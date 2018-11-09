@@ -25,6 +25,7 @@ android_test {
         "collector-device-lib",
         "junit",
         "mockito-target-minus-junit4",
+        "perfetto-helper",
     ],
 
     sdk_version: "current",
