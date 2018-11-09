@@ -21,6 +21,7 @@ java_library {
     static_libs: [
         "androidx.test.runner",
         "junit",
+        "perfetto-helper",
     ],
 
     sdk_version: "current",
@@ -40,6 +41,7 @@ java_library {
         "androidx.test.runner",
         "collectors-helper",
         "junit",
+        "perfetto-helper",
     ],
 
     platform_apis: true,
