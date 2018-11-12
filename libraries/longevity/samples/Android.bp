@@ -14,9 +14,39 @@
 // limitations under the License.
 //
 
+java_genrule {
+    name: "sample-profile-text-protos",
+    host_supported: true,
+    tools: ["aprotoc"],
+    srcs: [
+        ":profile-proto-def",
+        "assets/*.textpb",
+    ],
+    out: ["sample-profiles.jar"],
+    /*
+     * Loops over all *.textpb files under assets/ and serializes them into binary protos with
+     * ".pb" extension using aprotoc. The generated *.pb files are put under an assets/
+     * directory, which gets packed into a .jar file and ends up under the assets/
+     * directory in the package, which can then be read with asset manager.
+     *
+     * If a profile fails to parse, an error is thrown and the build will fail.
+     */
+    cmd: "out_dir=$$(dirname $(out)) && assets_dir=\"assets\" " +
+        "&& mkdir -p $$out_dir/$$assets_dir && src_protos=($(locations assets/*.textpb)) " +
+        "&& for file in $${src_protos[@]} ; do fname=$$(basename $$file) " +
+        "&& if ! ($(location aprotoc) --encode=composer.profile.Configuration " +
+        "$(location :profile-proto-def) < $$file > " +
+        "$$out_dir/$$assets_dir/$${fname//.textpb/.pb}) ; then " +
+        "echo \"\033[0;31mFailed to parse profile $$file. See above for errors.\033[0m\" " +
+        "&& exit 1 ; fi ; done && jar cf $(out) -C $$(dirname $(out)) $$assets_dir",
+}
+
 java_library_host {
     name: "LongevityHostLibSamples",
-    static_libs: ["longevity-host-lib"],
+    static_libs: [
+        "longevity-host-lib",
+        "sample-profile-text-protos",
+    ],
     srcs: ["src/android/longevity/core/**/*.java"],
 }
 
@@ -24,8 +54,11 @@ java_library_host {
 
 android_test {
     name: "LongevityPlatformLibSamples",
-
     sdk_version: "24",
-    static_libs: ["longevity-device-lib"],
+    static_libs: [
+        "longevity-device-lib",
+        "sample-profile-text-protos",
+    ],
     srcs: ["src/android/longevity/platform/**/*.java"],
 }
+
