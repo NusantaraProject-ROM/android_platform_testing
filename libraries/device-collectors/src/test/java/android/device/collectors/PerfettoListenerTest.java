@@ -151,8 +151,8 @@ public class PerfettoListenerTest {
         verify(mPerfettoHelper, times(3)).stopCollecting(anyLong(), anyString());
 
         // Check if the the test count is incremented properly.
-        assertEquals(2, (int) mInvocationCount.get(mTest1Desc.getDisplayName()));
-        assertEquals(1, (int) mInvocationCount.get(mTest2Desc.getDisplayName()));
+        assertEquals(2, (int) mInvocationCount.get(mListener.getTestFileName(mTest1Desc)));
+        assertEquals(1, (int) mInvocationCount.get(mListener.getTestFileName(mTest2Desc)));
 
     }
 }
