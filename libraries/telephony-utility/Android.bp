@@ -1,3 +1,4 @@
+//
 // Copyright (C) 2018 The Android Open Source Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,24 +12,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+//
 
-// Filegroup for the profile proto definition that enables referencing it elsewhere.
-filegroup {
-    name: "profile-proto-def",
-    srcs: [ "src/**/profile.proto" ],
-}
+// Android Instrumentation Target
+android_test {
+    name: "TelephonyUtility",
+    defaults: ["tradefed_errorprone_defaults"],
 
-java_library_static {
-    name: "test-composers",
-    static_libs: [ "junit" ],
-    srcs: [
-        "src/**/*.java",
-        "src/**/*.proto",
+    srcs: ["src/**/*.java"],
+    static_libs: [
+        "androidx.test.runner",
+        "collector-device-lib",
+        "junit",
     ],
-    proto: {
-        type: "lite",
-        include_dirs: ["external/protobuf/src"],
-    },
+
     sdk_version: "current",
-    host_supported: true,
 }
