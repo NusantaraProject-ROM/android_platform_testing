@@ -75,7 +75,9 @@ public class StatsdHelper {
                     .addAtomMatcher(getSimpleAtomMatcher(atomUniqueId, atomId));
         }
         try {
+            adoptShellIdentity();
             getStatsManager().addConfig(configId, statsConfigBuilder.build().toByteArray());
+            dropShellIdentity();
         } catch (Exception e) {
             Log.e(LOG_TAG, "Not able to setup the event config.", e);
             return false;
@@ -122,8 +124,10 @@ public class StatsdHelper {
         }
 
         try {
+            adoptShellIdentity();
             getStatsManager().addConfig(configId,
                     statsConfigBuilder.build().toByteArray());
+            dropShellIdentity();
         } catch (Exception e) {
             Log.e(LOG_TAG, "Not able to setup the gauge config.", e);
             return false;
@@ -173,8 +177,10 @@ public class StatsdHelper {
         List<EventMetricData> eventData = new ArrayList<>();
         try {
             if (getConfigId() != -1) {
+                adoptShellIdentity();
                 reportList = ConfigMetricsReportList.parser()
                         .parseFrom(getStatsManager().getReports(getConfigId()));
+                dropShellIdentity();
             }
         } catch (InvalidProtocolBufferException | StatsUnavailableException se) {
             Log.e(LOG_TAG, "Retreiving event metrics failed.", se);
@@ -202,8 +208,10 @@ public class StatsdHelper {
         List<GaugeMetricData> gaugeData = new ArrayList<>();
         try {
             if (getConfigId() != -1) {
+                adoptShellIdentity();
                 reportList = ConfigMetricsReportList.parser()
                         .parseFrom(getStatsManager().getReports(getConfigId()));
+                dropShellIdentity();
             }
         } catch (InvalidProtocolBufferException | StatsUnavailableException se) {
             Log.e(LOG_TAG, "Retreiving gauge metrics failed.", se);
@@ -228,7 +236,9 @@ public class StatsdHelper {
     public boolean removeStatsConfig() {
         Log.i(LOG_TAG, "Removing statsd config-id: " + getConfigId());
         try {
+            adoptShellIdentity();
             getStatsManager().removeConfig(getConfigId());
+            dropShellIdentity();
             Log.i(LOG_TAG, "Successfully removed config-id: " + getConfigId());
             return true;
         } catch (StatsUnavailableException e) {
@@ -288,4 +298,21 @@ public class StatsdHelper {
     private int getUniqueId() {
         return UUID.randomUUID().hashCode();
     }
+
+    /**
+     * Adopts shell permission identity needed to access StatsManager service
+     */
+    public static void adoptShellIdentity() {
+        InstrumentationRegistry.getInstrumentation().getUiAutomation()
+                .adoptShellPermissionIdentity();
+    }
+
+    /**
+     * Drop shell permission identity
+     */
+    public static void dropShellIdentity() {
+        InstrumentationRegistry.getInstrumentation().getUiAutomation()
+                .dropShellPermissionIdentity();
+    }
+
 }
