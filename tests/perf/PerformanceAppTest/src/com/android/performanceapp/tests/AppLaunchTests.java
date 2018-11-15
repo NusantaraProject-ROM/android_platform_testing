@@ -204,6 +204,7 @@ public class AppLaunchTests extends InstrumentationTestCase {
                 Thread.sleep(5 * 1000);
             }
         }
+        Thread.sleep(60 * 1000);
         getInstrumentation().sendStatus(0, mResult);
     }
 
