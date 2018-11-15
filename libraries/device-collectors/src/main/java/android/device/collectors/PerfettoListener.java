@@ -103,7 +103,7 @@ public class PerfettoListener extends BaseMetricListener {
     public void onTestStart(DataRecord testData, Description description) {
         // Increment method invocation count by 1 whenever there is a new invocation of the test
         // method.
-        mTestIdInvocationCount.compute(description.getDisplayName(),
+        mTestIdInvocationCount.compute(getTestFileName(description),
                 (key, value) -> (value == null) ? 1 : value + 1);
         Log.i(getTag(), "Starting perfetto before test started.");
         mPerfettoStartSuccess = mPerfettoHelper.startCollecting(mConfigFileName);
@@ -118,9 +118,9 @@ public class PerfettoListener extends BaseMetricListener {
             Log.i(getTag(), "Stopping perfetto after test ended.");
             // Construct test output directory in the below format
             // <root_folder>/<test_display_name>/PerfettoListener/<test_display_name>-<count>.pb
-            Path path = Paths.get(mTestOutputRoot, description.getDisplayName(), this.getClass()
-                    .getSimpleName(), String.format("%s-%d.pb", description.getDisplayName(),
-                    mTestIdInvocationCount.get(description.getDisplayName())));
+            Path path = Paths.get(mTestOutputRoot, getTestFileName(description), this.getClass()
+                    .getSimpleName(), String.format("%s-%d.pb", getTestFileName(description),
+                    mTestIdInvocationCount.get(getTestFileName(description))));
             Log.i(getTag(), "Full folder name" + path.toString());
             if (!mPerfettoHelper.stopCollecting(mWaitTimeInMs, path.toString())) {
                 Log.e(getTag(), "Failed to collect the perfetto output.");
@@ -129,5 +129,13 @@ public class PerfettoListener extends BaseMetricListener {
             Log.i(getTag(),
                     "Skipping perfetto stop attempt because perfetto did not start successfully.");
         }
+    }
+
+    /**
+     * Returns the packagename.classname_methodname which has no special characters and
+     * used to create file names.
+     */
+    public static String getTestFileName(Description description) {
+        return String.format("%s_%s", description.getClassName(), description.getMethodName());
     }
 }
