@@ -127,6 +127,9 @@ public class StatsdHelper {
             adoptShellIdentity();
             getStatsManager().addConfig(configId,
                     statsConfigBuilder.build().toByteArray());
+            StatsLog.logEvent(0);
+            // Dump the counters before the test started.
+            SystemClock.sleep(METRIC_DELAY_MS);
             dropShellIdentity();
         } catch (Exception e) {
             Log.e(LOG_TAG, "Not able to setup the gauge config.", e);
@@ -201,14 +204,14 @@ public class StatsdHelper {
      * Returns the list of GaugeMetric data tracked under the config.
      */
     public List<GaugeMetricData> getGaugeMetrics() {
-        // Dump the metric after the test is completed.
-        StatsLog.logEvent(0);
-        SystemClock.sleep(METRIC_DELAY_MS);
         ConfigMetricsReportList reportList = null;
         List<GaugeMetricData> gaugeData = new ArrayList<>();
         try {
             if (getConfigId() != -1) {
                 adoptShellIdentity();
+                StatsLog.logEvent(0);
+                // Dump the the counters after the test completed.
+                SystemClock.sleep(METRIC_DELAY_MS);
                 reportList = ConfigMetricsReportList.parser()
                         .parseFrom(getStatsManager().getReports(getConfigId()));
                 dropShellIdentity();
