@@ -56,4 +56,11 @@ public interface IAutoLauncherStrategy extends ILauncherStrategy {
      * Open Google Assistant Facet.
      */
     void openAssistantFacet();
+
+    /**
+     * This method is to check if an application is visible on UI
+     *
+     * @param appName check app from all apps facet.
+     */
+    boolean checkApplicationExists(String appName);
 }
