@@ -16,11 +16,13 @@
 
 package com.android.performanceapp.tests;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,12 +60,14 @@ public class AppLaunchTests extends InstrumentationTestCase {
     private static final String ACTIVITYLIST = "activitylist";
     private static final String LAUNCHCOUNT = "launchcount";
     private static final String RECORDTRACE = "recordtrace";
-    private static final String ATRACE_START = "atrace --async_start am view gfx";
-    private static final String ATRACE_DUMP = "atrace --async_dump";
+    private static final String ATRACE_CATEGORIES = "tracecategory";
+    private static final String DEFAULT_CATEGORIES = "am,view,gfx";
+    private static final String ATRACE_START = "atrace --async_start -b 100000 %s";
     private static final String ATRACE_STOP = "atrace --async_stop";
     private static final String FORCE_STOP = "am force-stop ";
     private static final String TARGET_URL = "instanturl";
     private static final String URL_PREFIX = "http://";
+    private static final int BUFFER_SIZE = 8192;
 
     private Context mContext;
     private Bundle mResult;
@@ -71,6 +75,7 @@ public class AppLaunchTests extends InstrumentationTestCase {
     private String mSimpleperfBin;
     private String mSimpleperfEvt;
     private String mSimpleperfDir;
+    private String mAtraceCategory;
     private String mDispatcher;
     private int mLaunchCount;
     private String mCustomActivityList;
@@ -93,6 +98,13 @@ public class AppLaunchTests extends InstrumentationTestCase {
         assertNotNull("Target package name not set", mTargetPackageName);
         mSimpleperfEvt = args.getString(SIMPLEPERF_EVT);
         mDispatcher = args.getString(DISPATCHER);
+
+        mAtraceCategory = args.getString(ATRACE_CATEGORIES);
+        if (mAtraceCategory == null || mAtraceCategory.isEmpty()) {
+            mAtraceCategory = DEFAULT_CATEGORIES;
+        }
+        mAtraceCategory = mAtraceCategory.replace(",", " ");
+
         if (mDispatcher != null && !mDispatcher.isEmpty()) {
             mSimpleperfBin = args.getString(SIMPLEPERF_BIN);
             mSimpleperfEvt = args.getString(SIMPLEPERF_EVT);
@@ -133,7 +145,8 @@ public class AppLaunchTests extends InstrumentationTestCase {
             if (mSimpleperfDir == null)
                 mSimpleperfDir = "/sdcard/perf_simpleperf/";
             File simpleperfDir = new File(mSimpleperfDir);
-            assertTrue("Unable to create the directory to store simpleperf data", simpleperfDir.mkdir());
+            assertTrue("Unable to create the directory to store simpleperf data",
+                    simpleperfDir.mkdir());
         }
         for (int count = 0; count < mLaunchCount; count++) {
             for (String activityName : mActivityList) {
@@ -159,12 +172,17 @@ public class AppLaunchTests extends InstrumentationTestCase {
 
                 // Start the atrace
                 if (mRecordTrace) {
-                    assertNotNull(
-                            "Unable to start atrace async",
-                            getInstrumentation().getUiAutomation()
-                                    .executeShellCommand(ATRACE_START));
-                    // Sleep for 10 secs to make sure atrace command is started
-                    Thread.sleep(10 * 1000);
+                    ByteArrayOutputStream startStream = new ByteArrayOutputStream();
+                    try {
+                        writeDataToByteStream(getInstrumentation().getUiAutomation()
+                                .executeShellCommand(String.format(ATRACE_START, mAtraceCategory)),
+                                startStream);
+                    } finally {
+                        startStream.close();
+                    }
+
+                    // Sleep for 5 secs to make sure atrace command is started
+                    Thread.sleep(5 * 1000);
                 }
 
                 // Launch the activity
@@ -193,29 +211,20 @@ public class AppLaunchTests extends InstrumentationTestCase {
                         fileName = String.format("%s-%d-%d", Uri.parse(activityName).getHost(),
                                 count, processId);
                     }
-                    ParcelFileDescriptor parcelFile =
-                            getInstrumentation().getUiAutomation().executeShellCommand(ATRACE_DUMP);
-                    assertNotNull("Unable to get the File descriptor to standard out",
-                            parcelFile);
-                    InputStream inputStream = new FileInputStream(parcelFile.getFileDescriptor());
-                    File file = new File(logsDir, fileName);
-                    FileOutputStream outputStream = new FileOutputStream(file);
-                    try {
-                        byte[] buffer = new byte[1024];
-                        int length;
-                        while ((length = inputStream.read(buffer)) > 0) {
-                            outputStream.write(buffer, 0, length);
-                        }
-                    } catch (IOException e) {
-                        Log.w(TAG, "Error writing atrace info to file", e);
-                    }
-                    inputStream.close();
-                    outputStream.close();
 
-                    // Stop the atrace
-                    assertNotNull(
-                            "Unable to stop the atrace",
-                            getInstrumentation().getUiAutomation().executeShellCommand(ATRACE_STOP));
+                    ByteArrayOutputStream stopStream = new ByteArrayOutputStream();
+                    File file = new File(logsDir, fileName);
+                    OutputStream fileOutputStream = new FileOutputStream(file);
+                    try {
+                        writeDataToByteStream(
+                                getInstrumentation().getUiAutomation()
+                                        .executeShellCommand(ATRACE_STOP),
+                                stopStream);
+                        fileOutputStream.write(stopStream.toByteArray());
+                    } finally {
+                        stopStream.close();
+                        fileOutputStream.close();
+                    }
 
                     // To keep track of the activity name,list of atrace file name
                     if (!activityName.startsWith(URL_PREFIX)) {
@@ -224,9 +233,17 @@ public class AppLaunchTests extends InstrumentationTestCase {
                         registerTraceFileNames(Uri.parse(activityName).getHost(), fileName);
                     }
                 }
-                assertNotNull("Unable to stop recent activity launched",
-                        getInstrumentation().getUiAutomation().executeShellCommand(
-                                FORCE_STOP + mTargetPackageName));
+
+                ByteArrayOutputStream killStream = new ByteArrayOutputStream();
+                try {
+                    writeDataToByteStream(getInstrumentation().getUiAutomation()
+                            .executeShellCommand(
+                                    FORCE_STOP + mTargetPackageName),
+                            killStream);
+                } finally {
+                    killStream.close();
+                }
+
                 Thread.sleep(5 * 1000);
             }
         }
@@ -308,4 +325,26 @@ public class AppLaunchTests extends InstrumentationTestCase {
             mResult.putString(activityName, "" + absPath);
         }
     }
+
+    /**
+     * Method to write data into byte array
+     * @param pfDescriptor Used to read the content returned by shell command
+     * @param outputStream Write the data to this output stream read from pfDescriptor
+     * @throws IOException
+     */
+    private void writeDataToByteStream(
+            ParcelFileDescriptor pfDescriptor, ByteArrayOutputStream outputStream)
+            throws IOException {
+        InputStream inputStream = new ParcelFileDescriptor.AutoCloseInputStream(pfDescriptor);
+        try {
+            byte[] buffer = new byte[BUFFER_SIZE];
+            int length;
+            while ((length = inputStream.read(buffer)) >= 0) {
+                outputStream.write(buffer, 0, length);
+            }
+        } finally {
+            inputStream.close();
+        }
+    }
+
 }
