@@ -114,7 +114,7 @@ public class StatsdHelper {
                     .setWhat(atomUniqueId)
                     .setGaugeFieldsFilter(FieldFilter.newBuilder().setIncludeAll(true).build())
                     .setMaxNumGaugeAtomsPerBucket(MAX_ATOMS)
-                    .setSamplingType(GaugeMetric.SamplingType.ALL_CONDITION_CHANGES)
+                    .setSamplingType(GaugeMetric.SamplingType.FIRST_N_SAMPLES)
                     .setTriggerEvent(appBreadCrumbUniqueId)
                     .setBucket(TimeUnit.CTS);
 
