@@ -39,7 +39,7 @@ java_library {
 
     static_libs: [
         "androidx.test.runner",
-        "collectors-helper",
+        "statsd-helper",
         "junit",
         "perfetto-helper",
     ],
