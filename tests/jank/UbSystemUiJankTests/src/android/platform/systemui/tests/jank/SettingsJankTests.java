@@ -54,6 +54,7 @@ public class SettingsJankTests extends JankTestBase {
     private UiDevice mDevice;
 
     public void setUp() {
+        androidx.test.InstrumentationRegistry.registerInstance(getInstrumentation(), new Bundle());
         mDevice = UiDevice.getInstance(getInstrumentation());
 
         try {

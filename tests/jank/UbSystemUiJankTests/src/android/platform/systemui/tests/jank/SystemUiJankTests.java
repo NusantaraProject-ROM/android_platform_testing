@@ -122,6 +122,7 @@ public class SystemUiJankTests extends JankTestBase {
     private int mInitialDozeAlwaysOn;
 
     public void setUp() throws Exception {
+        androidx.test.InstrumentationRegistry.registerInstance(getInstrumentation(), new Bundle());
         mDevice = UiDevice.getInstance(getInstrumentation());
         try {
             mDevice.setOrientationNatural();
@@ -137,11 +138,12 @@ public class SystemUiJankTests extends JankTestBase {
 
         // Enable AOD, otherwise we won't test all animations. Having AOD off also adds
         // unpredictable fluctuations since the display can take up to 200ms to turn on.
-        AmbientDisplayConfiguration configuration =
+        // TODO: Fix b/120088636 before uncommenting this code.
+        /*AmbientDisplayConfiguration configuration =
                 new AmbientDisplayConfiguration(getInstrumentation().getContext());
         mInitialDozeAlwaysOn = configuration.alwaysOnEnabled(UserHandle.USER_SYSTEM) ? 1 : 0;
         ContentResolver contentResolver = getInstrumentation().getContext().getContentResolver();
-        Settings.Secure.putInt(contentResolver, Settings.Secure.DOZE_ALWAYS_ON, 1);
+        Settings.Secure.putInt(contentResolver, Settings.Secure.DOZE_ALWAYS_ON, 1);*/
 
         mLauncher = new LauncherInstrumentation(getInstrumentation());
         mDevice.executeShellCommand("pm disable com.google.android.music");
@@ -157,9 +159,9 @@ public class SystemUiJankTests extends JankTestBase {
         mDevice.executeShellCommand("pm enable com.google.android.music");
         mDevice.unfreezeRotation();
         unblockNotifications();
-        ContentResolver contentResolver = getInstrumentation().getContext().getContentResolver();
+        /*ContentResolver contentResolver = getInstrumentation().getContext().getContentResolver();
         Settings.Secure.putInt(contentResolver, Settings.Secure.DOZE_ALWAYS_ON,
-                mInitialDozeAlwaysOn);
+                mInitialDozeAlwaysOn);*/
         super.tearDown();
     }
 
