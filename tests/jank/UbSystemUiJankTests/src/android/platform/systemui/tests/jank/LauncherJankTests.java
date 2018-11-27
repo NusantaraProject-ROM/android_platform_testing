@@ -57,6 +57,7 @@ public class LauncherJankTests extends JankTestBase {
 
     @Override
     public void setUp() throws Exception {
+        androidx.test.InstrumentationRegistry.registerInstance(getInstrumentation(), new Bundle());
         mDevice = UiDevice.getInstance(getInstrumentation());
         try {
             mDevice.setOrientationNatural();
