@@ -59,6 +59,8 @@ import com.android.launcher3.tapl.Overview;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class SystemUiJankTests extends JankTestBase {
 
@@ -210,9 +212,14 @@ public class SystemUiJankTests extends JankTestBase {
     }
 
     private void postNotifications(int groupMode, int sleepBetweenDuration, int maxCount) {
-        Context context = getInstrumentation().getContext();
-        Builder builder = new Builder(context)
+        Builder builder = new Builder(getInstrumentation().getContext())
                 .setContentTitle(NOTIFICATION_TEXT);
+        postNotifications(builder, groupMode, sleepBetweenDuration, maxCount);
+    }
+
+    private void postNotifications(Builder builder, int groupMode, int sleepBetweenDuration,
+            int maxCount) {
+        Context context = getInstrumentation().getContext();
         if (groupMode == GROUP_MODE_GROUPED) {
             builder.setGroup("key");
         }
@@ -238,6 +245,41 @@ public class SystemUiJankTests extends JankTestBase {
             SystemClock.sleep(sleepBetweenDuration);
             first = false;
         }
+    }
+
+    private Builder createSmartSuggestionsNotificationBuilder() {
+        Context context = getInstrumentation().getContext();
+        Builder builder = new Builder(context)
+                .setContentTitle(NOTIFICATION_TEXT)
+                .setContentText(NOTIFICATION_TEXT)
+                .setSmallIcon(ICONS[0]);
+        // Add one reply and two actions
+        RemoteInput remoteInput = new RemoteInput.Builder("reply")
+                .setLabel(NOTIFICATION_TEXT)
+                .setChoices(new String[]{"Yes!"})
+                .build();
+        for (Action action : createSmartActions("Click", "Tap")) {
+            builder.addAction(action);
+        }
+        return builder;
+    }
+
+    private List<Action> createSmartActions(String ...actionTitles) {
+        List<Action> actions = new ArrayList<>();
+        for (String title : actionTitles) {
+            actions.add(createSmartAction(title));
+        }
+        return actions;
+    }
+
+    private Action createSmartAction(String actionTitle) {
+        Context context = getInstrumentation().getContext();
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0 , new Intent(),
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        Icon icon = Icon.createWithResource(context, ICONS[0]);
+        return new Action.Builder(icon, actionTitle, pendingIntent)
+                .setSemanticAction(Action.SEMANTIC_ACTION_CONTEXTUAL_SUGGESTION)
+                .build();
     }
 
     private void postInlineReplyNotification() {
@@ -656,6 +698,24 @@ public class SystemUiJankTests extends JankTestBase {
     public void testNotificationAppear() throws Exception {
         for (int i = 0; i < INNER_LOOP; i++) {
             postNotifications(GROUP_MODE_UNGROUPED, 250, 5);
+            mDevice.waitForIdle();
+            cancelNotifications(250);
+            mDevice.waitForIdle();
+        }
+    }
+
+    /**
+     * Measures jank when a notification with smart suggestions (replies and actions) is appearing.
+     */
+    @JankTest(expectedFrames = 800, // When added this test produced ~1000 frames on a Pixel 2.
+            defaultIterationCount = 5,
+            beforeTest = "beforeNotificationAppear",
+            afterTest = "afterNotificationAppear")
+    @GfxMonitor(processName = SYSTEMUI_PACKAGE)
+    public void testSmartReplyNotificationsAppear() throws Exception {
+        for (int i = 0; i < INNER_LOOP; i++) {
+            postNotifications(
+                    createSmartSuggestionsNotificationBuilder(), GROUP_MODE_UNGROUPED, 250, 10);
             mDevice.waitForIdle();
             cancelNotifications(250);
             mDevice.waitForIdle();
