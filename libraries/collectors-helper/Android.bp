@@ -14,7 +14,7 @@
 
 // Used for collecting metrics from statsd.
 java_library {
-    name: "collectors-helper",
+    name: "statsd-helper",
     defaults: ["tradefed_errorprone_defaults"],
 
     srcs: [
@@ -31,7 +31,6 @@ java_library {
 
     platform_apis: true,
 }
-
 
 // Used for collecting perfetto traces.
 java_library {
