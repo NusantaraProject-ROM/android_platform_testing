@@ -63,4 +63,13 @@ public interface IAutoLauncherStrategy extends ILauncherStrategy {
      * @param appName check app from all apps facet.
      */
     boolean checkApplicationExists(String appName);
+
+    /**
+     * This method is to open an application if it appears on UI
+     *
+     * It throws an exception when the target application is not found
+     *
+     * @param appName application to be opened.
+     */
+    void openApp(String appName);
 }

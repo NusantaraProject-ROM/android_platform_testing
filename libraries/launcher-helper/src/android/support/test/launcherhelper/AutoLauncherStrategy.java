@@ -132,6 +132,7 @@ public class AutoLauncherStrategy implements IAutoLauncherStrategy {
         return object != null ? true : false;
     }
 
+    @Override
     public void openApp(String appName) {
         if (checkApplicationExists(appName)) {
             UiObject2 app = mDevice.wait(
