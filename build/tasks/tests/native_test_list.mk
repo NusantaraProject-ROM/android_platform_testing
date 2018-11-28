@@ -111,6 +111,8 @@ native_tests := \
     prioritydumper_test \
     recovery_component_test \
     recovery_unit_test \
+    resolv_integration_test \
+    resolv_unit_test \
     scrape_mmap_addr \
     simpleperf_cpu_hotplug_test \
     simpleperf_unit_test \
