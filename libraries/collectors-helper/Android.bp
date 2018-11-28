@@ -14,10 +14,13 @@
 
 // Used for collecting metrics from statsd.
 java_library {
-    name: "collectors-helper",
+    name: "statsd-helper",
     defaults: ["tradefed_errorprone_defaults"],
 
-    srcs: ["statsd/src/**/*.java"],
+    srcs: [
+        "statsd/src/**/*.java",
+        "utilities/src/**/*.java"
+    ],
 
     static_libs: [
         "platformprotoslite",
@@ -29,13 +32,30 @@ java_library {
     platform_apis: true,
 }
 
-
 // Used for collecting perfetto traces.
 java_library {
     name: "perfetto-helper",
     defaults: ["tradefed_errorprone_defaults"],
 
     srcs: ["perfetto/src/**/*.java"],
+
+    static_libs: [
+        "androidx.test.runner",
+        "ub-uiautomator",
+    ],
+
+    sdk_version: "current",
+}
+
+// Used for collecting memory metrics.
+java_library {
+    name: "memory-helper",
+    defaults: ["tradefed_errorprone_defaults"],
+
+    srcs: [
+        "memory/src/**/*.java",
+        "utilities/src/**/*.java"
+    ],
 
     static_libs: [
         "androidx.test.runner",

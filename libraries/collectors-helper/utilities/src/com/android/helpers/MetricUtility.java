@@ -27,7 +27,7 @@ public class MetricUtility {
      * @param metric metric to track.
      * @param resultMap map of all the metrics.
      */
-    public static void addMetric(String metricKey, int metric, Map<String,
+    public static void addMetric(String metricKey, long metric, Map<String,
             StringBuilder> resultMap) {
         resultMap.compute(metricKey, (key, value) -> (value == null) ?
                 new StringBuilder().append(metric) : value.append(METRIC_SEPARATOR).append(metric));

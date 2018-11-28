@@ -13,38 +13,16 @@
 // limitations under the License.
 
 java_library {
-    // TODO(b/119891007) Remove this in place of statsd-helper-test once it merges internally.
-    name: "collectors-helper-test",
+    name: "memory-helper-test",
     defaults: ["tradefed_errorprone_defaults"],
 
     srcs: ["src/**/*.java"],
 
     static_libs: [
         "androidx.test.runner",
-        "android-support-test",
-        "statsd-helper",
-        "app-helpers-handheld-interfaces",
         "junit",
-        "ub-uiautomator",
+        "memory-helper",
     ],
 
-    platform_apis: true,
-}
-
-java_library {
-    name: "statsd-helper-test",
-    defaults: ["tradefed_errorprone_defaults"],
-
-    srcs: ["src/**/*.java"],
-
-    static_libs: [
-        "androidx.test.runner",
-        "android-support-test",
-        "statsd-helper",
-        "app-helpers-handheld-interfaces",
-        "junit",
-        "ub-uiautomator",
-    ],
-
-    platform_apis: true,
+    sdk_version: "current",
 }

@@ -78,10 +78,12 @@ public class CpuUsageHelper implements ICollectorHelper<Long> {
                     if (atom.getCpuTimePerUid().hasUid()) {
                         int uId = atom.getCpuTimePerUid().getUid();
                         String packageName = mStatsdHelper.getPackageName(uId);
-                        long userTime = atom.getCpuTimePerUid().getUserTimeMillis();
-                        long sysTime = atom.getCpuTimePerUid().getSysTimeMillis();
+                        // Convert to milliseconds to compare with CpuTimePerFreq
+                        long userTimeMillis = atom.getCpuTimePerUid().getUserTimeMicros() / 1000;
+                        long sysTimeMillis = atom.getCpuTimePerUid().getSysTimeMicros() / 1000;
                         Log.v(LOG_TAG, String.format("Uid:%d, Pkg Name: %s, User_Time: %d,"
-                                + " System_Time: %d", uId, packageName, userTime, sysTime));
+                                + " System_Time: %d", uId, packageName, userTimeMillis,
+                                sysTimeMillis));
 
                         // Use the package name if exist for the UID otherwise use the UID.
                         // Note: UID for the apps will be different across the builds.
@@ -95,8 +97,8 @@ public class CpuUsageHelper implements ICollectorHelper<Long> {
                         String finalSystemTimeKey = MetricUtility.constructKey(CPU_USAGE_PKG_UID,
                                 (packageName == null) ? String.valueOf(uId) : packageName,
                                 SYSTEM_TIME);
-                        cpuUsageMap.put(finalUserTimeKey, userTime);
-                        cpuUsageMap.put(finalSystemTimeKey, sysTime);
+                        cpuUsageMap.put(finalUserTimeKey, userTimeMillis);
+                        cpuUsageMap.put(finalSystemTimeKey, sysTimeMillis);
                     }
 
                     // Track cpu usage per cluster_id and freq_index
