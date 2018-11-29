@@ -18,7 +18,7 @@ android_test {
     name: "PlatformRuleTests",
     defaults: ["tradefed_errorprone_defaults"],
 
-    sdk_version: "current",
+    sdk_version: "test_current",
     static_libs: [
         "platform-test-rules",
         "truth-prebuilt",
