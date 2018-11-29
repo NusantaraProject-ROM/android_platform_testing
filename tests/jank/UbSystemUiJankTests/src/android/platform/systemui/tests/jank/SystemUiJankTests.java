@@ -16,6 +16,7 @@
 
 package android.platform.systemui.tests.jank;
 
+import static android.support.test.InstrumentationRegistry.getInstrumentation;
 import static android.system.helpers.OverviewHelper.isRecentsInLauncher;
 
 import static org.junit.Assert.assertNotNull;
@@ -25,6 +26,7 @@ import android.app.Notification.Builder;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.RemoteInput;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Rect;
@@ -33,6 +35,8 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.RemoteException;
 import android.os.SystemClock;
+import android.os.UserHandle;
+import android.provider.Settings;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.jank.GfxMonitor;
 import android.support.test.jank.JankTest;
@@ -50,6 +54,8 @@ import android.system.helpers.LockscreenHelper;
 import android.system.helpers.OverviewHelper;
 import android.widget.Button;
 import android.widget.ImageView;
+
+import com.android.internal.hardware.AmbientDisplayConfiguration;
 
 import java.io.File;
 import java.io.IOException;
@@ -118,6 +124,7 @@ public class SystemUiJankTests extends JankTestBase {
     private UiDevice mDevice;
     private ArrayList<String> mLaunchedPackages;
     private NotificationManager mNotificationManager;
+    private int mInitialDozeAlwaysOn;
 
     public void setUp() throws Exception {
         mDevice = UiDevice.getInstance(getInstrumentation());
@@ -130,6 +137,14 @@ public class SystemUiJankTests extends JankTestBase {
                 NotificationManager.class);
         InstrumentationRegistry.registerInstance(getInstrumentation(), getArguments());
         blockNotifications();
+
+        // Enable AOD, otherwise we won't test all animations. Having AOD off also adds
+        // unpredictable fluctuations since the display can take up to 200ms to turn on.
+        AmbientDisplayConfiguration configuration =
+                new AmbientDisplayConfiguration(getInstrumentation().getContext());
+        mInitialDozeAlwaysOn = configuration.alwaysOnEnabled(UserHandle.USER_SYSTEM) ? 1 : 0;
+        ContentResolver contentResolver = getInstrumentation().getContext().getContentResolver();
+        Settings.Secure.putInt(contentResolver, Settings.Secure.DOZE_ALWAYS_ON, 1);
     }
 
     public void goHome() {
@@ -141,6 +156,9 @@ public class SystemUiJankTests extends JankTestBase {
     protected void tearDown() throws Exception {
         mDevice.unfreezeRotation();
         unblockNotifications();
+        ContentResolver contentResolver = getInstrumentation().getContext().getContentResolver();
+        Settings.Secure.putInt(contentResolver, Settings.Secure.DOZE_ALWAYS_ON,
+                mInitialDozeAlwaysOn);
         super.tearDown();
     }
 
@@ -407,6 +425,8 @@ public class SystemUiJankTests extends JankTestBase {
     }
 
     public void beforeNotificationListPull() throws Exception {
+        mDevice.wakeUp();
+        mDevice.waitForIdle();
         prepareNotifications(GROUP_MODE_LEGACY);
         TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
                 getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
@@ -799,6 +819,7 @@ public class SystemUiJankTests extends JankTestBase {
             SystemClock.sleep(100);
             mDevice.waitForIdle();
             mDevice.wakeUp();
+            SystemClock.sleep(500);
             mDevice.waitForIdle();
             mDevice.sleep();
             SystemClock.sleep(1000);
@@ -888,8 +909,6 @@ public class SystemUiJankTests extends JankTestBase {
             replyButton.click();
             mDevice.waitForIdle();
             Thread.sleep(1000);
-            mDevice.pressBack();
-            mDevice.waitForIdle();
             mDevice.pressBack();
             mDevice.waitForIdle();
         }
