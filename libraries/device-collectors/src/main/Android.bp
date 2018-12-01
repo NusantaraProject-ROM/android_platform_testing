@@ -21,6 +21,7 @@ java_library {
     static_libs: [
         "androidx.test.runner",
         "junit",
+        "memory-helper",
         "perfetto-helper",
     ],
 
@@ -39,9 +40,10 @@ java_library {
 
     static_libs: [
         "androidx.test.runner",
-        "statsd-helper",
         "junit",
+        "memory-helper",
         "perfetto-helper",
+        "statsd-helper",
     ],
 
     platform_apis: true,
