@@ -15,6 +15,10 @@
  */
 package android.device.collectors;
 
+import android.os.Bundle;
+
+import androidx.annotation.VisibleForTesting;
+
 import com.android.helpers.ICollectorHelper;
 
 import org.junit.runner.Description;
@@ -31,6 +35,14 @@ public class BaseCollectionListener<T> extends BaseMetricListener {
 
     private ICollectorHelper mHelper;
 
+    public BaseCollectionListener() {
+        super();
+    }
+
+    @VisibleForTesting
+    public BaseCollectionListener(Bundle args) {
+        super(args);
+    }
 
     @Override
     public void onTestStart(DataRecord testData, Description description) {
