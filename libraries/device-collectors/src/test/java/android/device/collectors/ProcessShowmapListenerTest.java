@@ -72,6 +72,6 @@ public class ProcessShowmapListenerTest {
 
         mListener.testRunStarted(mRunDesc);
 
-        verify(mShowmapHelper, times(1)).setUp(TEST_PROCESS_NAME);
+        verify(mShowmapHelper).setUp(TEST_PROCESS_NAME);
     }
 }
