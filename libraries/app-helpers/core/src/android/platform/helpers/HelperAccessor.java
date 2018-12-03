@@ -43,4 +43,15 @@ public class HelperAccessor<T extends IAppHelper> {
         }
         return mHelper;
     }
+
+    public T get(String prefix) {
+        if (mHelper == null) {
+            mHelper = HelperManager.getInstance(
+                InstrumentationRegistry.getContext(),
+                InstrumentationRegistry.getInstrumentation())
+                .get(mInterfaceClass, prefix);
+        }
+        return mHelper;
+    }
+
 }
