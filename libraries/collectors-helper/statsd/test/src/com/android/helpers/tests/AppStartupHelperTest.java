@@ -36,6 +36,8 @@ import static org.junit.Assert.assertEquals;
  *
  * To run:
  * Connect to wifi and login to gmail.
+ * Disable SELinux: adb shell setenforce 0; if this fails with "permission denied",
+ * try "adb shell su 0 setenforce 0"
  * atest CollectorsHelperTest:com.android.helpers.tests.AppStartupHelperTest
  */
 @RunWith(AndroidJUnit4.class)
@@ -43,21 +45,18 @@ public class AppStartupHelperTest {
 
     // Kill the calendar app.
     private static final String KILL_TEST_APP_CMD_TEMPLATE = "am force-stop %s";
-    // Package names used for testing
+    // Package names used for testing.
     private static final String CALENDAR_PKG_NAME = "com.google.android.calendar";
-    private static final String CALCULATOR_PKG_NAME = "com.google.android.calculator";
+    private static final String SETTINGS_PKG_NAME = "com.android.settings";
     // Key prefixes to store the cold, warm or hot launch time of the calendar app, respectively.
     private static final String COLD_LAUNCH_KEY_TEMPLATE = "cold_startup_%s";
     private static final String WARM_LAUNCH_KEY_TEMPLATE = "warm_startup_%s";
     private static final String HOT_LAUNCH_KEY_TEMPLATE = "hot_startup_%s";
+    // Keyword for keys to store the app startup fully drawn metric.
+    private static final String FULLY_DRAWN_KEY_KEYWORD = "fully_drawn";
 
-    // A couple of ADB commands to help with the calculator hot launch test.
-    private static final String LUANCH_APP_CMD_TEMPLATE =
-            "monkey -p %s -c android.intent.category.LAUNCHER 1";
-    private static final String KEYEVENT_CMD_TEMPLATE = "input keyevent %s";
+    // Keycode for pressing the home button.
     private static final String KEYCODE_HOME = "KEYCODE_HOME";
-    private static final String KEYCODE_WAKEUP = "KEYCODE_WAKEUP";
-    private static final String KEYCODE_UNLOCK = "KEYCODE_MENU";
 
     private AppStartupHelper mAppStartupHelper = new AppStartupHelper();
     private HelperAccessor<ICalendarHelper> mHelper =
@@ -68,7 +67,9 @@ public class AppStartupHelperTest {
         mAppStartupHelper = new AppStartupHelper();
         // Make sure the apps are starting from the clean state.
         HelperTestUtility.clearApp(String.format(KILL_TEST_APP_CMD_TEMPLATE, CALENDAR_PKG_NAME));
-        HelperTestUtility.clearApp(String.format(KILL_TEST_APP_CMD_TEMPLATE, CALCULATOR_PKG_NAME));
+        HelperTestUtility.clearApp(String.format(KILL_TEST_APP_CMD_TEMPLATE, SETTINGS_PKG_NAME));
+        // Make sure display is on and unlocked.
+        HelperTestUtility.wakeUpAndUnlock();
     }
 
     /**
@@ -91,28 +92,17 @@ public class AppStartupHelperTest {
     }
 
     /**
-     * Test cold launch key.
-     */
-    @Test
-    public void testColdLaunchMetricKey() throws Exception {
-        assertTrue(mAppStartupHelper.startCollecting());
-        mHelper.get().open();
-        Map.Entry<String, StringBuilder> appLaunchEntry = mAppStartupHelper.getMetrics().entrySet()
-                .iterator().next();
-        assertEquals(String.format(COLD_LAUNCH_KEY_TEMPLATE, CALENDAR_PKG_NAME),
-                appLaunchEntry.getKey());
-        assertTrue(mAppStartupHelper.stopCollecting());
-        mHelper.get().exit();
-    }
-
-    /**
      * Test cold launch metric.
      */
     @Test
     public void testSingleColdLaunchMetric() throws Exception {
         assertTrue(mAppStartupHelper.startCollecting());
         mHelper.get().open();
-        assertEquals(1, mAppStartupHelper.getMetrics().size());
+        Map<String, StringBuilder> appLaunchMetrics = mAppStartupHelper.getMetrics();
+        // A metric key for the app cold launching should exist, and should only hold one value.
+        String coldLaunchMetricKey = String.format(COLD_LAUNCH_KEY_TEMPLATE, CALENDAR_PKG_NAME);
+        assertTrue(appLaunchMetrics.keySet().contains(coldLaunchMetricKey));
+        assertEquals(1, appLaunchMetrics.get(coldLaunchMetricKey).toString().split(",").length);
         assertTrue(mAppStartupHelper.stopCollecting());
         mHelper.get().exit();
     }
@@ -128,9 +118,11 @@ public class AppStartupHelperTest {
         mHelper.get().exit();
         HelperTestUtility.clearApp(String.format(KILL_TEST_APP_CMD_TEMPLATE, CALENDAR_PKG_NAME));
         mHelper.get().open();
-        Map.Entry<String, StringBuilder> appLaunchEntry = mAppStartupHelper.getMetrics().entrySet()
-                .iterator().next();
-        assertEquals(2, appLaunchEntry.getValue().toString().split(",").length);
+        Map<String, StringBuilder> appLaunchMetrics = mAppStartupHelper.getMetrics();
+        // A metric key for the app cold launching should exist, and should hold two values.
+        String coldLaunchMetricKey = String.format(COLD_LAUNCH_KEY_TEMPLATE, CALENDAR_PKG_NAME);
+        assertTrue(appLaunchMetrics.keySet().contains(coldLaunchMetricKey));
+        assertEquals(2, appLaunchMetrics.get(coldLaunchMetricKey).toString().split(",").length);
         assertTrue(mAppStartupHelper.stopCollecting());
         mHelper.get().exit();
     }
@@ -140,12 +132,11 @@ public class AppStartupHelperTest {
      */
     @Test
     public void testWarmLaunchMetric() throws Exception {
-
         // Launch the app once and exit it so it resides in memory.
         mHelper.get().open();
         SystemClock.sleep(HelperTestUtility.ACTION_DELAY);
         // Press home and clear the cache explicitly.
-        HelperTestUtility.executeShellCommand(String.format(KEYEVENT_CMD_TEMPLATE, KEYCODE_HOME));
+        HelperTestUtility.sendKeyCode(KEYCODE_HOME);
         HelperTestUtility.clearCache();
         SystemClock.sleep(HelperTestUtility.ACTION_DELAY);
         // Start the collection here to test warm launch.
@@ -162,34 +153,95 @@ public class AppStartupHelperTest {
     }
 
     /**
-     * Test hot launch metric on calculator, which is lightweight enough to trigger a hot launch.
+     * Test hot launch metric on settings, which is lightweight enough to trigger a hot launch.
      */
     @Test
     public void testHotLaunchMetric() throws Exception {
-        String calculatorLaunchCommand =
-                String.format(LUANCH_APP_CMD_TEMPLATE, CALCULATOR_PKG_NAME);
         // Launch the app once and go home so the app resides in memory.
-        HelperTestUtility.executeShellCommand(String.format(KEYEVENT_CMD_TEMPLATE, KEYCODE_WAKEUP));
-        SystemClock.sleep(HelperTestUtility.ACTION_DELAY);
-        HelperTestUtility.executeShellCommand(String.format(KEYEVENT_CMD_TEMPLATE, KEYCODE_UNLOCK));
-        SystemClock.sleep(HelperTestUtility.ACTION_DELAY);
-        HelperTestUtility.executeShellCommand(calculatorLaunchCommand);
-        SystemClock.sleep(HelperTestUtility.ACTION_DELAY);
-        HelperTestUtility.executeShellCommand(String.format(KEYEVENT_CMD_TEMPLATE, KEYCODE_HOME));
+        HelperTestUtility.launchPackageViaAdb(SETTINGS_PKG_NAME);
+        HelperTestUtility.sendKeyCode(KEYCODE_HOME);
         // Start the collection here to test hot launch.
         assertTrue(mAppStartupHelper.startCollecting());
         SystemClock.sleep(HelperTestUtility.ACTION_DELAY);
         // Launch the app; a hot launch occurs.
-        HelperTestUtility.executeShellCommand(calculatorLaunchCommand);
+        HelperTestUtility.launchPackageViaAdb(SETTINGS_PKG_NAME);
         SystemClock.sleep(HelperTestUtility.ACTION_DELAY);
         Map<String, StringBuilder> appLaunchMetrics = mAppStartupHelper.getMetrics();
-        String calculatoHotLaunchKey = String.format(HOT_LAUNCH_KEY_TEMPLATE, CALCULATOR_PKG_NAME);
+        String calculatoHotLaunchKey = String.format(HOT_LAUNCH_KEY_TEMPLATE, SETTINGS_PKG_NAME);
         assertTrue(appLaunchMetrics.keySet().contains(calculatoHotLaunchKey));
         assertEquals(1, appLaunchMetrics.get(calculatoHotLaunchKey).toString().split(",").length);
         assertTrue(mAppStartupHelper.stopCollecting());
-        HelperTestUtility.executeShellCommand(String.format(KEYEVENT_CMD_TEMPLATE, KEYCODE_HOME));
+        HelperTestUtility.sendKeyCode(KEYCODE_HOME);
         SystemClock.sleep(HelperTestUtility.ACTION_DELAY);
-        HelperTestUtility.clearApp(String.format(KILL_TEST_APP_CMD_TEMPLATE, CALCULATOR_PKG_NAME));
+        HelperTestUtility.clearApp(String.format(KILL_TEST_APP_CMD_TEMPLATE, SETTINGS_PKG_NAME));
+        SystemClock.sleep(HelperTestUtility.ACTION_DELAY);
+    }
+
+    /**
+     * Test that app startup fully drawn metric is collected for a single launch.
+     */
+    @Test
+    public void testSingleLaunchStartupFullyDrawnMetric() throws Exception {
+        // The Settings app is used here as it calls reportFullyDrawn(), which is required for the
+        // AppStartFullyDrawn metric to be collected.
+        // Start metric collection and then launch the Settings app.
+        assertTrue(mAppStartupHelper.startCollecting());
+        HelperTestUtility.launchPackageViaAdb(SETTINGS_PKG_NAME);
+        SystemClock.sleep(HelperTestUtility.ACTION_DELAY);
+        // Check that the collected metrics contains the key for the AppStartFullyDrawn metric.
+        boolean hasFullyDrawnKey = false;
+        Map<String, StringBuilder> appLaunchMetrics = mAppStartupHelper.getMetrics();
+        for (String key : appLaunchMetrics.keySet()) {
+            if (key.contains(FULLY_DRAWN_KEY_KEYWORD) && key.contains(SETTINGS_PKG_NAME)) {
+                hasFullyDrawnKey = true;
+            }
+        }
+        assertTrue(hasFullyDrawnKey);
+        assertTrue(mAppStartupHelper.stopCollecting());
+        HelperTestUtility.sendKeyCode(KEYCODE_HOME);
+        SystemClock.sleep(HelperTestUtility.ACTION_DELAY);
+        HelperTestUtility.clearApp(String.format(KILL_TEST_APP_CMD_TEMPLATE, SETTINGS_PKG_NAME));
+        SystemClock.sleep(HelperTestUtility.ACTION_DELAY);
+    }
+
+    /**
+     * Test that app startup fully drawn metric is collected for a single launch.
+     */
+    @Test
+    public void testMultipleLaunchStartupFullyDrawnMetric() throws Exception {
+        // The Settings app is used here as it calls reportFullyDrawn(), which is required for the
+        // AppStartFullyDrawn metric to be collected.
+        // Start metric collection and then cold launch the Settings app twice, as in this app
+        // reportFullyDrawn() is only called during cold launch (the calling function is only called
+        // during onCreate()).
+        assertTrue(mAppStartupHelper.startCollecting());
+        // 1st launch and kill.
+        HelperTestUtility.launchPackageViaAdb(SETTINGS_PKG_NAME);
+        SystemClock.sleep(HelperTestUtility.ACTION_DELAY);
+        HelperTestUtility.sendKeyCode(KEYCODE_HOME);
+        SystemClock.sleep(HelperTestUtility.ACTION_DELAY);
+        HelperTestUtility.clearApp(String.format(KILL_TEST_APP_CMD_TEMPLATE, SETTINGS_PKG_NAME));
+        SystemClock.sleep(HelperTestUtility.ACTION_DELAY);
+        // 2nd launch.
+        HelperTestUtility.launchPackageViaAdb(SETTINGS_PKG_NAME);
+        SystemClock.sleep(HelperTestUtility.ACTION_DELAY);
+        // Check that the collected metrics contains the key for the AppStartFullyDrawn metric,
+        // and that there are two values under this key.
+        boolean hasFullyDrawnKey = false;
+        Map<String, StringBuilder> appLaunchMetrics = mAppStartupHelper.getMetrics();
+        for (String key : appLaunchMetrics.keySet()) {
+            if (key.contains(FULLY_DRAWN_KEY_KEYWORD) && key.contains(SETTINGS_PKG_NAME)) {
+                hasFullyDrawnKey = true;
+                // There should be two values under this key.
+                assertEquals(2, appLaunchMetrics.get(key).toString().split(",").length);
+            }
+        }
+        assertTrue(hasFullyDrawnKey);
+        assertTrue(mAppStartupHelper.stopCollecting());
+        HelperTestUtility.sendKeyCode(KEYCODE_HOME);
+        SystemClock.sleep(HelperTestUtility.ACTION_DELAY);
+        HelperTestUtility.clearApp(String.format(KILL_TEST_APP_CMD_TEMPLATE, SETTINGS_PKG_NAME));
+        SystemClock.sleep(HelperTestUtility.ACTION_DELAY);
     }
 }
 
