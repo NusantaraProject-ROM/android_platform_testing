@@ -18,6 +18,7 @@ package com.android.helpers;
 
 import android.util.Log;
 
+import com.android.os.AtomsProto.AppStartFullyDrawn;
 import com.android.os.AtomsProto.AppStartOccurred;
 import com.android.os.AtomsProto.Atom;
 import com.android.os.StatsLog.EventMetricData;
@@ -36,9 +37,15 @@ import java.util.Map;
 public class AppStartupHelper implements ICollectorHelper<StringBuilder> {
 
     private static final String LOG_TAG = AppStartupHelper.class.getSimpleName();
+
     private static final String COLD_STARTUP = "cold_startup";
     private static final String WARM_STARTUP = "warm_startup";
     private static final String HOT_STARTUP = "hot_startup";
+
+    private static final String STARTUP_FULLY_DRAWN_UNKNOWN = "startup_fully_drawn_unknown";
+    private static final String STARTUP_FULLY_DRAWN_WITH_BUNDLE = "startup_fully_drawn_with_bundle";
+    private static final String STARTUP_FULLY_DRAWN_WITHOUT_BUNDLE =
+            "startup_fully_drawn_without_bundle";
 
     private StatsdHelper mStatsdHelper = new StatsdHelper();
 
@@ -50,6 +57,7 @@ public class AppStartupHelper implements ICollectorHelper<StringBuilder> {
         Log.i(LOG_TAG, "Adding AppStartOccured config to statsd.");
         List<Integer> atomIdList = new ArrayList<>();
         atomIdList.add(Atom.APP_START_OCCURRED_FIELD_NUMBER);
+        atomIdList.add(Atom.APP_START_FULLY_DRAWN_FIELD_NUMBER);
         return mStatsdHelper.addEventConfig(atomIdList);
     }
 
@@ -61,29 +69,59 @@ public class AppStartupHelper implements ICollectorHelper<StringBuilder> {
         List<EventMetricData> eventMetricData = mStatsdHelper.getEventMetrics();
         Map<String, StringBuilder> appStartResultMap = new HashMap<>();
         for (EventMetricData dataItem : eventMetricData) {
-            AppStartOccurred appStartAtom = dataItem.getAtom().getAppStartOccurred();
-            String pkgName = appStartAtom.getPkgName();
-            String transitionType = appStartAtom.getType().toString();
-            int windowsDrawnMillis = appStartAtom.getWindowsDrawnDelayMillis();
-            Log.i(LOG_TAG, String.format("Pkg Name: %s, Transition Type: %s,"
-                    + " WindowDrawnDelayMillis:%s", pkgName, transitionType, windowsDrawnMillis));
+            Atom atom = dataItem.getAtom();
+            if (atom.hasAppStartOccurred()) {
+                AppStartOccurred appStartAtom = atom.getAppStartOccurred();
+                String pkgName = appStartAtom.getPkgName();
+                String transitionType = appStartAtom.getType().toString();
+                int windowsDrawnMillis = appStartAtom.getWindowsDrawnDelayMillis();
+                Log.i(LOG_TAG, String.format("Pkg Name: %s, Transition Type: %s, "
+                        + "WindowDrawnDelayMillis: %s",
+                        pkgName, transitionType, windowsDrawnMillis));
 
-            String metricKey = "";
-            switch (appStartAtom.getType()) {
-                case COLD:
-                    metricKey = MetricUtility.constructKey(COLD_STARTUP, appStartAtom.getPkgName());
-                    break;
-                case WARM:
-                    metricKey = MetricUtility.constructKey(WARM_STARTUP, appStartAtom.getPkgName());
-                    break;
-                case HOT:
-                    metricKey = MetricUtility.constructKey(HOT_STARTUP, appStartAtom.getPkgName());
-                    break;
-                case UNKNOWN:
-                    break;
-            }
-            if (!metricKey.isEmpty()) {
-                MetricUtility.addMetric(metricKey, windowsDrawnMillis, appStartResultMap);
+                String metricKey = "";
+                switch (appStartAtom.getType()) {
+                    case COLD:
+                        metricKey = MetricUtility.constructKey(COLD_STARTUP, pkgName);
+                        break;
+                    case WARM:
+                        metricKey = MetricUtility.constructKey(WARM_STARTUP, pkgName);
+                        break;
+                    case HOT:
+                        metricKey = MetricUtility.constructKey(HOT_STARTUP, pkgName);
+                        break;
+                    case UNKNOWN:
+                        break;
+                }
+                if (!metricKey.isEmpty()) {
+                    MetricUtility.addMetric(metricKey, windowsDrawnMillis, appStartResultMap);
+                }
+            } else if (atom.hasAppStartFullyDrawn()) {
+                AppStartFullyDrawn appFullyDrawnAtom = atom.getAppStartFullyDrawn();
+                String pkgName = appFullyDrawnAtom.getPkgName();
+                String transitionType = appFullyDrawnAtom.getType().toString();
+                long startupTimeMillis = appFullyDrawnAtom.getAppStartupTimeMillis();
+                Log.i(LOG_TAG, String.format("Pkg Name: %s, Transition Type: %s, "
+                        + "AppStartupTimeMillis: %d", pkgName, transitionType, startupTimeMillis));
+
+                String metricKey = "";
+                switch (appFullyDrawnAtom.getType()) {
+                    case UNKNOWN:
+                        metricKey = MetricUtility.constructKey(
+                                STARTUP_FULLY_DRAWN_UNKNOWN, pkgName);
+                        break;
+                    case WITH_BUNDLE:
+                        metricKey = MetricUtility.constructKey(
+                                STARTUP_FULLY_DRAWN_WITH_BUNDLE, pkgName);
+                        break;
+                    case WITHOUT_BUNDLE:
+                        metricKey = MetricUtility.constructKey(
+                                STARTUP_FULLY_DRAWN_WITHOUT_BUNDLE, pkgName);
+                        break;
+                }
+                if (!metricKey.isEmpty()) {
+                    MetricUtility.addMetric(metricKey, startupTimeMillis, appStartResultMap);
+                }
             }
         }
         return appStartResultMap;

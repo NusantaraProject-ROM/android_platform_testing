@@ -35,6 +35,8 @@ import static org.junit.Assert.assertEquals;
  * Android Unit tests for {@link CrashHelper}.
  *
  * To run:
+ * Disable SELinux: adb shell setenforce 0; if this fails with "permission denied",
+ * try "adb shell su 0 setenforce 0"
  * atest CollectorsHelperTest:com.android.helpers.tests.CrashHelperTest
  */
 @RunWith(AndroidJUnit4.class)
@@ -151,8 +153,6 @@ public class CrashHelperTest {
     public void testAnrMetric() throws Exception {
         assertTrue(mCrashHelper.startCollecting());
         HelperTestUtility.executeShellCommand(START_APP);
-        // The 30100ms sleep time guarantees that an ANR is indeed triggered.
-        // See BadBehaviorActivity.BadService for details.
         invokeBehavior(ANR_SERVICE_BTN_NAME, ANR_DELAY);
         Map<String, Integer> crashMap = mCrashHelper.getMetrics();
         // Two ANR keys and two empty crash keys.
