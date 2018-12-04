@@ -15,7 +15,7 @@
 android_test {
     name: "MicrobenchmarkRunnerTests",
 
-    sdk_version: "current",
+    sdk_version: "test_current",
     static_libs: [
         "microbenchmark-device-lib",
         "truth-prebuilt",
