@@ -14,10 +14,11 @@
 
 java_library {
     name: "platform-test-rules",
-    sdk_version: "current",
+    sdk_version: "test_current",
     static_libs: [
         "androidx.test.runner",
         "ub-uiautomator",
+        "app-helpers-handheld-interfaces"
     ],
     srcs: ["src/**/*.java"],
 }
