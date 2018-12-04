@@ -3,9 +3,8 @@ package android.platform.helpers;
 /**
  * Helper class for functional tests of date & time
  */
-
 import android.support.test.uiautomator.UiObject2;
-import java.util.Date;
+import java.time.LocalDate;
 
 public interface IAutoDateTimeSettingsHelper extends IAppHelper {
     /**
@@ -13,21 +12,18 @@ public interface IAutoDateTimeSettingsHelper extends IAppHelper {
      *
      * This method is to set the device date manually
      *
-     * @param month - input month
-     * @param day - input day
-     * @param year - input year
+     * @param date - input LocalDate object
      *
      */
-    void setDate(int year, int month, int day);
+    void setDate(LocalDate date);
 
     /**
      * Setup expectation: Date & time setting is open
      *
-     * This method is to get the current date displayed on the UI
-     *
+     * This method is to get the current date displayed on the UI in LocalDate object
      *
      */
-    Date getDate();
+    LocalDate getDate();
 
     /**
      * Setup expectation: Date & time setting is open
