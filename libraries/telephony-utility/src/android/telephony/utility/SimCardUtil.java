@@ -45,7 +45,7 @@ public class SimCardUtil {
         Context context = InstrumentationRegistry.getTargetContext();
         Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
 
-        TelephonyManager tm = context.getSystemService(TelephonyManager.class);
+        TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
         assertNotNull(tm);
 
         Bundle returnBundle = new Bundle();
