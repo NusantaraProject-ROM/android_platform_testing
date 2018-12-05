@@ -28,6 +28,8 @@ android_test {
     ],
 
     libs: ["android.test.base"],
-
+    optimize: {
+        enabled: false,
+    },
     test_suites: ["device-tests"],
 }
