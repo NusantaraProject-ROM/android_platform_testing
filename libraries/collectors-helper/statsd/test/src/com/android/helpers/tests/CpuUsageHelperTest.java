@@ -34,6 +34,8 @@ import static org.junit.Assert.assertEquals;
  * Android Unit tests for {@link CpuUsageHelperTest}.
  *
  * To run:
+ * Disable SELinux: adb shell setenforce 0; if this fails with "permission denied",
+ * try "adb shell su 0 setenforce 0"
  * atest CollectorsHelperTest:com.android.helpers.tests.CpuUsageHelperTest
  */
 @RunWith(AndroidJUnit4.class)
@@ -84,8 +86,8 @@ public class CpuUsageHelperTest {
 
     /**
      * Test that at least one cpu usage per pkg or uid and per preq index is collected,
-     * the total usage is collected, and that
-     * the total usage is indeed the sum of the per pkg/uid and frequency usage, respectively.
+     * the total usage is collected, and that the total usage is indeed the sum of the per pkg/uid
+     * and frequency usage, respectively.
      */
     @Test
     public void testCpuUsageMetricsKey() throws Exception {

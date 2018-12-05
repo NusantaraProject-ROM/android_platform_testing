@@ -28,4 +28,27 @@ public interface INotificationHelper extends IAppHelper {
     default public void openNotificationbyIndex(int index) {
         throw new UnsupportedOperationException("Not yet implemented.");
     }
+
+    /**
+     * Setup Expectations: None
+     *
+     * <p>Posts a number of notifications to the device. Successive calls to this should post
+     * new notifications to those previously posted. Note that this may be limited by the system
+     * if too many notifications have already been posted.
+     *
+     * @param count The number of notifications to post.
+     * @return The number of notifications successfully posted.
+     */
+    default public int postNotifications(int count) {
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
+
+    /**
+     * Setup Expectations: None
+     *
+     * <p>Cancel any notifications posted by this helper.
+     */
+    default public void cancelNotifications() {
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
 }
