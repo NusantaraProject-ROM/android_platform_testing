@@ -57,6 +57,7 @@ public class PerfettoListenerTest {
     private PerfettoListener mListener;
     private Instrumentation mInstrumentation;
     private Map<String, Integer> mInvocationCount;
+    private DataRecord mDataRecord;
 
     @Mock
     private PerfettoHelper mPerfettoHelper;
@@ -73,6 +74,7 @@ public class PerfettoListenerTest {
         mPerfettoHelper = spy(new PerfettoHelper());
         mInvocationCount = new HashMap<>();
         PerfettoListener listener = new PerfettoListener(b, mPerfettoHelper, mInvocationCount);
+        mDataRecord = listener.createDataRecord();
         listener.setInstrumentation(mInstrumentation);
         return listener;
     }
@@ -93,7 +95,7 @@ public class PerfettoListenerTest {
         // Test test start behavior
         mListener.testStarted(mTest1Desc);
         verify(mPerfettoHelper, times(1)).startCollecting(anyString());
-        mListener.testFinished(mTest1Desc);
+        mListener.onTestEnd(mDataRecord, mTest1Desc);
         verify(mPerfettoHelper, times(1)).stopCollecting(anyLong(), anyString());
 
     }
@@ -113,9 +115,8 @@ public class PerfettoListenerTest {
         // Test test start behavior
         mListener.testStarted(mTest1Desc);
         verify(mPerfettoHelper, times(1)).startCollecting(anyString());
-        mListener.testFinished(mTest1Desc);
+        mListener.onTestEnd(mDataRecord, mTest1Desc);
         verify(mPerfettoHelper, times(0)).stopCollecting(anyLong(), anyString());
-
     }
 
     /*
@@ -135,19 +136,20 @@ public class PerfettoListenerTest {
         // Test1 invocation 1 start behavior
         mListener.testStarted(mTest1Desc);
         verify(mPerfettoHelper, times(1)).startCollecting(anyString());
-        mListener.testFinished(mTest1Desc);
+        mListener.onTestEnd(mDataRecord, mTest1Desc);
         verify(mPerfettoHelper, times(1)).stopCollecting(anyLong(), anyString());
 
         // Test1 invocation 2 start behaviour
         mListener.testStarted(mTest1Desc);
         verify(mPerfettoHelper, times(2)).startCollecting(anyString());
-        mListener.testFinished(mTest1Desc);
+        mListener.onTestEnd(mDataRecord, mTest1Desc);
         verify(mPerfettoHelper, times(2)).stopCollecting(anyLong(), anyString());
 
         // Test2 invocation 1 start behaviour
         mListener.testStarted(mTest2Desc);
         verify(mPerfettoHelper, times(3)).startCollecting(anyString());
-        mListener.testFinished(mTest2Desc);
+        mDataRecord = mListener.createDataRecord();
+        mListener.onTestEnd(mDataRecord, mTest2Desc);
         verify(mPerfettoHelper, times(3)).stopCollecting(anyLong(), anyString());
 
         // Check if the the test count is incremented properly.
