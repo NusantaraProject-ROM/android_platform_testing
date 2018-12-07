@@ -37,7 +37,7 @@ public class PerfettoHelper {
     // Command to start the perfetto tracing in the background.
     // perfetto -b -c /data/misc/perfetto-traces/trace_config.pb -o
     // /data/misc/perfetto-traces/trace_output.pb
-    private static final String PERFETTO_START_CMD = "perfetto -b -c %s%s -o %s";
+    private static final String PERFETTO_START_CMD = "perfetto --background -c %s%s -o %s";
     private static final String PERFETTO_TMP_OUTPUT_FILE =
             "/data/misc/perfetto-traces/trace_output.pb";
     // Command to stop (i.e kill) the perfetto tracing.
