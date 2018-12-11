@@ -51,6 +51,8 @@ public class PerfettoListener extends BaseMetricListener {
     private static final String PERFETTO_WAIT_TIME_ARG = "perfetto_wait_time_ms";
     // Destination directory to save the trace results.
     private static final String TEST_OUTPUT_ROOT = "test_output_root";
+    // Perfetto file path key.
+    private static final String PERFETTO_FILE_PATH = "perfetto_file_path";
 
     // Trace config file name to use while collecting the trace which is defaulted to
     // trace_config.pb. It can be changed via the perfetto_config_file arg.
@@ -124,6 +126,8 @@ public class PerfettoListener extends BaseMetricListener {
             Log.i(getTag(), "Full folder name" + path.toString());
             if (!mPerfettoHelper.stopCollecting(mWaitTimeInMs, path.toString())) {
                 Log.e(getTag(), "Failed to collect the perfetto output.");
+            } else {
+                testData.addStringMetric(PERFETTO_FILE_PATH, path.toString());
             }
         } else {
             Log.i(getTag(),
