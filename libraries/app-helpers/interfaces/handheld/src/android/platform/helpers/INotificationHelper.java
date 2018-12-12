@@ -33,13 +33,12 @@ public interface INotificationHelper extends IAppHelper {
      * Setup Expectations: None
      *
      * <p>Posts a number of notifications to the device. Successive calls to this should post
-     * new notifications to those previously posted. Note that this may be limited by the system
-     * if too many notifications have already been posted.
+     * new notifications to those previously posted. Note that this may fail if the helper has
+     * surpassed the system-defined limit for per-package notifications.
      *
      * @param count The number of notifications to post.
-     * @return The number of notifications successfully posted.
      */
-    default public int postNotifications(int count) {
+    default public void postNotifications(int count) {
         throw new UnsupportedOperationException("Not yet implemented.");
     }
 
