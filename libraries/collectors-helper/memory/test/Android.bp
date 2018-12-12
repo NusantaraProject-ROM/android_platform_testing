@@ -21,6 +21,7 @@ java_library {
     static_libs: [
         "androidx.test.runner",
         "junit",
+        "mockito-target",
         "memory-helper",
     ],
 
