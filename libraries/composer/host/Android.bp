@@ -20,11 +20,11 @@ filegroup {
 
 java_library_static {
     name: "test-composers",
-    static_libs: [ "junit" ],
     srcs: [
         "src/**/*.java",
         "src/**/*.proto",
     ],
+    libs: [ "junit" ],
     proto: {
         type: "lite",
         include_dirs: ["external/protobuf/src"],
