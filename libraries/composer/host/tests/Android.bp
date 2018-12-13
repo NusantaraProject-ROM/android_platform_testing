@@ -18,21 +18,25 @@ java_library_static {
     sdk_version: "current",
     host_supported: true,
     libs: [
-        "junit",
+        "guava",
         "test-composers",
         "truth-prebuilt",
     ],
     target: {
         android: {
-            static_libs: ["mockito-target"]
+            libs: [
+            "junit",
+            "mockito-target",
+        ],
         },
         host: {
-            static_libs: ["mockito", "objenesis"]
-        }
+            libs: [
+            "junit-host",
+            "mockito",
+        "objenesis",
+        ],
+        },
     },
-    static_libs: [
-        "guava",
-    ]
 }
 
 //#####################################
@@ -40,9 +44,12 @@ java_library_static {
 java_test_host {
     name: "HostTestComposersTests",
     static_libs: [
+        "guava",
         "junit-host",
         "test-composers",
         "test-composers-tests",
         "truth-host-prebuilt",
+        "mockito",
+        "objenesis",
     ],
 }
