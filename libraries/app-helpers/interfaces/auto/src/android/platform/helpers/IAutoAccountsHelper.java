@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,20 +22,21 @@ public interface IAutoAccountsHelper extends IAppHelper {
      * Setup expectation: Accounts setting is open.
      *
      * This method is to add an account.
-     *
-     * @param account - email or phone number
-     * @param pswd - password
-     *
      */
-    void addAccount(String account, String pswd);
+    void addAccount(String email, String password);
 
     /**
      * Setup expectation: Accounts setting is open.
      *
-     * This method is to remove an account.
-     *
-     * @param account - email or phone number
-     *
+     * This method is to remove an account by email.
      */
-    void removeAccount(String account);
+    void removeAccount(String email);
+
+
+    /**
+     * Setup expectation: Accounts setting is open.
+     *
+     * check if an email exists.
+     */
+    boolean doesEmailExist(String email);
 }
