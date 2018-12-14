@@ -40,7 +40,7 @@ public class PerfettoListener extends BaseMetricListener {
     // Default perfetto config file name.
     private static final String DEFAULT_CONFIG_FILE = "trace_config.pb";
     // Default wait time before stopping the perfetto trace.
-    private static final Long DEFAULT_WAIT_TIME_MSECS = 3000L;
+    private static final String DEFAULT_WAIT_TIME_MSECS = "3000";
     // Default output folder to store the perfetto output traces.
     private static final String DEFAULT_OUTPUT_ROOT = "/sdcard/test_results";
     // Argument to get custom config file name for collecting the trace.
@@ -93,7 +93,8 @@ public class PerfettoListener extends BaseMetricListener {
         // Wait time before stopping the perfetto trace collection after the test
         // is completed. Defaulted to 3000 msecs if perfetto_wait_time_ms is not passed.
         // TODO: b/118122395 for parsing failures.
-        mWaitTimeInMs = args.getLong(PERFETTO_WAIT_TIME_ARG, DEFAULT_WAIT_TIME_MSECS);
+        mWaitTimeInMs = Long.parseLong(args.getString(PERFETTO_WAIT_TIME_ARG,
+                DEFAULT_WAIT_TIME_MSECS));
 
         // Destination folder in the device to save all the trace files.
         // Defaulted to /sdcard/test_results if test_output_root is not passed.
