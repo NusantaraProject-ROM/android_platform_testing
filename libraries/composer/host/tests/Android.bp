@@ -25,16 +25,16 @@ java_library_static {
     target: {
         android: {
             libs: [
-            "junit",
-            "mockito-target",
-        ],
+                "junit",
+                "mockito-target",
+            ],
         },
         host: {
             libs: [
-            "junit-host",
-            "mockito",
-        "objenesis",
-        ],
+                "junit-host",
+                "mockito",
+                "objenesis",
+            ],
         },
     },
 }
