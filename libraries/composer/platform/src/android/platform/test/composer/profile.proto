@@ -16,20 +16,20 @@ syntax = "proto2";
 
 package composer.profile;
 
-option java_package = "android.host.test.composer.profile";
+option java_package = "android.platform.test.composer.profile";
 option java_multiple_files = true;
 
 message Configuration {
     // Types required to build a profile.
 
-    //
+    // Information for a scheduled profile.
     message Scheduled {
-        //
+        // Action to take if a test finishes early.
         enum IfEarly {
             IDLE = 1;
             SLEEP = 2;
         }
-        //
+        // Action to take if a test finishes late.
         enum IfLate {
             DELAY = 1;
             END = 2;
@@ -38,34 +38,27 @@ message Configuration {
         optional IfLate if_late = 2;
     }
 
-    //
-    message Weighted { }
-
-    //
+    // Information for each scenario.
     message Scenario {
         oneof schedule {
-            //
+            // Timestamp to run the scenario in HH:MM:SS.
             string at = 1;
-            //
-            double weight = 2;
         }
-        //
+        // Reference to the CUJ (<package>.<class>).
         optional string journey = 3;
-        //
+        // Extra arguments to pass to the CUJ.
         message ExtraArg {
             optional string key = 1;
             optional string value = 2;
         }
         //
         repeated ExtraArg extras = 4;
-        //map<string, string> extras = 4;
     }
 
     // Field definitions for a profile.
 
     oneof schedule {
         Scheduled scheduled = 1;
-        Weighted weighted = 2;
     }
     repeated Scenario scenarios = 3;
 }
