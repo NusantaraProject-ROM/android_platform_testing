@@ -12,10 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Filegroup for the profile proto definition that enables referencing it elsewhere.
+filegroup {
+    name: "profile-proto-def",
+    srcs: [ "src/**/profile.proto" ],
+}
+
 java_library_static {
     name: "platform-test-composers",
-    srcs: [ "src/**/*.java" ],
+    srcs: [
+        "src/**/*.java",
+        "src/**/profile.proto",
+    ],
+    proto: {
+        type: "lite",
+        include_dirs: ["external/protobuf/src"],
+    },
     sdk_version: "current",
-    libs: [ "androidx.test.runner" ],
-    static_libs: ["test-composers", "guava"],
+    libs: [
+        "androidx.test.runner",
+        "guava",
+    ],
+    static_libs: ["test-composers"],
 }

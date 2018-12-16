@@ -24,6 +24,7 @@ android_test {
         "test-composers-tests",
         "truth-prebuilt",
         "guava",
+        "mockito-target-minus-junit4",
     ],
     srcs: [ "src/**/*.java" ],
     test_suites: [ "device-tests" ],

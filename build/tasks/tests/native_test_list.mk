@@ -126,8 +126,7 @@ native_tests := \
     wificond_unit_test \
     wifilogd_unit_test \
     ziparchive-tests \
-    BufferHubBuffer_test \
-    BufferHubMetadata_test \
+    BufferHub_test \
     GraphicBuffer_test \
     NeuralNetworksTest_mt_static \
     NeuralNetworksTest_operations \
