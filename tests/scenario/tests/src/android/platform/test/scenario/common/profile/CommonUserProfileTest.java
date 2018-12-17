@@ -1,6 +1,6 @@
 package android.platform.test.scenario.common.profile;
 
-import android.longevity.platform.LongevitySuite;
+import android.platform.test.longevity.LongevitySuite;
 import android.platform.test.rule.NaturalOrientationRule;
 
 import org.junit.ClassRule;
