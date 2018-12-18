@@ -1,4 +1,5 @@
-// Copyright (C) 2018 The Android Open Source Project
+//
+// Copyright (C) 2017 The Android Open Source Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,18 +12,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+//
 
-// TODO(harrytczhang@): Refactor to share command with the similar genrule in samples. See
-// b/119635583 for similar bug.
 java_genrule {
-    name: "common-profile-text-protos",
+    name: "sample-profile-text-protos",
     host_supported: true,
     tools: ["aprotoc"],
     srcs: [
         ":profile-proto-def",
         "assets/*.textpb",
     ],
-    out: ["sample-profiles-common.jar"],
+    out: ["sample-profiles.jar"],
     /*
      * Loops over all *.textpb files under assets/ and serializes them into binary protos with
      * ".pb" extension using aprotoc. The generated *.pb files are put under an assets/
@@ -42,16 +42,15 @@ java_genrule {
 }
 
 android_test {
-    name: "PlatformCommonScenarioTests",
-    min_sdk_version: "24",
+    name: "LongevityPlatformLibSamples",
+    sdk_version: "24",
     static_libs: [
-        "common-platform-scenarios",
-        "common-profile-text-protos",
+        "androidx.test.runner",
         "guava",
         "longevity-device-lib",
         "platform-test-composers",
-        "platform-test-rules",
+        "sample-profile-text-protos",
     ],
     srcs: ["src/**/*.java"],
-    test_suites: ["device-tests"],
 }
+
