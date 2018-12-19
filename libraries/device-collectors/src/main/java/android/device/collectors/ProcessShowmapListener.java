@@ -37,7 +37,7 @@ import org.junit.runner.Description;
 public class ProcessShowmapListener extends BaseCollectionListener<Long> {
     @VisibleForTesting
     static final String PROCESS_NAME_KEY = "processshowmap-process-name";
-    ProcessShowmapHelper mShowmapHelper = new ProcessShowmapHelper();
+    private ProcessShowmapHelper mShowmapHelper = new ProcessShowmapHelper();
 
     public ProcessShowmapListener() {
         createHelperInstance(mShowmapHelper);
