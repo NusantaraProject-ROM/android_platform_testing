@@ -1,0 +1,19 @@
+scheduled {
+    if_early: IDLE
+}
+scenarios [{
+    at: "00:00:10"
+    journey: "android.platform.test.longevity.samples.SimpleSuite$PassingTest"
+}, {
+    at: "00:01:00"
+    journey: "android.platform.test.longevity.samples.SimpleSuite$FailingTest"
+}, {
+    at: "00:02:00"
+    journey: "android.platform.test.longevity.samples.SimpleSuite$PassingTest"
+}, {
+    at: "00:03:00"
+    journey: "android.platform.test.longevity.samples.SimpleSuite$PassingTest"
+}, {
+    at: "00:04:00"
+    journey: "android.platform.test.longevity.samples.SimpleSuite$FailingTest"
+}]
