@@ -18,7 +18,8 @@ java_library {
     static_libs: [
         "androidx.test.runner",
         "ub-uiautomator",
-        "app-helpers-handheld-interfaces"
+        "app-helpers-handheld-interfaces",
+        "memory-helper"
     ],
     srcs: ["src/**/*.java"],
 }
