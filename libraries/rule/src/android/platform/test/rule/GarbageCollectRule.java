@@ -15,6 +15,10 @@
  */
 package android.platform.test.rule;
 
+import androidx.annotation.VisibleForTesting;
+
+import com.android.helpers.GarbageCollectionHelper;
+
 import org.junit.runner.Description;
 import org.junit.runners.model.InitializationError;
 
@@ -22,24 +26,24 @@ import org.junit.runners.model.InitializationError;
  * This rule will gc the provided apps before running each test method.
  */
 public class GarbageCollectRule extends TestWatcher {
-    private final String[] mApplications;
+    private final GarbageCollectionHelper mGcHelper;
 
     public GarbageCollectRule() throws InitializationError {
         throw new InitializationError("Must supply an application for garbage collection.");
     }
 
     public GarbageCollectRule(String... applications) {
-        mApplications = applications;
+        mGcHelper = initGcHelper();
+        mGcHelper.setUp(applications);
+    }
+
+    @VisibleForTesting
+    GarbageCollectionHelper initGcHelper() {
+        return new GarbageCollectionHelper();
     }
 
     @Override
     protected void starting(Description description) {
-        // Garbage collect each application in sequence.
-        for (String app : mApplications) {
-            String pidofOutput = executeShellCommand(String.format("pidof %s", app));
-            if (!pidofOutput.isEmpty()) {
-                executeShellCommand(String.format("kill -10 %s", pidofOutput));
-            }
-        }
+        mGcHelper.garbageCollect();
     }
 }
