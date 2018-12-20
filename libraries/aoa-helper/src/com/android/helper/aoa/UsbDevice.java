@@ -24,24 +24,14 @@ import com.sun.jna.ptr.PointerByReference;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-/** USB connection to an AOAv2-compatible device. */
-class AoaDeviceConnection implements AutoCloseable {
-
-    // USB constants
-    private static final byte USB_DIR_IN = -128;
-    private static final byte USB_DIR_OUT = 0;
-    private static final byte USB_TYPE_VENDOR = 64;
-    private static final byte GET_PROTOCOL = 51;
-
-    // USB request types
-    static final byte INPUT = USB_DIR_IN | USB_TYPE_VENDOR;
-    static final byte OUTPUT = USB_DIR_OUT | USB_TYPE_VENDOR;
+/** Connected USB device. */
+public class UsbDevice implements AutoCloseable {
 
     private final IUsbNative mUsb;
     private final byte[] mDescriptor = new byte[18];
     private Pointer mHandle;
 
-    AoaDeviceConnection(@Nonnull IUsbNative usb, @Nonnull Pointer devicePointer) {
+    UsbDevice(@Nonnull IUsbNative usb, @Nonnull Pointer devicePointer) {
         mUsb = usb;
 
         // retrieve device descriptor
@@ -58,7 +48,7 @@ class AoaDeviceConnection implements AutoCloseable {
      *
      * @return number of bytes transferred, or an error code
      */
-    int controlTransfer(byte requestType, byte request, int value, int index, byte[] data) {
+    public int controlTransfer(byte requestType, byte request, int value, int index, byte[] data) {
         return mUsb.libusb_control_transfer(
                 checkNotNull(mHandle),
                 requestType,
@@ -70,14 +60,24 @@ class AoaDeviceConnection implements AutoCloseable {
                 0);
     }
 
+    /**
+     * Performs a USB port reset. A LIBUSB_ERROR_NOT_FOUND error may indicate that the connection
+     * was reset, but that this {@link UsbDevice} is no longer valid and needs to be recreated.
+     *
+     * @return 0 on success or error code
+     */
+    public int reset() {
+        return mUsb.libusb_reset_device(checkNotNull(mHandle));
+    }
+
     /** @return true if device handle is non-null, but does not check if resetting is necessary */
-    boolean isValid() {
+    public boolean isValid() {
         return mHandle != null;
     }
 
     /** @return device's serial number or {@code null} if serial could not be determined */
     @Nullable
-    String getSerialNumber() {
+    public String getSerialNumber() {
         if (!isValid() || mDescriptor[16] <= 0) {
             // no device handle or string index is invalid
             return null;
@@ -89,23 +89,13 @@ class AoaDeviceConnection implements AutoCloseable {
     }
 
     /** @return device's vendor ID */
-    int getVendorId() {
+    public int getVendorId() {
         return Shorts.fromBytes(mDescriptor[9], mDescriptor[8]);
     }
 
     /** @return device's product ID */
-    int getProductId() {
+    public int getProductId() {
         return Shorts.fromBytes(mDescriptor[11], mDescriptor[10]);
-    }
-
-    /** @return true if device supports the AOAv2 protocol */
-    boolean isAoaCompatible() {
-        if (!isValid()) {
-            return false;
-        }
-
-        int protocol = controlTransfer(INPUT, GET_PROTOCOL, 0, 0, new byte[2]);
-        return protocol >= 2;
     }
 
     /** Close the connection if necessary. */
