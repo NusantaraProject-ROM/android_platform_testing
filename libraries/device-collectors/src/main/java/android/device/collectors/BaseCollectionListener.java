@@ -49,11 +49,6 @@ public class BaseCollectionListener<T> extends BaseMetricListener {
     }
 
     @VisibleForTesting
-    public BaseCollectionListener(Bundle args) {
-        super(args);
-    }
-
-    @VisibleForTesting
     public BaseCollectionListener(Bundle args, ICollectorHelper helper) {
         super(args);
         mHelper = helper;
