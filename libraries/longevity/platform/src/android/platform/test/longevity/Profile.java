@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.platform.test.composer;
+package android.platform.test.longevity;
 
 import android.content.res.AssetManager;
 import android.host.test.composer.Compose;
 import android.os.Bundle;
-import android.platform.test.composer.profile.Configuration;
-import android.platform.test.composer.profile.Configuration.Scenario;
+import android.platform.test.longevity.proto.Configuration;
+import android.platform.test.longevity.proto.Configuration.Scenario;
 import android.util.Log;
 import androidx.test.InstrumentationRegistry;
 

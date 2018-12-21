@@ -34,7 +34,7 @@ java_genrule {
     cmd: "out_dir=$$(dirname $(out)) && assets_dir=\"assets\" " +
         "&& mkdir -p $$out_dir/$$assets_dir && src_protos=($(locations assets/*.textpb)) " +
         "&& for file in $${src_protos[@]} ; do fname=$$(basename $$file) " +
-        "&& if ! ($(location aprotoc) --encode=composer.profile.Configuration " +
+        "&& if ! ($(location aprotoc) --encode=longevity.profile.Configuration " +
         "$(location :profile-proto-def) < $$file > " +
         "$$out_dir/$$assets_dir/$${fname//.textpb/.pb}) ; then " +
         "echo \"\033[0;31mFailed to parse profile $$file. See above for errors.\033[0m\" " +
