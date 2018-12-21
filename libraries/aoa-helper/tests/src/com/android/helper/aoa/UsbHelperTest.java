@@ -15,9 +15,15 @@
  */
 package com.android.helper.aoa;
 
+import static com.android.helper.aoa.AoaDevice.ACCESSORY_GET_PROTOCOL;
+import static com.android.helper.aoa.AoaDevice.GOOGLE_VID;
+
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyByte;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -36,16 +42,17 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Unit tests for {@link AoaDeviceManager} */
+/** Unit tests for {@link UsbHelper} */
 @RunWith(JUnit4.class)
-public class AoaDeviceManagerTest {
+public class UsbHelperTest {
 
     private static final String SERIAL_NUMBER = "serial-number";
+    private static final int ACCESSORY_PID = 0x2D00;
 
-    private AoaDeviceManager mManager;
+    private UsbHelper mHelper;
 
     private IUsbNative mUsb;
-    private AoaDeviceConnection mConnection;
+    private UsbDevice mDevice;
 
     @Before
     public void setUp() {
@@ -72,11 +79,16 @@ public class AoaDeviceManagerTest {
                             return 1;
                         });
 
-        mConnection = mock(AoaDeviceConnection.class);
+        // device is valid, has right serial number, and is in accessory mode by default
+        mDevice = mock(UsbDevice.class);
+        when(mDevice.isValid()).thenReturn(true);
+        when(mDevice.getSerialNumber()).thenReturn(SERIAL_NUMBER);
+        when(mDevice.getVendorId()).thenReturn(GOOGLE_VID);
+        when(mDevice.getProductId()).thenReturn(ACCESSORY_PID);
 
-        mManager = spy(new AoaDeviceManager(mUsb));
-        // always return the mocked connection
-        doReturn(mConnection).when(mManager).connect(any());
+        mHelper = spy(new UsbHelper(mUsb));
+        // always return the mocked device
+        doReturn(mDevice).when(mHelper).connect(any());
     }
 
     @Test
@@ -85,77 +97,75 @@ public class AoaDeviceManagerTest {
         verify(mUsb, times(1)).libusb_init(any());
 
         // exited on close
-        mManager.close();
+        mHelper.close();
         verify(mUsb, times(1)).libusb_exit(any());
     }
 
     @Test
     public void testCheckResult() {
         // non-negative numbers are always valid
-        assertEquals(0, mManager.checkResult(0));
-        assertEquals(1, mManager.checkResult(1));
-        assertEquals(Integer.MAX_VALUE, mManager.checkResult(Integer.MAX_VALUE));
+        assertEquals(0, mHelper.checkResult(0));
+        assertEquals(1, mHelper.checkResult(1));
+        assertEquals(Integer.MAX_VALUE, mHelper.checkResult(Integer.MAX_VALUE));
     }
 
-    @Test(expected = AoaDeviceException.class)
+    @Test(expected = UsbException.class)
     public void testCheckResult_invalid() {
         // negative numbers indicate errors
-        mManager.checkResult(-1);
+        mHelper.checkResult(-1);
     }
 
     @Test
-    public void testGetConnection() {
-        when(mConnection.isValid()).thenReturn(true);
-        when(mConnection.getSerialNumber()).thenReturn(SERIAL_NUMBER);
-        when(mConnection.isAoaCompatible()).thenReturn(true);
-
+    public void testGetDevice() {
         // valid connection was found and opened
-        assertEquals(mConnection, mManager.getConnection(SERIAL_NUMBER));
+        assertEquals(mDevice, mHelper.getDevice(SERIAL_NUMBER));
 
         // device list was closed, but not connection
-        verify(mConnection, never()).close();
+        verify(mDevice, never()).close();
         verify(mUsb, times(1)).libusb_free_device_list(any(), eq(true));
     }
 
     @Test
-    public void testGetConnection_invalid() {
-        when(mConnection.isValid()).thenReturn(false);
-        when(mConnection.getSerialNumber()).thenReturn(SERIAL_NUMBER);
-        when(mConnection.isAoaCompatible()).thenReturn(true);
+    public void testGetDevice_invalid() {
+        when(mDevice.isValid()).thenReturn(false);
 
-        // valid connection not found
-        assertNull(mManager.getConnection(SERIAL_NUMBER));
+        // valid device not found
+        assertNull(mHelper.getDevice(SERIAL_NUMBER));
 
         // connection and device list were closed
-        verify(mConnection, times(1)).close();
+        verify(mDevice, times(1)).close();
         verify(mUsb, times(1)).libusb_free_device_list(any(), eq(true));
     }
 
     @Test
-    public void testGetConnection_missing() {
-        when(mConnection.isValid()).thenReturn(true);
-        when(mConnection.getSerialNumber()).thenReturn("unknown");
-        when(mConnection.isAoaCompatible()).thenReturn(true);
+    public void testGetDevice_missing() {
+        when(mDevice.getSerialNumber()).thenReturn("unknown");
 
-        // valid connection not found
-        assertNull(mManager.getConnection(SERIAL_NUMBER));
+        // valid device not found
+        assertNull(mHelper.getDevice(SERIAL_NUMBER));
 
         // connection and device list were closed
-        verify(mConnection, times(1)).close();
+        verify(mDevice, times(1)).close();
         verify(mUsb, times(1)).libusb_free_device_list(any(), eq(true));
     }
 
     @Test
-    public void testGetConnection_incompatible() {
-        when(mConnection.isValid()).thenReturn(true);
-        when(mConnection.getSerialNumber()).thenReturn(SERIAL_NUMBER);
-        when(mConnection.isAoaCompatible()).thenReturn(false);
+    public void testGetAoaDevice() {
+        // AOAv2 protocol supported
+        when(mDevice.controlTransfer(
+                anyByte(), eq(ACCESSORY_GET_PROTOCOL), anyInt(), anyInt(), any()))
+                .thenReturn(2);
 
-        // valid connection not found
-        assertNull(mManager.getConnection(SERIAL_NUMBER));
+        assertNotNull(mHelper.getAoaDevice(SERIAL_NUMBER));
+    }
 
-        // connection and device list were closed
-        verify(mConnection, times(1)).close();
-        verify(mUsb, times(1)).libusb_free_device_list(any(), eq(true));
+    @Test
+    public void testGetAoaDevice_incompatible() {
+        // AOAv2 protocol not supported
+        when(mDevice.controlTransfer(
+                anyByte(), eq(ACCESSORY_GET_PROTOCOL), anyInt(), anyInt(), any()))
+                .thenReturn(-1);
+
+        assertNull(mHelper.getAoaDevice(SERIAL_NUMBER));
     }
 }
