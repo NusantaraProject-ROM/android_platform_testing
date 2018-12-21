@@ -49,7 +49,7 @@ public class ProcessShowmapListener extends BaseCollectionListener<Long> {
      */
     @VisibleForTesting
     public ProcessShowmapListener(Bundle args, ProcessShowmapHelper helper) {
-        super(args);
+        super(args, helper);
         mShowmapHelper = helper;
         createHelperInstance(mShowmapHelper);
     }
