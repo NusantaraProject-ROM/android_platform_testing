@@ -17,11 +17,11 @@ package com.android.helper.aoa;
 
 import javax.annotation.Nullable;
 
-/** Thrown when an error occurs while communicating with an AOAv2-compatible Android device. */
-public class AoaDeviceException extends RuntimeException {
+/** Thrown when an error occurs while communicating with a device over USB. */
+public class UsbException extends RuntimeException {
     private static final long serialVersionUID = -8880998872299531980L;
 
-    AoaDeviceException(@Nullable String template, @Nullable Object... args) {
+    UsbException(@Nullable String template, @Nullable Object... args) {
         super(String.format(String.valueOf(template), args));
     }
 }

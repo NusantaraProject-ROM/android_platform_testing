@@ -15,8 +15,6 @@
  */
 package com.android.helper.aoa;
 
-import static com.android.helper.aoa.AoaDeviceConnection.OUTPUT;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -47,12 +45,17 @@ public class AoaDevice implements AutoCloseable {
     // USB error code
     static final int DEVICE_NOT_FOUND = -4;
 
+    // USB request types (direction and vendor type)
+    static final byte INPUT = (byte) (0x80 | (0x02 << 5));
+    static final byte OUTPUT = (byte) (0x00 | (0x02 << 5));
+
     // AOA VID and PID
     static final int GOOGLE_VID = 0x18D1;
     private static final Range<Integer> AOA_PID = Range.closed(0x2D00, 0x2D05);
     private static final ImmutableSet<Integer> ADB_PID = ImmutableSet.of(0x2D01, 0x2D03, 0x2D05);
 
     // AOA requests
+    static final byte ACCESSORY_GET_PROTOCOL = 51;
     static final byte ACCESSORY_START = 53;
     static final byte ACCESSORY_REGISTER_HID = 54;
     static final byte ACCESSORY_UNREGISTER_HID = 55;
@@ -77,33 +80,33 @@ public class AoaDevice implements AutoCloseable {
     static final int SCROLL_STEPS = 40;
     static final int FLING_STEPS = 10;
 
-    private final AoaDeviceManager mManager;
-    private AoaDeviceConnection mConnection;
+    private final UsbHelper mHelper;
+    private UsbDevice mDelegate;
     private String mSerialNumber;
 
-    AoaDevice(@Nonnull AoaDeviceManager manager, @Nonnull AoaDeviceConnection connection) {
-        mManager = manager;
-        mConnection = connection;
+    AoaDevice(@Nonnull UsbHelper helper, @Nonnull UsbDevice delegate) {
+        mHelper = helper;
+        mDelegate = delegate;
         initialize();
     }
 
     // Configure the device, switching to accessory mode if necessary and registering the HIDs
     private void initialize() {
         if (!isValid()) {
-            throw new AoaDeviceException("Invalid device connection");
+            throw new UsbException("Invalid device connection");
         }
 
-        mSerialNumber = mConnection.getSerialNumber();
+        mSerialNumber = mDelegate.getSerialNumber();
         if (mSerialNumber == null) {
-            throw new AoaDeviceException("Missing serial number");
+            throw new UsbException("Missing serial number");
         }
 
         if (isAccessoryMode()) {
             registerHIDs();
         } else {
             // restart in accessory mode
-            mManager.checkResult(
-                    mConnection.controlTransfer(OUTPUT, ACCESSORY_START, 0, 0, new byte[0]));
+            mHelper.checkResult(
+                    mDelegate.controlTransfer(OUTPUT, ACCESSORY_START, 0, 0, new byte[0]));
             sleep(CONFIGURE_DELAY);
             resetConnection();
         }
@@ -113,16 +116,16 @@ public class AoaDevice implements AutoCloseable {
     private void registerHIDs() {
         for (HID hid : HID.values()) {
             // register HID identifier
-            mManager.checkResult(
-                    mConnection.controlTransfer(
+            mHelper.checkResult(
+                    mDelegate.controlTransfer(
                             OUTPUT,
                             ACCESSORY_REGISTER_HID,
                             hid.getId(),
                             hid.getDescriptor().length,
                             new byte[0]));
             // register HID descriptor
-            mManager.checkResult(
-                    mConnection.controlTransfer(
+            mHelper.checkResult(
+                    mDelegate.controlTransfer(
                             OUTPUT,
                             ACCESSORY_SET_HID_REPORT_DESC,
                             hid.getId(),
@@ -135,7 +138,7 @@ public class AoaDevice implements AutoCloseable {
     // Unregister HIDs
     private void unregisterHIDs() {
         for (HID hid : HID.values()) {
-            mConnection.controlTransfer(
+            mDelegate.controlTransfer(
                     OUTPUT, ACCESSORY_UNREGISTER_HID, hid.getId(), 0, new byte[0]);
         }
     }
@@ -146,13 +149,13 @@ public class AoaDevice implements AutoCloseable {
      */
     public void resetConnection() {
         close();
-        mConnection = mManager.waitForConnection(mSerialNumber, CONNECTION_TIMEOUT);
+        mDelegate = mHelper.getDevice(mSerialNumber, CONNECTION_TIMEOUT);
         initialize();
     }
 
     /** @return true if connection is non-null, but does not check if resetting is necessary */
     public boolean isValid() {
-        return mConnection != null && mConnection.isValid();
+        return mDelegate != null && mDelegate.isValid();
     }
 
     /** @return device's serial number */
@@ -163,14 +166,14 @@ public class AoaDevice implements AutoCloseable {
 
     // Checks whether the device is in accessory mode
     private boolean isAccessoryMode() {
-        return GOOGLE_VID == mConnection.getVendorId()
-                && AOA_PID.contains(mConnection.getProductId());
+        return GOOGLE_VID == mDelegate.getVendorId()
+                && AOA_PID.contains(mDelegate.getProductId());
     }
 
     /** @return true if device has USB debugging enabled */
     public boolean isAdbEnabled() {
-        return GOOGLE_VID == mConnection.getVendorId()
-                && ADB_PID.contains(mConnection.getProductId());
+        return GOOGLE_VID == mDelegate.getVendorId()
+                && ADB_PID.contains(mDelegate.getProductId());
     }
 
     /** Wait for a specified duration. */
@@ -289,15 +292,15 @@ public class AoaDevice implements AutoCloseable {
     // Send a HID event to the device
     private void send(HID hid, byte[] data, Duration pause) {
         int result =
-                mConnection.controlTransfer(OUTPUT, ACCESSORY_SEND_HID_EVENT, hid.getId(), 0, data);
+                mDelegate.controlTransfer(OUTPUT, ACCESSORY_SEND_HID_EVENT, hid.getId(), 0, data);
         if (result == DEVICE_NOT_FOUND) {
             // device not found, reset the connection and retry
             resetConnection();
             result =
-                    mConnection.controlTransfer(
+                    mDelegate.controlTransfer(
                             OUTPUT, ACCESSORY_SEND_HID_EVENT, hid.getId(), 0, data);
         }
-        mManager.checkResult(result);
+        mHelper.checkResult(result);
         sleep(pause);
     }
 
@@ -308,8 +311,8 @@ public class AoaDevice implements AutoCloseable {
             if (isAccessoryMode()) {
                 unregisterHIDs();
             }
-            mConnection.close();
-            mConnection = null;
+            mDelegate.close();
+            mDelegate = null;
         }
     }
 
