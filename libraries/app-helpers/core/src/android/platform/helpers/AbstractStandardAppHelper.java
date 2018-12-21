@@ -32,6 +32,7 @@ import android.support.test.launcherhelper.LauncherStrategyFactory;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
+import android.support.test.uiautomator.UiWatcher;
 import android.support.test.uiautomator.Until;
 import android.util.Log;
 import android.view.KeyCharacterMap;
@@ -259,5 +260,21 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
       if (!element.isChecked()) {
         throw new UnknownUiException("Element " + element + " is not checked");
       }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void registerWatcher(String name, UiWatcher watcher) {
+        mDevice.registerWatcher(name, watcher);
+    }
+
+    /**
+    * {@inheritDoc}
+    */
+    @Override
+    public void removeWatcher(String name) {
+      mDevice.removeWatcher(name);
     }
 }
