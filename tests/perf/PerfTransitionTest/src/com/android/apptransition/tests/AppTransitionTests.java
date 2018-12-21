@@ -60,8 +60,8 @@ public class AppTransitionTests extends Instrumentation {
     private static final String DEFAULT_POST_LAUNCH_TIMEOUT = "5000";
     private static final String DEFAULT_LAUNCH_COUNT = "10";
     private static final String SUCCESS_MESSAGE = "Status: ok";
-    private static final String HOT_LAUNCH_MESSAGE = "Warning: Activity not started, its current"
-            + " task has been brought to the front";
+    private static final String HOT_LAUNCH_MESSAGE = "LaunchState: HOT";
+    private static final String TOTAL_TIME_MESSAGE = "TotalTime:";
     private static final String DROP_CACHE_SCRIPT = "/data/local/tmp/dropCache.sh";
     private static final String APP_LAUNCH_CMD = "am start -W -n";
     private static final String FORCE_STOP = "am force-stop ";
@@ -72,7 +72,7 @@ public class AppTransitionTests extends Instrumentation {
     private static final String COLD_LAUNCH = "cold_launch";
     private static final String HOT_LAUNCH = "hot_launch";
     private static final String NOT_SURE = "not_sure";
-    private static final String ACTIVITY = "Activity";
+    private static final String ACTIVITY = "Activity:";
     private static final String KEY_TRACE_DIRECTORY = "trace_directory";
     private static final String KEY_TRACE_CATEGORY = "trace_categories";
     private static final String KEY_TRACE_BUFFERSIZE = "trace_bufferSize";
@@ -507,38 +507,52 @@ public class AppTransitionTests extends Instrumentation {
             mCmpName = null;
             try {
                 InputStream inputStream = new FileInputStream(parcelDesc.getFileDescriptor());
+                /* SAMPLE OUTPUT : Cold launch
+                Starting: Intent { cmp=com.google.android.calculator/com.android.calculator2.Calculator }
+                Status: ok
+                LaunchState: COLD
+                Activity: com.google.android.calculator/com.android.calculator2.Calculator
+                TotalTime: 357
+                WaitTime: 377
+                Complete*/
+                /* SAMPLE OUTPUT : Hot launch
+                Starting: Intent { cmp=com.google.android.calculator/com.android.calculator2.Calculator }
+                Warning: Activity not started, its current task has been brought to the front
+                Status: ok
+                LaunchState: HOT
+                Activity: com.google.android.calculator/com.android.calculator2.CalculatorGoogle
+                TotalTime: 60
+                WaitTime: 67
+                Complete*/
                 StringBuilder appLaunchOuput = new StringBuilder();
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(
                         inputStream));
                 String line = null;
-                int lineCount = 1;
+                final boolean maybeHotLaunch = mLaunchMode.contains(HOT_LAUNCH) ||
+                        mLaunchMode.contains(NOT_SURE);
                 while ((line = bufferedReader.readLine()) != null) {
-                    if (lineCount == 2) {
-                        if ((mLaunchMode.contains(COLD_LAUNCH) || mLaunchMode.contains(NOT_SURE))
-                                && line.contains(SUCCESS_MESSAGE)) {
-                            launchSuccess = true;
-                        } else if ((mLaunchMode.contains(HOT_LAUNCH) || mLaunchMode
-                                .contains(NOT_SURE)) && line.contains(HOT_LAUNCH_MESSAGE)) {
-                            launchSuccess = true;
-                        }
+                    if (line.startsWith(SUCCESS_MESSAGE)) {
+                        launchSuccess = true;
                     }
-                    if ((launchSuccess && (mLaunchMode.contains(COLD_LAUNCH)
-                            || mLaunchMode.contains(NOT_SURE)) && lineCount == 4) ||
-                            (launchSuccess && (mLaunchMode.contains(HOT_LAUNCH) ||
-                                    mLaunchMode.contains(NOT_SURE)) && lineCount == 5)) {
+                    if (!launchSuccess) {
+                        continue;
+                    }
+
+                    if (line.startsWith(HOT_LAUNCH_MESSAGE) && (!maybeHotLaunch)){
+                        Log.w(TAG, "Error did not expect a hot launch");
+                        break;
+                    }
+
+                    if (line.startsWith(TOTAL_TIME_MESSAGE)) {
                         String launchSplit[] = line.split(":");
                         launchTime = launchSplit[1].trim();
                     }
                     // Needed to update the component name if the very first launch activity
                     // is different from hot launch activity (i.e YouTube)
-                    if ((launchSuccess && (mLaunchMode.contains(HOT_LAUNCH) ||
-                            mLaunchMode.contains(NOT_SURE)) && lineCount == 3)) {
+                    if (maybeHotLaunch && line.startsWith(ACTIVITY)) {
                         String activitySplit[] = line.split(":");
-                        if (activitySplit[0].contains(ACTIVITY)) {
-                            mCmpName = activitySplit[1].trim();
-                        }
+                        mCmpName = activitySplit[1].trim();
                     }
-                    lineCount++;
                 }
                 inputStream.close();
             } catch (IOException e) {
