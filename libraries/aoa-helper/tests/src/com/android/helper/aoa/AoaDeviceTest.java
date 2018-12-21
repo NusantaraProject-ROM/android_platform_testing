@@ -81,20 +81,20 @@ public class AoaDeviceTest {
 
     private AoaDevice mDevice;
 
-    private AoaDeviceManager mManager;
-    private AoaDeviceConnection mConnection;
+    private UsbHelper mHelper;
+    private UsbDevice mDelegate;
 
     @Before
     public void setUp() {
-        // valid accessory mode connection by default
-        mConnection = mock(AoaDeviceConnection.class);
-        when(mConnection.isValid()).thenReturn(true);
-        when(mConnection.getSerialNumber()).thenReturn(SERIAL_NUMBER);
-        when(mConnection.getVendorId()).thenReturn(GOOGLE_VID);
-        when(mConnection.getProductId()).thenReturn(ADB_DISABLED_PID);
+        // valid accessory mode device by default
+        mDelegate = mock(UsbDevice.class);
+        when(mDelegate.isValid()).thenReturn(true);
+        when(mDelegate.getSerialNumber()).thenReturn(SERIAL_NUMBER);
+        when(mDelegate.getVendorId()).thenReturn(GOOGLE_VID);
+        when(mDelegate.getProductId()).thenReturn(ADB_DISABLED_PID);
 
-        mManager = mock(AoaDeviceManager.class);
-        when(mManager.waitForConnection(anyString(), any())).thenReturn(mConnection);
+        mHelper = mock(UsbHelper.class);
+        when(mHelper.getDevice(anyString(), any())).thenReturn(mDelegate);
     }
 
     // Initialization
@@ -115,7 +115,7 @@ public class AoaDeviceTest {
     @Test
     public void testDetectsAccessoryMode() {
         // not in accessory mode initially
-        when(mConnection.getVendorId())
+        when(mDelegate.getVendorId())
                 .thenReturn(INVALID_VID)
                 .thenReturn(INVALID_VID)
                 .thenReturn(GOOGLE_VID);
@@ -134,10 +134,10 @@ public class AoaDeviceTest {
     @Test
     public void testResetConnection() {
         mDevice = createDevice();
-        clearInvocations(mConnection);
+        clearInvocations(mDelegate);
         mDevice.resetConnection();
 
-        verify(mManager, times(1)).waitForConnection(eq(SERIAL_NUMBER), any());
+        verify(mHelper, times(1)).getDevice(eq(SERIAL_NUMBER), any());
 
         // re-registers HIDs
         verifyRequest(times(HID_COUNT), ACCESSORY_UNREGISTER_HID);
@@ -145,15 +145,15 @@ public class AoaDeviceTest {
         verifyRequest(times(HID_COUNT), ACCESSORY_SET_HID_REPORT_DESC);
     }
 
-    @Test(expected = AoaDeviceException.class)
+    @Test(expected = UsbException.class)
     public void testThrowsIfConnectionInvalid() {
-        when(mConnection.isValid()).thenReturn(false);
+        when(mDelegate.isValid()).thenReturn(false);
         mDevice = createDevice();
     }
 
-    @Test(expected = AoaDeviceException.class)
+    @Test(expected = UsbException.class)
     public void testThrowsIfSerialNumberMissing() {
-        when(mConnection.getSerialNumber()).thenReturn(null);
+        when(mDelegate.getSerialNumber()).thenReturn(null);
         mDevice = createDevice();
     }
 
@@ -168,18 +168,18 @@ public class AoaDeviceTest {
         mDevice = createDevice();
 
         // invalid VID and valid PID
-        when(mConnection.getVendorId()).thenReturn(INVALID_VID);
-        when(mConnection.getProductId()).thenReturn(ADB_ENABLED_PID);
+        when(mDelegate.getVendorId()).thenReturn(INVALID_VID);
+        when(mDelegate.getProductId()).thenReturn(ADB_ENABLED_PID);
         assertFalse(mDevice.isAdbEnabled());
 
         // valid VID and invalid PID
-        when(mConnection.getVendorId()).thenReturn(GOOGLE_VID);
-        when(mConnection.getProductId()).thenReturn(ADB_DISABLED_PID);
+        when(mDelegate.getVendorId()).thenReturn(GOOGLE_VID);
+        when(mDelegate.getProductId()).thenReturn(ADB_DISABLED_PID);
         assertFalse(mDevice.isAdbEnabled());
 
         // both valid
-        when(mConnection.getVendorId()).thenReturn(GOOGLE_VID);
-        when(mConnection.getProductId()).thenReturn(ADB_ENABLED_PID);
+        when(mDelegate.getVendorId()).thenReturn(GOOGLE_VID);
+        when(mDelegate.getProductId()).thenReturn(ADB_ENABLED_PID);
         assertTrue(mDevice.isAdbEnabled());
     }
 
@@ -190,7 +190,7 @@ public class AoaDeviceTest {
 
         // unregisters descriptors and closes connection
         verifyRequest(times(HID_COUNT), ACCESSORY_UNREGISTER_HID);
-        verify(mConnection, times(1)).close();
+        verify(mDelegate, times(1)).close();
     }
 
     // Actions
@@ -277,7 +277,7 @@ public class AoaDeviceTest {
         mDevice = createDevice();
         mDevice.key(1, null, 2);
 
-        InOrder order = inOrder(mConnection);
+        InOrder order = inOrder(mDelegate);
         // press and release 1
         verifyHidRequest(order, times(1), AoaDevice.HID.KEYBOARD, (byte) 1);
         verifyHidRequest(order, times(1), AoaDevice.HID.KEYBOARD, (byte) 0);
@@ -315,14 +315,14 @@ public class AoaDeviceTest {
         mDevice = createDevice();
 
         // first attempt will fail to find device
-        when(mConnection.controlTransfer(anyByte(), anyByte(), anyInt(), anyInt(), any()))
+        when(mDelegate.controlTransfer(anyByte(), anyByte(), anyInt(), anyInt(), any()))
                 .thenReturn(DEVICE_NOT_FOUND)
                 .thenReturn(0);
 
         mDevice.click(new Point(34, 56));
 
         // reset the connection
-        verify(mManager, times(1)).waitForConnection(eq(SERIAL_NUMBER), any());
+        verify(mHelper, times(1)).getDevice(eq(SERIAL_NUMBER), any());
 
         verifyTouches(
                 new Touch(TOUCH_DOWN, 34, 56), // failed
@@ -333,7 +333,7 @@ public class AoaDeviceTest {
     // Helpers
 
     private AoaDevice createDevice() {
-        AoaDevice device = new AoaDevice(mManager, mConnection) {
+        AoaDevice device = new AoaDevice(mHelper, mDelegate) {
             @Override
             public void sleep(@Nonnull Duration duration) {}
         };
@@ -341,7 +341,7 @@ public class AoaDeviceTest {
     }
 
     private void verifyRequest(VerificationMode mode, byte request) {
-        verify(mConnection, mode)
+        verify(mDelegate, mode)
                 .controlTransfer(anyByte(), eq(request), anyInt(), anyInt(), any());
     }
 
@@ -351,8 +351,8 @@ public class AoaDeviceTest {
 
     private void verifyHidRequest(
             InOrder order, VerificationMode mode, AoaDevice.HID hid, byte... data) {
-        AoaDeviceConnection verifier =
-                order == null ? verify(mConnection, mode) : order.verify(mConnection, mode);
+        UsbDevice verifier =
+                order == null ? verify(mDelegate, mode) : order.verify(mDelegate, mode);
         verifier.controlTransfer(
                 anyByte(), eq(ACCESSORY_SEND_HID_EVENT), eq(hid.getId()), anyInt(), eq(data));
     }
@@ -364,7 +364,7 @@ public class AoaDeviceTest {
     private void verifyTouches(List<Touch> expected) {
         ArgumentCaptor<byte[]> captor = ArgumentCaptor.forClass(byte[].class);
 
-        verify(mConnection, times(expected.size()))
+        verify(mDelegate, times(expected.size()))
                 .controlTransfer(
                         anyByte(),
                         eq(ACCESSORY_SEND_HID_EVENT),
