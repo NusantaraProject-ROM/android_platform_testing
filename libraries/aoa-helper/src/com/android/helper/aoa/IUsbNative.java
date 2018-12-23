@@ -79,6 +79,14 @@ interface IUsbNative extends Library {
     void libusb_close(Pointer dev_handle);
 
     /**
+     * Perform a USB port reset to reinitialize a device.
+     *
+     * @param dev_handle device handle to reset
+     * @return 0 on success, or an error code
+     */
+    int libusb_reset_device(Pointer dev_handle);
+
+    /**
      * Get the USB device descriptor for a given device.
      *
      * @param dev device
