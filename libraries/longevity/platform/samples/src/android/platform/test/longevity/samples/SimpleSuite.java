@@ -21,6 +21,7 @@ import android.platform.test.longevity.LongevitySuite;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(LongevitySuite.class)
@@ -34,6 +35,7 @@ import org.junit.runners.Suite.SuiteClasses;
 public class SimpleSuite {
     // no local test cases.
 
+    @RunWith(JUnit4.class)
     public static class PassingTest {
         @Test
         public void testAssertEquals() {
@@ -41,6 +43,7 @@ public class SimpleSuite {
         }
     }
 
+    @RunWith(JUnit4.class)
     public static class FailingTest {
         @Test
         public void testAssertEquals() {
