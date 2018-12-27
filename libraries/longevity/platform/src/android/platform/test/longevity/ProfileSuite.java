@@ -20,7 +20,6 @@ import android.app.Instrumentation;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.platform.test.composer.Profile;
 import androidx.annotation.VisibleForTesting;
 import androidx.test.InstrumentationRegistry;
 
