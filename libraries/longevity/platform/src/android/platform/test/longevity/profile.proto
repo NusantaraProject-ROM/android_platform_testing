@@ -14,9 +14,9 @@
 
 syntax = "proto2";
 
-package composer.profile;
+package longevity.profile;
 
-option java_package = "android.platform.test.composer.profile";
+option java_package = "android.platform.test.longevity.proto";
 option java_multiple_files = true;
 
 message Configuration {

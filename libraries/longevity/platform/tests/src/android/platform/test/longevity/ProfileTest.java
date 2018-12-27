@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.platform.test.composer;
+package android.platform.test.longevity;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import android.os.Bundle;
-import android.platform.test.composer.profile.Configuration;
-import android.platform.test.composer.profile.Configuration.Scenario;
-import android.platform.test.composer.profile.Configuration.Scheduled;
-import android.platform.test.composer.profile.Configuration.Scheduled.IfEarly;
-import android.platform.test.composer.profile.Configuration.Scheduled.IfLate;
+import android.platform.test.longevity.proto.Configuration;
+import android.platform.test.longevity.proto.Configuration.Scenario;
+import android.platform.test.longevity.proto.Configuration.Scheduled;
+import android.platform.test.longevity.proto.Configuration.Scheduled.IfEarly;
+import android.platform.test.longevity.proto.Configuration.Scheduled.IfLate;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
