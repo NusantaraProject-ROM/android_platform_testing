@@ -34,6 +34,7 @@ import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiWatcher;
 import android.support.test.uiautomator.Until;
+import androidx.test.InstrumentationRegistry;
 import android.util.Log;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
@@ -44,8 +45,10 @@ import java.io.IOException;
 public abstract class AbstractStandardAppHelper implements IAppHelper {
     private static final String LOG_TAG = AbstractStandardAppHelper.class.getSimpleName();
     private static final String SCREENSHOT_DIR = "apphelper-screenshots";
+    private static final String FAVOR_CMD = "favor-shell-commands";
     private static final String ERROR_NOT_FOUND =
         "Element %s %s is not found in the application %s";
+    private static final long APP_LAUNCH_WAIT_TIME_MS = 5000; // 5 seconds
 
     private static File sScreenshotDirectory;
 
@@ -54,11 +57,15 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
     public ILauncherStrategy mLauncherStrategy;
     private final KeyCharacterMap mKeyCharacterMap =
             KeyCharacterMap.load(KeyCharacterMap.VIRTUAL_KEYBOARD);
+    private final boolean mFavorShellCommands;
 
     public AbstractStandardAppHelper(Instrumentation instr) {
         mInstrumentation = instr;
         mDevice = UiDevice.getInstance(instr);
         mLauncherStrategy = LauncherStrategyFactory.getInstance(mDevice).getLauncherStrategy();
+        mFavorShellCommands =
+                Boolean.valueOf(
+                        InstrumentationRegistry.getArguments().getString(FAVOR_CMD, "false"));
     }
 
     /**
@@ -67,10 +74,30 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
     @Override
     public void open() {
         String pkg = getPackage();
-        String id = getLauncherName();
-        if (!mDevice.hasObject(By.pkg(pkg).depth(0))) {
-            mLauncherStrategy.launch(id, pkg);
-            Log.i(LOG_TAG, "Launched package: id=" + id + ", pkg=" + pkg);
+        if (mFavorShellCommands) {
+            String output = null;
+            try {
+                output = mDevice.executeShellCommand(String.format("am start %s", pkg));
+                Log.i(LOG_TAG, String.format("Sent command to launch: %s", pkg));
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to execute start command", e);
+            }
+            if (output != null && output.contains("unable to resolve")) {
+                throw new IllegalArgumentException(
+                        String.format("Unable to find package, %s, to start.", pkg));
+            }
+        } else {
+            // Launch using the UI and launcher strategy.
+            String id = getLauncherName();
+            if (!mDevice.hasObject(By.pkg(pkg).depth(0))) {
+                mLauncherStrategy.launch(id, pkg);
+                Log.i(LOG_TAG, "Launched package: id=" + id + ", pkg=" + pkg);
+            }
+        }
+        // Ensure the package is in the foreground for success.
+        if (!mDevice.wait(Until.hasObject(By.pkg(pkg).depth(0)), APP_LAUNCH_WAIT_TIME_MS)) {
+            throw new IllegalStateException(
+                    String.format("Did not find package, %s, in foreground.", pkg));
         }
     }
 
