@@ -33,6 +33,7 @@ java_library_static {
     ],
     libs: [
         "androidx.test.runner",
+        "common-platform-scenarios",
         "guava",
         "platform-test-composers",
     ],

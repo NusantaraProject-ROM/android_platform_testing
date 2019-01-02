@@ -20,6 +20,7 @@ import android.app.Instrumentation;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.platform.test.scenario.annotation.Scenario;
 import androidx.annotation.VisibleForTesting;
 import androidx.test.InstrumentationRegistry;
 
@@ -27,6 +28,7 @@ import java.util.function.BiFunction;
 import java.util.List;
 
 import org.junit.runner.Runner;
+import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
@@ -74,6 +76,29 @@ public class ProfileSuite extends LongevitySuite {
         if (annotation == null) {
             throw new InitializationError(String.format(
                     "Longevity suite, '%s', must have a SuiteClasses annotation", suite.getName()));
+        }
+        // Validate that runnable scenarios are passed into the suite.
+        for (Class<?> scenario : annotation.value()) {
+            Runner runner = null;
+            try {
+                runner = builder.runnerForClass(scenario);
+            } catch (Throwable t) {
+                throw new InitializationError(t);
+            }
+            // All scenarios must be annotated with @Scenario.
+            if (scenario.getAnnotation(Scenario.class) == null) {
+                throw new InitializationError(
+                        String.format(
+                                "%s is not annotated with @Scenario.",
+                                runner.getDescription().getDisplayName()));
+            }
+            // All scenarios must extend BlockJUnit4ClassRunner.
+            if (!(runner instanceof BlockJUnit4ClassRunner)) {
+                throw new InitializationError(
+                        String.format(
+                                "All runners must extend BlockJUnit4ClassRunner. %s:%s doesn't.",
+                                runner.getClass(), runner.getDescription().getDisplayName()));
+            }
         }
         // Construct and store custom runners for the full suite.
         BiFunction<Bundle, List<Runner>, List<Runner>> modifier = new Profile(args);
