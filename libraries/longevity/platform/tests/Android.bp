@@ -20,11 +20,13 @@ android_test {
     sdk_version: "24",
     static_libs: [
         "androidx.test.runner",
+        "common-platform-scenarios",
         "guava",
         "longevity-device-lib",
         "mockito-target",
         "platform-test-composers",
         "truth-prebuilt",
+        "ub-uiautomator",
     ],
     srcs: ["src/**/*.java"],
     test_suites: ["device-tests"],
