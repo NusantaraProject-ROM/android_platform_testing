@@ -93,7 +93,7 @@ public class BaseMetricListener extends InstrumentationRunListener {
      * for testing.
      */
     @VisibleForTesting
-    BaseMetricListener(Bundle argsBundle) {
+    protected BaseMetricListener(Bundle argsBundle) {
         this();
         mArgsBundle = argsBundle;
     }
