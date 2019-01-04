@@ -41,13 +41,17 @@ public class PerfettoHelper {
     private static final String PERFETTO_TMP_OUTPUT_FILE =
             "/data/misc/perfetto-traces/trace_output.pb";
     // Command to stop (i.e kill) the perfetto tracing.
-    private static final String PERFETTO_STOP_CMD = "pkill perfetto";
+    private static final String PERFETTO_STOP_CMD = "pkill -INT perfetto";
     // Command to check the perfetto process id.
     private static final String PERFETTO_PROC_ID_CMD = "pidof perfetto";
     // Remove the trace output file /data/misc/perfetto-traces/trace_output.pb
     private static final String REMOVE_CMD = "rm %s";
     // Command to move the perfetto output trace file to given folder.
     private static final String MOVE_CMD = "mv %s %s";
+    // Max wait count for checking if perfetto is stopped successfully
+    private static final int PERFETTO_KILL_WAIT_COUNT = 12;
+    // Check if perfetto is stopped every 5 secs.
+    private static final long PERFETTO_KILL_WAIT_TIME = 5000;
 
     private UiDevice mUIDevice;
 
@@ -99,8 +103,8 @@ public class PerfettoHelper {
     }
 
     /**
-     * Stop the perfetto trace collection under /data/misc/perfetto-traces/trace_output.pb
-     * after waiting for given time in msecs and copy the output to the destination file.
+     * Stop the perfetto trace collection under /data/misc/perfetto-traces/trace_output.pb after
+     * waiting for given time in msecs and copy the output to the destination file.
      *
      * @param waitTimeInMsecs time to wait in msecs before stopping the trace collection.
      * @param destinationFile file to copy the perfetto output trace.
@@ -138,7 +142,15 @@ public class PerfettoHelper {
     private boolean stopPerfetto() throws IOException {
         String stopOutput = mUIDevice.executeShellCommand(PERFETTO_STOP_CMD);
         Log.i(LOG_TAG, String.format("Perfetto stop command output - %s", stopOutput));
-        if (isPerfettoRunning()) {
+        int waitCount = 0;
+        while (isPerfettoRunning()) {
+            // 60 secs timeout for perfetto shutdown.
+            if (waitCount < PERFETTO_KILL_WAIT_COUNT) {
+                // Check every 5 secs if perfetto stopped successfully.
+                SystemClock.sleep(PERFETTO_KILL_WAIT_TIME);
+                waitCount++;
+                continue;
+            }
             return false;
         }
         Log.e(LOG_TAG, "Perfetto stopped successfully.");
