@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * AppStartupHelper consist of helper methods to set the app
@@ -41,6 +42,8 @@ public class AppStartupHelper implements ICollectorHelper<StringBuilder> {
     private static final String COLD_STARTUP = "cold_startup";
     private static final String WARM_STARTUP = "warm_startup";
     private static final String HOT_STARTUP = "hot_startup";
+    private static final String COUNT = "count";
+    private static final String TOTAL_COUNT = "total_count";
 
     private static final String STARTUP_FULLY_DRAWN_UNKNOWN = "startup_fully_drawn_unknown";
     private static final String STARTUP_FULLY_DRAWN_WITH_BUNDLE = "startup_fully_drawn_with_bundle";
@@ -68,6 +71,7 @@ public class AppStartupHelper implements ICollectorHelper<StringBuilder> {
     public Map<String, StringBuilder> getMetrics() {
         List<EventMetricData> eventMetricData = mStatsdHelper.getEventMetrics();
         Map<String, StringBuilder> appStartResultMap = new HashMap<>();
+        Map<String, Integer> appStartCountMap = new HashMap<>();
         for (EventMetricData dataItem : eventMetricData) {
             Atom atom = dataItem.getAtom();
             if (atom.hasAppStartOccurred()) {
@@ -80,21 +84,33 @@ public class AppStartupHelper implements ICollectorHelper<StringBuilder> {
                         pkgName, transitionType, windowsDrawnMillis));
 
                 String metricKey = "";
+                // To track number of startups per type per package.
+                String metricCountKey = "";
+                // To track total number of startups per type.
+                String totalCountKey = "";
                 switch (appStartAtom.getType()) {
                     case COLD:
                         metricKey = MetricUtility.constructKey(COLD_STARTUP, pkgName);
+                        metricCountKey = MetricUtility.constructKey(COLD_STARTUP, COUNT, pkgName);
+                        totalCountKey = MetricUtility.constructKey(COLD_STARTUP, TOTAL_COUNT);
                         break;
                     case WARM:
                         metricKey = MetricUtility.constructKey(WARM_STARTUP, pkgName);
+                        metricCountKey = MetricUtility.constructKey(WARM_STARTUP, COUNT, pkgName);
+                        totalCountKey = MetricUtility.constructKey(WARM_STARTUP, TOTAL_COUNT);
                         break;
                     case HOT:
                         metricKey = MetricUtility.constructKey(HOT_STARTUP, pkgName);
+                        metricCountKey = MetricUtility.constructKey(HOT_STARTUP, COUNT, pkgName);
+                        totalCountKey = MetricUtility.constructKey(HOT_STARTUP, TOTAL_COUNT);
                         break;
                     case UNKNOWN:
                         break;
                 }
                 if (!metricKey.isEmpty()) {
                     MetricUtility.addMetric(metricKey, windowsDrawnMillis, appStartResultMap);
+                    MetricUtility.addMetric(metricCountKey, appStartCountMap);
+                    MetricUtility.addMetric(totalCountKey, appStartCountMap);
                 }
             } else if (atom.hasAppStartFullyDrawn()) {
                 AppStartFullyDrawn appFullyDrawnAtom = atom.getAppStartFullyDrawn();
@@ -124,6 +140,16 @@ public class AppStartupHelper implements ICollectorHelper<StringBuilder> {
                 }
             }
         }
+        // Cast to StringBuilder as the raw app startup metric could be comma separated values
+        // if there are multiple app launches.
+        Map<String, StringBuilder> finalCountMap = appStartCountMap
+                .entrySet()
+                .stream()
+                .collect(
+                        Collectors.toMap(Map.Entry::getKey,
+                                e -> new StringBuilder(Integer.toString(e.getValue()))));
+        // Add the count map in the app start result map.
+        appStartResultMap.putAll(finalCountMap);
         return appStartResultMap;
     }
 
