@@ -284,6 +284,25 @@ public class BaseMetricListener extends InstrumentationRunListener {
     }
 
     /**
+     * Delete a directory and all the file inside.
+     *
+     * @param rootDir the {@link File} directory to delete.
+     */
+    public void recursiveDelete(File rootDir) {
+        if (rootDir != null) {
+            if (rootDir.isDirectory()) {
+                File[] childFiles = rootDir.listFiles();
+                if (childFiles != null) {
+                    for (File child : childFiles) {
+                        recursiveDelete(child);
+                    }
+                }
+            }
+            rootDir.delete();
+        }
+    }
+
+    /**
      * Returns the name of the current class to be used as a logging tag.
      */
     String getTag() {
