@@ -42,7 +42,7 @@ public class SettingsJankTests extends JankTestBase {
     private static final int TIMEOUT = 5000;
     private static final String SETTINGS_PACKAGE = "com.android.settings";
     private static final BySelector SETTINGS_DASHBOARD = By.res(SETTINGS_PACKAGE,
-            "dashboard_container");
+            "main_content_scrollable_container");
     // short transitions should be repeated within the test function, otherwise frame stats
     // captured are not really meaningful in a statistical sense
     private static final int INNER_LOOP = 2;
