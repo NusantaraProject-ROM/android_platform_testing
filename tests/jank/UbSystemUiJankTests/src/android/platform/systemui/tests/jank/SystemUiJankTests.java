@@ -277,7 +277,7 @@ public class SystemUiJankTests extends JankTestBase {
                 PendingIntent.FLAG_UPDATE_CURRENT);
         Icon icon = Icon.createWithResource(context, ICONS[0]);
         return new Action.Builder(icon, actionTitle, pendingIntent)
-                .setSemanticAction(Action.SEMANTIC_ACTION_CONTEXTUAL_SUGGESTION)
+                .setContextual(true)
                 .build();
     }
 
