@@ -50,6 +50,8 @@ public class AppStartupHelperTest {
     private static final String SETTINGS_PKG_NAME = "com.android.settings";
     // Key prefixes to store the cold, warm or hot launch time of the calendar app, respectively.
     private static final String COLD_LAUNCH_KEY_TEMPLATE = "cold_startup_%s";
+    private static final String COLD_LAUNCH_COUNT_PKG_KEY_TEMPLATE = "cold_startup_count_%s";
+    private static final String COLD_LAUNCH_TOTAL_COUNT_KEY_TEMPLATE = "cold_startup_total_count";
     private static final String WARM_LAUNCH_KEY_TEMPLATE = "warm_startup_%s";
     private static final String HOT_LAUNCH_KEY_TEMPLATE = "hot_startup_%s";
     // Keyword for keys to store the app startup fully drawn metric.
@@ -92,7 +94,7 @@ public class AppStartupHelperTest {
     }
 
     /**
-     * Test cold launch metric.
+     * Test single cold launch metric.
      */
     @Test
     public void testSingleColdLaunchMetric() throws Exception {
@@ -101,8 +103,13 @@ public class AppStartupHelperTest {
         Map<String, StringBuilder> appLaunchMetrics = mAppStartupHelper.getMetrics();
         // A metric key for the app cold launching should exist, and should only hold one value.
         String coldLaunchMetricKey = String.format(COLD_LAUNCH_KEY_TEMPLATE, CALENDAR_PKG_NAME);
+        String coldLaunchCountPkgKey = String.format(COLD_LAUNCH_COUNT_PKG_KEY_TEMPLATE,
+                CALENDAR_PKG_NAME);
         assertTrue(appLaunchMetrics.keySet().contains(coldLaunchMetricKey));
         assertEquals(1, appLaunchMetrics.get(coldLaunchMetricKey).toString().split(",").length);
+        assertEquals(1, Integer.parseInt(appLaunchMetrics.get(coldLaunchCountPkgKey).toString()));
+        assertEquals(1, Integer.parseInt(appLaunchMetrics.get(COLD_LAUNCH_TOTAL_COUNT_KEY_TEMPLATE)
+                .toString()));
         assertTrue(mAppStartupHelper.stopCollecting());
         mHelper.get().exit();
     }
@@ -121,10 +128,61 @@ public class AppStartupHelperTest {
         Map<String, StringBuilder> appLaunchMetrics = mAppStartupHelper.getMetrics();
         // A metric key for the app cold launching should exist, and should hold two values.
         String coldLaunchMetricKey = String.format(COLD_LAUNCH_KEY_TEMPLATE, CALENDAR_PKG_NAME);
+        String coldLaunchCountPkgKey = String.format(COLD_LAUNCH_COUNT_PKG_KEY_TEMPLATE,
+                CALENDAR_PKG_NAME);
         assertTrue(appLaunchMetrics.keySet().contains(coldLaunchMetricKey));
         assertEquals(2, appLaunchMetrics.get(coldLaunchMetricKey).toString().split(",").length);
+        assertEquals(2, Integer.parseInt(appLaunchMetrics.get(coldLaunchCountPkgKey).toString()));
+        assertEquals(2, Integer.parseInt(appLaunchMetrics.get(COLD_LAUNCH_TOTAL_COUNT_KEY_TEMPLATE)
+                .toString()));
         assertTrue(mAppStartupHelper.stopCollecting());
         mHelper.get().exit();
+    }
+
+    /**
+     * Test cold launch metric of two different apps.
+     */
+    @Test
+    public void testDifferentAppColdLaunchMetric() throws Exception {
+
+        // Open the calendar app.
+        assertTrue(mAppStartupHelper.startCollecting());
+        mHelper.get().open();
+        SystemClock.sleep(HelperTestUtility.ACTION_DELAY);
+        mHelper.get().exit();
+        HelperTestUtility.clearApp(String.format(KILL_TEST_APP_CMD_TEMPLATE, CALENDAR_PKG_NAME));
+
+        // Open settings app
+        HelperTestUtility.launchPackageViaAdb(SETTINGS_PKG_NAME);
+        SystemClock.sleep(HelperTestUtility.ACTION_DELAY);
+        HelperTestUtility.sendKeyCode(KEYCODE_HOME);
+        SystemClock.sleep(HelperTestUtility.ACTION_DELAY);
+        HelperTestUtility.clearApp(String.format(KILL_TEST_APP_CMD_TEMPLATE, SETTINGS_PKG_NAME));
+        SystemClock.sleep(HelperTestUtility.ACTION_DELAY);
+
+        Map<String, StringBuilder> appLaunchMetrics = mAppStartupHelper.getMetrics();
+        String coldLaunchCalendarMetricKey = String.format(COLD_LAUNCH_KEY_TEMPLATE,
+                CALENDAR_PKG_NAME);
+        String coldLaunchSettingsMetricKey = String.format(COLD_LAUNCH_KEY_TEMPLATE,
+                SETTINGS_PKG_NAME);
+        String coldLaunchCalendarCountPkgKey = String.format(COLD_LAUNCH_COUNT_PKG_KEY_TEMPLATE,
+                CALENDAR_PKG_NAME);
+        String coldLaunchSettingsCountPkgKey = String.format(COLD_LAUNCH_COUNT_PKG_KEY_TEMPLATE,
+                CALENDAR_PKG_NAME);
+        assertTrue(appLaunchMetrics.keySet().contains(coldLaunchCalendarMetricKey));
+        assertTrue(appLaunchMetrics.keySet().contains(coldLaunchSettingsMetricKey));
+        assertEquals(1,
+                appLaunchMetrics.get(coldLaunchCalendarMetricKey).toString().split(",").length);
+        assertEquals(1,
+                appLaunchMetrics.get(coldLaunchSettingsCountPkgKey).toString().split(",").length);
+        assertEquals(1,
+                Integer.parseInt(appLaunchMetrics.get(coldLaunchCalendarCountPkgKey).toString()));
+        assertEquals(1,
+                Integer.parseInt(appLaunchMetrics.get(coldLaunchSettingsCountPkgKey).toString()));
+        assertEquals(2, Integer.parseInt(appLaunchMetrics.get(COLD_LAUNCH_TOTAL_COUNT_KEY_TEMPLATE)
+                .toString()));
+        assertTrue(mAppStartupHelper.stopCollecting());
+
     }
 
     /**
