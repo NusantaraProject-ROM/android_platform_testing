@@ -31,6 +31,7 @@ native_tests := \
     bugreportz_test \
     bsdiff_unittest \
     camera_client_test \
+    clatd_test \
     crashcollector \
     debuggerd_test \
     dumpstate_test \
