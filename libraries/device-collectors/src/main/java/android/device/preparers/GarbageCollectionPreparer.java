@@ -52,10 +52,15 @@ public final class GarbageCollectionPreparer extends BaseMetricListener {
     @VisibleForTesting
     static final String GC_WAIT_TIME_KEY = "garbagecollection-wait-time";
 
-    private GarbageCollectionHelper mGcHelper = new GarbageCollectionHelper();
+    private final GarbageCollectionHelper mGcHelper;
     // Whether the preparer successfully set up and initialized.
     private boolean mSetUp;
     private Long mWaitTime;
+
+    public GarbageCollectionPreparer() {
+        super();
+        mGcHelper = new GarbageCollectionHelper();
+    }
 
     /**
      * Constructor to simulate receiving the instrumentation arguments. Should not be used except
