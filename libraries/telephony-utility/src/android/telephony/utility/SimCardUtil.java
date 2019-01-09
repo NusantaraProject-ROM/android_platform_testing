@@ -19,11 +19,22 @@ import android.app.Instrumentation;
 import android.content.Context;
 import android.device.collectors.util.SendToInstrumentation;
 import android.os.Bundle;
+import android.se.omapi.Channel;
+import android.se.omapi.Reader;
+import android.se.omapi.SEService;
+import android.se.omapi.SEService.OnConnectedListener;
+import android.se.omapi.Session;
 import android.telephony.TelephonyManager;
+
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.Executor;
 
 import androidx.test.InstrumentationRegistry;
 import androidx.test.runner.AndroidJUnit4;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -38,6 +49,32 @@ public class SimCardUtil {
 
     private static final String SIM_STATE = "sim_state";
     private static final String CARRIER_PRIVILEGES = "has_carried_privileges";
+    private static final String SECURED_ELEMENT = "has_secured_element";
+    private static final String SE_SERVICE = "has_se_service";
+
+    private final long SERVICE_CONNECTION_TIME_OUT = 3000;
+
+    private SEService mSeService;
+    private Object mServiceMutex = new Object();
+    private Timer mConnectionTimer;
+    private ServiceConnectionTimerTask mTimerTask = new ServiceConnectionTimerTask();
+    private boolean mConnected = false;
+    private final OnConnectedListener mListener = new OnConnectedListener() {
+                @Override
+                public void onConnected() {
+                    synchronized (mServiceMutex) {
+                        mConnected = true;
+                        mServiceMutex.notify();
+                    }
+                }
+            };
+
+    @Before
+    public void setUp() throws Exception {
+        mSeService = new SEService(InstrumentationRegistry.getContext(), new SynchronousExecutor(), mListener);
+        mConnectionTimer = new Timer();
+        mConnectionTimer.schedule(mTimerTask, SERVICE_CONNECTION_TIME_OUT);
+    }
 
     @Test
     public void getSimCardInformation() throws Exception {
@@ -57,6 +94,59 @@ public class SimCardUtil {
         boolean carrierPrivileges = tm.hasCarrierPrivileges();
         returnBundle.putBoolean(CARRIER_PRIVILEGES, carrierPrivileges);
 
+        // Secured element check
+        if (waitForConnection()) {
+            Reader[] readers = mSeService.getReaders();
+            for (Reader reader : readers) {
+                returnBundle.putBoolean(SECURED_ELEMENT, reader.isSecureElementPresent());
+                returnBundle.putBoolean(SE_SERVICE, reader.getSEService() != null ? true : false);
+            }
+        } else {
+            returnBundle.putBoolean(SECURED_ELEMENT, false);
+            returnBundle.putBoolean(SE_SERVICE, false);
+        }
         SendToInstrumentation.sendBundle(instrumentation, returnBundle);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        if (mSeService != null && mSeService.isConnected()) {
+            mSeService.shutdown();
+            mConnected = false;
+        }
+    }
+
+    private boolean waitForConnection() {
+        synchronized (mServiceMutex) {
+            if (!mConnected) {
+                try {
+                    mServiceMutex.wait();
+                } catch (InterruptedException e) {
+                    return false;
+                }
+            }
+            if (!mConnected) {
+                return false;
+            }
+            if (mConnectionTimer != null) {
+                mConnectionTimer.cancel();
+            }
+            return true;
+        }
+    }
+
+    private class SynchronousExecutor implements Executor {
+        public void execute(Runnable r) {
+            r.run();
+        }
+    }
+
+    private class ServiceConnectionTimerTask extends TimerTask {
+        @Override
+        public void run() {
+            synchronized (mServiceMutex) {
+                mServiceMutex.notifyAll();
+            }
+        }
     }
 }
