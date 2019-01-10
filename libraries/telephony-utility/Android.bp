@@ -26,5 +26,5 @@ android_test {
         "junit",
     ],
 
-    sdk_version: "22",
+    sdk_version: "28",
 }
