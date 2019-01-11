@@ -56,6 +56,7 @@ native_tests := \
     libandroidfw_tests \
     libappfuse_test \
     libbase_test \
+    libbpf_android_test \
     libcutils_test \
     libcutils_test_static \
     libdemangle_test \
@@ -65,6 +66,7 @@ native_tests := \
     libjavacore-unit-tests \
     liblog-unit-tests \
     libminijail_unittest_gtest \
+    libnetdbpf_test \
     libperfmgr_test \
     libprocinfo_test \
     libtextclassifier_tests \
