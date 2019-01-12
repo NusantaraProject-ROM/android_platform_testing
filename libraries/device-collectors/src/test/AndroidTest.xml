@@ -22,6 +22,7 @@
     <test class="com.android.tradefed.testtype.AndroidJUnitTest" >
         <option name="package" value="android.device.collectors" />
         <option name="runtime-hint" value="5s" />
+        <option name="exclude-filter" value="android.device.tests.TestEvents" />
     </test>
 </configuration>
 
