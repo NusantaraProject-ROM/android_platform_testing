@@ -70,6 +70,7 @@ public class DeviceCollectorsTest extends BaseHostJUnit4Test {
                 new RemoteAndroidTestRunner(PACKAGE_NAME, AJUR_RUNNER, getDevice().getIDevice());
         // Set the new runListener order to ensure test cases can show their metrics.
         mTestRunner.addInstrumentationArg(AndroidJUnitTest.NEW_RUN_LISTENER_ORDER_KEY, "true");
+        mTestRunner.addInstrumentationArg("notClass", "android.device.tests.TestEvents");
         mContext = mock(IInvocationContext.class);
         doReturn(Arrays.asList(getDevice())).when(mContext).getDevices();
         doReturn(Arrays.asList(getBuild())).when(mContext).getBuildInfos();
@@ -81,6 +82,7 @@ public class DeviceCollectorsTest extends BaseHostJUnit4Test {
     @Test
     public void testBaseListenerRuns() throws Exception {
         mTestRunner.addInstrumentationArg("listener", STUB_BASE_COLLECTOR);
+        mTestRunner.setClassName("android.device.collectors.BaseMetricListenerInstrumentedTest");
         CollectingTestListener listener = new CollectingTestListener();
         assertTrue(getDevice().runInstrumentationTests(mTestRunner, listener));
         Collection<TestRunResult> results = listener.getRunResults();
