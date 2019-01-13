@@ -18,20 +18,15 @@ package android.platform.test.longevity.samples;
 
 import android.platform.test.longevity.ProfileSuite;
 
-import org.junit.Assert;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(ProfileSuite.class)
 @SuiteClasses({
     SimpleSuite.PassingTest.class,
-    SimpleSuite.FailingTest.class
+    SimpleSuite.FailingTest.class,
 })
-
-/**
- * Sample device-side test cases using a profile.
- */
+/** Sample device-side test cases using a profile. */
 public class SimpleProfile {
-    // no local test cases.
+    // No local test cases.
 }

@@ -56,7 +56,7 @@ android.platform.test.longevity.samples/androidx.test.runner.AndroidJUnitRunner`
 **Run a suite using the sample profile under assets/**
 
 `adb shell am instrument -w -r -e profile sample_profile
--e class android.platform.test.longevity.samples.SimpleProfileSuite
+-e class android.platform.test.longevity.samples.SimpleProfile
 android.platform.test.longevity.samples/androidx.test.runner.AndroidJUnitRunner`
 
 ## Options

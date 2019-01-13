@@ -87,6 +87,7 @@ public class BatterystatsCollectorHostTest extends BaseHostJUnit4Test {
         mTestRunner.addInstrumentationArg("listener", BATTERYSTATS_COLLECTOR);
         mTestRunner.addInstrumentationArg("batterystats-format", "file:batterystats-log");
         mTestRunner.addInstrumentationArg("batterystats-per-run", "true");
+        mTestRunner.setClassName("android.device.collectors.BatteryStatsListenerTest");
         CollectingTestListener listener = new CollectingTestListener();
         FilePullerDeviceMetricCollector collector = new FilePullerDeviceMetricCollector() {
             @Override
@@ -137,6 +138,7 @@ public class BatterystatsCollectorHostTest extends BaseHostJUnit4Test {
         mTestRunner.addInstrumentationArg("listener", BATTERYSTATS_COLLECTOR);
         mTestRunner.addInstrumentationArg("batterystats-format", "file:batterystats-log");
         mTestRunner.addInstrumentationArg("batterystats-per-run", "false");
+        mTestRunner.setClassName("android.device.collectors.BatteryStatsListenerTest");
         CollectingTestListener listener = new CollectingTestListener();
         FilePullerDeviceMetricCollector collector = new FilePullerDeviceMetricCollector() {
             @Override

@@ -17,6 +17,7 @@
 package android.platform.test.longevity.samples;
 
 import android.platform.test.longevity.LongevitySuite;
+import android.platform.test.scenario.annotation.Scenario;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -35,6 +36,7 @@ import org.junit.runners.Suite.SuiteClasses;
 public class SimpleSuite {
     // no local test cases.
 
+    @Scenario
     @RunWith(JUnit4.class)
     public static class PassingTest {
         @Test
@@ -43,6 +45,7 @@ public class SimpleSuite {
         }
     }
 
+    @Scenario
     @RunWith(JUnit4.class)
     public static class FailingTest {
         @Test

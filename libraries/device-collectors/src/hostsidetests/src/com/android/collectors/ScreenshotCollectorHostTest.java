@@ -65,6 +65,7 @@ public class ScreenshotCollectorHostTest extends BaseHostJUnit4Test {
         assertTrue(isPackageInstalled(PACKAGE_NAME));
         mTestRunner =
                 new RemoteAndroidTestRunner(PACKAGE_NAME, AJUR_RUNNER, getDevice().getIDevice());
+        mTestRunner.setClassName("android.device.tests.TestEvents");
         mContext = mock(IInvocationContext.class);
         doReturn(Arrays.asList(getDevice())).when(mContext).getDevices();
         doReturn(Arrays.asList(getBuild())).when(mContext).getBuildInfos();

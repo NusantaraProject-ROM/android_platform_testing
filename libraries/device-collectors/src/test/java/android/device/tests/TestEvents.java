@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package android.device.tests;
 
-package android.platform.test.scenario.annotation;
+import androidx.test.runner.AndroidJUnit4;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
-/**
- * Identifies a top-level platform scenario.
- */
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.METHOD})
-public @interface Scenario {}
+import static org.junit.Assert.assertTrue;
+
+/** A class used to trigger events (pass, fail, etc.) so we can tests the collectors. */
+@RunWith(AndroidJUnit4.class)
+public final class TestEvents {
+
+    @Test
+    public void testPass() {}
+
+    @Test
+    public void testFail() {
+        assertTrue(false);
+    }
+}
