@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.helpers.tests;
+package com.android.helpers;
 
 import android.platform.helpers.HelperAccessor;
 import android.platform.helpers.ICalendarHelper;
@@ -52,7 +52,7 @@ public class CpuUsageHelperTest {
     // Key used for total CPU usage in frequency buckets
     private static final String TOTAL_CPU_USAGE_FREQ = "total_cpu_usage_freq";
 
-    private CpuUsageHelper mCpuUsageHelper = new CpuUsageHelper();
+    private CpuUsageHelper mCpuUsageHelper;
     private HelperAccessor<ICalendarHelper> mHelper =
             new HelperAccessor<>(ICalendarHelper.class);
 
@@ -146,5 +146,63 @@ public class CpuUsageHelperTest {
         mHelper.get().exit();
     }
 
-}
+    /**
+     * Test cpu usage metrics are not collected per pkg and per freq
+     * and collected only total cpu usage by freq and packages.
+     */
+    @Test
+    public void testCpuDisabledPerPkgPerFreq() throws Exception {
+        mCpuUsageHelper.setDisablePerPackage();
+        mCpuUsageHelper.setDisablePerFrequency();
+        assertTrue(mCpuUsageHelper.startCollecting());
+        mHelper.get().open();
+        Map<String, Long> cpuUsage = mCpuUsageHelper.getMetrics();
+        assertTrue(cpuUsage.size() == 2);
+        assertTrue(cpuUsage.containsKey(TOTAL_CPU_USAGE_FREQ));
+        assertTrue(cpuUsage.containsKey(TOTAL_CPU_USAGE));
+        assertTrue(mCpuUsageHelper.stopCollecting());
+        mHelper.get().exit();
+    }
 
+    /**
+     * Test cpu usage metrics are not collected per freq, total
+     * usage per freq and package and collected only cpu usage
+     * per package.
+     */
+    @Test
+    public void testCpuUsageOnlyPerPkg() throws Exception {
+        mCpuUsageHelper.setDisableTotalPackage();
+        mCpuUsageHelper.setDisableTotalFrequency();
+        mCpuUsageHelper.setDisablePerFrequency();
+        assertTrue(mCpuUsageHelper.startCollecting());
+        mHelper.get().open();
+        Map<String, Long> cpuUsage = mCpuUsageHelper.getMetrics();
+        assertTrue(cpuUsage.size() > 2);
+        for (Map.Entry<String, Long> cpuUsageEntry : mCpuUsageHelper.getMetrics().entrySet()) {
+            assertTrue(cpuUsageEntry.getKey().startsWith(CPU_USAGE_PKG_UID_PREFIX));
+        }
+        assertTrue(mCpuUsageHelper.stopCollecting());
+        mHelper.get().exit();
+    }
+
+    /**
+     * Test cpu usage metrics are not collected per package, total
+     * usage by freq and by packages and collected only cpu usage
+     * per frequency.
+     */
+    @Test
+    public void testCpuUsageOnlyPerFreq() throws Exception {
+        mCpuUsageHelper.setDisableTotalPackage();
+        mCpuUsageHelper.setDisableTotalFrequency();
+        mCpuUsageHelper.setDisablePerPackage();
+        assertTrue(mCpuUsageHelper.startCollecting());
+        mHelper.get().open();
+        Map<String, Long> cpuUsage = mCpuUsageHelper.getMetrics();
+        assertTrue(cpuUsage.size() > 2);
+        for (Map.Entry<String, Long> cpuUsageEntry : mCpuUsageHelper.getMetrics().entrySet()) {
+            assertTrue(cpuUsageEntry.getKey().startsWith(CPU_USAGE_FREQ_PREFIX));
+        }
+        assertTrue(mCpuUsageHelper.stopCollecting());
+        mHelper.get().exit();
+    }
+}
