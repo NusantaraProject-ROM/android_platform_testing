@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.helpers.tests;
+package com.android.helpers;
 
 import android.app.KeyguardManager;
 import android.content.Context;
