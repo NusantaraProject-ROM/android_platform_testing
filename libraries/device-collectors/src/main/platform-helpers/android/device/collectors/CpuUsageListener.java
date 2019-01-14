@@ -16,6 +16,7 @@
 package android.device.collectors;
 
 import android.device.collectors.annotations.OptionClass;
+import android.os.Bundle;
 
 import com.android.helpers.CpuUsageHelper;
 
@@ -27,8 +28,38 @@ import com.android.helpers.CpuUsageHelper;
  */
 @OptionClass(alias = "cpuusage-collector")
 public class CpuUsageListener extends BaseCollectionListener<Long> {
+
+    private static final String DISABLE_PER_PACKAGE = "disable_per_pkg";
+    private static final String DISABLE_PER_FREQ = "disable_per_freq";
+    private static final String DISABLE_TOTAL_PKG = "disable_total_pkg";
+    private static final String DISABLE_TOTAL_FREQ = "disable_total_freq";
+
     public CpuUsageListener() {
         createHelperInstance(new CpuUsageHelper());
+    }
+
+    /**
+     * Adds the options to filter the cpu usage metrics collected.
+     */
+    @Override
+    public void setupAdditionalArgs() {
+        Bundle args = getArgsBundle();
+        CpuUsageHelper cpuUsageHelper = (CpuUsageHelper) mHelper;
+        if ("true".equals(args.getString(DISABLE_PER_PACKAGE))) {
+            cpuUsageHelper.setDisablePerPackage();
+        }
+
+        if ("true".equals(args.getString(DISABLE_PER_FREQ))) {
+            cpuUsageHelper.setDisablePerFrequency();
+        }
+
+        if ("true".equals(args.getString(DISABLE_TOTAL_PKG))) {
+            cpuUsageHelper.setDisableTotalPackage();
+        }
+
+        if ("true".equals(args.getString(DISABLE_TOTAL_FREQ))) {
+            cpuUsageHelper.setDisableTotalFrequency();
+        }
     }
 }
 
