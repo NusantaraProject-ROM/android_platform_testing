@@ -21,6 +21,7 @@ import android.util.Log;
 import com.android.os.AtomsProto.Atom;
 import com.android.os.StatsLog.GaugeBucketInfo;
 import com.android.os.StatsLog.GaugeMetricData;
+
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 
@@ -48,7 +49,10 @@ public class CpuUsageHelper implements ICollectorHelper<Long> {
     private static final String SYSTEM_TIME = "system_time";
 
     private StatsdHelper mStatsdHelper = new StatsdHelper();
-
+    private boolean isPerFreqDisabled;
+    private boolean isPerPkgDisabled;
+    private boolean isTotalPkgDisabled;
+    private boolean isTotalFreqDisabled;
 
     @Override
     public boolean startCollecting() {
@@ -60,7 +64,6 @@ public class CpuUsageHelper implements ICollectorHelper<Long> {
 
         return mStatsdHelper.addGaugeConfig(atomIdList);
     }
-
 
     @Override
     public Map<String, Long> getMetrics() {
@@ -129,19 +132,32 @@ public class CpuUsageHelper implements ICollectorHelper<Long> {
                         - cpuUsageList.get(0);
                 // Add the final result only if the cpu usage is greater than 0.
                 if (cpuUsage > 0) {
-                    cpuUsageFinalMap.put(key, cpuUsage);
+                    if (key.startsWith(CPU_USAGE_PKG_UID)
+                            && !isPerPkgDisabled) {
+                        cpuUsageFinalMap.put(key, cpuUsage);
+                    }
+                    if (key.startsWith(CPU_USAGE_FREQ)
+                            && !isPerFreqDisabled) {
+                        cpuUsageFinalMap.put(key, cpuUsage);
+                    }
                 }
                 // Add the CPU time to their respective (usage or frequency) total metric.
-                if (key.startsWith(CPU_USAGE_PKG_UID)) {
+                if (key.startsWith(CPU_USAGE_PKG_UID)
+                        && !isTotalPkgDisabled) {
                     totalCpuUsage += cpuUsage;
-                } else if (key.startsWith(CPU_USAGE_FREQ)) {
+                } else if (key.startsWith(CPU_USAGE_FREQ)
+                        && !isTotalFreqDisabled) {
                     totalCpuFreq += cpuUsage;
                 }
             }
         }
         // Put the total results into the final result map.
-        cpuUsageFinalMap.put(TOTAL_CPU_USAGE, totalCpuUsage);
-        cpuUsageFinalMap.put(TOTAL_CPU_USAGE_FREQ, totalCpuFreq);
+        if (!isTotalPkgDisabled) {
+            cpuUsageFinalMap.put(TOTAL_CPU_USAGE, totalCpuUsage);
+        }
+        if (!isTotalFreqDisabled) {
+            cpuUsageFinalMap.put(TOTAL_CPU_USAGE_FREQ, totalCpuFreq);
+        }
         return cpuUsageFinalMap;
     }
 
@@ -151,5 +167,33 @@ public class CpuUsageHelper implements ICollectorHelper<Long> {
     @Override
     public boolean stopCollecting() {
         return mStatsdHelper.removeStatsConfig();
+    }
+
+    /**
+     * Disable the cpu metric collection per package.
+     */
+    public void setDisablePerPackage() {
+        isPerPkgDisabled = true;
+    }
+
+    /**
+     * Disable the cpu metric collection per frequency.
+     */
+    public void setDisablePerFrequency() {
+        isPerFreqDisabled = true;
+    }
+
+    /**
+     * Disable the total cpu metric collection by all the packages.
+     */
+    public void setDisableTotalPackage() {
+        isTotalPkgDisabled = true;
+    }
+
+    /**
+     * Disable the total cpu metric collection by all the frequency.
+     */
+    public void setDisableTotalFrequency() {
+        isTotalFreqDisabled = true;
     }
 }
