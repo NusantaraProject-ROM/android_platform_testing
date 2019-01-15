@@ -180,8 +180,7 @@ public class SystemUiJankTests extends JankTestBase {
     // Makes sure Recents is opened on the most recent task.
     public void resetRecents() throws RemoteException {
         mDevice.wakeUp();
-        mDevice.pressHome();
-        mLauncher.getWorkspace().switchToOverview();
+        mLauncher.pressHome().switchToOverview();
     }
 
     public void prepareNotifications(int groupMode) throws Exception {
