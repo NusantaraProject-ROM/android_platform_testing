@@ -125,7 +125,6 @@ native_tests := \
     update_engine_unittests \
     vintf_object_test \
     wificond_unit_test \
-    wifilogd_unit_test \
     ziparchive-tests \
     BufferHub_test \
     BufferHubServer_test \
