@@ -51,6 +51,9 @@ public class LongevitySuite extends android.host.test.longevity.LongevitySuite {
     private Instrumentation mInstrumentation;
     private Context mContext;
 
+    // Cached {@link TimeoutTerminator} instance.
+    private TimeoutTerminator mTimeoutTerminator;
+
     /**
      * Takes a {@link Bundle} and maps all String K/V pairs into a {@link Map<String, String>}.
      *
@@ -144,11 +147,16 @@ public class LongevitySuite extends android.host.test.longevity.LongevitySuite {
 
     /**
      * Returns the platform-specific {@link TimeoutTerminator} for Android devices.
+     *
+     * <p>This method will always return the same {@link TimeoutTerminator} instance.
      */
     @Override
     public android.host.test.longevity.listener.TimeoutTerminator getTimeoutTerminator(
             final RunNotifier notifier) {
-        return new TimeoutTerminator(notifier, mArguments);
+        if (mTimeoutTerminator == null) {
+            mTimeoutTerminator = new TimeoutTerminator(notifier, mArguments);
+        }
+        return mTimeoutTerminator;
     }
 
     /**

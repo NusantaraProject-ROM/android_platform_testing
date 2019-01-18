@@ -20,7 +20,7 @@ import android.app.Instrumentation;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.platform.test.scenario.annotation.Scenario;
+import android.platform.test.longevity.proto.Configuration.Scenario;
 import androidx.annotation.VisibleForTesting;
 import androidx.test.InstrumentationRegistry;
 
@@ -28,8 +28,8 @@ import java.util.function.BiFunction;
 import java.util.List;
 
 import org.junit.runner.Runner;
-import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runner.notification.RunNotifier;
+import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
 
@@ -40,8 +40,18 @@ import org.junit.runners.model.RunnerBuilder;
  * profile.
  */
 public class ProfileSuite extends LongevitySuite {
+    // An arbiturary leeway that hopefully allows the @After and @AfterClass methods of a scenario
+    // to finish execution.
+    @VisibleForTesting static final long ENDTIME_LEEWAY_MS = 3000;
+
+    private static final String LOG_TAG = ProfileSuite.class.getSimpleName();
+
     // Profile instance for scheduling tests.
     private Profile mProfile;
+    // Suite timeout for timing out the last scenario.
+    private long mSuiteTimeout;
+    // Cached {@link android.host.test.longevity.listener.TimeoutTerminator} instance.
+    private android.host.test.longevity.listener.TimeoutTerminator mTimeoutTerminator;
 
     /**
      * Called reflectively on classes annotated with {@code @RunWith(LongevitySuite.class)}
@@ -86,7 +96,8 @@ public class ProfileSuite extends LongevitySuite {
                 throw new InitializationError(t);
             }
             // All scenarios must be annotated with @Scenario.
-            if (scenario.getAnnotation(Scenario.class) == null) {
+            if (!scenario.isAnnotationPresent(
+                    android.platform.test.scenario.annotation.Scenario.class)) {
                 throw new InitializationError(
                         String.format(
                                 "%s is not annotated with @Scenario.",
@@ -105,28 +116,55 @@ public class ProfileSuite extends LongevitySuite {
         return modifier.apply(args, builder.runners(suite, annotation.value()));
     }
 
+    /** {@inheritDoc} */
     @Override
     public void run(final RunNotifier notifier) {
         // Set the test run start time in the profile composer and sleep until the first scheduled
         // test starts. When no profile is supplied, hasNextScheduledScenario() returns false and
         // no sleep is performed.
         if (mProfile.hasNextScheduledScenario()) {
-            mProfile.setTestRunStartTimeMillis(System.currentTimeMillis());
-            SystemClock.sleep(mProfile.getMillisecondsUntilNextScenario());
+            mProfile.setTestRunStartTimeMs(System.currentTimeMillis());
+            SystemClock.sleep(mProfile.getTimeUntilNextScenarioMs());
         }
         // Register other listeners and continue with standard longevity run.
         super.run(notifier);
     }
 
+    /** {@inheritDoc} */
     @Override
     protected void runChild(Runner runner, final RunNotifier notifier) {
-        super.runChild(runner, notifier);
-        mProfile.scenarioEnded();
-        // If there are remaining scenarios, Sleep until the next one starts.
-        // When no profile is supplied, hasNextSceduledScenario() returns false and no sleep is
-        // performed.
-        if (mProfile.hasNextScheduledScenario()) {
-            SystemClock.sleep(mProfile.getMillisecondsUntilNextScenario());
+        mProfile.scenarioStarted();
+        long timeout =
+                mProfile.hasNextScheduledScenario()
+                        ? mProfile.getTimeUntilNextScenarioMs()
+                        : (getTimeoutTerminator(notifier).getTotalSuiteTimeoutMs()
+                                - mProfile.getTimeSinceRunStartedMs());
+        super.runChild(
+                getScheduledRunner(
+                        // Cast is safe as runners have been verified to be BlockJUnit4Runner above.
+                        (BlockJUnit4ClassRunner) runner,
+                        mProfile.getCurrentScenario(),
+                        timeout,
+                        mProfile.hasNextScheduledScenario()),
+                notifier);
+    }
+
+    /**
+     * Replace a runner with {@link ScheduledScenarioRunner} for features specific to scheduled
+     * profiles.
+     */
+    @VisibleForTesting
+    protected ScheduledScenarioRunner getScheduledRunner(
+            BlockJUnit4ClassRunner runner, Scenario scenario, long timeout, boolean shouldIdle) {
+        Class<?> testClass = runner.getTestClass().getJavaClass();
+        try {
+            return new ScheduledScenarioRunner(testClass, scenario, timeout, shouldIdle);
+        } catch (InitializationError e) {
+            throw new RuntimeException(
+                    String.format(
+                            "Unable to run scenario %s with a scheduled runner.",
+                            runner.getDescription().getDisplayName()),
+                    e);
         }
     }
 }
