@@ -43,18 +43,17 @@ import java.util.Arrays;
  * Host side tests for the screenshot collector, this ensure that we are able to use the collectors
  * in a similar way as the infra.
  *
- * Command:
- * mm CollectorHostsideLibTest CollectorDeviceLibTest -j16
- * tradefed.sh run commandAndExit template/local_min --template:map test=CollectorHostsideLibTest
+ * <p>Command: mm CollectorHostsideLibTest CollectorDeviceLibTest -j16 tradefed.sh run
+ * commandAndExit template/local_min --template:map test=CollectorHostsideLibTest
  */
 @RunWith(DeviceJUnit4ClassRunner.class)
-public class ScreenshotCollectorHostTest extends BaseHostJUnit4Test {
+public class ScreenshotOnFailureCollectorHostTest extends BaseHostJUnit4Test {
     private static final String TEST_APK = "CollectorDeviceLibTest.apk";
     private static final String PACKAGE_NAME = "android.device.collectors";
     private static final String AJUR_RUNNER = "androidx.test.runner.AndroidJUnitRunner";
 
     private static final String SCREENSHOT_COLLECTOR =
-            "android.device.collectors.ScreenshotListener";
+            "android.device.collectors.ScreenshotOnFailureCollector";
 
     private RemoteAndroidTestRunner mTestRunner;
     private IInvocationContext mContext;
@@ -72,7 +71,7 @@ public class ScreenshotCollectorHostTest extends BaseHostJUnit4Test {
     }
 
     /**
-     * Test that ScreenshotListener collects screenshot and records to a file per test.
+     * Test that ScreenshotOnFailureCollector collects screenshot and records to a file per test.
      */
     @Test
     public void testScreenshotListener() throws Exception {
