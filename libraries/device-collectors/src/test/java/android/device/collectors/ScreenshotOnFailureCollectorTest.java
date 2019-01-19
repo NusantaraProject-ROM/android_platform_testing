@@ -24,6 +24,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.Description;
+import org.junit.runner.notification.Failure;
 import org.junit.runner.Result;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -44,13 +45,13 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 /**
- * Android Unit tests for {@link BatteryStatsListener}.
+ * Android Unit tests for {@link ScreenshotOnFailureCollector}.
  *
- * To run:
- * atest CollectorDeviceLibTest:android.device.collectors.ScreenshotListenerTest
+ * <p>To run: atest
+ * CollectorDeviceLibTest:android.device.collectors.ScreenshotOnFailureCollectorTest
  */
 @RunWith(AndroidJUnit4.class)
-public class ScreenshotListenerTest {
+public class ScreenshotOnFailureCollectorTest {
 
     private static final int NUM_TEST_CASE = 5;
 
@@ -58,7 +59,7 @@ public class ScreenshotListenerTest {
     private File mLogFile;
     private Description mRunDesc;
     private Description mTestDesc;
-    private ScreenshotListener mListener;
+    private ScreenshotOnFailureCollector mListener;
 
     @Mock
     private Instrumentation mInstrumentation;
@@ -82,8 +83,8 @@ public class ScreenshotListenerTest {
         }
     }
 
-    private ScreenshotListener initListener(Bundle b) {
-        ScreenshotListener listener = spy(new ScreenshotListener(b));
+    private ScreenshotOnFailureCollector initListener(Bundle b) {
+        ScreenshotOnFailureCollector listener = spy(new ScreenshotOnFailureCollector(b));
         listener.setInstrumentation(mInstrumentation);
         doNothing().when(listener).screenshotToStream(any());
         doReturn(mLogDir).when(listener).createAndEmptyDirectory(anyString());
@@ -92,57 +93,18 @@ public class ScreenshotListenerTest {
     }
 
     @Test
-    public void testSaveAsBytes() throws Exception {
-        Bundle b = new Bundle();
-        b.putString(ScreenshotListener.KEY_FORMAT, ScreenshotListener.OPTION_BYTE);
-        mListener = initListener(b);
-
-        // Test run start behavior
-        mListener.testRunStarted(mRunDesc);
-        verify(mListener, times(0)).createAndEmptyDirectory(ScreenshotListener.DEFAULT_DIR);
-
-        for (int i = 1; i <= NUM_TEST_CASE; i++) {
-            mListener.testStarted(mTestDesc);
-
-            // Test test end behavior
-            mListener.testFinished(mTestDesc);
-            verify(mListener, times(i)).screenshotToStream(any());
-        }
-
-        // Test run end behavior
-        mListener.testRunFinished(new Result());
-
-        Bundle resultBundle = new Bundle();
-        mListener.instrumentationRunFinished(System.out, resultBundle, new Result());
-
-        ArgumentCaptor<Bundle> capture = ArgumentCaptor.forClass(Bundle.class);
-        Mockito.verify(mInstrumentation, times(NUM_TEST_CASE))
-                .sendStatus(Mockito.eq(
-                        SendToInstrumentation.INST_STATUS_IN_PROGRESS), capture.capture());
-        List<Bundle> capturedBundle = capture.getAllValues();
-        assertEquals(NUM_TEST_CASE, capturedBundle.size());
-
-        int fileCount = 0;
-        for(Bundle bundle:capturedBundle){
-            for(String key : bundle.keySet()) {
-                if (key.contains(".bytes")) fileCount++;
-            }
-        }
-        assertEquals(NUM_TEST_CASE, fileCount);
-    }
-
-    @Test
     public void testSaveAsFile() throws Exception {
         Bundle b = new Bundle();
-        b.putString(ScreenshotListener.KEY_FORMAT, "file");
         mListener = initListener(b);
 
         // Test run start behavior
         mListener.testRunStarted(mRunDesc);
-        verify(mListener).createAndEmptyDirectory(ScreenshotListener.DEFAULT_DIR);
+        verify(mListener).createAndEmptyDirectory(ScreenshotOnFailureCollector.DEFAULT_DIR);
 
         for (int i = 1; i <= NUM_TEST_CASE; i++) {
             mListener.testStarted(mTestDesc);
+
+            mListener.testFailure(new Failure(mTestDesc, new RuntimeException("I failed")));
 
             // Test test end behavior
             mListener.testFinished(mTestDesc);
@@ -169,16 +131,5 @@ public class ScreenshotListenerTest {
             }
         }
         assertEquals(NUM_TEST_CASE, fileCount);
-    }
-
-    @Test
-    public void testSaveToSpecifiedDir() throws Exception {
-        Bundle b = new Bundle();
-        b.putString(ScreenshotListener.KEY_FORMAT, "file:unique/dir");
-        mListener = initListener(b);
-
-        // Test run start behavior
-        mListener.testRunStarted(mRunDesc);
-        verify(mListener).createAndEmptyDirectory("unique/dir");
     }
 }
