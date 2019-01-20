@@ -22,44 +22,32 @@ import androidx.annotation.VisibleForTesting;
 import android.util.Log;
 
 import org.junit.runner.Description;
+import org.junit.runner.notification.Failure;
 
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 
 /**
- * A {@link BaseMetricListener} that captures screenshots at the end of each test case.
+ * A {@link BaseMetricListener} that captures screenshots when a test fails.
  *
- * This class needs external storage permission. See {@link BaseMetricListener} how to grant
+ * <p>This class needs external storage permission. See {@link BaseMetricListener} how to grant
  * external storage permission, especially at install time.
  *
- * Options:
- * -e screenshot-quality [0-100]: set screenshot image quality. Default is 75.
- * -e screenshot-format [byte|file:optional/path/to/dir]: set screenshot format. Default is file.
- * Choose "byte" to save as a byte array in result bundle.
- * Choose "file" to save as an image file. Append ":path/to/dir" behind "file" to specify directory
- * to save screenshots, relative to /sdcard/. e.g. "-e screenshot-format file:tmp/sc" will save
- * screenshots to /sdcard/tmp/sc/ directory.
- *
- * Do NOT throw exception anywhere in this class. We don't want to halt the test when metrics
- * collection fails.
+ * <p>Options: -e screenshot-quality [0-100]: set screenshot image quality. Default is 75.
  */
-@OptionClass(alias = "screenshot-collector")
-public class ScreenshotListener extends BaseMetricListener {
+@OptionClass(alias = "screenshot-failure-collector")
+public class ScreenshotOnFailureCollector extends BaseMetricListener {
 
     public static final String DEFAULT_DIR = "run_listeners/screenshots";
     public static final String KEY_QUALITY = "screenshot-quality"; // 0 to 100
-    public static final String KEY_FORMAT = "screenshot-format"; // byte or file
     public static final int DEFAULT_QUALITY = 75;
-    public static final String OPTION_BYTE = "byte";
     private int mQuality = DEFAULT_QUALITY;
-    private boolean mToFile;
 
     private File mDestDir;
 
-    public ScreenshotListener() {
+    public ScreenshotOnFailureCollector() {
         super();
     }
 
@@ -68,7 +56,7 @@ public class ScreenshotListener extends BaseMetricListener {
      * for testing.
      */
     @VisibleForTesting
-    ScreenshotListener(Bundle args) {
+    ScreenshotOnFailureCollector(Bundle args) {
         super(args);
     }
 
@@ -87,36 +75,21 @@ public class ScreenshotListener extends BaseMetricListener {
                 Log.e(getTag(), "Failed to parse screenshot quality", e);
             }
         }
-        mToFile = !OPTION_BYTE.equals(args.getString(KEY_FORMAT));
-        if (mToFile) {
-            String dir = DEFAULT_DIR;
-            if (args.containsKey(KEY_FORMAT)) {
-                String[] argsArray = args.getString(KEY_FORMAT).split(":", 2);
-                if (argsArray.length > 1) {
-                    dir = argsArray[1];
-                }
-            }
-            mDestDir = createAndEmptyDirectory(dir);
-        }
+
+        String dir = DEFAULT_DIR;
+        mDestDir = createAndEmptyDirectory(dir);
     }
 
     @Override
-    public void onTestEnd(DataRecord testData, Description description) {
-        if (mToFile) {
-            if (mDestDir == null) {
-                return;
-            }
-            final String fileName = String.format("%s.%s.png", description.getClassName(),
-                    description.getMethodName());
-            File img = takeScreenshot(fileName);
-            if (img != null) {
-                testData.addFileMetric(String.format("%s_%s", getTag(), img.getName()), img);
-            }
-        } else {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            screenshotToStream(out);
-            testData.addBinaryMetric(String.format("%s_%s.%s.bytes", getTag(),
-                    description.getClassName(), description.getMethodName()), out.toByteArray());
+    public void onTestFail(DataRecord testData, Description description, Failure failure) {
+        if (mDestDir == null) {
+            return;
+        }
+        final String fileName =
+                String.format("%s.%s.png", description.getClassName(), description.getMethodName());
+        File img = takeScreenshot(fileName);
+        if (img != null) {
+            testData.addFileMetric(String.format("%s_%s", getTag(), img.getName()), img);
         }
     }
 
