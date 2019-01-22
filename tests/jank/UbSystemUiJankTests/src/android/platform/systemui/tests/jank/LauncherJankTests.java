@@ -84,8 +84,7 @@ public class LauncherJankTests extends JankTestBase {
     }
 
     public void resetAndOpenRecents() throws UiObjectNotFoundException, RemoteException {
-        mDevice.pressHome();
-        mLauncher.getWorkspace().switchToOverview();
+        mLauncher.pressHome().switchToOverview();
     }
 
     public void prepareOpenAllAppsContainer() throws IOException {
