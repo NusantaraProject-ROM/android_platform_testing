@@ -54,4 +54,3 @@ android_test {
     ],
     srcs: ["src/**/*.java"],
 }
-
