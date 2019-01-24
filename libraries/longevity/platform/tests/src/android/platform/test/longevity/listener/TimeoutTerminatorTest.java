@@ -16,7 +16,6 @@
 package android.platform.test.longevity.listener;
 
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 
 import android.os.SystemClock;
@@ -54,7 +53,7 @@ public class TimeoutTerminatorTest {
      */
     @Test
     public void testTimeoutTerminator_pass() throws Exception {
-        mListener.testStarted(Description.EMPTY);
+        mListener.testRunStarted(Description.EMPTY);
         SystemClock.sleep(10L);
         verify(mNotifier, never()).pleaseStop();
     }
@@ -64,7 +63,7 @@ public class TimeoutTerminatorTest {
      */
     @Test
     public void testTimeoutTerminator_timeout() throws Exception {
-        mListener.testStarted(Description.EMPTY);
+        mListener.testRunStarted(Description.EMPTY);
         SystemClock.sleep(60L);
         mListener.testFinished(Description.EMPTY);
         verify(mNotifier).pleaseStop();

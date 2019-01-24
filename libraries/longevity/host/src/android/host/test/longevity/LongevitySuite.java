@@ -53,12 +53,16 @@ public class LongevitySuite extends Suite {
      */
     public LongevitySuite(Class<?> klass, RunnerBuilder builder)
             throws InitializationError {
-        this(klass, builder,
-            System.getProperties().entrySet()
-                .stream()
-                .collect(Collectors.toMap(
-                        i -> String.valueOf(i.getKey()),
-                        i -> String.valueOf(i.getValue()))));
+        this(
+                klass,
+                builder,
+                System.getProperties()
+                        .entrySet()
+                        .stream()
+                        .collect(
+                                Collectors.toMap(
+                                        i -> String.valueOf(i.getKey()),
+                                        i -> String.valueOf(i.getValue()))));
     }
 
     /**
