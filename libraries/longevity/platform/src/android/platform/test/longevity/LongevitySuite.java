@@ -37,6 +37,7 @@ import java.util.Map;
 
 import org.junit.runner.Runner;
 import org.junit.runner.notification.RunNotifier;
+import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
 
@@ -120,6 +121,22 @@ public class LongevitySuite extends android.host.test.longevity.LongevitySuite {
             throw new InitializationError(String.format(
                     "Longevity suite, '%s', must have a SuiteClasses annotation", suite.getName()));
         }
+        // Validate that runnable scenarios are passed into the suite.
+        for (Class<?> scenario : annotation.value()) {
+            Runner runner = null;
+            try {
+                runner = builder.runnerForClass(scenario);
+            } catch (Throwable t) {
+                throw new InitializationError(t);
+            }
+            // All scenarios must extend BlockJUnit4ClassRunner.
+            if (!(runner instanceof BlockJUnit4ClassRunner)) {
+                throw new InitializationError(
+                        String.format(
+                                "All runners must extend BlockJUnit4ClassRunner. %s:%s doesn't.",
+                                runner.getClass(), runner.getDescription().getDisplayName()));
+            }
+        }
         // Construct and store custom runners for the full suite.
         BiFunction<Bundle, List<Runner>, List<Runner>> modifier =
                 new Iterate<Runner>().andThen(new Shuffle<Runner>());
@@ -134,6 +151,11 @@ public class LongevitySuite extends android.host.test.longevity.LongevitySuite {
         }
         // Register other listeners and continue with standard longevity run.
         super.run(notifier);
+    }
+
+    @Override
+    protected void runChild(Runner runner, final RunNotifier notifier) {
+        super.runChild(getSuiteRunner(runner), notifier);
     }
 
     /**
@@ -157,6 +179,33 @@ public class LongevitySuite extends android.host.test.longevity.LongevitySuite {
             mTimeoutTerminator = new TimeoutTerminator(notifier, mArguments);
         }
         return mTimeoutTerminator;
+    }
+
+    /** Returns the timeout set on the suite in milliseconds. */
+    public long getSuiteTimeoutMs() {
+        if (mTimeoutTerminator == null) {
+            throw new IllegalStateException("No suite timeout is set. This should never happen.");
+        }
+        return mTimeoutTerminator.getTotalSuiteTimeoutMs();
+    }
+
+    /**
+     * Returns a {@link Runner} specific for the suite, if any. Can be overriden by subclasses to
+     * supply different runner implementations.
+     */
+    protected Runner getSuiteRunner(Runner runner) {
+        try {
+            // Cast is safe as we have verified that the runner is BlockJUnit4Runner during
+            // initialization.
+            return new LongevityClassRunner(
+                    ((BlockJUnit4ClassRunner) runner).getTestClass().getJavaClass());
+        } catch (InitializationError e) {
+            throw new RuntimeException(
+                    String.format(
+                            "Unable to run scenario %s with a longevity-specific runner.",
+                            runner.getDescription().getDisplayName()),
+                    e);
+        }
     }
 
     /**
