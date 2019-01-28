@@ -46,6 +46,7 @@ android_test {
     sdk_version: "24",
     static_libs: [
         "androidx.test.runner",
+        "common-platform-scenarios",
         "guava",
         "longevity-device-lib",
         "platform-test-composers",
@@ -53,4 +54,3 @@ android_test {
     ],
     srcs: ["src/**/*.java"],
 }
-

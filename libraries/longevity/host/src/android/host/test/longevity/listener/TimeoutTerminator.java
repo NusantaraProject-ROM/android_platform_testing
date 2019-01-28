@@ -34,28 +34,33 @@ public class TimeoutTerminator extends RunTerminator {
 
     public TimeoutTerminator(RunNotifier notifier, Map<String, String> args) {
         super(notifier);
-        mSuiteTimeout = args.containsKey(OPTION) ?
-            Long.parseLong(args.get(OPTION)) : DEFAULT;
+        mSuiteTimeout = args.containsKey(OPTION) ? Long.parseLong(args.get(OPTION)) : DEFAULT;
     }
 
     /**
      * {@inheritDoc}
      *
-     * Note: this initializes the countdown timer if unset.
+     * <p>Note: this initializes the countdown timer if unset.
      */
     @Override
-    public void testStarted(Description description) {
+    public void testRunStarted(Description description) {
         if (mStartTimestamp == UNSET_TIMESTAMP) {
             mStartTimestamp = getCurrentTimestamp();
         }
     }
 
+    /** {@inheritDoc} */
     @Override
     public void testFinished(Description description) {
-      if (mStartTimestamp != UNSET_TIMESTAMP
-          && (getCurrentTimestamp() - mStartTimestamp) > mSuiteTimeout) {
+        if (mStartTimestamp != UNSET_TIMESTAMP
+                && (getCurrentTimestamp() - mStartTimestamp) > mSuiteTimeout) {
             kill("the suite timed out");
         }
+    }
+
+    /** Returns the total timeout set for the suite. */
+    public long getTotalSuiteTimeoutMs() {
+        return mSuiteTimeout;
     }
 
     /**

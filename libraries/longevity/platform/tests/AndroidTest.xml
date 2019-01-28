@@ -23,6 +23,7 @@
     </target_preparer>
     <test class="com.android.tradefed.testtype.AndroidJUnitTest" >
         <option name="package" value="android.platform.test.longevity.tests" />
+        <option name="exclude-filter" value="android.platform.test.longevity.samples.testing.SampleProfileSuite" />
         <option name="runtime-hint" value="1m30s" />
     </test>
 </configuration>
