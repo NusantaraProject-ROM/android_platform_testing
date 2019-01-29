@@ -22,7 +22,7 @@ package android.platform.helpers;
 
 public interface IAutoAppInfoSettingsHelper extends IAppHelper {
     /**
-     * Setup expectation: App info setting is open
+     * Setup expectation: Apps & notifications setting is open
      *
      * This method is to open an application in App info setting
      *
@@ -31,7 +31,15 @@ public interface IAutoAppInfoSettingsHelper extends IAppHelper {
     void selectApp(String application);
 
     /**
-     * Setup expectation: An application in App info setting is open
+     * Setup expectation: Apps & notifications setting is open
+     *
+     * This method is to click on Show all apps menu
+     *
+     */
+    void showAllApps();
+
+    /**
+     * Setup expectation: An application in Apps & notifications setting is open
      *
      * This method is to enable/disable an application
      *
@@ -40,21 +48,21 @@ public interface IAutoAppInfoSettingsHelper extends IAppHelper {
     void enableDisableApplication(boolean enable);
 
     /**
-     * Setup expectation: An application in App info setting is open
+     * Setup expectation: An application in Apps & notifications setting is open
      *
      * This method is to check whether an application is running in background from UI
      */
     boolean isCurrentApplicationRunning();
 
     /**
-     * Setup expectation: An application in App info setting is open
+     * Setup expectation: An application in Apps & notifications setting is open
      *
      * This method is to force stop the application
      */
     void forceStop();
 
     /**
-     * Setup expectation: App info setting is open
+     * Setup expectation: Apps & notifications setting is open
      *
      * This method is to add a permission to an application
      *
