@@ -14,6 +14,33 @@
 // limitations under the License.
 //
 
+java_genrule {
+    name: "lib-test-profile-text-protos",
+    host_supported: true,
+    tools: ["aprotoc"],
+    srcs: [
+        ":profile-proto-def",
+        "assets/*.textpb",
+    ],
+    out: ["lib-test-profiles.jar"],
+    /*
+     * Loops over all *.textpb files under assets/ and serializes them into binary protos with
+     * ".pb" extension using aprotoc. The generated *.pb files are put under an assets/
+     * directory, which gets packed into a .jar file and ends up under the assets/
+     * directory in the package, which can then be read with asset manager.
+     *
+     * If a profile fails to parse, an error is thrown and the build will fail.
+     */
+    cmd: "out_dir=$$(dirname $(out)) && assets_dir=\"assets\" " +
+        "&& mkdir -p $$out_dir/$$assets_dir && src_protos=($(locations assets/*.textpb)) " +
+        "&& for file in $${src_protos[@]} ; do fname=$$(basename $$file) " +
+        "&& if ! ($(location aprotoc) --encode=longevity.profile.Configuration " +
+        "$(location :profile-proto-def) < $$file > " +
+        "$$out_dir/$$assets_dir/$${fname//.textpb/.pb}) ; then " +
+        "echo \"\033[0;31mFailed to parse profile $$file. See above for errors.\033[0m\" " +
+        "&& exit 1 ; fi ; done && jar cf $(out) -C $$(dirname $(out)) $$assets_dir",
+}
+
 android_test {
     name: "LongevityPlatformLibTests",
 
@@ -22,6 +49,7 @@ android_test {
         "androidx.test.runner",
         "common-platform-scenarios",
         "guava",
+        "lib-test-profile-text-protos",
         "longevity-device-lib",
         "mockito-target",
         "platform-test-composers",

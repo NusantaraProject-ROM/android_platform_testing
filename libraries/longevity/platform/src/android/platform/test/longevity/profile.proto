@@ -1,3 +1,4 @@
+
 // Copyright (C) 2018 The Android Open Source Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,24 +21,12 @@ option java_package = "android.platform.test.longevity.proto";
 option java_multiple_files = true;
 
 message Configuration {
-    // Types required to build a profile.
-
-    // Information for a scheduled profile.
-    message Scheduled {
-        // Action to take if a test finishes early.
-        enum IfEarly {
-            IDLE = 1;
-            SLEEP = 2;
-        }
-        // Action to take if a test finishes late.
-        enum IfLate {
-            DELAY = 1;
-            END = 2;
-        }
-        optional IfEarly if_early = 1;
-        optional IfLate if_late = 2;
+    // Schedule used to run the profile.
+    // TODO(b/122323704): Implement ordered profile.
+    enum Schedule {
+        TIMESTAMPED = 1;
     }
-
+    optional Schedule schedule = 1 [default = TIMESTAMPED];
     // Information for each scenario.
     message Scenario {
         oneof schedule {
@@ -51,14 +40,13 @@ message Configuration {
             optional string key = 1;
             optional string value = 2;
         }
-        //
         repeated ExtraArg extras = 4;
+        // For app-based scenarios, whether to stay in the app after the tested action is performed.
+        enum AfterTest {
+            STAY_IN_APP = 1;
+            EXIT = 2;
+        }
+        optional AfterTest after_test = 5 [default = EXIT];
     }
-
-    // Field definitions for a profile.
-
-    oneof schedule {
-        Scheduled scheduled = 1;
-    }
-    repeated Scenario scenarios = 3;
+    repeated Scenario scenarios = 2;
 }
