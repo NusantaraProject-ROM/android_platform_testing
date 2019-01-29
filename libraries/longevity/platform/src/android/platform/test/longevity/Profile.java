@@ -20,7 +20,9 @@ import android.host.test.composer.Compose;
 import android.os.Bundle;
 import android.platform.test.longevity.proto.Configuration;
 import android.platform.test.longevity.proto.Configuration.Scenario;
+import android.platform.test.longevity.proto.Configuration.Schedule;
 import android.util.Log;
+import androidx.annotation.VisibleForTesting;
 import androidx.test.InstrumentationRegistry;
 
 import org.junit.runner.Description;
@@ -30,14 +32,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.IOException;
-import java.lang.IllegalArgumentException;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.function.Function;
@@ -47,7 +47,8 @@ import java.util.stream.Collectors;
  * A profile composer for device-side testing.
  */
 public class Profile implements Compose<Bundle, Runner> {
-    protected static final String PROFILE_OPTION_NAME = "profile";
+    @VisibleForTesting static final String PROFILE_OPTION_NAME = "profile";
+
     protected static final String PROFILE_EXTENSION = ".pb";
 
     private static final String LOG_TAG = Profile.class.getSimpleName();
@@ -55,13 +56,13 @@ public class Profile implements Compose<Bundle, Runner> {
     // Parser for parsing "at" timestamps in profiles.
     private static final SimpleDateFormat TIMESTAMP_FORMATTER = new SimpleDateFormat("HH:mm:ss");
 
-    // Keeps track of the current scenario to run.
+    // Keeps track of the next scenario to run.
     private int mScenarioIndex = 0;
     // A list of scenarios in the order that they will be run.
     private List<Scenario> mOrderedScenariosList;
     // Timestamp when the test run starts, defaults to time when the ProfileBase object is
-    // constructed. Can be overridden by {@link setTestRunStartTimeMillis}.
-    private long mRunStartTimeMillis = System.currentTimeMillis();
+    // constructed. Can be overridden by {@link setTestRunStartTimeMs}.
+    private long mRunStartTimeMs = System.currentTimeMillis();
 
     // Comparator for sorting timstamped CUJs.
     private static class ScenarioTimestampComparator implements Comparator<Scenario> {
@@ -86,8 +87,11 @@ public class Profile implements Compose<Bundle, Runner> {
             return;
         }
         mOrderedScenariosList = new ArrayList<Scenario>(config.getScenariosList());
-        if (config.hasScheduled()) {
+        if (config.getSchedule().equals(Schedule.TIMESTAMPED)) {
             Collections.sort(mOrderedScenariosList, new ScenarioTimestampComparator());
+        } else {
+            throw new UnsupportedOperationException(
+                    "Only scheduled profiles are currently supported.");
         }
     }
 
@@ -134,18 +138,14 @@ public class Profile implements Compose<Bundle, Runner> {
         return result;
     }
 
-    /**
-     * Enables classes using the profile composer to set the test run start time.
-     */
-    public void setTestRunStartTimeMillis(long timestamp) {
-        mRunStartTimeMillis = timestamp;
+    /** Enables classes using the profile composer to set the test run start time. */
+    public void setTestRunStartTimeMs(long timestamp) {
+        mRunStartTimeMs = timestamp;
     }
 
-    /**
-     * Called by suite runners to signal that a scenario/test has ended; increments the scenario
-     * index.
-     */
-    public void scenarioEnded() {
+    /** Called by suite runners to signal that a scenario/test has started. */
+    public void scenarioStarted() {
+        // Increments the index to move onto the next scenario.
         mScenarioIndex += 1;
     }
 
@@ -157,30 +157,41 @@ public class Profile implements Compose<Bundle, Runner> {
         return (mOrderedScenariosList != null) && (mScenarioIndex < mOrderedScenariosList.size());
     }
 
-    /**
-     * Returns time in milliseconds until the next scenario.
-     */
-    public long getMillisecondsUntilNextScenario() {
+    /** Returns time in milliseconds until the next scenario. */
+    public long getTimeUntilNextScenarioMs() {
         Scenario nextScenario = mOrderedScenariosList.get(mScenarioIndex);
         if (nextScenario.hasAt()) {
             try {
-                long startTimeMillis = TIMESTAMP_FORMATTER.parse(nextScenario.getAt()).getTime();
+                long startTimeMs = TIMESTAMP_FORMATTER.parse(nextScenario.getAt()).getTime();
                 // Time in milliseconds from the start of the test run to the current point in time.
-                long currentTimeMillis = System.currentTimeMillis() - mRunStartTimeMillis;
+                long currentTimeMs = getTimeSinceRunStartedMs();
                 // If the next test should not start yet, sleep until its start time. Otherwise,
                 // start it immediately.
                 // TODO(b/118495360): Deal with the IfLate situation.
-                if (startTimeMillis > currentTimeMillis) {
-                    return startTimeMillis - currentTimeMillis;
+                if (startTimeMs > currentTimeMs) {
+                    return startTimeMs - currentTimeMs;
                 }
             } catch (ParseException e) {
                 throw new IllegalArgumentException(
-                        String.format("Time %s from scenario %s could not be parsed",
+                        String.format(
+                                "Timestamp %s from scenario %s could not be parsed",
                                 nextScenario.getAt(), nextScenario.getJourney()));
             }
         }
         // For non-scheduled profiles (not a priority at this point), simply return 0.
         return 0L;
+    }
+
+    /** Return time in milliseconds since the test run started. */
+    public long getTimeSinceRunStartedMs() {
+        return System.currentTimeMillis() - mRunStartTimeMs;
+    }
+
+    /** Returns the Scenario object for the current scenario. */
+    public Scenario getCurrentScenario() {
+        // mScenarioIndex points to the next scenario, so the index for the current one is
+        // mScenarioIndex - 1.
+        return mOrderedScenariosList.get(mScenarioIndex - 1);
     }
 
     /*

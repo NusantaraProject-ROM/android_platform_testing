@@ -20,14 +20,11 @@ import static com.google.common.truth.Truth.assertThat;
 import android.os.Bundle;
 import android.platform.test.longevity.proto.Configuration;
 import android.platform.test.longevity.proto.Configuration.Scenario;
-import android.platform.test.longevity.proto.Configuration.Scheduled;
-import android.platform.test.longevity.proto.Configuration.Scheduled.IfEarly;
-import android.platform.test.longevity.proto.Configuration.Scheduled.IfLate;
+import android.platform.test.longevity.proto.Configuration.Schedule;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -36,56 +33,53 @@ import org.junit.runner.Description;
 import org.junit.runner.Runner;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * Unit test the logic for {@link Profile}.
  */
 @RunWith(JUnit4.class)
 public class ProfileTest {
+    // TODO(b/120508148): Add tests for current scenario and timestamp book-keeping logic and
+    // I/O operations regarding parsing the profile.
+
     protected static final String PROFILE_OPTION_NAME = "profile";
 
     protected static final String VALID_CONFIG_KEY = "valid_config";
-    protected static final Configuration VALID_CONFIG = Configuration.newBuilder()
-            .setScheduled(
-                    Scheduled.newBuilder()
-                            .setIfEarly(IfEarly.SLEEP)
-                            .setIfLate(IfLate.END))
-            .addScenarios(
-                    Scenario.newBuilder()
-                            .setAt("00:01:00")
-                            .setJourney("android.platform.test.scenario.calendar.FlingWeekPage"))
-            .addScenarios(
-                    Scenario.newBuilder()
-                            .setAt("00:04:00")
-                            .setJourney("android.platform.test.scenario.calendar.FlingDayPage"))
-            .addScenarios(
-                    Scenario.newBuilder()
-                            .setAt("00:02:00")
-                            .setJourney("android.platform.test.scenario.calendar.FlingWeekPage"))
-            .build();
+    protected static final Configuration VALID_CONFIG =
+            Configuration.newBuilder()
+                    .setSchedule(Schedule.TIMESTAMPED)
+                    .addScenarios(
+                            Scenario.newBuilder()
+                                    .setAt("00:01:00")
+                                    .setJourney(
+                                            "android.platform.test.scenario.calendar.FlingWeekPage"))
+                    .addScenarios(
+                            Scenario.newBuilder()
+                                    .setAt("00:04:00")
+                                    .setJourney(
+                                            "android.platform.test.scenario.calendar.FlingDayPage"))
+                    .addScenarios(
+                            Scenario.newBuilder()
+                                    .setAt("00:02:00")
+                                    .setJourney(
+                                            "android.platform.test.scenario.calendar.FlingWeekPage"))
+                    .build();
     private static final String CONFIG_WITH_INVALID_JOURNEY_KEY = "config_with_invalid_journey";
-    protected static final Configuration CONFIG_WITH_INVALID_JOURNEY = Configuration.newBuilder()
-            .setScheduled(
-                    Scheduled.newBuilder()
-                            .setIfEarly(IfEarly.SLEEP)
-                            .setIfLate(IfLate.END))
-            .addScenarios(
-                    Scenario.newBuilder()
-                            .setAt("00:01:00")
-                            .setJourney("android.platform.test.scenario.calendar.FlingWeekPage"))
-            .addScenarios(
-                    Scenario.newBuilder()
-                            .setAt("00:02:00")
-                            .setJourney("invalid"))
-            .build();
+    protected static final Configuration CONFIG_WITH_INVALID_JOURNEY =
+            Configuration.newBuilder()
+                    .setSchedule(Schedule.TIMESTAMPED)
+                    .addScenarios(
+                            Scenario.newBuilder()
+                                    .setAt("00:01:00")
+                                    .setJourney(
+                                            "android.platform.test.scenario.calendar.FlingWeekPage"))
+                    .addScenarios(Scenario.newBuilder().setAt("00:02:00").setJourney("invalid"))
+                    .build();
     private static final String CONFIG_WITH_MISSING_TIMESTAMPS_KEY =
             "config_with_missing_timestamps";
     protected static final ImmutableMap<String, Configuration> TEST_CONFIGS= ImmutableMap.of(
