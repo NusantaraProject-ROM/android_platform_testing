@@ -15,6 +15,16 @@
  */
 package android.device.collectors;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 import android.app.Instrumentation;
 import android.device.collectors.util.SendToInstrumentation;
 import android.os.Bundle;
@@ -33,16 +43,8 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 /**
  * Android Unit tests for {@link ScreenshotOnFailureCollector}.
@@ -53,10 +55,11 @@ import static org.mockito.Mockito.verify;
 @RunWith(AndroidJUnit4.class)
 public class ScreenshotOnFailureCollectorTest {
 
-    private static final int NUM_TEST_CASE = 5;
+    private static final int NUM_TEST_CASE = 20;
 
     private File mLogDir;
-    private File mLogFile;
+    private File mPngLogFile;
+    private File mUixLogFile;
     private Description mRunDesc;
     private Description mTestDesc;
     private ScreenshotOnFailureCollector mListener;
@@ -68,32 +71,37 @@ public class ScreenshotOnFailureCollectorTest {
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         mLogDir = new File("tmp/");
-        mLogFile = new File("unique_log_file.log");
+        mPngLogFile = new File("unique_png_log_file.log");
+        mUixLogFile = new File("unique_uix_log_file.log");
         mRunDesc = Description.createSuiteDescription("run");
         mTestDesc = Description.createTestDescription("run", "test");
     }
 
     @After
     public void tearDown() {
-        if (mLogFile != null) {
-            mLogFile.delete();
+        if (mPngLogFile != null) {
+            mPngLogFile.delete();
+        }
+        if (mUixLogFile != null) {
+            mUixLogFile.delete();
         }
         if (mLogDir != null) {
             mLogDir.delete();
         }
     }
 
-    private ScreenshotOnFailureCollector initListener(Bundle b) {
+    private ScreenshotOnFailureCollector initListener(Bundle b) throws IOException {
         ScreenshotOnFailureCollector listener = spy(new ScreenshotOnFailureCollector(b));
         listener.setInstrumentation(mInstrumentation);
         doNothing().when(listener).screenshotToStream(any());
         doReturn(mLogDir).when(listener).createAndEmptyDirectory(anyString());
-        doReturn(mLogFile).when(listener).takeScreenshot(anyString());
+        doReturn(mPngLogFile).when(listener).takeScreenshot(anyString());
+        doReturn(mUixLogFile).when(listener).collectUiXml(any());
         return listener;
     }
 
     @Test
-    public void testSaveAsFile() throws Exception {
+    public void testSavePngAsFile() throws Exception {
         Bundle b = new Bundle();
         mListener = initListener(b);
 
@@ -124,12 +132,87 @@ public class ScreenshotOnFailureCollectorTest {
         List<Bundle> capturedBundle = capture.getAllValues();
         assertEquals(NUM_TEST_CASE, capturedBundle.size());
 
-        int fileCount = 0;
-        for(Bundle bundle:capturedBundle){
-            for(String key : bundle.keySet()) {
-                if (key.contains(mLogFile.getName())) fileCount++;
+        int pngFileCount = 0;
+        for (Bundle bundle : capturedBundle) {
+            for (String key : bundle.keySet()) {
+                if (key.contains(mPngLogFile.getName())) pngFileCount++;
             }
         }
-        assertEquals(NUM_TEST_CASE, fileCount);
+        assertEquals(NUM_TEST_CASE, pngFileCount);
+    }
+
+    @Test
+    public void testSaveUixAsFile() throws Exception {
+        Bundle b = new Bundle();
+        b.putString("include-ui-xml", "true");
+        mListener = initListener(b);
+
+        // Run through a sequence of `NUM_TEST_CASE` failing tests.
+        mListener.testRunStarted(mRunDesc);
+        verify(mListener).createAndEmptyDirectory(ScreenshotOnFailureCollector.DEFAULT_DIR);
+        for (int i = 1; i <= NUM_TEST_CASE; i++) {
+            mListener.testStarted(mTestDesc);
+            mListener.testFailure(new Failure(mTestDesc, new RuntimeException("I failed")));
+            mListener.testFinished(mTestDesc);
+            // Test `i` UI XML's were saved before this.
+            verify(mListener, times(i)).collectUiXml(any());
+        }
+        mListener.testRunFinished(new Result());
+
+        Bundle resultBundle = new Bundle();
+        mListener.instrumentationRunFinished(System.out, resultBundle, new Result());
+        ArgumentCaptor<Bundle> capture = ArgumentCaptor.forClass(Bundle.class);
+        Mockito.verify(mInstrumentation, times(NUM_TEST_CASE))
+                .sendStatus(
+                        Mockito.eq(SendToInstrumentation.INST_STATUS_IN_PROGRESS),
+                        capture.capture());
+        List<Bundle> capturedBundle = capture.getAllValues();
+        assertEquals(NUM_TEST_CASE, capturedBundle.size());
+
+        // Ensure that `NUM_TEST_CASE` files were reported.
+        int uixFileCount = 0;
+        for (Bundle bundle : capturedBundle) {
+            for (String key : bundle.keySet()) {
+                if (key.contains(mUixLogFile.getName())) uixFileCount++;
+            }
+        }
+        assertEquals(NUM_TEST_CASE, uixFileCount);
+    }
+
+    @Test
+    public void testNoUixWithoutOption() throws Exception {
+        Bundle b = new Bundle();
+        b.putString("include-ui-xml", "false");
+        mListener = initListener(b);
+
+        // Run through a sequence of `NUM_TEST_CASE` failing tests.
+        mListener.testRunStarted(mRunDesc);
+        verify(mListener).createAndEmptyDirectory(ScreenshotOnFailureCollector.DEFAULT_DIR);
+        for (int i = 1; i <= NUM_TEST_CASE; i++) {
+            mListener.testStarted(mTestDesc);
+            mListener.testFailure(new Failure(mTestDesc, new RuntimeException("I failed")));
+            mListener.testFinished(mTestDesc);
+            // Test `i` UI XML's were saved before this.
+        }
+        mListener.testRunFinished(new Result());
+        verify(mListener, Mockito.never()).collectUiXml(any());
+
+        Bundle resultBundle = new Bundle();
+        mListener.instrumentationRunFinished(System.out, resultBundle, new Result());
+        ArgumentCaptor<Bundle> capture = ArgumentCaptor.forClass(Bundle.class);
+        Mockito.verify(mInstrumentation, times(NUM_TEST_CASE))
+                .sendStatus(
+                        Mockito.eq(SendToInstrumentation.INST_STATUS_IN_PROGRESS),
+                        capture.capture());
+        List<Bundle> capturedBundle = capture.getAllValues();
+        assertEquals(NUM_TEST_CASE, capturedBundle.size());
+
+        // Ensure no matching files were reported.
+        int uixFileCount = 0;
+        for (Bundle bundle : capturedBundle) {
+            for(String key : bundle.keySet()) {
+                assertFalse(key.contains(mUixLogFile.getName()));
+            }
+        }
     }
 }
