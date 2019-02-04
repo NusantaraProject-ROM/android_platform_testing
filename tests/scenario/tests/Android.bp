@@ -41,6 +41,19 @@ java_genrule {
         "&& exit 1 ; fi ; done && jar cf $(out) -C $$(dirname $(out)) $$assets_dir",
 }
 
+java_library_static {
+    name: "common-platform-scenario-tests",
+    sdk_version: "test_current",
+    srcs: [ "src/**/*.java" ],
+    libs: [
+        "common-platform-scenarios",
+        "guava",
+        "longevity-device-lib",
+        "microbenchmark-device-lib",
+        "platform-test-rules",
+    ],
+}
+
 android_test {
     name: "PlatformCommonScenarioTests",
     min_sdk_version: "24",
@@ -49,6 +62,7 @@ android_test {
         "common-profile-text-protos",
         "guava",
         "longevity-device-lib",
+        "microbenchmark-device-lib",
         "platform-test-composers",
         "platform-test-rules",
     ],
