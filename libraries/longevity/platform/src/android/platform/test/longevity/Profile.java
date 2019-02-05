@@ -63,6 +63,8 @@ public class Profile implements Compose<Bundle, Runner> {
     // Timestamp when the test run starts, defaults to time when the ProfileBase object is
     // constructed. Can be overridden by {@link setTestRunStartTimeMs}.
     private long mRunStartTimeMs = System.currentTimeMillis();
+    // The profile configuration.
+    private Configuration mConfiguration;
 
     // Comparator for sorting timstamped CUJs.
     private static class ScenarioTimestampComparator implements Comparator<Scenario> {
@@ -82,12 +84,14 @@ public class Profile implements Compose<Bundle, Runner> {
 
         // Load configuration from arguments and stored the list of scenarios sorted according to
         // their timestamps.
-        Configuration config = getConfigurationArgument(args);
-        if (config == null) {
+        mConfiguration = getConfigurationArgument(args);
+        // When no configuration is supplied, behaves the same way as LongevitySuite but without
+        // support for shuffle, iterate etc.
+        if (mConfiguration == null) {
             return;
         }
-        mOrderedScenariosList = new ArrayList<Scenario>(config.getScenariosList());
-        if (config.getSchedule().equals(Schedule.TIMESTAMPED)) {
+        mOrderedScenariosList = new ArrayList<Scenario>(mConfiguration.getScenariosList());
+        if (mConfiguration.getSchedule().equals(Schedule.TIMESTAMPED)) {
             Collections.sort(mOrderedScenariosList, new ScenarioTimestampComparator());
         } else {
             throw new UnsupportedOperationException(
@@ -194,8 +198,13 @@ public class Profile implements Compose<Bundle, Runner> {
         return mOrderedScenariosList.get(mScenarioIndex - 1);
     }
 
+    /** Returns the profile configuration. */
+    public Configuration getConfiguration() {
+        return mConfiguration;
+    }
+
     /*
-     * Parses the arguments, reads the configuration file and returns the Configuraiton object.
+     * Parses the arguments, reads the configuration file and returns the Configuration object.
      *
      * If no profile option is found in the arguments, function should return null, in which case
      * the input sequence is returned without modification. Otherwise, function should parse the

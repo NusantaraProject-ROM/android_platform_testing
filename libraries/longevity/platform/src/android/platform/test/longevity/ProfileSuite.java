@@ -134,19 +134,38 @@ public class ProfileSuite extends LongevitySuite {
     @Override
     protected void runChild(Runner runner, final RunNotifier notifier) {
         mProfile.scenarioStarted();
-        long timeout =
-                mProfile.hasNextScheduledScenario()
-                        ? mProfile.getTimeUntilNextScenarioMs()
-                        : (getTimeoutTerminator(notifier).getTotalSuiteTimeoutMs()
-                                - mProfile.getTimeSinceRunStartedMs());
-        super.runChild(
-                getScheduledRunner(
-                        // Cast is safe as runners have been verified to be BlockJUnit4Runner above.
+        super.runChild(runner, notifier);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Returns a runner suitable for the schedule that the profile uses. Currently supports
+     * {@link ScheduledScenarioRunner} only, but support for more runners will be added as profile
+     * features expand.
+     */
+    @Override
+    protected Runner getSuiteRunner(Runner runner) {
+        if (mProfile.getConfiguration() == null) {
+            return super.getSuiteRunner(runner);
+        }
+        switch (mProfile.getConfiguration().getSchedule()) {
+            case TIMESTAMPED:
+                long timeout =
+                        mProfile.hasNextScheduledScenario()
+                                ? mProfile.getTimeUntilNextScenarioMs()
+                                : (getSuiteTimeoutMs() - mProfile.getTimeSinceRunStartedMs());
+                return getScheduledRunner(
                         (BlockJUnit4ClassRunner) runner,
                         mProfile.getCurrentScenario(),
                         timeout,
-                        mProfile.hasNextScheduledScenario()),
-                notifier);
+                        mProfile.hasNextScheduledScenario());
+            default:
+                throw new RuntimeException(
+                        String.format(
+                                "Schedule type %s is not yet supported.",
+                                mProfile.getConfiguration().getSchedule().toString()));
+        }
     }
 
     /**
