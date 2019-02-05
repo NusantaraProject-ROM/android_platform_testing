@@ -23,6 +23,7 @@ java_library {
         "junit",
         "memory-helper",
         "perfetto-helper",
+        "ub-uiautomator",
     ],
 
     sdk_version: "current",
@@ -44,6 +45,7 @@ java_library {
         "memory-helper",
         "perfetto-helper",
         "statsd-helper",
+        "ub-uiautomator",
     ],
 
     platform_apis: true,
