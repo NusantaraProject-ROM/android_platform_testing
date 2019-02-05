@@ -19,6 +19,7 @@ import android.device.collectors.annotations.OptionClass;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import androidx.annotation.VisibleForTesting;
+import android.support.test.uiautomator.UiDevice;
 import android.util.Log;
 
 import org.junit.runner.Description;
@@ -27,6 +28,7 @@ import org.junit.runner.notification.Failure;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 
 /**
@@ -35,17 +37,21 @@ import java.io.OutputStream;
  * <p>This class needs external storage permission. See {@link BaseMetricListener} how to grant
  * external storage permission, especially at install time.
  *
- * <p>Options: -e screenshot-quality [0-100]: set screenshot image quality. Default is 75.
+ * <p>Options: -e screenshot-quality [0-100]: set screenshot image quality. Default is 75. -e
+ * include-ui-xml [true, false]: include the UI XML on failure too, if true.
  */
 @OptionClass(alias = "screenshot-failure-collector")
 public class ScreenshotOnFailureCollector extends BaseMetricListener {
 
     public static final String DEFAULT_DIR = "run_listeners/screenshots";
-    public static final String KEY_QUALITY = "screenshot-quality"; // 0 to 100
+    public static final String KEY_INCLUDE_XML = "include-ui-xml";
+    public static final String KEY_QUALITY = "screenshot-quality";
     public static final int DEFAULT_QUALITY = 75;
+    private boolean mIncludeUiXml = false;
     private int mQuality = DEFAULT_QUALITY;
 
     private File mDestDir;
+    private UiDevice mDevice;
 
     public ScreenshotOnFailureCollector() {
         super();
@@ -76,6 +82,10 @@ public class ScreenshotOnFailureCollector extends BaseMetricListener {
             }
         }
 
+        if (args.containsKey(KEY_INCLUDE_XML)) {
+            mIncludeUiXml = Boolean.parseBoolean(args.getString(KEY_INCLUDE_XML));
+        }
+
         String dir = DEFAULT_DIR;
         mDestDir = createAndEmptyDirectory(dir);
     }
@@ -86,18 +96,26 @@ public class ScreenshotOnFailureCollector extends BaseMetricListener {
             return;
         }
         final String fileName =
-                String.format("%s.%s.png", description.getClassName(), description.getMethodName());
-        File img = takeScreenshot(fileName);
+                String.format("%s.%s", description.getClassName(), description.getMethodName());
+        // Capture the screenshot first.
+        final String pngFileName = String.format("%s.png", fileName);
+        File img = takeScreenshot(pngFileName);
         if (img != null) {
             testData.addFileMetric(String.format("%s_%s", getTag(), img.getName()), img);
         }
+        // Capture the UI XML second.
+        if (mIncludeUiXml) {
+            File uixFile = collectUiXml(fileName);
+            if (uixFile != null) {
+                testData.addFileMetric(
+                        String.format("%s_%s", getTag(), uixFile.getName()), uixFile);
+            }
+        }
     }
 
-    /**
-     * Public so that Mockito can alter its behavior.
-     */
+    /** Public so that Mockito can alter its behavior. */
     @VisibleForTesting
-    public File takeScreenshot(String fileName){
+    public File takeScreenshot(String fileName) {
         File img = new File(mDestDir, fileName);
         if (img.exists()) {
             Log.w(getTag(), String.format("File exists: %s", img.getAbsolutePath()));
@@ -123,5 +141,29 @@ public class ScreenshotOnFailureCollector extends BaseMetricListener {
     public void screenshotToStream(OutputStream out) {
         getInstrumentation().getUiAutomation()
                 .takeScreenshot().compress(Bitmap.CompressFormat.PNG, mQuality, out);
+    }
+
+    /** Public so that Mockito can alter its behavior. */
+    @VisibleForTesting
+    public File collectUiXml(String fileName) {
+        File uixFile = new File(mDestDir, String.format("%s.uix", fileName));
+        if (uixFile.exists()) {
+            Log.w(getTag(), String.format("File exists: %s.", uixFile.getAbsolutePath()));
+            uixFile.delete();
+        }
+        try {
+            getDevice().dumpWindowHierarchy(uixFile);
+            return uixFile;
+        } catch (IOException e) {
+            Log.e(getTag(), "Failed to collect UI XML on failure.");
+        }
+        return null;
+    }
+
+    private UiDevice getDevice() {
+        if (mDevice == null) {
+            mDevice = UiDevice.getInstance(getInstrumentation());
+        }
+        return mDevice;
     }
 }
