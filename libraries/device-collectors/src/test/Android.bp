@@ -26,6 +26,7 @@ android_test {
         "junit",
         "mockito-target-minus-junit4",
         "perfetto-helper",
+        "ub-uiautomator",
     ],
 
     sdk_version: "current",

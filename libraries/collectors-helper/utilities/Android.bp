@@ -1,4 +1,4 @@
-// Copyright (C) 2017 The Android Open Source Project
+// Copyright (C) 2019 The Android Open Source Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,19 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-java_library {
-    name: "collector-device-lib",
+// Common utilities
+java_library_static {
+    name: "collector-helper-utilities",
     defaults: ["tradefed_errorprone_defaults"],
 
-    srcs: ["java/**/*.java"],
-
-    static_libs: [
-        "androidx.test.runner",
-        "junit",
-        "memory-helper",
-        "perfetto-helper",
-        "ub-uiautomator",
+    srcs: [
+        "src/**/*.java"
     ],
 
     sdk_version: "current",
 }
+

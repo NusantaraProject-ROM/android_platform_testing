@@ -36,7 +36,7 @@ import org.junit.runners.model.Statement;
  * A {@link BlockJUnit4ClassRunner} that runs a test class with a specified timeout and optionally
  * performs an idle before teardown (staying inside the app for Android CUJs).
  */
-public class ScheduledScenarioRunner extends BlockJUnit4ClassRunner {
+public class ScheduledScenarioRunner extends LongevityClassRunner {
     @VisibleForTesting static final long ENDTIME_LEEWAY_MS = 3000;
 
     private final Scenario mScenario;
