@@ -15,9 +15,6 @@
  */
 package com.android.helper.aoa;
 
-import static com.android.helper.aoa.AoaDevice.ACCESSORY_GET_PROTOCOL;
-import static com.android.helper.aoa.AoaDevice.INPUT;
-
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -28,6 +25,10 @@ import com.sun.jna.ptr.PointerByReference;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
@@ -72,6 +73,31 @@ public class UsbHelper implements AutoCloseable {
     }
 
     /**
+     * Find all connected device serial numbers.
+     *
+     * @param aoaOnly whether to only include AOAv2-compatible devices
+     * @return USB device serial numbers
+     */
+    @Nonnull
+    public Set<String> getSerialNumbers(boolean aoaOnly) {
+        Set<String> serialNumbers = new HashSet<>();
+
+        try (DeviceList list = new DeviceList()) {
+            for (Pointer devicePointer : list) {
+                // add all valid serial numbers
+                try (UsbDevice device = connect(devicePointer)) {
+                    String serialNumber = device.getSerialNumber();
+                    if (serialNumber != null && (!aoaOnly || device.isAoaCompatible())) {
+                        serialNumbers.add(serialNumber);
+                    }
+                }
+            }
+        }
+
+        return serialNumbers;
+    }
+
+    /**
      * Find a USB device using its serial number.
      *
      * @param serialNumber device serial number
@@ -79,26 +105,19 @@ public class UsbHelper implements AutoCloseable {
      */
     @Nullable
     public UsbDevice getDevice(@Nonnull String serialNumber) {
-        // retrieve all connected USB devices
-        PointerByReference list = new PointerByReference();
-        int count = checkResult(mUsb.libusb_get_device_list(checkNotNull(mContext), list));
-
-        try {
-            for (Pointer devicePointer : list.getValue().getPointerArray(0, count)) {
+        try (DeviceList list = new DeviceList()) {
+            for (Pointer devicePointer : list) {
                 // check if device has the right serial number
                 UsbDevice device = connect(devicePointer);
-                if (device.isValid() && serialNumber.equals(device.getSerialNumber())) {
+                if (serialNumber.equals(device.getSerialNumber())) {
                     return device;
                 }
                 device.close();
             }
-
-            // device not found
-            return null;
-
-        } finally {
-            mUsb.libusb_free_device_list(list.getValue(), true);
         }
+
+        // device not found
+        return null;
     }
 
     @VisibleForTesting
@@ -147,14 +166,7 @@ public class UsbHelper implements AutoCloseable {
     @Nullable
     public AoaDevice getAoaDevice(@Nonnull String serialNumber, @Nonnull Duration timeout) {
         UsbDevice device = getDevice(serialNumber, timeout);
-        if (device != null) {
-            // verify compatibility with AOAv2
-            int protocol = device.controlTransfer(INPUT, ACCESSORY_GET_PROTOCOL, 0, 0, new byte[2]);
-            if (protocol >= 2) {
-                return new AoaDevice(this, device);
-            }
-        }
-        return null;
+        return device != null && device.isAoaCompatible() ? new AoaDevice(this, device) : null;
     }
 
     /** De-initialize the USB context. */
@@ -163,6 +175,31 @@ public class UsbHelper implements AutoCloseable {
         if (mContext != null) {
             mUsb.libusb_exit(mContext);
             mContext = null;
+        }
+    }
+
+    /** USB device pointer list. */
+    private class DeviceList implements Iterable<Pointer>, AutoCloseable {
+
+        private final Pointer list;
+        private final int count;
+
+        private DeviceList() {
+            PointerByReference list = new PointerByReference();
+            this.count = checkResult(mUsb.libusb_get_device_list(checkNotNull(mContext), list));
+            this.list = list.getValue();
+        }
+
+        @Override
+        @Nonnull
+        public Iterator<Pointer> iterator() {
+            Pointer[] devices = list.getPointerArray(0, count);
+            return Arrays.stream(devices).iterator();
+        }
+
+        @Override
+        public void close() {
+            mUsb.libusb_free_device_list(list, true);
         }
     }
 }

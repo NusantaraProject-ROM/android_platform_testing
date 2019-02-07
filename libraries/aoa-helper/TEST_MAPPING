@@ -1,7 +1,8 @@
 {
   "presubmit": [
     {
-      "name": "aoa-helper-test"
+      "name": "aoa-helper-test",
+      "host": true
     }
   ]
 }

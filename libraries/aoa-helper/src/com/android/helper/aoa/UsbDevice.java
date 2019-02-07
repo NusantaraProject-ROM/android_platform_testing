@@ -15,6 +15,9 @@
  */
 package com.android.helper.aoa;
 
+import static com.android.helper.aoa.AoaDevice.ACCESSORY_GET_PROTOCOL;
+import static com.android.helper.aoa.AoaDevice.INPUT;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.primitives.Shorts;
@@ -96,6 +99,11 @@ public class UsbDevice implements AutoCloseable {
     /** @return device's product ID */
     public int getProductId() {
         return Shorts.fromBytes(mDescriptor[11], mDescriptor[10]);
+    }
+
+    /** @return true if device is AOAv2-compatible */
+    public boolean isAoaCompatible() {
+        return isValid() && controlTransfer(INPUT, ACCESSORY_GET_PROTOCOL, 0, 0, new byte[2]) >= 2;
     }
 
     /** Close the connection if necessary. */
