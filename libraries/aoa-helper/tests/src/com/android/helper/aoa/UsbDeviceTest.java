@@ -18,6 +18,9 @@ package com.android.helper.aoa;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyByte;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyShort;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -100,5 +103,34 @@ public class UsbDeviceTest {
         mDevice.close();
         // trying to operate on a closed handle should fail
         mDevice.reset();
+    }
+
+    @Test
+    public void testIsAoaCompatible() {
+        // supports AOA protocol version 2
+        when(mUsb.libusb_control_transfer(
+                        eq(mHandle),
+                        anyByte(),
+                        anyByte(),
+                        anyShort(),
+                        anyShort(),
+                        any(),
+                        anyShort(),
+                        anyInt()))
+                .thenReturn(2);
+        assertTrue(mDevice.isAoaCompatible());
+
+        // does not support any AOA protocol
+        when(mUsb.libusb_control_transfer(
+                        eq(mHandle),
+                        anyByte(),
+                        anyByte(),
+                        anyShort(),
+                        anyShort(),
+                        any(),
+                        anyShort(),
+                        anyInt()))
+                .thenReturn(-1);
+        assertFalse(mDevice.isAoaCompatible());
     }
 }
