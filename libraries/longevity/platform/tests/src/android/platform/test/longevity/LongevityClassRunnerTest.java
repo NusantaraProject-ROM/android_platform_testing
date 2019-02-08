@@ -71,7 +71,7 @@ public class LongevityClassRunnerTest {
     // the runner under test to fail but will not trigger a test failure directly. This message is
     // used to filter failures reported by the mocked RunNotifier and re-throw the ones injected in
     // the spy.
-    private static final String ASSERTION_FAILURE_MESSAGE = "Test assertions failed.";
+    private static final String ASSERTION_FAILURE_MESSAGE = "Test assertions failed";
 
     @Before
     public void setUp() throws InitializationError {
