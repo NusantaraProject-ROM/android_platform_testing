@@ -21,6 +21,7 @@ import android.util.Log;
 import com.android.os.AtomsProto.AppStartFullyDrawn;
 import com.android.os.AtomsProto.AppStartOccurred;
 import com.android.os.AtomsProto.Atom;
+import com.android.os.AtomsProto.ProcessStartTime;
 import com.android.os.StatsLog.EventMetricData;
 
 import java.util.ArrayList;
@@ -50,6 +51,9 @@ public class AppStartupHelper implements ICollectorHelper<StringBuilder> {
     private static final String STARTUP_FULLY_DRAWN_WITHOUT_BUNDLE =
             "startup_fully_drawn_without_bundle";
 
+    private static final String PROCESS_START = "process_start";
+    private static final String PROCESS_START_DELAY = "process_start_delay";
+
     private StatsdHelper mStatsdHelper = new StatsdHelper();
 
     /**
@@ -57,10 +61,11 @@ public class AppStartupHelper implements ICollectorHelper<StringBuilder> {
      */
     @Override
     public boolean startCollecting() {
-        Log.i(LOG_TAG, "Adding AppStartOccured config to statsd.");
+        Log.i(LOG_TAG, "Adding app startup configs to statsd.");
         List<Integer> atomIdList = new ArrayList<>();
         atomIdList.add(Atom.APP_START_OCCURRED_FIELD_NUMBER);
         atomIdList.add(Atom.APP_START_FULLY_DRAWN_FIELD_NUMBER);
+        atomIdList.add(Atom.PROCESS_START_TIME_FIELD_NUMBER);
         return mStatsdHelper.addEventConfig(atomIdList);
     }
 
@@ -88,31 +93,31 @@ public class AppStartupHelper implements ICollectorHelper<StringBuilder> {
                 String metricCountKey = "";
                 // To track total number of startups per type.
                 String totalCountKey = "";
+                String typeKey = "";
                 switch (appStartAtom.getType()) {
                     case COLD:
-                        metricKey = MetricUtility.constructKey(COLD_STARTUP, pkgName);
-                        metricCountKey = MetricUtility.constructKey(COLD_STARTUP, COUNT, pkgName);
-                        totalCountKey = MetricUtility.constructKey(COLD_STARTUP, TOTAL_COUNT);
+                        typeKey = COLD_STARTUP;
                         break;
                     case WARM:
-                        metricKey = MetricUtility.constructKey(WARM_STARTUP, pkgName);
-                        metricCountKey = MetricUtility.constructKey(WARM_STARTUP, COUNT, pkgName);
-                        totalCountKey = MetricUtility.constructKey(WARM_STARTUP, TOTAL_COUNT);
+                        typeKey = WARM_STARTUP;
                         break;
                     case HOT:
-                        metricKey = MetricUtility.constructKey(HOT_STARTUP, pkgName);
-                        metricCountKey = MetricUtility.constructKey(HOT_STARTUP, COUNT, pkgName);
-                        totalCountKey = MetricUtility.constructKey(HOT_STARTUP, TOTAL_COUNT);
+                        typeKey = HOT_STARTUP;
                         break;
                     case UNKNOWN:
                         break;
                 }
-                if (!metricKey.isEmpty()) {
+                if (!typeKey.isEmpty()) {
+                    metricKey = MetricUtility.constructKey(typeKey, pkgName);
+                    metricCountKey = MetricUtility.constructKey(typeKey, COUNT, pkgName);
+                    totalCountKey = MetricUtility.constructKey(typeKey, TOTAL_COUNT);
+                    // Update the metrics.
                     MetricUtility.addMetric(metricKey, windowsDrawnMillis, appStartResultMap);
                     MetricUtility.addMetric(metricCountKey, appStartCountMap);
                     MetricUtility.addMetric(totalCountKey, appStartCountMap);
                 }
-            } else if (atom.hasAppStartFullyDrawn()) {
+            }
+            if (atom.hasAppStartFullyDrawn()) {
                 AppStartFullyDrawn appFullyDrawnAtom = atom.getAppStartFullyDrawn();
                 String pkgName = appFullyDrawnAtom.getPkgName();
                 String transitionType = appFullyDrawnAtom.getType().toString();
@@ -137,6 +142,52 @@ public class AppStartupHelper implements ICollectorHelper<StringBuilder> {
                 }
                 if (!metricKey.isEmpty()) {
                     MetricUtility.addMetric(metricKey, startupTimeMillis, appStartResultMap);
+                }
+            }
+            // ProcessStartTime reports startup time for both foreground and background process.
+            if (atom.hasProcessStartTime()) {
+                ProcessStartTime processStartTimeAtom = atom.getProcessStartTime();
+                String processName = processStartTimeAtom.getProcessName();
+                // Number of milliseconds it takes to finish start of the process.
+                long processStartDelayMillis = processStartTimeAtom.getProcessStartDelayMillis();
+                // Treating activity hosting type as foreground and everything else as background.
+                String hostingType = processStartTimeAtom.getHostingType().equals("activity")
+                        ? "fg" : "bg";
+                Log.i(LOG_TAG, String.format("Process Name: %s, Start Type: %s, Hosting Type: %s,"
+                        + " ProcessStartDelayMillis: %d", processName,
+                        processStartTimeAtom.getType().toString(),
+                        hostingType, processStartDelayMillis));
+
+                String metricKey = "";
+                // To track number of startups per type per package.
+                String metricCountKey = "";
+                // To track total number of startups per type.
+                String totalCountKey = "";
+                String typeKey = "";
+                switch (processStartTimeAtom.getType()) {
+                    case COLD:
+                        typeKey = COLD_STARTUP;
+                        break;
+                    case WARM:
+                        typeKey = WARM_STARTUP;
+                        break;
+                    case HOT:
+                        typeKey = HOT_STARTUP;
+                        break;
+                    case UNKNOWN:
+                        break;
+                }
+                if (!typeKey.isEmpty()) {
+                    metricKey = MetricUtility.constructKey(typeKey,
+                            PROCESS_START_DELAY, processName, hostingType);
+                    metricCountKey = MetricUtility.constructKey(typeKey, PROCESS_START,
+                            COUNT, processName, hostingType);
+                    totalCountKey = MetricUtility.constructKey(typeKey, PROCESS_START,
+                            TOTAL_COUNT);
+                    // Update the metrics
+                    MetricUtility.addMetric(metricKey, processStartDelayMillis, appStartResultMap);
+                    MetricUtility.addMetric(metricCountKey, appStartCountMap);
+                    MetricUtility.addMetric(totalCountKey, appStartCountMap);
                 }
             }
         }
