@@ -15,15 +15,12 @@
  */
 package com.android.helper.aoa;
 
-import static com.android.helper.aoa.AoaDevice.ACCESSORY_GET_PROTOCOL;
 import static com.android.helper.aoa.AoaDevice.GOOGLE_VID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyByte;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -33,6 +30,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.Sets;
 import com.sun.jna.Memory;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.PointerByReference;
@@ -41,6 +39,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+
+import java.util.HashSet;
 
 /** Unit tests for {@link UsbHelper} */
 @RunWith(JUnit4.class)
@@ -116,6 +116,26 @@ public class UsbHelperTest {
     }
 
     @Test
+    public void testGetSerialNumbers() {
+        assertEquals(Sets.newHashSet(SERIAL_NUMBER), mHelper.getSerialNumbers(false));
+
+        // device list and device were closed
+        verify(mDevice, times(1)).close();
+        verify(mUsb, times(1)).libusb_free_device_list(any(), eq(true));
+    }
+
+    @Test
+    public void testGetSerialNumbers_aoaOnly() {
+        when(mDevice.isAoaCompatible()).thenReturn(false);
+        assertEquals(Sets.newHashSet(SERIAL_NUMBER), mHelper.getSerialNumbers(false));
+        assertEquals(new HashSet<>(), mHelper.getSerialNumbers(true));
+
+        when(mDevice.isAoaCompatible()).thenReturn(true);
+        assertEquals(Sets.newHashSet(SERIAL_NUMBER), mHelper.getSerialNumbers(false));
+        assertEquals(Sets.newHashSet(SERIAL_NUMBER), mHelper.getSerialNumbers(true));
+    }
+
+    @Test
     public void testGetDevice() {
         // valid connection was found and opened
         assertEquals(mDevice, mHelper.getDevice(SERIAL_NUMBER));
@@ -127,19 +147,7 @@ public class UsbHelperTest {
 
     @Test
     public void testGetDevice_invalid() {
-        when(mDevice.isValid()).thenReturn(false);
-
-        // valid device not found
-        assertNull(mHelper.getDevice(SERIAL_NUMBER));
-
-        // connection and device list were closed
-        verify(mDevice, times(1)).close();
-        verify(mUsb, times(1)).libusb_free_device_list(any(), eq(true));
-    }
-
-    @Test
-    public void testGetDevice_missing() {
-        when(mDevice.getSerialNumber()).thenReturn("unknown");
+        when(mDevice.getSerialNumber()).thenReturn(null);
 
         // valid device not found
         assertNull(mHelper.getDevice(SERIAL_NUMBER));
@@ -151,21 +159,13 @@ public class UsbHelperTest {
 
     @Test
     public void testGetAoaDevice() {
-        // AOAv2 protocol supported
-        when(mDevice.controlTransfer(
-                anyByte(), eq(ACCESSORY_GET_PROTOCOL), anyInt(), anyInt(), any()))
-                .thenReturn(2);
-
+        when(mDevice.isAoaCompatible()).thenReturn(true);
         assertNotNull(mHelper.getAoaDevice(SERIAL_NUMBER));
     }
 
     @Test
     public void testGetAoaDevice_incompatible() {
-        // AOAv2 protocol not supported
-        when(mDevice.controlTransfer(
-                anyByte(), eq(ACCESSORY_GET_PROTOCOL), anyInt(), anyInt(), any()))
-                .thenReturn(-1);
-
+        when(mDevice.isAoaCompatible()).thenReturn(false);
         assertNull(mHelper.getAoaDevice(SERIAL_NUMBER));
     }
 }
