@@ -18,6 +18,6 @@ java_library {
 
     name: "metrics-helper-lib",
     srcs: ["src/**/*.java"],
-    static_libs: ["junit"],
-
+    static_libs: ["junit", "framework-protos", ],
+    sdk_version: "test_current",
 }
