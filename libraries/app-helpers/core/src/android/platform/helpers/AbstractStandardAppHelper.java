@@ -46,6 +46,7 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
     private static final String LOG_TAG = AbstractStandardAppHelper.class.getSimpleName();
     private static final String SCREENSHOT_DIR = "apphelper-screenshots";
     private static final String FAVOR_CMD = "favor-shell-commands";
+    private static final String USE_HOME_CMD = "press-home-to-exit";
     private static final String ERROR_NOT_FOUND =
         "Element %s %s is not found in the application %s";
     private static final long APP_LAUNCH_WAIT_TIME_MS = 5000; // 5 seconds
@@ -58,6 +59,7 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
     private final KeyCharacterMap mKeyCharacterMap =
             KeyCharacterMap.load(KeyCharacterMap.VIRTUAL_KEYBOARD);
     private final boolean mFavorShellCommands;
+    private final boolean mPressHomeToExit;
 
     public AbstractStandardAppHelper(Instrumentation instr) {
         mInstrumentation = instr;
@@ -66,6 +68,9 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
         mFavorShellCommands =
                 Boolean.valueOf(
                         InstrumentationRegistry.getArguments().getString(FAVOR_CMD, "false"));
+        mPressHomeToExit =
+                Boolean.valueOf(
+                        InstrumentationRegistry.getArguments().getString(USE_HOME_CMD, "false"));
     }
 
     /**
@@ -106,15 +111,23 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
      */
     @Override
     public void exit() {
-        int maxBacks = 4;
-        while (!mDevice.hasObject(mLauncherStrategy.getWorkspaceSelector()) && maxBacks > 0) {
-            mDevice.pressBack();
-            mDevice.waitForIdle();
-            maxBacks--;
-        }
-
-        if (maxBacks == 0) {
+        if (mPressHomeToExit) {
             mDevice.pressHome();
+            mDevice.waitForIdle();
+            if (!mDevice.hasObject(mLauncherStrategy.getWorkspaceSelector())) {
+                throw new IllegalStateException("Pressing Home failed to exit the app.");
+            }
+        } else {
+            int maxBacks = 4;
+            while (!mDevice.hasObject(mLauncherStrategy.getWorkspaceSelector()) && maxBacks > 0) {
+                mDevice.pressBack();
+                mDevice.waitForIdle();
+                maxBacks--;
+            }
+
+            if (maxBacks == 0) {
+                mDevice.pressHome();
+            }
         }
     }
 
