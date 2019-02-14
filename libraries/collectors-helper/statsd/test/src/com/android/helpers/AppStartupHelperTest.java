@@ -38,7 +38,7 @@ import static org.junit.Assert.assertEquals;
  * Connect to wifi and login to gmail.
  * Disable SELinux: adb shell setenforce 0; if this fails with "permission denied",
  * try "adb shell su 0 setenforce 0"
- * atest CollectorsHelperTest:com.android.helpers.tests.AppStartupHelperTest
+ * atest CollectorsHelperTest:com.android.helpers.AppStartupHelperTest
  */
 @RunWith(AndroidJUnit4.class)
 public class AppStartupHelperTest {
@@ -50,8 +50,14 @@ public class AppStartupHelperTest {
     private static final String SETTINGS_PKG_NAME = "com.android.settings";
     // Key prefixes to store the cold, warm or hot launch time of the calendar app, respectively.
     private static final String COLD_LAUNCH_KEY_TEMPLATE = "cold_startup_%s";
+    private static final String COLD_LAUNCH_PROCESSS_FG_KEY_TEMPLATE =
+            "cold_startup_process_start_delay_%s_fg";
     private static final String COLD_LAUNCH_COUNT_PKG_KEY_TEMPLATE = "cold_startup_count_%s";
+    private static final String COLD_LAUNCH_PROCESS_COUNT_FG_KEY_TEMPLATE =
+            "cold_startup_process_start_count_%s_fg";
     private static final String COLD_LAUNCH_TOTAL_COUNT_KEY_TEMPLATE = "cold_startup_total_count";
+    private static final String COLD_LAUNCH_PROCESS_START_TOTAL_COUNT_KEY_TEMPLATE =
+            "cold_startup_process_start_total_count";
     private static final String WARM_LAUNCH_KEY_TEMPLATE = "warm_startup_%s";
     private static final String HOT_LAUNCH_KEY_TEMPLATE = "hot_startup_%s";
     // Keyword for keys to store the app startup fully drawn metric.
@@ -110,6 +116,22 @@ public class AppStartupHelperTest {
         assertEquals(1, Integer.parseInt(appLaunchMetrics.get(coldLaunchCountPkgKey).toString()));
         assertEquals(1, Integer.parseInt(appLaunchMetrics.get(COLD_LAUNCH_TOTAL_COUNT_KEY_TEMPLATE)
                 .toString()));
+
+        // Verify process start values.
+        String coldLaunchProcessMetricKey = String.format(COLD_LAUNCH_PROCESSS_FG_KEY_TEMPLATE,
+                CALENDAR_PKG_NAME);
+        String coldLaunchProcessCountPkgKey = String.format(COLD_LAUNCH_COUNT_PKG_KEY_TEMPLATE,
+                CALENDAR_PKG_NAME);
+        assertTrue(appLaunchMetrics.keySet().contains(coldLaunchProcessMetricKey));
+        assertEquals(1,
+                appLaunchMetrics.get(coldLaunchProcessMetricKey).toString().split(",").length);
+        assertEquals(1,
+                Integer.parseInt(appLaunchMetrics.get(coldLaunchProcessCountPkgKey).toString()));
+        assertEquals(
+                1,
+                Integer.parseInt(appLaunchMetrics.get(
+                        COLD_LAUNCH_PROCESS_START_TOTAL_COUNT_KEY_TEMPLATE)
+                        .toString()));
         assertTrue(mAppStartupHelper.stopCollecting());
         mHelper.get().exit();
     }
@@ -135,6 +157,24 @@ public class AppStartupHelperTest {
         assertEquals(2, Integer.parseInt(appLaunchMetrics.get(coldLaunchCountPkgKey).toString()));
         assertEquals(2, Integer.parseInt(appLaunchMetrics.get(COLD_LAUNCH_TOTAL_COUNT_KEY_TEMPLATE)
                 .toString()));
+
+        // Verify process start values.
+        String coldLaunchProcessMetricKey = String.format(COLD_LAUNCH_PROCESSS_FG_KEY_TEMPLATE,
+                CALENDAR_PKG_NAME);
+        String coldLaunchProcessCountPkgKey = String.format(COLD_LAUNCH_COUNT_PKG_KEY_TEMPLATE,
+                CALENDAR_PKG_NAME);
+        assertTrue(appLaunchMetrics.keySet().contains(coldLaunchProcessMetricKey));
+        assertEquals(2,
+                appLaunchMetrics.get(coldLaunchProcessMetricKey).toString().split(",").length);
+        assertEquals(2,
+                Integer.parseInt(appLaunchMetrics.get(coldLaunchProcessCountPkgKey).toString()));
+        assertEquals(
+                2,
+                Integer.parseInt(appLaunchMetrics.get(
+                        COLD_LAUNCH_PROCESS_START_TOTAL_COUNT_KEY_TEMPLATE)
+                        .toString()));
+        assertTrue(mAppStartupHelper.stopCollecting());
+        mHelper.get().exit();
         assertTrue(mAppStartupHelper.stopCollecting());
         mHelper.get().exit();
     }
@@ -181,6 +221,35 @@ public class AppStartupHelperTest {
                 Integer.parseInt(appLaunchMetrics.get(coldLaunchSettingsCountPkgKey).toString()));
         assertEquals(2, Integer.parseInt(appLaunchMetrics.get(COLD_LAUNCH_TOTAL_COUNT_KEY_TEMPLATE)
                 .toString()));
+
+        // Verify process start values.
+        String coldLaunchProcessMetricKey = String.format(COLD_LAUNCH_PROCESSS_FG_KEY_TEMPLATE,
+                CALENDAR_PKG_NAME);
+        String coldLaunchProcessCountPkgKey = String.format(COLD_LAUNCH_COUNT_PKG_KEY_TEMPLATE,
+                CALENDAR_PKG_NAME);
+        String coldLaunchProcessMetricSettingsKey = String.format(
+                COLD_LAUNCH_PROCESSS_FG_KEY_TEMPLATE, SETTINGS_PKG_NAME);
+        String coldLaunchProcessCountSettingsPkgKey = String.format(
+                COLD_LAUNCH_COUNT_PKG_KEY_TEMPLATE,
+                SETTINGS_PKG_NAME);
+
+        assertTrue(appLaunchMetrics.keySet().contains(coldLaunchProcessMetricKey));
+        assertEquals(1,
+                appLaunchMetrics.get(coldLaunchProcessMetricKey).toString().split(",").length);
+        assertEquals(1,
+                Integer.parseInt(appLaunchMetrics.get(coldLaunchProcessCountPkgKey).toString()));
+        assertEquals(
+                1, appLaunchMetrics.get(
+                        coldLaunchProcessMetricSettingsKey).toString().split(",").length);
+        assertEquals(1, Integer.parseInt(appLaunchMetrics.get(coldLaunchProcessCountSettingsPkgKey)
+                .toString()));
+
+        // Sometimes I see background process started during the test counted towards total count
+        // hence setting to gretaer than 2.
+        assertTrue(Integer.parseInt(appLaunchMetrics.get(
+                COLD_LAUNCH_PROCESS_START_TOTAL_COUNT_KEY_TEMPLATE)
+                .toString()) >= 2);
+
         assertTrue(mAppStartupHelper.stopCollecting());
 
     }
