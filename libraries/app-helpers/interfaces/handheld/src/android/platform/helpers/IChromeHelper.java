@@ -79,11 +79,23 @@ public interface IChromeHelper extends IAppHelper {
     public abstract void openMenu();
 
     /**
-     * Setup expectations: Chrome is open on a page and menu is opened.
+     * Setup expectations: Chrome is open on a page.
      *
      * <p>This method will open provided item in the menu.
      */
     public abstract void openMenuItem(IChromeHelper.MenuItem menuItem);
+
+    /**
+     * Setup expectations: Chrome is open on a page.
+     *
+     * <p>This method will open provided item in the menu.
+     *
+     * @param menuItem The name of menu item.
+     * @param waitForPageLoad Wait for the page to load completely or not.
+     */
+    public default void openMenuItem(IChromeHelper.MenuItem menuItem, boolean waitForPageLoad) {
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
 
     /**
      * Setup expectations: Chrome is open on a page and the tabs are treated as apps.
