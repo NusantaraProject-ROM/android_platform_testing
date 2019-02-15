@@ -68,6 +68,7 @@ public class LogcatOnFailureCollectorHostTest extends BaseHostJUnit4Test {
         mOptions.setRunner(AJUR_RUNNER);
         mOptions.addInstrumentationArg("listener", LOGCAT_COLLECTOR);
         mOptions.setTestClassName("android.device.tests.TestEvents");
+        mOptions.setDisableIsolatedStorage(true);
 
         mContext = mock(IInvocationContext.class);
         doReturn(Arrays.asList(getDevice())).when(mContext).getDevices();
