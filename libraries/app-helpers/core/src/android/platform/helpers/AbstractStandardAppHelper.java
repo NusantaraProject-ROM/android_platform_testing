@@ -19,7 +19,9 @@ package android.platform.helpers;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.Instrumentation;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -82,14 +84,15 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
         if (mFavorShellCommands) {
             String output = null;
             try {
-                output = mDevice.executeShellCommand(String.format("am start %s", pkg));
+                Intent intent =
+                        mInstrumentation
+                                .getContext()
+                                .getPackageManager()
+                                .getLaunchIntentForPackage(pkg);
+                mInstrumentation.getContext().startActivity(intent);
                 Log.i(LOG_TAG, String.format("Sent command to launch: %s", pkg));
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to execute start command", e);
-            }
-            if (output != null && output.contains("unable to resolve")) {
-                throw new IllegalArgumentException(
-                        String.format("Unable to find package, %s, to start.", pkg));
+            } catch (ActivityNotFoundException e) {
+                throw new RuntimeException(String.format("Failed to find package: %s", pkg), e);
             }
         } else {
             // Launch using the UI and launcher strategy.
