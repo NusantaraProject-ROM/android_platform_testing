@@ -46,25 +46,6 @@ platform_tests += \
     ExternalSharedPermsFLTestApp \
     ExternalSharedPermsTestApp \
     flatland \
-    FrameworksCoreTests \
-    FrameworkCoreTests_install \
-    FrameworkCoreTests_install_bad_dex \
-    FrameworkCoreTests_install_complete_package_info \
-    FrameworkCoreTests_install_decl_perm \
-    FrameworkCoreTests_install_loc_auto \
-    FrameworkCoreTests_install_loc_internal \
-    FrameworkCoreTests_install_loc_sdcard \
-    FrameworkCoreTests_install_loc_unspecified \
-    FrameworkCoreTests_install_use_perm_good \
-    FrameworkCoreTests_install_uses_feature \
-    FrameworkCoreTests_install_verifier_bad \
-    FrameworkCoreTests_install_verifier_good \
-    FrameworkCoreTests_version_1 \
-    FrameworkCoreTests_version_1_diff \
-    FrameworkCoreTests_version_1_nosys \
-    FrameworkCoreTests_version_2 \
-    FrameworkCoreTests_version_2_diff \
-    FrameworkCoreTests_version_3 \
     FrameworkPerf \
     FrameworkPermissionTests \
     FrameworksCoreTests \
