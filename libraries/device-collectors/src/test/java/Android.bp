@@ -19,7 +19,7 @@ android_test {
     name: "CollectorDeviceLibTest",
     defaults: ["tradefed_errorprone_defaults"],
 
-    srcs: ["java/**/*.java"],
+    srcs: ["android/**/*.java"],
     static_libs: [
         "androidx.test.runner",
         "collector-device-lib",
@@ -33,3 +33,4 @@ android_test {
 
     test_suites: ["general-tests"],
 }
+
