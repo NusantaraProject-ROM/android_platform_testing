@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 /**
@@ -53,6 +54,7 @@ public class AppStartupHelper implements ICollectorHelper<StringBuilder> {
 
     private static final String PROCESS_START = "process_start";
     private static final String PROCESS_START_DELAY = "process_start_delay";
+    private boolean isProcStartDetailsDisabled;
 
     private StatsdHelper mStatsdHelper = new StatsdHelper();
 
@@ -77,6 +79,7 @@ public class AppStartupHelper implements ICollectorHelper<StringBuilder> {
         List<EventMetricData> eventMetricData = mStatsdHelper.getEventMetrics();
         Map<String, StringBuilder> appStartResultMap = new HashMap<>();
         Map<String, Integer> appStartCountMap = new HashMap<>();
+        Map<String, Integer> tempResultCountMap = new HashMap<>();
         for (EventMetricData dataItem : eventMetricData) {
             Atom atom = dataItem.getAtom();
             if (atom.hasAppStartOccurred()) {
@@ -185,12 +188,26 @@ public class AppStartupHelper implements ICollectorHelper<StringBuilder> {
                     totalCountKey = MetricUtility.constructKey(typeKey, PROCESS_START,
                             TOTAL_COUNT);
                     // Update the metrics
-                    MetricUtility.addMetric(metricKey, processStartDelayMillis, appStartResultMap);
-                    MetricUtility.addMetric(metricCountKey, appStartCountMap);
+                    if(isProcStartDetailsDisabled) {
+                        MetricUtility.addMetric(metricCountKey, tempResultCountMap);
+                    } else {
+                        MetricUtility.addMetric(metricKey, processStartDelayMillis,
+                                appStartResultMap);
+                        MetricUtility.addMetric(metricCountKey, appStartCountMap);
+                    }
+
                     MetricUtility.addMetric(totalCountKey, appStartCountMap);
                 }
             }
         }
+
+        if (isProcStartDetailsDisabled) {
+            for (Entry<String, Integer> entry : tempResultCountMap.entrySet()) {
+                Log.i(LOG_TAG, String.format("Process_delay_key: %s, Count: %d", entry.getKey(),
+                        entry.getValue()));
+            }
+        }
+
         // Cast to StringBuilder as the raw app startup metric could be comma separated values
         // if there are multiple app launches.
         Map<String, StringBuilder> finalCountMap = appStartCountMap
@@ -210,5 +227,12 @@ public class AppStartupHelper implements ICollectorHelper<StringBuilder> {
     @Override
     public boolean stopCollecting() {
         return mStatsdHelper.removeStatsConfig();
+    }
+
+    /**
+     * Disable process start detailed metrics.
+     */
+    public void setDisableProcStartDetails() {
+        isProcStartDetailsDisabled = true;
     }
 }
