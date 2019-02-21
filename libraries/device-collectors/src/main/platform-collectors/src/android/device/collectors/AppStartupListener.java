@@ -16,6 +16,7 @@
 package android.device.collectors;
 
 import android.device.collectors.annotations.OptionClass;
+import android.os.Bundle;
 
 import com.android.helpers.AppStartupHelper;
 
@@ -27,7 +28,22 @@ import com.android.helpers.AppStartupHelper;
  */
 @OptionClass(alias = "appstartup-collector")
 public class AppStartupListener extends BaseCollectionListener<StringBuilder> {
+
+    private static final String DISABLE_PROC_START_DETAILS = "disable_process_start_details";
+
     public AppStartupListener() {
         createHelperInstance(new AppStartupHelper());
+    }
+
+    /**
+     * Adds the options to filter the app startup metrics
+     */
+    @Override
+    public void setupAdditionalArgs() {
+        Bundle args = getArgsBundle();
+        AppStartupHelper appstartupHelper = (AppStartupHelper) mHelper;
+        if ("true".equals(args.getString(DISABLE_PROC_START_DETAILS))) {
+            appstartupHelper.setDisableProcStartDetails();
+        }
     }
 }

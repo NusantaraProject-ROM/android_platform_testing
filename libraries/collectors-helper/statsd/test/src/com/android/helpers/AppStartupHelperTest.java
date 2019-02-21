@@ -28,6 +28,7 @@ import org.junit.runner.RunWith;
 
 import java.util.Map;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 
@@ -370,5 +371,41 @@ public class AppStartupHelperTest {
         HelperTestUtility.clearApp(String.format(KILL_TEST_APP_CMD_TEMPLATE, SETTINGS_PKG_NAME));
         SystemClock.sleep(HelperTestUtility.ACTION_DELAY);
     }
-}
 
+    /**
+     * Test disable detailed process start delay metrics.
+     */
+    @Test
+    public void testDisableDetailedProcStartMetrics() throws Exception {
+        mAppStartupHelper.setDisableProcStartDetails();
+        assertTrue(mAppStartupHelper.startCollecting());
+        mHelper.get().open();
+        Map<String, StringBuilder> appLaunchMetrics = mAppStartupHelper.getMetrics();
+        // A metric key for the app cold launching should exist, and should only hold one value.
+        String coldLaunchMetricKey = String.format(COLD_LAUNCH_KEY_TEMPLATE, CALENDAR_PKG_NAME);
+        String coldLaunchCountPkgKey = String.format(COLD_LAUNCH_COUNT_PKG_KEY_TEMPLATE,
+                CALENDAR_PKG_NAME);
+        assertTrue(appLaunchMetrics.keySet().contains(coldLaunchMetricKey));
+        assertEquals(1, appLaunchMetrics.get(coldLaunchMetricKey).toString().split(",").length);
+        assertEquals(1, Integer.parseInt(appLaunchMetrics.get(coldLaunchCountPkgKey).toString()));
+        assertEquals(1, Integer.parseInt(appLaunchMetrics.get(COLD_LAUNCH_TOTAL_COUNT_KEY_TEMPLATE)
+                .toString()));
+
+        // Verify process start detailed values are not added.
+        String coldLaunchProcessMetricKey = String.format(COLD_LAUNCH_PROCESSS_FG_KEY_TEMPLATE,
+                CALENDAR_PKG_NAME);
+        String coldLaunchProcessCountPkgKey = String.format(COLD_LAUNCH_COUNT_PKG_KEY_TEMPLATE,
+                CALENDAR_PKG_NAME);
+        assertFalse(appLaunchMetrics.keySet().contains(coldLaunchProcessMetricKey));
+        assertTrue(appLaunchMetrics.keySet().contains(coldLaunchProcessCountPkgKey));
+
+        // Only the total count is tracked.
+        assertEquals(
+                1,
+                Integer.parseInt(appLaunchMetrics.get(
+                        COLD_LAUNCH_PROCESS_START_TOTAL_COUNT_KEY_TEMPLATE)
+                        .toString()));
+        assertTrue(mAppStartupHelper.stopCollecting());
+        mHelper.get().exit();
+    }
+}
