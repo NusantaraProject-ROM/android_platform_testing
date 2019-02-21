@@ -26,6 +26,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Environment;
+import android.os.RemoteException;
 import android.os.SystemClock;
 import android.platform.helpers.exceptions.AccountException;
 import android.platform.helpers.exceptions.UnknownUiException;
@@ -80,6 +81,19 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
      */
     @Override
     public void open() {
+        // Turn on the screen if necessary.
+        try {
+            if (!mDevice.isScreenOn()) {
+                mDevice.wakeUp();
+            }
+        } catch (RemoteException e) {
+            throw new RuntimeException("Could not unlock the device.", e);
+        }
+        // Unlock the screen if necessary.
+        if (mDevice.hasObject(By.res("com.android.systemui", "keyguard_bottom_area"))) {
+            mDevice.pressMenu();
+        }
+        // Launch the application as normal.
         String pkg = getPackage();
         if (mFavorShellCommands) {
             String output = null;
