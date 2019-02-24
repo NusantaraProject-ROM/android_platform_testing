@@ -35,7 +35,7 @@ platform_tests += \
     Development \
     DeviceHealthChecks \
     DeviceHealthTests \
-    DexLoggerIntegrationTests \
+    DynamicCodeLoggerIntegrationTests \
     DialerJankTests \
     DownloadManagerTestApp \
     DummyIME \

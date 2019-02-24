@@ -50,7 +50,7 @@ instrumentation_tests := \
     BlockedNumberProviderTest \
     DownloadAppFunctionalTests \
     NotificationFunctionalTests \
-    DexLoggerIntegrationTests \
+    DynamicCodeLoggerIntegrationTests \
     UsbTests \
     DownloadProviderTests \
     EmergencyInfoUnitTests \
