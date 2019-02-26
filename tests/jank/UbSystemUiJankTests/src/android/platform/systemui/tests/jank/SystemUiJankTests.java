@@ -30,6 +30,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Rect;
 import android.graphics.drawable.Icon;
+import android.hardware.display.AmbientDisplayConfiguration;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.RemoteException;
@@ -52,14 +53,12 @@ import android.system.helpers.OverviewHelper;
 import android.widget.Button;
 import android.widget.ImageView;
 
-import com.android.internal.hardware.AmbientDisplayConfiguration;
 import com.android.launcher3.tapl.LauncherInstrumentation;
 import com.android.launcher3.tapl.Overview;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class SystemUiJankTests extends JankTestBase {
