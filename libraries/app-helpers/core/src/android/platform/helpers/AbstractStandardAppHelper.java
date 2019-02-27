@@ -52,7 +52,7 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
     private static final String USE_HOME_CMD = "press-home-to-exit";
     private static final String ERROR_NOT_FOUND =
         "Element %s %s is not found in the application %s";
-    private static final long APP_LAUNCH_WAIT_TIME_MS = 5000; // 5 seconds
+    private static final long APP_LAUNCH_WAIT_TIME_MS = 10000; // 10 seconds
 
     private static File sScreenshotDirectory;
 
@@ -92,6 +92,7 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
         // Unlock the screen if necessary.
         if (mDevice.hasObject(By.res("com.android.systemui", "keyguard_bottom_area"))) {
             mDevice.pressMenu();
+            mDevice.waitForIdle();
         }
         // Launch the application as normal.
         String pkg = getPackage();
