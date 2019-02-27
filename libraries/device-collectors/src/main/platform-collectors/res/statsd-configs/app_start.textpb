@@ -1,0 +1,17 @@
+allowed_log_source: "AID_ROOT"
+allowed_log_source: "AID_SYSTEM"
+allowed_log_source: "AID_RADIO"
+allowed_log_source: "AID_BLUETOOTH"
+allowed_log_source: "AID_GRAPHICS"
+allowed_log_source: "AID_STATSD"
+allowed_log_source: "AID_INCIENTD"
+atom_matcher {
+  id: 699909520
+  simple_atom_matcher {
+    atom_id: 48     # AppStartOccurred
+  }
+}
+event_metric {
+  id: -73684035
+  what: 699909520   # Matches an atom ID
+}
