@@ -19,8 +19,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.endsWith;
+import static org.mockito.ArgumentMatchers.matches;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -38,6 +41,7 @@ import org.junit.runner.notification.Failure;
 import org.junit.runner.Result;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -192,7 +196,6 @@ public class ScreenshotOnFailureCollectorTest {
             mListener.testStarted(mTestDesc);
             mListener.testFailure(new Failure(mTestDesc, new RuntimeException("I failed")));
             mListener.testFinished(mTestDesc);
-            // Test `i` UI XML's were saved before this.
         }
         mListener.testRunFinished(new Result());
         verify(mListener, Mockito.never()).collectUiXml(any());
@@ -213,6 +216,43 @@ public class ScreenshotOnFailureCollectorTest {
             for(String key : bundle.keySet()) {
                 assertFalse(key.contains(mUixLogFile.getName()));
             }
+        }
+    }
+
+    @Test
+    public void testSavesIterations() throws Exception {
+        Bundle b = new Bundle();
+        b.putString("include-ui-xml", "true");
+        mListener = initListener(b);
+
+        // Run through a sequence of `NUM_TEST_CASE` failing tests.
+        mListener.testRunStarted(mRunDesc);
+        verify(mListener).createAndEmptyDirectory(ScreenshotOnFailureCollector.DEFAULT_DIR);
+        for (int i = 1; i <= NUM_TEST_CASE; i++) {
+            mListener.testStarted(mTestDesc);
+            mListener.testFailure(new Failure(mTestDesc, new RuntimeException("I failed")));
+            mListener.testFinished(mTestDesc);
+        }
+        mListener.testRunFinished(new Result());
+
+        // Verifies that screenshots are saved with iterations.
+        InOrder screenshotSaveVerifier = inOrder(mListener);
+        // The first saved screenshot should not have an iteration number.
+        screenshotSaveVerifier.verify(mListener).takeScreenshot(matches("^.*[^1].png$"));
+        // The second and later saved screenshots should contain the iteration number.
+        for (int i = 1; i < NUM_TEST_CASE; i++) {
+            screenshotSaveVerifier
+                    .verify(mListener)
+                    .takeScreenshot(endsWith(String.format("%d.png", i + 1)));
+        }
+
+        // Verifies that XMLs are saved with iterations that start with 1.
+        InOrder xmlSaveVerifier = inOrder(mListener);
+        // The first saved XML should not have an iteration number.
+        xmlSaveVerifier.verify(mListener).takeScreenshot(matches("^.*[^1]$"));
+        // The second and later saved XML should contain the iteration number.
+        for (int i = 1; i < NUM_TEST_CASE; i++) {
+            xmlSaveVerifier.verify(mListener).collectUiXml(endsWith(String.valueOf(i + 1)));
         }
     }
 }
