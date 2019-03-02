@@ -65,6 +65,9 @@ public class Profile implements Compose<Bundle, Runner> {
     private long mRunStartTimeMs = System.currentTimeMillis();
     // The profile configuration.
     private Configuration mConfiguration;
+    // The timestamp of the first scenario in milliseconds. All scenarios will be scheduled relative
+    // to this timestamp.
+    private long mFirstScenarioTimestampMs = 0;
 
     // Comparator for sorting timstamped CUJs.
     private static class ScenarioTimestampComparator implements Comparator<Scenario> {
@@ -91,8 +94,18 @@ public class Profile implements Compose<Bundle, Runner> {
             return;
         }
         mOrderedScenariosList = new ArrayList<Scenario>(mConfiguration.getScenariosList());
+        if (mOrderedScenariosList.isEmpty()) {
+            throw new IllegalArgumentException("Profile must have at least one scenario.");
+        }
         if (mConfiguration.getSchedule().equals(Schedule.TIMESTAMPED)) {
             Collections.sort(mOrderedScenariosList, new ScenarioTimestampComparator());
+            try {
+                mFirstScenarioTimestampMs =
+                        TIMESTAMP_FORMATTER.parse(mOrderedScenariosList.get(0).getAt()).getTime();
+            } catch (ParseException e) {
+                throw new IllegalArgumentException(
+                        "Cannot parse the timestamp of the first scenario.", e);
+            }
         } else {
             throw new UnsupportedOperationException(
                     "Only scheduled profiles are currently supported.");
@@ -166,12 +179,14 @@ public class Profile implements Compose<Bundle, Runner> {
         Scenario nextScenario = mOrderedScenariosList.get(mScenarioIndex);
         if (nextScenario.hasAt()) {
             try {
-                long startTimeMs = TIMESTAMP_FORMATTER.parse(nextScenario.getAt()).getTime();
+                // Calibrate the start time against the first scenario's timestamp.
+                long startTimeMs =
+                        TIMESTAMP_FORMATTER.parse(nextScenario.getAt()).getTime()
+                                - mFirstScenarioTimestampMs;
                 // Time in milliseconds from the start of the test run to the current point in time.
                 long currentTimeMs = getTimeSinceRunStartedMs();
                 // If the next test should not start yet, sleep until its start time. Otherwise,
                 // start it immediately.
-                // TODO(b/118495360): Deal with the IfLate situation.
                 if (startTimeMs > currentTimeMs) {
                     return startTimeMs - currentTimeMs;
                 }
