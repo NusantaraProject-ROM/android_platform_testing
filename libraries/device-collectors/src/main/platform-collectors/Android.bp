@@ -12,36 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Genrule for handwritten statsd configs.
-java_genrule {
-    name: "statsd-configs-text-protos",
-    host_supported: true,
-    tools: ["aprotoc"],
-    srcs: [
-        ":statsd-config-proto-def",
-        "res/statsd-configs/*.textpb",
-    ],
-    out: ["statsd-config-text-protos.jar"],
-    /*
-     * Loops over all *.textpb files under res/statsd-configs/ and serializes them into binary
-     * protos with ".pb" extension using aprotoc. The generated *.pb files are put under an
-     * assets/statsd-configs/ directory, which gets packed into a .jar file and ends up under the
-     * assets/statsd-configs/ directory in the package, which can then be read with asset manager
-     * in the APK.
-     *
-     * If a config fails to parse, an error is thrown and the build will fail.
-     */
-    cmd: "out_dir=$$(dirname $(out)) && assets_dir=\"assets/statsd-configs\" " +
-        "&& mkdir -p $$out_dir/$$assets_dir " +
-        "&& src_protos=($(locations res/statsd-configs/*.textpb)) " +
-        "&& for file in $${src_protos[@]} ; do fname=$$(basename $$file) " +
-        "&& if ! ($(location aprotoc) --encode=android.os.statsd.StatsdConfig " +
-        "$(location :statsd-config-proto-def) < $$file > " +
-        "$$out_dir/$$assets_dir/$${fname//.textpb/.pb}) ; then " +
-        "echo \"\033[0;31mFailed to parse profile $$file. See above for errors.\033[0m\" " +
-        "&& exit 1 ; fi ; done && jar cf $(out) -C $$(dirname $(out)) $$assets_dir",
-}
-
 // This library enables additional listeners dependent on platform apis.
 java_library {
     name: "collector-device-lib-platform",
@@ -53,8 +23,8 @@ java_library {
 
     static_libs: [
         "collector-device-lib",
-        "statsd-configs-text-protos",
         "statsd-helper",
     ],
+
     platform_apis: true,
 }
