@@ -96,6 +96,7 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
         }
         // Launch the application as normal.
         String pkg = getPackage();
+        long launchInitiationTimeMs = System.currentTimeMillis();
         if (mFavorShellCommands) {
             String output = null;
             try {
@@ -120,7 +121,9 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
         // Ensure the package is in the foreground for success.
         if (!mDevice.wait(Until.hasObject(By.pkg(pkg).depth(0)), APP_LAUNCH_WAIT_TIME_MS)) {
             throw new IllegalStateException(
-                    String.format("Did not find package, %s, in foreground.", pkg));
+                    String.format(
+                            "Did not find package, %s, in foreground after %d ms.",
+                            pkg, System.currentTimeMillis() - launchInitiationTimeMs));
         }
     }
 
