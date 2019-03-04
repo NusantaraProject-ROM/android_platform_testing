@@ -178,12 +178,9 @@ public class ProfileSuiteTest {
                 .run(argThat(notifier -> notifier.equals(mRunNotifier)));
         doAnswer(
                         invocation -> {
-                            // The first scenario should begin at 00:00:01 per the profile.
+                            // The first scenario should start immediately.
                             Assert.assertTrue(
-                                    abs(
-                                                    System.currentTimeMillis()
-                                                            - runStartTimeMs.longValue()
-                                                            - TimeUnit.SECONDS.toMillis(1))
+                                    abs(System.currentTimeMillis() - runStartTimeMs.longValue())
                                             <= SCHEDULE_LEEWAY_MS);
                             invocation.callRealMethod();
                             return null;
@@ -198,12 +195,12 @@ public class ProfileSuiteTest {
                         argThat(notifier -> notifier.equals(mRunNotifier)));
         doAnswer(
                         invocation -> {
-                            // The second scenario should begin at 00:00:10 per the profile.
+                            // The second scenario should begin at 00:00:10 - 00:00:01 = 9 seconds.
                             Assert.assertTrue(
                                     abs(
                                                     System.currentTimeMillis()
                                                             - runStartTimeMs.longValue()
-                                                            - TimeUnit.SECONDS.toMillis(10))
+                                                            - TimeUnit.SECONDS.toMillis(9))
                                             <= SCHEDULE_LEEWAY_MS);
                             invocation.callRealMethod();
                             return null;
@@ -283,10 +280,12 @@ public class ProfileSuiteTest {
                                                     .toMillis(exception.getTimeout());
                                     // Expected timeout the duration from the last scenario to when
                                     // the suite should time out, minus the end time leeway set in
-                                    // ScheduledScenarioRunner.
+                                    // ScheduledScenarioRunner. Note that the second scenario is
+                                    // executed at 00:00:04 as the first scenario is always
+                                    // considered to be at 00:00:00.
                                     long expectedTimeout =
                                             suiteTimeoutMsecs
-                                                    - TimeUnit.SECONDS.toMillis(5)
+                                                    - TimeUnit.SECONDS.toMillis(4)
                                                     - ScheduledScenarioRunner.ENDTIME_LEEWAY_MS;
                                     return abs(exceptionTimeout - expectedTimeout)
                                             <= SCHEDULE_LEEWAY_MS;

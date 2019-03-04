@@ -124,7 +124,6 @@ public class ProfileSuite extends LongevitySuite {
         // no sleep is performed.
         if (mProfile.hasNextScheduledScenario()) {
             mProfile.setTestRunStartTimeMs(System.currentTimeMillis());
-            SystemClock.sleep(mProfile.getTimeUntilNextScenarioMs());
         }
         // Register other listeners and continue with standard longevity run.
         super.run(notifier);
