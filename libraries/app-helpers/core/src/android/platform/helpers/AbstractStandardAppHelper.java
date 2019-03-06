@@ -44,15 +44,16 @@ import android.view.KeyEvent;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractStandardAppHelper implements IAppHelper {
     private static final String LOG_TAG = AbstractStandardAppHelper.class.getSimpleName();
     private static final String SCREENSHOT_DIR = "apphelper-screenshots";
     private static final String FAVOR_CMD = "favor-shell-commands";
     private static final String USE_HOME_CMD = "press-home-to-exit";
+    private static final String LAUNCH_TIMEOUT_OPTION = "app-launch-timeout_ms";
     private static final String ERROR_NOT_FOUND =
         "Element %s %s is not found in the application %s";
-    private static final long APP_LAUNCH_WAIT_TIME_MS = 10000; // 10 seconds
 
     private static File sScreenshotDirectory;
 
@@ -63,6 +64,7 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
             KeyCharacterMap.load(KeyCharacterMap.VIRTUAL_KEYBOARD);
     private final boolean mFavorShellCommands;
     private final boolean mPressHomeToExit;
+    private final long mLaunchTimeout;
 
     public AbstractStandardAppHelper(Instrumentation instr) {
         mInstrumentation = instr;
@@ -74,6 +76,13 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
         mPressHomeToExit =
                 Boolean.valueOf(
                         InstrumentationRegistry.getArguments().getString(USE_HOME_CMD, "false"));
+        //TODO(b/127356533): Choose a sensible default for app launch timeout after b/125356281.
+        mLaunchTimeout =
+                Long.valueOf(
+                        InstrumentationRegistry.getArguments()
+                                .getString(
+                                        LAUNCH_TIMEOUT_OPTION,
+                                        String.valueOf(TimeUnit.SECONDS.toMillis(30))));
     }
 
     /**
@@ -119,7 +128,7 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
             }
         }
         // Ensure the package is in the foreground for success.
-        if (!mDevice.wait(Until.hasObject(By.pkg(pkg).depth(0)), APP_LAUNCH_WAIT_TIME_MS)) {
+        if (!mDevice.wait(Until.hasObject(By.pkg(pkg).depth(0)), mLaunchTimeout)) {
             throw new IllegalStateException(
                     String.format(
                             "Did not find package, %s, in foreground after %d ms.",

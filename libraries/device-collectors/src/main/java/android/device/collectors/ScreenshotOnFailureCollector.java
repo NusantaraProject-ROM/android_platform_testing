@@ -30,6 +30,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Map;
+import java.util.HashMap;
+
 
 /**
  * A {@link BaseMetricListener} that captures screenshots when a test fails.
@@ -52,6 +55,10 @@ public class ScreenshotOnFailureCollector extends BaseMetricListener {
 
     private File mDestDir;
     private UiDevice mDevice;
+
+    // Tracks the test iterations to ensure that each failure gets unique filenames.
+    // Key: test description; value: number of iterations.
+    private Map<String, Integer> mTestIterations = new HashMap<String, Integer>();
 
     public ScreenshotOnFailureCollector() {
         super();
@@ -91,12 +98,26 @@ public class ScreenshotOnFailureCollector extends BaseMetricListener {
     }
 
     @Override
+    public void onTestStart(DataRecord testData, Description description) {
+        // Track the number of iteration for this test.
+        String testName = description.getDisplayName();
+        mTestIterations.computeIfPresent(testName, (name, iterations) -> iterations + 1);
+        mTestIterations.computeIfAbsent(testName, name -> 1);
+    }
+
+    @Override
     public void onTestFail(DataRecord testData, Description description, Failure failure) {
         if (mDestDir == null) {
             return;
         }
-        final String fileName =
+        final String fileNameBase =
                 String.format("%s.%s", description.getClassName(), description.getMethodName());
+        // Omit the iteration number for the first iteration.
+        int iteration = mTestIterations.get(description.getDisplayName());
+        final String fileName =
+                iteration == 1
+                        ? fileNameBase
+                        : String.join("-", fileNameBase, String.valueOf(iteration));
         // Capture the screenshot first.
         final String pngFileName = String.format("%s.png", fileName);
         File img = takeScreenshot(pngFileName);
