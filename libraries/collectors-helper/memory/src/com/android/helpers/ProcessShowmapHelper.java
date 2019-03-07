@@ -22,6 +22,8 @@ import android.icu.text.NumberFormat;
 import android.support.test.uiautomator.UiDevice;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.test.InstrumentationRegistry;
 
 import java.io.IOException;
@@ -42,7 +44,6 @@ import java.util.Scanner;
  * metrics = processShowmapHelper.getMetrics();
  * processShowmapHelper.stopCollecting();
  *
- * TODO(b/119675321) Take in multiple processes and output metrics for each
  * TODO(b/119684651) Add support for writing showmap output to file
  */
 public class ProcessShowmapHelper implements ICollectorHelper<Long> {
@@ -56,9 +57,9 @@ public class ProcessShowmapHelper implements ICollectorHelper<Long> {
     private static final String VSS = "vss";
     private static final String DELTA = "delta";
 
-    private String mProcessName;
-    private ShowmapMetrics mTestStartMetrics;
-    private ShowmapMetrics mTestEndMetrics;
+    private String[] mProcessNames;
+    private ShowmapMetrics[] mTestStartMetrics;
+    private ShowmapMetrics[] mTestEndMetrics;
     private UiDevice mUiDevice;
 
     private static final class ShowmapMetrics {
@@ -70,16 +71,16 @@ public class ProcessShowmapHelper implements ICollectorHelper<Long> {
     /**
      * Sets up the helper before it starts sampling.
      *
-     * @param processName process name to sample
+     * @param processNames process names to sample
      */
-    public void setUp(String processName) {
-        mProcessName = processName;
+    public void setUp(String... processNames) {
+        mProcessNames = processNames;
         mUiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
     }
 
     @Override
     public boolean startCollecting() {
-        mTestStartMetrics = sampleMemory(mProcessName);
+        mTestStartMetrics = sampleMemoryOfProcesses(mProcessNames);
         return mTestStartMetrics != null;
     }
 
@@ -87,28 +88,37 @@ public class ProcessShowmapHelper implements ICollectorHelper<Long> {
     public Map<String, Long> getMetrics() {
         // Collect end sample.
         HashMap<String, Long> showmapFinalMap = new HashMap<>();
-        mTestEndMetrics = sampleMemory(mProcessName);
+        mTestEndMetrics = sampleMemoryOfProcesses(mProcessNames);
         if (mTestEndMetrics == null) {
-            Log.e(TAG, "Unable to collect showmap memory at test end.");
+            Log.e(TAG, "Unable to collect any showmap metrics at end. Returning empty metrics");
             return showmapFinalMap;
         }
 
-        // Calculate and determine final metrics.
-        showmapFinalMap.put(constructKey(mProcessName, PSS), mTestEndMetrics.pss);
-        showmapFinalMap.put(constructKey(mProcessName, RSS), mTestEndMetrics.rss);
-        showmapFinalMap.put(constructKey(mProcessName, VSS), mTestEndMetrics.vss);
+        // Iterate over each process and collate start and end sample to build final metrics.
+        for (int i = 0; i < mTestEndMetrics.length; i++) {
+            String processName = mProcessNames[i];
+            ShowmapMetrics endMetrics = mTestEndMetrics[i];
+            if (endMetrics == null) {
+                // Failed to get end metrics for this process. Continue.
+                continue;
+            }
+            // Calculate and determine final metrics.
+            showmapFinalMap.put(constructKey(processName, PSS), endMetrics.pss);
+            showmapFinalMap.put(constructKey(processName, RSS), endMetrics.rss);
+            showmapFinalMap.put(constructKey(processName, VSS), endMetrics.vss);
 
-        if (mTestStartMetrics == null) {
-            Log.i(TAG, "Unable to get deltas because we were unable to sample memory when the "
-                    + "test began");
-            return showmapFinalMap;
+            if (mTestStartMetrics == null || mTestStartMetrics[i] == null) {
+                // Failed to get start metrics for this process. Continue.
+                continue;
+            }
+            ShowmapMetrics startMetrics = mTestStartMetrics[i];
+            showmapFinalMap.put(
+                    constructKey(processName, PSS, DELTA), endMetrics.pss - startMetrics.pss);
+            showmapFinalMap.put(
+                    constructKey(processName, RSS, DELTA), endMetrics.rss - startMetrics.rss);
+            showmapFinalMap.put(
+                    constructKey(processName, VSS, DELTA), endMetrics.vss - startMetrics.vss);
         }
-        showmapFinalMap.put(constructKey(mProcessName, PSS, DELTA),
-                mTestEndMetrics.pss - mTestStartMetrics.pss);
-        showmapFinalMap.put(constructKey(mProcessName, RSS, DELTA),
-                mTestEndMetrics.rss - mTestStartMetrics.rss);
-        showmapFinalMap.put(constructKey(mProcessName, VSS, DELTA),
-                mTestEndMetrics.vss - mTestStartMetrics.vss);
         return showmapFinalMap;
     }
 
@@ -119,16 +129,30 @@ public class ProcessShowmapHelper implements ICollectorHelper<Long> {
     }
 
     /**
+     * Sample the current memory for a set of processes using showmap.
+     *
+     * @param processNames the process names to sample
+     * @return a list of showmap metrics for each process given in order. May be null if it is not
+     *     properly set up.
+     */
+    private @Nullable ShowmapMetrics[] sampleMemoryOfProcesses(String... processNames) {
+        if (processNames == null || mUiDevice == null) {
+            Log.e(TAG, "Process names or UI device is null. Make sure you've called setup.");
+            return null;
+        }
+        ShowmapMetrics[] metrics = new ShowmapMetrics[processNames.length];
+        for (int i = 0; i < processNames.length; i++) {
+            metrics[i] = sampleMemory(processNames[i]);
+        }
+        return metrics;
+    }
+
+    /**
      * Samples the current memory use of the process using showmap. Gets PSS, RSS, and VSS.
      *
      * @return metrics object with pss, rss, and vss
      */
-    private ShowmapMetrics sampleMemory(String processName) {
-        if (processName == null || mUiDevice == null) {
-            Log.e(TAG,"Process name or UI device is null. Make sure you've called setup.");
-            return null;
-        }
-
+    private @Nullable ShowmapMetrics sampleMemory(@NonNull String processName) {
         // Get pid
         int pid;
         try {
@@ -137,7 +161,7 @@ public class ProcessShowmapHelper implements ICollectorHelper<Long> {
                 String.format(PIDOF_CMD, processName));
             pid = NumberFormat.getInstance().parse(pidofOutput).intValue();
         } catch (IOException | ParseException e) {
-            Log.e(TAG, "Unable to get pid of process", e);
+            Log.e(TAG, String.format("Unable to get pid of %s ", processName), e);
             return null;
         }
 
@@ -168,7 +192,7 @@ public class ProcessShowmapHelper implements ICollectorHelper<Long> {
             metrics.rss = sc.nextLong();
             metrics.pss = sc.nextLong();
         } catch (IndexOutOfBoundsException | InputMismatchException e) {
-            Log.e(TAG, "Unexpected showmap format", e);
+            Log.e(TAG, String.format("Unexpected showmap format for %s ", processName), e);
             return null;
         }
         return metrics;
