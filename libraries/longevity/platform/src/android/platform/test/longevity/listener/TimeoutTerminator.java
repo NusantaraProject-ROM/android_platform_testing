@@ -36,7 +36,7 @@ public final class TimeoutTerminator extends android.host.test.longevity.listene
      */
     @Override
     protected long getCurrentTimestamp() {
-        return SystemClock.uptimeMillis();
+        return SystemClock.elapsedRealtime();
     }
 
     /**

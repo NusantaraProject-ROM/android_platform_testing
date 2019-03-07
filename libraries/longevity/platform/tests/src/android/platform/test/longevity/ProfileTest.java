@@ -120,12 +120,11 @@ public class ProfileTest {
             "android.platform.test.scenario.calendar.FlingWeekPage",
             "android.platform.test.scenario.calendar.FlingDayPage");
 
-        List<Runner> output = getProfile(getArguments(VALID_CONFIG_KEY))
-                .apply(getArguments(VALID_CONFIG_KEY), mMockInput);
+        List<Runner> output =
+                getProfile(getArguments(VALID_CONFIG_KEY)).getRunnerSequence(mMockInput);
         List<String> outputDescriptions = output.stream().map(r ->
                 r.getDescription().getDisplayName()).collect(Collectors.toList());
         boolean respected = outputDescriptions.equals(expectedJourneyOrder);
-        System.out.println(outputDescriptions);
         assertThat(respected).isTrue();
     }
 
@@ -140,8 +139,9 @@ public class ProfileTest {
         exceptionThrown.expectMessage("invalid");
 
         // Attempt to apply a profile with invalid CUJ; the above exception should be thrown.
-        List<Runner> output = getProfile(getArguments(CONFIG_WITH_INVALID_JOURNEY_KEY))
-                .apply(getArguments(CONFIG_WITH_INVALID_JOURNEY_KEY), mMockInput);
+        List<Runner> output =
+                getProfile(getArguments(CONFIG_WITH_INVALID_JOURNEY_KEY))
+                        .getRunnerSequence(mMockInput);
     }
 
     protected class TestableProfile extends Profile {
