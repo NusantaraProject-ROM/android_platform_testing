@@ -16,7 +16,9 @@
 
 package android.device.collectors;
 
-import static org.mockito.Mockito.times;
+import static android.device.collectors.ProcessShowmapListener.PROCESS_NAMES_KEY;
+import static android.device.collectors.ProcessShowmapListener.PROCESS_SEPARATOR;
+
 import static org.mockito.Mockito.verify;
 
 import android.app.Instrumentation;
@@ -42,8 +44,6 @@ import org.mockito.MockitoAnnotations;
 @RunWith(AndroidJUnit4.class)
 public class ProcessShowmapListenerTest {
 
-    private static final String TEST_PROCESS_NAME = "com.android.systemui";
-
     @Mock
     private Instrumentation mInstrumentation;
     @Mock
@@ -65,13 +65,13 @@ public class ProcessShowmapListenerTest {
     }
 
     @Test
-    public void testHelperReceivesProcessName() throws Exception {
+    public void testHelperReceivesProcessNames() throws Exception {
         Bundle b = new Bundle();
-        b.putString(ProcessShowmapListener.PROCESS_NAME_KEY, TEST_PROCESS_NAME);
+        b.putString(PROCESS_NAMES_KEY, "process1" + PROCESS_SEPARATOR + "process2");
         mListener = initListener(b);
 
         mListener.testRunStarted(mRunDesc);
 
-        verify(mShowmapHelper).setUp(TEST_PROCESS_NAME);
+        verify(mShowmapHelper).setUp("process1", "process2");
     }
 }
