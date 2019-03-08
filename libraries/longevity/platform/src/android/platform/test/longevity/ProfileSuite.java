@@ -19,12 +19,10 @@ package android.platform.test.longevity;
 import android.app.Instrumentation;
 import android.content.Context;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.platform.test.longevity.proto.Configuration.Scenario;
 import androidx.annotation.VisibleForTesting;
 import androidx.test.InstrumentationRegistry;
 
-import java.util.function.BiFunction;
 import java.util.List;
 
 import org.junit.runner.Runner;
@@ -112,19 +110,14 @@ public class ProfileSuite extends LongevitySuite {
             }
         }
         // Construct and store custom runners for the full suite.
-        BiFunction<Bundle, List<Runner>, List<Runner>> modifier = new Profile(args);
-        return modifier.apply(args, builder.runners(suite, annotation.value()));
+        return new Profile(args).getRunnerSequence(builder.runners(suite, annotation.value()));
     }
 
     /** {@inheritDoc} */
     @Override
     public void run(final RunNotifier notifier) {
-        // Set the test run start time in the profile composer and sleep until the first scheduled
-        // test starts. When no profile is supplied, hasNextScheduledScenario() returns false and
-        // no sleep is performed.
-        if (mProfile.hasNextScheduledScenario()) {
-            mProfile.setTestRunStartTimeMs(System.currentTimeMillis());
-        }
+        // Add the profile listener.
+        notifier.addListener(mProfile);
         // Register other listeners and continue with standard longevity run.
         super.run(notifier);
     }
@@ -132,7 +125,6 @@ public class ProfileSuite extends LongevitySuite {
     /** {@inheritDoc} */
     @Override
     protected void runChild(Runner runner, final RunNotifier notifier) {
-        mProfile.scenarioStarted();
         super.runChild(runner, notifier);
     }
 
