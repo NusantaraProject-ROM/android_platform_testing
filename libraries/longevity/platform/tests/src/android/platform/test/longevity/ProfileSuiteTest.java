@@ -28,9 +28,10 @@ import static java.lang.Math.abs;
 import android.app.Instrumentation;
 import android.content.Context;
 import android.host.test.longevity.listener.TimeoutTerminator;
+import android.os.Bundle;
+import android.os.SystemClock;
 import android.platform.test.longevity.samples.testing.SampleProfileSuite;
 import android.platform.test.scenario.annotation.Scenario;
-import android.os.Bundle;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -63,8 +64,8 @@ public class ProfileSuiteTest {
 
     @Mock private Instrumentation mInstrumentation;
     @Mock private Context mContext;
-    @Mock private RunNotifier mRunNotifier;
     @Mock private Profile mProfile;
+    private RunNotifier mRunNotifier;
 
     // Threshold above which missing a schedule is considered a failure.
     private static final long SCHEDULE_LEEWAY_MS = 500;
@@ -72,6 +73,7 @@ public class ProfileSuiteTest {
     @Before
     public void setUpSuite() throws InitializationError {
         initMocks(this);
+        mRunNotifier = spy(new RunNotifier());
     }
 
     /** Test that profile suites with classes that aren't scenarios are rejected. */
@@ -158,7 +160,7 @@ public class ProfileSuiteTest {
         // should be initialized when run() is called on the suite, but Java does not want
         // assignment to local varaible in lambda expressions. AtomicLong allows for using the
         // same reference but altering the value.
-        final AtomicLong runStartTimeMs = new AtomicLong(System.currentTimeMillis());
+        final AtomicLong runStartTimeMs = new AtomicLong(SystemClock.elapsedRealtime());
         ProfileSuite suite =
                 spy(
                         new ProfileSuite(
@@ -170,7 +172,7 @@ public class ProfileSuiteTest {
         // Stub the lifecycle calls to verify that tests are run on schedule.
         doAnswer(
                         invocation -> {
-                            runStartTimeMs.set(System.currentTimeMillis());
+                            runStartTimeMs.set(SystemClock.elapsedRealtime());
                             invocation.callRealMethod();
                             return null;
                         })
@@ -180,7 +182,7 @@ public class ProfileSuiteTest {
                         invocation -> {
                             // The first scenario should start immediately.
                             Assert.assertTrue(
-                                    abs(System.currentTimeMillis() - runStartTimeMs.longValue())
+                                    abs(SystemClock.elapsedRealtime() - runStartTimeMs.longValue())
                                             <= SCHEDULE_LEEWAY_MS);
                             invocation.callRealMethod();
                             return null;
@@ -198,7 +200,7 @@ public class ProfileSuiteTest {
                             // The second scenario should begin at 00:00:10 - 00:00:01 = 9 seconds.
                             Assert.assertTrue(
                                     abs(
-                                                    System.currentTimeMillis()
+                                                    SystemClock.elapsedRealtime()
                                                             - runStartTimeMs.longValue()
                                                             - TimeUnit.SECONDS.toMillis(9))
                                             <= SCHEDULE_LEEWAY_MS);

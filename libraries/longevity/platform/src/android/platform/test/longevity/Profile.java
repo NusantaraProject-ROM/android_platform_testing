@@ -16,8 +16,8 @@
 package android.platform.test.longevity;
 
 import android.content.res.AssetManager;
-import android.host.test.composer.Compose;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.platform.test.longevity.proto.Configuration;
 import android.platform.test.longevity.proto.Configuration.Scenario;
 import android.platform.test.longevity.proto.Configuration.Schedule;
@@ -27,6 +27,7 @@ import androidx.test.InstrumentationRegistry;
 
 import org.junit.runner.Description;
 import org.junit.runner.Runner;
+import org.junit.runner.notification.RunListener;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -43,10 +44,8 @@ import java.util.TimeZone;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-/**
- * A profile composer for device-side testing.
- */
-public class Profile implements Compose<Bundle, Runner> {
+/** A profile composer for device-side testing. */
+public class Profile extends RunListener {
     @VisibleForTesting static final String PROFILE_OPTION_NAME = "profile";
 
     protected static final String PROFILE_EXTENSION = ".pb";
@@ -56,13 +55,13 @@ public class Profile implements Compose<Bundle, Runner> {
     // Parser for parsing "at" timestamps in profiles.
     private static final SimpleDateFormat TIMESTAMP_FORMATTER = new SimpleDateFormat("HH:mm:ss");
 
-    // Keeps track of the next scenario to run.
+    // Keeps track of the current scenario being run; updated at the end of a scenario.
     private int mScenarioIndex = 0;
     // A list of scenarios in the order that they will be run.
     private List<Scenario> mOrderedScenariosList;
     // Timestamp when the test run starts, defaults to time when the ProfileBase object is
     // constructed. Can be overridden by {@link setTestRunStartTimeMs}.
-    private long mRunStartTimeMs = System.currentTimeMillis();
+    private long mRunStartTimeMs = SystemClock.elapsedRealtime();
     // The profile configuration.
     private Configuration mConfiguration;
     // The timestamp of the first scenario in milliseconds. All scenarios will be scheduled relative
@@ -112,13 +111,11 @@ public class Profile implements Compose<Bundle, Runner> {
         }
     }
 
-    @Override
-    public List<Runner> apply(Bundle args, List<Runner> input) {
-        Configuration config = getConfigurationArgument(args);
-        if (config == null) {
+    public List<Runner> getRunnerSequence(List<Runner> input) {
+        if (mConfiguration == null) {
             return input;
         }
-        return getTestSequenceFromConfiguration(config, input);
+        return getTestSequenceFromConfiguration(mConfiguration, input);
     }
 
     protected List<Runner> getTestSequenceFromConfiguration(
@@ -155,13 +152,13 @@ public class Profile implements Compose<Bundle, Runner> {
         return result;
     }
 
-    /** Enables classes using the profile composer to set the test run start time. */
-    public void setTestRunStartTimeMs(long timestamp) {
-        mRunStartTimeMs = timestamp;
+    @Override
+    public void testRunStarted(Description description) {
+        mRunStartTimeMs = SystemClock.elapsedRealtime();
     }
 
-    /** Called by suite runners to signal that a scenario/test has started. */
-    public void scenarioStarted() {
+    @Override
+    public void testFinished(Description description) {
         // Increments the index to move onto the next scenario.
         mScenarioIndex += 1;
     }
@@ -171,12 +168,13 @@ public class Profile implements Compose<Bundle, Runner> {
      * false.
      */
     public boolean hasNextScheduledScenario() {
-        return (mOrderedScenariosList != null) && (mScenarioIndex < mOrderedScenariosList.size());
+        return (mOrderedScenariosList != null)
+                && (mScenarioIndex < mOrderedScenariosList.size() - 1);
     }
 
     /** Returns time in milliseconds until the next scenario. */
     public long getTimeUntilNextScenarioMs() {
-        Scenario nextScenario = mOrderedScenariosList.get(mScenarioIndex);
+        Scenario nextScenario = mOrderedScenariosList.get(mScenarioIndex + 1);
         if (nextScenario.hasAt()) {
             try {
                 // Calibrate the start time against the first scenario's timestamp.
@@ -203,14 +201,12 @@ public class Profile implements Compose<Bundle, Runner> {
 
     /** Return time in milliseconds since the test run started. */
     public long getTimeSinceRunStartedMs() {
-        return System.currentTimeMillis() - mRunStartTimeMs;
+        return SystemClock.elapsedRealtime() - mRunStartTimeMs;
     }
 
     /** Returns the Scenario object for the current scenario. */
     public Scenario getCurrentScenario() {
-        // mScenarioIndex points to the next scenario, so the index for the current one is
-        // mScenarioIndex - 1.
-        return mOrderedScenariosList.get(mScenarioIndex - 1);
+        return mOrderedScenariosList.get(mScenarioIndex);
     }
 
     /** Returns the profile configuration. */
