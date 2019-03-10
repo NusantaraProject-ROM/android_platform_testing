@@ -42,6 +42,8 @@ public class ProcessShowmapHelperTest {
 
     // Process name used for testing
     private static final String TEST_PROCESS_NAME = "com.android.systemui";
+    // Second process name used for testing
+    private static final String TEST_PROCESS_NAME_2 = "system_server";
     // Pss string in key
     private static final String PSS = "pss";
     // Delta string in keys
@@ -63,13 +65,12 @@ public class ProcessShowmapHelperTest {
         assertFalse(mShowmapHelper.startCollecting());
     }
 
-    /**
-     * Test start collecting returns false if the process name is empty.
-     */
+    /** Test no metrics are sampled if process name is empty. */
     @Test
     public void testEmptyProcessName() {
         mShowmapHelper.setUp("");
-        assertFalse(mShowmapHelper.startCollecting());
+        Map<String, Long> showmapMetrics = mShowmapHelper.getMetrics();
+        assertTrue(showmapMetrics.isEmpty());
     }
 
     /**
@@ -81,16 +82,26 @@ public class ProcessShowmapHelperTest {
         assertTrue(mShowmapHelper.startCollecting());
     }
 
-    /**
-     * Test getting metrics based off sampled memory.
-     */
+    /** Test getting metrics based off sampled memory. */
     @Test
-    public void testGetMetrics() {
+    public void testGetMetrics_OneProcess() {
         mShowmapHelper.setUp(TEST_PROCESS_NAME);
         assertTrue(mShowmapHelper.startCollecting());
         Map<String, Long> showmapMetrics = mShowmapHelper.getMetrics();
-        assertTrue(!showmapMetrics.isEmpty());
+        assertFalse(showmapMetrics.isEmpty());
         assertTrue(showmapMetrics.containsKey(constructKey(TEST_PROCESS_NAME, PSS)));
         assertTrue(showmapMetrics.containsKey(constructKey(TEST_PROCESS_NAME, PSS, DELTA)));
+    }
+
+    @Test
+    public void testGetMetrics_MultipleProcesses() {
+        mShowmapHelper.setUp(TEST_PROCESS_NAME, TEST_PROCESS_NAME_2);
+        assertTrue(mShowmapHelper.startCollecting());
+        Map<String, Long> showmapMetrics = mShowmapHelper.getMetrics();
+        assertFalse(showmapMetrics.isEmpty());
+        assertTrue(showmapMetrics.containsKey(constructKey(TEST_PROCESS_NAME, PSS)));
+        assertTrue(showmapMetrics.containsKey(constructKey(TEST_PROCESS_NAME, PSS, DELTA)));
+        assertTrue(showmapMetrics.containsKey(constructKey(TEST_PROCESS_NAME_2, PSS)));
+        assertTrue(showmapMetrics.containsKey(constructKey(TEST_PROCESS_NAME_2, PSS, DELTA)));
     }
 }
