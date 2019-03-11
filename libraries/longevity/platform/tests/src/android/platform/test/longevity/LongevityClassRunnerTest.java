@@ -17,8 +17,10 @@
 package android.platform.test.longevity;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.argThat;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -38,17 +40,17 @@ import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.JUnit4;
 import org.junit.runners.model.FrameworkMethod;
-import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.exceptions.base.MockitoAssertionError;
 
+
 /** Unit tests for the {@link LongevityClassRunner}. */
 public class LongevityClassRunnerTest {
     // A sample test class to test the runner with.
     @RunWith(JUnit4.class)
-    public static class SampleTest {
+    public static class NoOpTest {
         @BeforeClass
         public static void beforeClassMethod() {}
 
@@ -65,7 +67,31 @@ public class LongevityClassRunnerTest {
         public static void afterClassMethod() {}
     }
 
+    @RunWith(JUnit4.class)
+    public static class FailingTest extends NoOpTest {
+        @Test
+        public void testMethod() {
+            throw new RuntimeException("I failed.");
+        }
+    }
+
     @Mock private RunNotifier mRunNotifier;
+
+    private LongevityClassRunner mRunner;
+
+    private static final Statement PASSING_STATEMENT =
+            new Statement() {
+                public void evaluate() throws Throwable {
+                    // No-op.
+                }
+            };
+
+    private static final Statement FAILING_STATEMENT =
+            new Statement() {
+                public void evaluate() throws Throwable {
+                    throw new RuntimeException("I failed.");
+                }
+            };
 
     // A failure message for assertion calls in Mockito stubs. These assertion failures will cause
     // the runner under test to fail but will not trigger a test failure directly. This message is
@@ -74,7 +100,7 @@ public class LongevityClassRunnerTest {
     private static final String ASSERTION_FAILURE_MESSAGE = "Test assertions failed";
 
     @Before
-    public void setUp() throws InitializationError {
+    public void setUp() {
         initMocks(this);
     }
 
@@ -84,7 +110,7 @@ public class LongevityClassRunnerTest {
      */
     @Test
     public void testBeforeClassMethodsAddedAsBeforeMethods() throws Throwable {
-        LongevityClassRunner runner = spy(new LongevityClassRunner(SampleTest.class));
+        mRunner = spy(new LongevityClassRunner(NoOpTest.class));
         // Spy the withBeforeClasses() method to check that the method does not make changes to the
         // statement despite the presence of a @BeforeClass method.
         doAnswer(
@@ -97,9 +123,9 @@ public class LongevityClassRunnerTest {
                                     invocation.getArgument(0));
                             return returnedStatement;
                         })
-                .when(runner)
+                .when(mRunner)
                 .withBeforeClasses(any(Statement.class));
-        // Spy the getRunBefores() method to check that the @BeforeClass method is added to the
+        // Spy the addRunBefores() method to check that the @BeforeClass method is added to the
         // @Before methods.
         doAnswer(
                         invocation -> {
@@ -121,69 +147,217 @@ public class LongevityClassRunnerTest {
                                     "beforeMethod");
                             return invocation.callRealMethod();
                         })
-                .when(runner)
-                .getRunBefores(any(Statement.class), any(List.class), any(Object.class));
+                .when(mRunner)
+                .addRunBefores(any(Statement.class), any(List.class), any(Object.class));
         // Run the runner.
-        runner.run(mRunNotifier);
+        mRunner.run(mRunNotifier);
         verifyForAssertionFailures(mRunNotifier);
         // Verify that the stubbed methods are indeed called.
-        verify(runner, times(1)).withBeforeClasses(any(Statement.class));
-        verify(runner, times(1))
-                .getRunBefores(any(Statement.class), any(List.class), any(Object.class));
+        verify(mRunner, times(1)).withBeforeClasses(any(Statement.class));
+        verify(mRunner, times(1))
+                .addRunBefores(any(Statement.class), any(List.class), any(Object.class));
     }
 
     /**
-     * Test that the {@link AfterClass} methods are added to the test statement as {@link After}
-     * methods.
+     * Test that the {@link AfterClass} methods are added to the test statement as potential {@link
+     * After} methods.
      */
     @Test
     public void testAfterClassMethodsAddedAsAfterMethods() throws Throwable {
-        LongevityClassRunner runner = spy(new LongevityClassRunner(SampleTest.class));
-        // Spy the withAfterClasses() method to check that the method does not make changes to the
-        // statement despite the presence of a @AfterClass method.
+        mRunner = spy(new LongevityClassRunner(NoOpTest.class));
+        // Spy the withAfterClasses() method to check that the method returns an instance of
+        // LongevityClassRunner.RunAfterClassMethodsOnTestFailure.
         doAnswer(
                         invocation -> {
                             Statement returnedStatement = (Statement) invocation.callRealMethod();
                             // If this assertion fails, mRunNofitier will fire a test failure.
-                            Assert.assertEquals(
+                            Assert.assertTrue(
                                     ASSERTION_FAILURE_MESSAGE,
-                                    returnedStatement,
-                                    invocation.getArgument(0));
+                                    returnedStatement
+                                            instanceof
+                                            LongevityClassRunner.RunAfterClassMethodsOnTestFailure);
                             return returnedStatement;
                         })
-                .when(runner)
+                .when(mRunner)
                 .withAfterClasses(any(Statement.class));
-        // Spy the getRunAfters() method to check that the @AfterClass method is added to the
-        // @After methods.
+        // Spy the addRunAfters() method to check that the method returns an instance of
+        // LongevityClassRunner.RunAfterMethods.
         doAnswer(
                         invocation -> {
-                            List<FrameworkMethod> methodList =
-                                    (List<FrameworkMethod>) invocation.getArgument(1);
-                            // If any of these assertions fail, mRunNofitier will fire a test
+                            Statement returnedStatement = (Statement) invocation.callRealMethod();
+                            // If any of these assertions fail, mRunNotifier will fire a test
                             // failure.
-                            // There should be two methods.
-                            Assert.assertEquals(ASSERTION_FAILURE_MESSAGE, methodList.size(), 2);
-                            // The first one should be the @After one.
+                            Assert.assertTrue(
+                                    ASSERTION_FAILURE_MESSAGE,
+                                    returnedStatement
+                                            instanceof LongevityClassRunner.RunAfterMethods);
+                            // The second argument should only contain the @After method.
+                            List<FrameworkMethod> afterMethodList =
+                                    (List<FrameworkMethod>) invocation.getArgument(1);
+                            Assert.assertEquals(
+                                    ASSERTION_FAILURE_MESSAGE, afterMethodList.size(), 1);
                             Assert.assertEquals(
                                     ASSERTION_FAILURE_MESSAGE,
-                                    methodList.get(0).getName(),
+                                    afterMethodList.get(0).getName(),
                                     "afterMethod");
-                            // The second one should be the @AfterClass one.
+                            // The third argument should only contain the @AfterClass method.
+                            List<FrameworkMethod> afterClassMethodList =
+                                    (List<FrameworkMethod>) invocation.getArgument(2);
+                            Assert.assertEquals(
+                                    ASSERTION_FAILURE_MESSAGE, afterClassMethodList.size(), 1);
                             Assert.assertEquals(
                                     ASSERTION_FAILURE_MESSAGE,
-                                    methodList.get(1).getName(),
+                                    afterClassMethodList.get(0).getName(),
                                     "afterClassMethod");
-                            return invocation.callRealMethod();
+                            return returnedStatement;
                         })
-                .when(runner)
-                .getRunAfters(any(Statement.class), any(List.class), any(Object.class));
+                .when(mRunner)
+                .addRunAfters(
+                        any(Statement.class), any(List.class), any(List.class), any(Object.class));
         // Run the runner.
-        runner.run(mRunNotifier);
+        mRunner.run(mRunNotifier);
         verifyForAssertionFailures(mRunNotifier);
         // Verify that the stubbed methods are indeed called.
-        verify(runner, times(1)).withAfterClasses(any(Statement.class));
-        verify(runner, times(1))
-                .getRunAfters(any(Statement.class), any(List.class), any(Object.class));
+        verify(mRunner, times(1)).withAfterClasses(any(Statement.class));
+        verify(mRunner, times(1))
+                .addRunAfters(
+                        any(Statement.class), any(List.class), any(List.class), any(Object.class));
+    }
+
+    /**
+     * Test that {@link LongevityClassRunner.RunAfterMethods} marks the test as failed for a failed
+     * test.
+     */
+    @Test
+    public void testAfterClassMethodsHandling_marksFailure() throws Throwable {
+        // Initialization parameter does not matter as this test does not concern the tested class.
+        mRunner = spy(new LongevityClassRunner(NoOpTest.class));
+        try {
+            mRunner.hasTestFailed();
+            Assert.fail("Test status should not be able to be checked before it's run.");
+        } catch (Throwable e) {
+            Assert.assertTrue(e.getMessage().contains("should not be checked"));
+        }
+        // Create and partially run the runner with a failing statement.
+        Statement statement =
+                mRunner.withAfters(
+                        null,
+                        new NoOpTest(),
+                        new Statement() {
+                            public void evaluate() throws Throwable {
+                                throw new RuntimeException("I failed.");
+                            }
+                        });
+        try {
+            statement.evaluate();
+        } catch (Throwable e) {
+            // Expected and no action needed.
+        }
+        Assert.assertTrue(mRunner.hasTestFailed());
+    }
+
+    /**
+     * Test that {@link LongevityClassRunner.RunAfterMethods} marks the test as passed for a passed
+     * test.
+     */
+    @Test
+    public void testRunAfterClassMethodsHandling_marksPassed() throws Throwable {
+        // Initialization parameter does not matter as this test does not concern the tested class.
+        mRunner = spy(new LongevityClassRunner(NoOpTest.class));
+        // Checking test status before the statements are run should throw.
+        try {
+            mRunner.hasTestFailed();
+            Assert.fail("Test status should not be able to be checked before it's run.");
+        } catch (Throwable e) {
+            Assert.assertTrue(e.getMessage().contains("should not be checked"));
+        }
+        // Create and partially run the runner with a passing statement.
+        Statement statement =
+                mRunner.withAfters(
+                        null,
+                        new NoOpTest(),
+                        new Statement() {
+                            public void evaluate() throws Throwable {
+                                // Does nothing and thus passes.
+                            }
+                        });
+        statement.evaluate();
+        Assert.assertFalse(mRunner.hasTestFailed());
+    }
+
+    /** Test that {@link AfterClass} methods are run as {@link After} methods for a passing test. */
+    @Test
+    public void testAfterClass_runAsAfterForPassingTest() throws Throwable {
+        // Initialization parameter does not matter as this test does not concern the tested class.
+        mRunner = spy(new LongevityClassRunner(NoOpTest.class));
+        // For a passing test, the AfterClass method should be run in the statement returned from
+        // withAfters().
+        Statement statement =
+                mRunner.withAfters(
+                        null, // Passing null as parameter in the interface is not actually used.
+                        new NoOpTest(),
+                        PASSING_STATEMENT);
+        statement.evaluate();
+        // Check that the @AfterClass method is called.
+        ArgumentCaptor<List> methodsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(mRunner, times(1)).invokeAndCollectErrors(methodsCaptor.capture(), any());
+        Assert.assertEquals(methodsCaptor.getValue().size(), 1);
+        Assert.assertTrue(
+                ((FrameworkMethod) methodsCaptor.getValue().get(0))
+                        .getName()
+                        .contains("afterClassMethod"));
+    }
+
+    /**
+     * Test that {@link AfterClass} methods are run as {@link AfterClass} method for a failing test.
+     */
+    @Test
+    public void testAfterClass_runAsAfterClassForFailingTest() throws Throwable {
+        // Initialization parameter does not matter as this test does not concern the tested class.
+        mRunner = spy(new LongevityClassRunner(NoOpTest.class));
+        // For a failing test, the AfterClass method should be run in the statement returned from
+        // withAfterClass().
+        doReturn(true).when(mRunner).hasTestFailed();
+        Statement statement = mRunner.withAfterClasses(FAILING_STATEMENT);
+        try {
+            statement.evaluate();
+        } catch (Throwable e) {
+            // Expected and no action needed.
+        }
+        // Check that the @AfterClass method is called.
+        ArgumentCaptor<List> methodsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(mRunner, times(1)).invokeAndCollectErrors(methodsCaptor.capture(), any());
+        Assert.assertEquals(methodsCaptor.getValue().size(), 1);
+        Assert.assertTrue(
+                ((FrameworkMethod) methodsCaptor.getValue().get(0))
+                        .getName()
+                        .contains("afterClassMethod"));
+    }
+
+    /** Test that {@link AfterClass} methods are only executed once for a passing test. */
+    @Test
+    public void testAfterClassRunOnlyOnce_passingTest() throws Throwable {
+        mRunner = spy(new LongevityClassRunner(NoOpTest.class));
+        mRunner.run(mRunNotifier);
+        verify(mRunner, times(1))
+                .invokeAndCollectErrors(getMethodNameMatcher("afterClassMethod"), any());
+    }
+
+    /** Test that {@link AfterClass} methods are only executed once for a failing test. */
+    @Test
+    public void testAfterClassRunOnlyOnce_failingTest() throws Throwable {
+        mRunner = spy(new LongevityClassRunner(FailingTest.class));
+        mRunner.run(mRunNotifier);
+        verify(mRunner, times(1))
+                .invokeAndCollectErrors(getMethodNameMatcher("afterClassMethod"), any());
+    }
+
+    private List<FrameworkMethod> getMethodNameMatcher(String methodName) {
+        return argThat(
+                l ->
+                        l.stream()
+                                .anyMatch(
+                                        f -> ((FrameworkMethod) f).getName().contains(methodName)));
     }
 
     /**
