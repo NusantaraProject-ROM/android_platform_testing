@@ -63,4 +63,22 @@ public interface IMapsHelper extends IAppHelper {
     default public void flingAddressDetails() {
         throw new UnsupportedOperationException("Not yet implemented.");
     }
+
+    /**
+     * Setup expectation: On the navigation screen.
+     *
+     * <p>Click the home button to go to the navigation pip page.
+     */
+    public default void goToNavigatePip() {
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
+
+    /**
+     * Setup expectation: On the home screen.
+     *
+     * <p>Click the navigation pip to go to the navigation page.
+     */
+    public default void backToNavigationFromPip() {
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
 }
