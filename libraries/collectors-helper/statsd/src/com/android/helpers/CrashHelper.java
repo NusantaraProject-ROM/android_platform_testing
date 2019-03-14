@@ -94,8 +94,9 @@ public class CrashHelper implements ICollectorHelper<Integer> {
 
                 // Track the total ANR count.
                 MetricUtility.addMetric(TOTAL_PREFIX + EVENT_ANR, appCrashResultMap);
-                String detailKey = MetricUtility.constructKey(
-                            EVENT_ANR, processName, reason, foregoundState.toString());
+                String detailKey =
+                        MetricUtility.constructKey(
+                                EVENT_ANR, processName, foregoundState.toString());
                 MetricUtility.addMetric(detailKey, appCrashResultMap);
             }
         }
