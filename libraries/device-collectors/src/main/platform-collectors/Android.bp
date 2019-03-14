@@ -12,6 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Genrule for handwritten statsd configs.
+java_genrule {
+    name: "statsd-config-protos",
+    host_supported: true,
+    srcs: [
+        "res/statsd-configs/**/*.pb",
+    ],
+    out: ["statsd-config-protos.jar"],
+    /*
+     * Loops over all subdirectories under res/statsd-configs/ and copy all *.pb configs within to
+     * an assets/statsd-configs/ directory, which gets packed into a .jar file and ends up under the
+     * assets/statsd-configs/ directory in the package, which can then be read with asset manager
+     * in the APK.
+     *
+     * If a config fails to parse, an error is thrown and the build will fail.
+     */
+    cmd: "out_dir=$$(dirname $(out)) && assets_dir=\"assets/statsd-configs\" " +
+        "&& mkdir -p $$out_dir/$$assets_dir && protos=($(locations res/statsd-configs/**/*.pb)) " +
+        "&& for file in $${protos[@]} ; do cp $$file $$out_dir/$$assets_dir/ ; done " +
+        "&& jar cf $(out) -C $$(dirname $(out)) $$assets_dir"
+}
+
 // This library enables additional listeners dependent on platform apis.
 java_library {
     name: "collector-device-lib-platform",
@@ -23,8 +45,8 @@ java_library {
 
     static_libs: [
         "collector-device-lib",
+        "statsd-config-protos",
         "statsd-helper",
     ],
-
     platform_apis: true,
 }
