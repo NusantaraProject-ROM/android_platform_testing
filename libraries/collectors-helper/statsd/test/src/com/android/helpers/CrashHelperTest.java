@@ -20,7 +20,6 @@ import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.By;
 import androidx.test.runner.AndroidJUnit4;
 
-import com.android.helpers.CrashHelper;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -32,12 +31,10 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 
 /**
- * Android Unit tests for {@link CrashHelper}.
+ * Android Unit tests for {@link com.android.helpers.CrashHelper}.
  *
- * To run:
- * Disable SELinux: adb shell setenforce 0; if this fails with "permission denied",
- * try "adb shell su 0 setenforce 0"
- * atest CollectorsHelperTest:com.android.helpers.CrashHelperTest
+ * <p>To run: Disable SELinux: adb shell setenforce 0; if this fails with "permission denied", try
+ * "adb shell su 0 setenforce 0" atest CollectorsHelperTest:com.android.helpers.CrashHelperTest
  */
 @RunWith(AndroidJUnit4.class)
 public class CrashHelperTest {
@@ -61,9 +58,7 @@ public class CrashHelperTest {
     private static final String NATIVE_CRASH_PKG_KEY =
             "native_crash_com.android.development_FOREGROUND";
     // Detailed event key associated with the ANR: process, reason and foreground status.
-    private static final String ANR_DETAIL_KEY = "anr_com.android.development"
-            + "_executing service com.android.development/.BadBehaviorActivity$BadService"
-            + "_FOREGROUND";
+    private static final String ANR_DETAIL_KEY = "anr_com.android.development_FOREGROUND";
     // Button id to cause the crash.
     private static final String CRASH_BTN_NAME = "bad_behavior_crash_main";
     // Button id to cause the native crash.
