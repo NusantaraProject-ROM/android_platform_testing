@@ -39,8 +39,6 @@ public class ProcessShowmapListener extends BaseCollectionListener<Long> {
     private static final String TAG = ProcessShowmapListener.class.getSimpleName();
     @VisibleForTesting static final String PROCESS_SEPARATOR = ",";
     @VisibleForTesting static final String PROCESS_NAMES_KEY = "showmap-process-names";
-    // TODO(119675321): Remove this once all ATP configs have switched to the new key name.
-    static final String OLD_PROCESS_NAME_KEY = "processshowmap-process-name";
     private ProcessShowmapHelper mShowmapHelper = new ProcessShowmapHelper();
 
     public ProcessShowmapListener() {
@@ -62,16 +60,11 @@ public class ProcessShowmapListener extends BaseCollectionListener<Long> {
     public void onTestRunStart(DataRecord runData, Description description) {
         Bundle args = getArgsBundle();
         String procsString = args.getString(PROCESS_NAMES_KEY);
-        String oldProcString = args.getString(OLD_PROCESS_NAME_KEY);
-        if (procsString == null && oldProcString == null) {
+        if (procsString == null) {
             Log.e(TAG, "No processes provided to sample");
             return;
         }
-        if (oldProcString != null) {
-            mShowmapHelper.setUp(oldProcString);
-        } else {
-            String[] procs = procsString.split(PROCESS_SEPARATOR);
-            mShowmapHelper.setUp(procs);
-        }
+        String[] procs = procsString.split(PROCESS_SEPARATOR);
+        mShowmapHelper.setUp(procs);
     }
 }
