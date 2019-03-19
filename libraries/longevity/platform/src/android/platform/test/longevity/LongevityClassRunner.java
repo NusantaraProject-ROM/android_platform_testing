@@ -18,8 +18,8 @@ package android.platform.test.longevity;
 
 import androidx.annotation.VisibleForTesting;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -30,6 +30,7 @@ import org.junit.internal.runners.statements.RunBefores;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
+import org.junit.runners.model.MultipleFailureException;
 import org.junit.runners.model.Statement;
 
 /**
@@ -38,6 +39,9 @@ import org.junit.runners.model.Statement;
  * longevity tests.
  */
 public class LongevityClassRunner extends BlockJUnit4ClassRunner {
+    private boolean mTestFailed = true;
+    private boolean mTestHasRun = false;
+
     public LongevityClassRunner(Class<?> klass) throws InitializationError {
         super(klass);
     }
@@ -59,7 +63,8 @@ public class LongevityClassRunner extends BlockJUnit4ClassRunner {
      */
     @Override
     protected Statement withAfterClasses(Statement statement) {
-        return statement;
+        return new RunAfterClassMethodsOnTestFailure(
+                statement, getTestClass().getAnnotatedMethods(AfterClass.class), null);
     }
 
     /**
@@ -73,7 +78,7 @@ public class LongevityClassRunner extends BlockJUnit4ClassRunner {
         allBeforeMethods.addAll(getTestClass().getAnnotatedMethods(Before.class));
         return allBeforeMethods.isEmpty()
                 ? statement
-                : getRunBefores(statement, allBeforeMethods, target);
+                : addRunBefores(statement, allBeforeMethods, target);
     }
 
     /**
@@ -82,25 +87,125 @@ public class LongevityClassRunner extends BlockJUnit4ClassRunner {
      */
     @Override
     protected Statement withAfters(FrameworkMethod method, Object target, Statement statement) {
-        List<FrameworkMethod> allAfterMethods = new ArrayList<FrameworkMethod>();
-        allAfterMethods.addAll(getTestClass().getAnnotatedMethods(After.class));
-        allAfterMethods.addAll(getTestClass().getAnnotatedMethods(AfterClass.class));
-        return allAfterMethods.isEmpty()
-                ? statement
-                : getRunAfters(statement, allAfterMethods, target);
+        return addRunAfters(
+                statement,
+                getTestClass().getAnnotatedMethods(After.class),
+                getTestClass().getAnnotatedMethods(AfterClass.class),
+                target);
     }
 
     /** Factory method to return the {@link RunBefores} object. Exposed for testing only. */
     @VisibleForTesting
-    protected RunBefores getRunBefores(
+    protected RunBefores addRunBefores(
             Statement statement, List<FrameworkMethod> befores, Object target) {
         return new RunBefores(statement, befores, target);
     }
 
-    /** Factory method to return the {@link RunBefores} object. Exposed for testing only. */
+    /**
+     * Factory method to return the {@link Statement} object for running "after" methods. Exposed
+     * for testing only.
+     */
     @VisibleForTesting
-    protected RunAfters getRunAfters(
-            Statement statement, List<FrameworkMethod> afters, Object target) {
-        return new RunAfters(statement, afters, target);
+    protected Statement addRunAfters(
+            Statement statement,
+            List<FrameworkMethod> afterMethods,
+            List<FrameworkMethod> afterClassMethods,
+            Object target) {
+        return new RunAfterMethods(statement, afterMethods, afterClassMethods, target);
+    }
+
+    @VisibleForTesting
+    protected boolean hasTestFailed() {
+        if (!mTestHasRun) {
+            throw new IllegalStateException(
+                    "Test success status should not be checked before the test is run.");
+        }
+        return mTestFailed;
+    }
+
+    /**
+     * {@link Statement} to run the statement and the {@link After} methods. If the test does not
+     * fail, also runs the {@link AfterClass} method as {@link After} methods.
+     */
+    @VisibleForTesting
+    class RunAfterMethods extends Statement {
+        private final List<FrameworkMethod> mAfterMethods;
+        private final List<FrameworkMethod> mAfterClassMethods;
+        private final Statement mStatement;
+        private final Object mTarget;
+
+        public RunAfterMethods(
+                Statement statement,
+                List<FrameworkMethod> afterMethods,
+                List<FrameworkMethod> afterClassMethods,
+                Object target) {
+            mStatement = statement;
+            mAfterMethods = afterMethods;
+            mAfterClassMethods = afterClassMethods;
+            mTarget = target;
+        }
+
+        @Override
+        public void evaluate() throws Throwable {
+            Statement withAfters = new RunAfters(mStatement, mAfterMethods, mTarget);
+            try {
+                withAfters.evaluate();
+                // If the evaluation fails, the part from here on will not be executed, and
+                // RunAfterClassMethodsOnTestFailure will then know to run the @AfterClass methods.
+                LongevityClassRunner.this.mTestFailed = false;
+                invokeAndCollectErrors(mAfterClassMethods, mTarget);
+            } catch (Throwable e) {
+                throw e;
+            } finally {
+                LongevityClassRunner.this.mTestHasRun = true;
+            }
+        }
+    }
+
+    /**
+     * {@link Statement} to run the {@link AfterClass} methods only in the event that a test failed.
+     */
+    @VisibleForTesting
+    class RunAfterClassMethodsOnTestFailure extends Statement {
+        private final List<FrameworkMethod> mAfterClassMethods;
+        private final Statement mStatement;
+        private final Object mTarget;
+
+        public RunAfterClassMethodsOnTestFailure(
+                Statement statement, List<FrameworkMethod> afterClassMethods, Object target) {
+            mStatement = statement;
+            mAfterClassMethods = afterClassMethods;
+            mTarget = target;
+        }
+
+        @Override
+        public void evaluate() throws Throwable {
+            List<Throwable> errors = new ArrayList<>();
+            try {
+                mStatement.evaluate();
+            } catch (Throwable e) {
+                errors.add(e);
+            } finally {
+                if (LongevityClassRunner.this.hasTestFailed()) {
+                    errors.addAll(invokeAndCollectErrors(mAfterClassMethods, mTarget));
+                }
+            }
+            MultipleFailureException.assertEmpty(errors);
+        }
+    }
+
+    /** Invoke the list of methods and collect errors into a list. */
+    @VisibleForTesting
+    protected List<Throwable> invokeAndCollectErrors(List<FrameworkMethod> methods, Object target)
+            throws Throwable {
+        List<Throwable> errors = new ArrayList<>();
+        for (FrameworkMethod method : methods) {
+            try {
+                method.invokeExplosively(target);
+            } catch (Throwable e) {
+                errors.add(e);
+            }
+        }
+        return errors;
     }
 }
