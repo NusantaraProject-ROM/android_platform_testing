@@ -30,6 +30,7 @@ import android.os.RemoteException;
 import android.os.SystemClock;
 import android.platform.helpers.exceptions.AccountException;
 import android.platform.helpers.exceptions.UnknownUiException;
+import android.platform.helpers.watchers.AppIsNotRespondingWatcher;
 import android.support.test.launcherhelper.ILauncherStrategy;
 import android.support.test.launcherhelper.LauncherStrategyFactory;
 import android.support.test.uiautomator.By;
@@ -106,6 +107,8 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
         // Launch the application as normal.
         String pkg = getPackage();
         long launchInitiationTimeMs = System.currentTimeMillis();
+
+        registerDialogWatchers();
         if (mFavorShellCommands) {
             String output = null;
             try {
@@ -117,6 +120,7 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
                 mInstrumentation.getContext().startActivity(intent);
                 Log.i(LOG_TAG, String.format("Sent command to launch: %s", pkg));
             } catch (ActivityNotFoundException e) {
+                removeDialogWatchers();
                 throw new RuntimeException(String.format("Failed to find package: %s", pkg), e);
             }
         } else {
@@ -127,13 +131,16 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
                 Log.i(LOG_TAG, "Launched package: id=" + id + ", pkg=" + pkg);
             }
         }
+
         // Ensure the package is in the foreground for success.
         if (!mDevice.wait(Until.hasObject(By.pkg(pkg).depth(0)), mLaunchTimeout)) {
+            removeDialogWatchers();
             throw new IllegalStateException(
                     String.format(
                             "Did not find package, %s, in foreground after %d ms.",
                             pkg, System.currentTimeMillis() - launchInitiationTimeMs));
         }
+        removeDialogWatchers();
     }
 
     /**
@@ -346,5 +353,15 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
     @Override
     public void removeWatcher(String name) {
       mDevice.removeWatcher(name);
+    }
+
+    private void registerDialogWatchers() {
+        registerWatcher(
+                AppIsNotRespondingWatcher.class.getSimpleName(),
+                new AppIsNotRespondingWatcher(InstrumentationRegistry.getInstrumentation()));
+    }
+
+    private void removeDialogWatchers() {
+        removeWatcher(AppIsNotRespondingWatcher.class.getSimpleName());
     }
 }
