@@ -27,7 +27,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.List;
 
-import org.junit.rules.MethodRule;
+import org.junit.rules.TestRule;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.FrameworkMethod;
@@ -60,7 +60,7 @@ public class Microbenchmark extends BlockJUnit4ClassRunner {
     /**
      * Returns a {@link Statement} that invokes {@code method} on {@code test}, surrounded by any
      * explicit or command-line-supplied {@link TightMethodRule}s. This allows for tighter {@link
-     * MethodRule}s that live inside {@link Before} and {@link After} statements.
+     * TestRule}s that live inside {@link Before} and {@link After} statements.
      */
     @Override
     protected Statement methodInvoker(FrameworkMethod method, Object test) {
@@ -68,10 +68,10 @@ public class Microbenchmark extends BlockJUnit4ClassRunner {
         // Wrap the inner-most test method with trace points.
         start = getTracePointRule().apply(start, describeChild(method));
         // Invoke special @TightMethodRules that wrap @Test methods.
-        List<MethodRule> tightMethodRules = getTestClass()
-                .getAnnotatedFieldValues(test, TightMethodRule.class, MethodRule.class);
-        for (MethodRule tightMethodRule : tightMethodRules) {
-            start = tightMethodRule.apply(start, method, test);
+        List<TestRule> tightMethodRules =
+                getTestClass().getAnnotatedFieldValues(test, TightMethodRule.class, TestRule.class);
+        for (TestRule tightMethodRule : tightMethodRules) {
+            start = tightMethodRule.apply(start, describeChild(method));
         }
         return start;
     }
