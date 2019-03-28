@@ -15,7 +15,7 @@
  */
 package android.platform.test.rule;
 
-import android.app.UiAutomation;
+import android.os.Bundle;
 import android.support.test.uiautomator.UiDevice;
 import androidx.test.InstrumentationRegistry;
 
@@ -50,5 +50,14 @@ public class TestWatcher extends org.junit.rules.TestWatcher {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Returns the {@link Bundle} containing registered arguments.
+     *
+     * <p>Override this for unit testing device calls.
+     */
+    protected Bundle getArguments() {
+        return InstrumentationRegistry.getArguments();
     }
 }
