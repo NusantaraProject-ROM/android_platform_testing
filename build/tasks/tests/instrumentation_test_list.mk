@@ -67,7 +67,9 @@ instrumentation_tests := \
     FrameworksLocationTests \
     FrameworksPrivacyLibraryTests \
     SettingsUITests \
-    ExtServicesUnitTests
+    ExtServicesUnitTests\
+    NexusLauncherOutOfProcTests
+
 
 # Android Things specific tests
 ifeq ($(PRODUCT_IOT),true)

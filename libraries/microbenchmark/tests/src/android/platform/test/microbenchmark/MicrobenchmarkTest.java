@@ -16,8 +16,6 @@
 package android.platform.test.microbenchmark;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
-import static org.junit.Assert.fail;
 
 import android.os.Bundle;
 import android.platform.test.rule.TracePointRule;
@@ -25,13 +23,12 @@ import android.platform.test.rule.TracePointRule;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.rules.MethodRule;
+import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
 
@@ -163,9 +160,9 @@ public final class MicrobenchmarkTest {
             mOperationLog.add("after");
         }
 
-        class TightRule implements MethodRule {
+        class TightRule implements TestRule {
             @Override
-            public Statement apply(Statement base, FrameworkMethod method, Object target) {
+            public Statement apply(Statement base, Description description) {
                 return new Statement() {
                     @Override
                     public void evaluate() throws Throwable {
