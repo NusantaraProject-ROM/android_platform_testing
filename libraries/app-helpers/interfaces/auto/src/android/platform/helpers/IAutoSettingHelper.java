@@ -128,7 +128,4 @@ public interface IAutoSettingHelper extends IAppHelper {
      * @param changeType determines to increase or decrease the value of setting.
      */
     void changeSeekbarLevel(int index, ChangeType changeType);
-
-
-
 }
