@@ -100,4 +100,13 @@ public interface IGoogleHelper extends IAppHelper {
     default public void flingFeed(Direction dir) {
         throw new UnsupportedOperationException("Not yet implemented.");
     }
+
+    /**
+     * Setup expectations: In home.
+     *
+     * <p>This method clear search result.
+     */
+    public default boolean clearSearchResult() {
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
 }

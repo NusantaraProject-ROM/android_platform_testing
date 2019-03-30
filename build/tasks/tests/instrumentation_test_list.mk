@@ -68,7 +68,9 @@ instrumentation_tests := \
     FrameworksPrivacyLibraryTests \
     SettingsUITests \
     ExtServicesUnitTests\
-    NexusLauncherOutOfProcTests
+    NexusLauncherOutOfProcTests\
+    NexusLauncherDebug\
+    NexusLauncherTests\
 
 
 # Android Things specific tests
