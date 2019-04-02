@@ -21,7 +21,8 @@ instrumentation_metric_tests := \
     RsBlasBenchmark \
     ImageProcessingJB \
     MultiUserPerfTests \
-    NeuralNetworksApiBenchmark
+    NeuralNetworksApiBenchmark \
+    TextClassifierPerfTests
 
     # TODO(b/72332760): Uncomment when fixed
     #DocumentsUIPerfTests
