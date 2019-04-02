@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ public interface IAutoDialHelper extends IAppHelper {
     /**
      * Setup expectations: The app is open and there is an ongoing call.
      *
-     * This method is used to end call.
+     * This method is used to end call using softkey.
      */
     void endCall();
 
@@ -39,13 +39,6 @@ public interface IAutoDialHelper extends IAppHelper {
      * This method is used to open call history details.
      */
     void openCallHistory();
-
-    /**
-     * Setup expectations: The app is open and the drawer is open.
-     *
-     * This method is used to open missed call details.
-     */
-    void openMissedCall();
 
     /**
      * Setup expectations: The app is open and in "Dial a number" drawer option
@@ -71,7 +64,7 @@ public interface IAutoDialHelper extends IAppHelper {
     /**
      * Setup expectations: The app is open and phonenumber is entered on the dialpad
      *
-     * This method is used to make a call
+     * This method is used to make/receive a call using softkey
      *
      */
     void makeCall();
@@ -79,12 +72,11 @@ public interface IAutoDialHelper extends IAppHelper {
     /**
      * Setup expectations: The app is open
      *
-     * This method is used to dial a number from call history, missed call[s], recent
-     * call[s] list
+     * This method is used to dial a number from a list (Favorites, Call History, Contact)
      *
-     * @param phoneNumber  phoneNumber to be dialed
+     * @param contact (number or name) dial.
      */
-    void dialNumberFromList(String phoneNumber);
+    void dialNumberFromList(String contact);
 
     /**
      * Setup expectations: The app is open and there is an ongoing call
