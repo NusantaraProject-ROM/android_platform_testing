@@ -21,6 +21,13 @@ package android.platform.helpers;
  */
 
 public interface IAutoAppInfoSettingsHelper extends IAppHelper {
+
+    /** enum for enable/disable state */
+    public enum State {
+        ENABLE,
+        DISABLE
+    }
+
     /**
      * Setup expectation: Apps & notifications setting is open
      *
@@ -34,18 +41,17 @@ public interface IAutoAppInfoSettingsHelper extends IAppHelper {
      * Setup expectation: Apps & notifications setting is open
      *
      * This method is to click on Show all apps menu
-     *
      */
     void showAllApps();
 
     /**
      * Setup expectation: An application in Apps & notifications setting is open
      *
-     * This method is to enable/disable an application
+     * <p>This method is to enable/disable an application
      *
-     * @param enable - true: to enable, false: to disable
+     * @param state - ENABLE: to enable, DISABLE: to disable
      */
-    void enableDisableApplication(boolean enable);
+    void enableDisableApplication(State state);
 
     /**
      * Setup expectation: An application in Apps & notifications setting is open
@@ -64,13 +70,12 @@ public interface IAutoAppInfoSettingsHelper extends IAppHelper {
     /**
      * Setup expectation: Apps & notifications setting is open
      *
-     * This method is to add a permission to an application
+     * <p>This method is to add a permission to an application
      *
      * @param permission - name of the permission
-     *
-     * @param enable - true: to enable, false: to disable
+     * @param state - ENABLE: to enable, DISABLE: to disable
      */
-    void setAppPermission(String permission, boolean enable);
+    void setAppPermission(String permission, State state);
 
     /**
      * Setup expectation: An application in Apps & notifications setting is open
