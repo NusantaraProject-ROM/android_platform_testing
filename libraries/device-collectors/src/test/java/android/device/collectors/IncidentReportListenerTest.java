@@ -91,8 +91,9 @@ public class IncidentReportListenerTest {
     /** Tests the collector writes a new full report at the end of a test run. */
     @Test
     public void testCollectFullReportAtEnd() throws Exception {
-        doReturn(NONEMPTY_BYTE_ARRAY).when(mListener)
-                .executeCommandBlocking(matches("incident -p .*"));
+        doReturn(NONEMPTY_BYTE_ARRAY)
+                .when(mListener)
+                .executeCommandBlocking(matches("incident -b -p .*"));
         doReturn(NONEMPTY_BYTE_ARRAY).when(mListener)
                 .executeCommandBlocking(matches("rm -rf .*"));
         mListener.testRunStarted(FAKE_DESCRIPTION);
@@ -106,8 +107,9 @@ public class IncidentReportListenerTest {
     /** Tests the collector throws if the output directory is not created or does not exist. */
     @Test
     public void testFailCollectIfNoDestinationDirectory() throws Exception {
-        doReturn(NONEMPTY_BYTE_ARRAY).when(mListener)
-                .executeCommandBlocking(matches("incident -p .*"));
+        doReturn(NONEMPTY_BYTE_ARRAY)
+                .when(mListener)
+                .executeCommandBlocking(matches("incident -b -p .*"));
         doReturn(null).when(mListener).createAndEmptyDirectory(anyString());
         // Ensure the test run start throws exception failing to create the folder.
         try {
@@ -131,8 +133,9 @@ public class IncidentReportListenerTest {
     /** Tests the collector fails to write a new full report if the report data is empty. */
     @Test
     public void testCollectEmptyReportFails() throws Exception {
-        doReturn(EMPTY_BYTE_ARRAY).when(mListener)
-                .executeCommandBlocking(matches("incident -p .*"));
+        doReturn(EMPTY_BYTE_ARRAY)
+                .when(mListener)
+                .executeCommandBlocking(matches("incident -b -p .*"));
         doReturn(NONEMPTY_BYTE_ARRAY).when(mListener)
                 .executeCommandBlocking(matches("rm -rf .*"));
         mListener.testRunStarted(FAKE_DESCRIPTION);
@@ -147,8 +150,9 @@ public class IncidentReportListenerTest {
     /** Tests the collector includes the full report in the {@code DataRecord}. */
     @Test
     public void testReportMetricsAsData() throws Exception {
-        doReturn(NONEMPTY_BYTE_ARRAY).when(mListener)
-                .executeCommandBlocking(matches("incident -p .*"));
+        doReturn(NONEMPTY_BYTE_ARRAY)
+                .when(mListener)
+                .executeCommandBlocking(matches("incident -b -p .*"));
         doReturn(NONEMPTY_BYTE_ARRAY).when(mListener)
                 .executeCommandBlocking(matches("rm -rf .*"));
         mListener.testRunStarted(FAKE_DESCRIPTION);
