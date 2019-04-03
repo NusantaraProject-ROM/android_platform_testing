@@ -16,8 +16,6 @@
 
 package android.platform.helpers;
 
-import java.time.LocalDate;
-
 public interface IAutoHomeHelper extends IAppHelper {
 
     /**
@@ -46,12 +44,12 @@ public interface IAutoHomeHelper extends IAppHelper {
      *
      * @return to get current date in LocalDate format.
      */
-    LocalDate getDate();
+    String getDate();
 
     /**
      * Setup expectations: Should be on home screen.
      *
-     * Checks if exists a media widget.
+     * <p>Checks if exists a media widget.
      */
-    boolean checkMediaWidget();
+    boolean hasMediaWidget();
 }
