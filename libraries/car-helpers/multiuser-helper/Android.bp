@@ -12,15 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-java_library {
-    name: "platform-test-rules",
-    sdk_version: "test_current",
+
+java_library_static {
+    name: "multi-user-helper",
+    srcs: [
+        "src/**/*.java",
+    ],
     static_libs: [
         "androidx.test.runner",
-        "app-helpers-handheld-interfaces",
-        "guava",
-        "memory-helper",
-        "ub-uiautomator"
+        "android.car.userlib",
     ],
-    srcs: ["src/**/*.java"],
 }

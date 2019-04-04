@@ -39,7 +39,7 @@ import org.junit.runner.Result;
 @OptionClass(alias = "incident-collector")
 public class IncidentReportListener extends BaseMetricListener {
     private static final String LOG_TAG = IncidentReportListener.class.getSimpleName();
-    private static final String REDIRECT_INCIDENT_REPORT_CMD = "incident -p %s";
+    private static final String REDIRECT_INCIDENT_REPORT_CMD = "incident -b -p %s";
     // Separate directory name for conveniently calling {@code this#createAndEmptyDirectory}, which
     // is already conditioned on the external storage directory path. If improved, remove constant.
     private static final String DIRECTORY_NAME = "incidents";
