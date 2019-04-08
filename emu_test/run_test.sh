@@ -21,7 +21,10 @@ fi
 TEST_SUITE=`ls $BUILD_DIR/test_suite`
 echo "$TEST_SUITE"
 
-EMU_BIN=5430293
+mkdir -p $BUILD_DIR/emulator
+#fetch_artifact --bid 5441626 --target sdk_tools_linux sdk-repo-linux-emulator-5441626.zip $BUILD_DIR/emulator/
+fetch_artifact --target sdk_tools_linux --branch aosp-emu-master-dev --latest "sdk-repo-linux-emulator-[0-9]*" $BUILD_DIR/emulator/
+EMU_BIN=`ls $BUILD_DIR/emulator`
 echo "$EMU_BIN"
 
 if [ -d "$BUILD_DIR/gphone_x86-user" ];
