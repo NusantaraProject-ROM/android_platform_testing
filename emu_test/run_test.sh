@@ -15,9 +15,11 @@ BUILD_DIR="out/prebuilt_cached/builds"
 
 if [ ! -d "$BUILD_DIR/test_suite" ];
 then
-    echo "CTS suite does not exist"
+    echo "Test suite does not exist"
     exit 1
 fi
+#for cts, android-cts.zip
+#for gts, android-gts.zip
 TEST_SUITE=`ls $BUILD_DIR/test_suite`
 echo "$TEST_SUITE"
 
@@ -30,13 +32,28 @@ echo "$EMU_BIN"
 if [ -d "$BUILD_DIR/gphone_x86-user" ];
 then
     SYS_IMAGE=`ls $BUILD_DIR/gphone_x86-user`
-    echo "Run CTS with $SYS_IMAGE"
+    if [[ $TEST_SUITE == *"cts"* ]]
+    then
+        echo "Run CTS with $SYS_IMAGE"
+    elif [[ $TEST_SUITE == *"gts"* ]]
+    then
+        echo "Run GTS with $SYS_IMAGE"
+    fi
 fi
 
 if [ -d "$BUILD_DIR/gphone_x86-user" ];
 then
     SYS_IMAGE_64=`ls $BUILD_DIR/gphone_x86_64-user`
-    echo "Run CTS with $SYS_IMAGE_64"
+    if [[ $TEST_SUITE == *"cts"* ]]
+    then
+        echo "Run CTS with $SYS_IMAGE_64"
+    elif [[ $TEST_SUITE == *"gts"* ]]
+    then
+        echo "Run GTS with $SYS_IMAGE_64"
+    fi
 fi
+
+echo "Cleanup prebuilts"
+rm -rf /buildbot/prebuilt/*
 
 exit 0
