@@ -27,14 +27,15 @@ section (and this section only) in the Android Metrics documentation to create a
 2. Validate the config following the
 [Validate and sent a changelist for review](http://go/westworld-modulefooding#validate-and-send-a-changelist-for-review)
 section, but skip the sending CL for review part.
-2. Build the config parsing utility:
+3. Build the config parsing utility:
 `blaze build -c opt java/com/google/wireless/android/stats/westworld:parse_definitions`
-3. Use the utility to create the binary config:
+4. Use the utility to create the binary config:
 ```
 blaze-bin/java/com/google/wireless/android/stats/westworld/parse_definitions \
 --action=WRITE_STATSD_CONFIG \
 --definitions_dir=wireless/android/stats/platform/westworld/public/definitions/westworld/ \
 --config_name=<You config's name defined in step 1> \
+--enable_string_hash=false \    # Output human-readable package names to the uid map in the report.
 --allowed_sources=<Comma separated list of allowed log sources> \
 --output_file=<Output path of your config>
 ```
