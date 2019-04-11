@@ -70,7 +70,6 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
     public AbstractStandardAppHelper(Instrumentation instr) {
         mInstrumentation = instr;
         mDevice = UiDevice.getInstance(instr);
-        mLauncherStrategy = LauncherStrategyFactory.getInstance(mDevice).getLauncherStrategy();
         mFavorShellCommands =
                 Boolean.valueOf(
                         InstrumentationRegistry.getArguments().getString(FAVOR_CMD, "false"));
@@ -127,7 +126,7 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
             // Launch using the UI and launcher strategy.
             String id = getLauncherName();
             if (!mDevice.hasObject(By.pkg(pkg).depth(0))) {
-                mLauncherStrategy.launch(id, pkg);
+                getLauncherStrategy().launch(id, pkg);
                 Log.i(LOG_TAG, "Launched package: id=" + id + ", pkg=" + pkg);
             }
         }
@@ -151,12 +150,13 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
         if (mPressHomeToExit) {
             mDevice.pressHome();
             mDevice.waitForIdle();
-            if (!mDevice.hasObject(mLauncherStrategy.getWorkspaceSelector())) {
+            if (!mDevice.hasObject(getLauncherStrategy().getWorkspaceSelector())) {
                 throw new IllegalStateException("Pressing Home failed to exit the app.");
             }
         } else {
             int maxBacks = 4;
-            while (!mDevice.hasObject(mLauncherStrategy.getWorkspaceSelector()) && maxBacks > 0) {
+            while (!mDevice.hasObject(getLauncherStrategy().getWorkspaceSelector())
+                    && maxBacks > 0) {
                 mDevice.pressBack();
                 mDevice.waitForIdle();
                 maxBacks--;
@@ -363,5 +363,12 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
 
     private void removeDialogWatchers() {
         removeWatcher(AppIsNotRespondingWatcher.class.getSimpleName());
+    }
+
+    private ILauncherStrategy getLauncherStrategy() {
+        if (mLauncherStrategy == null) {
+            mLauncherStrategy = LauncherStrategyFactory.getInstance(mDevice).getLauncherStrategy();
+        }
+        return mLauncherStrategy;
     }
 }
