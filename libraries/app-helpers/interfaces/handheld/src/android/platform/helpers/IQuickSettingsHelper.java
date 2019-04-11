@@ -16,8 +16,6 @@
 
 package android.platform.helpers;
 
-import android.support.test.uiautomator.Direction;
-
 /** An App Helper interface for the Quick Settings bar. */
 public interface IQuickSettingsHelper extends IAppHelper {
     /**
@@ -35,7 +33,7 @@ public interface IQuickSettingsHelper extends IAppHelper {
         AIRPLANE("Airplane", 1000),
         AUTO_ROTATE("Auto-rotate", 1000),
         BLUETOOTH("Bluetooth", 10000),
-        DO_NOT_DISTURB("Do not disturb", 1000),
+        DO_NOT_DISTURB("Do Not Disturb", 1000),
         FLASHLIGHT("Flashlight", 1000),
         NIGHT_LIGHT("Night Light", 1000),
         WIFI("Wi-Fi", 5000);
