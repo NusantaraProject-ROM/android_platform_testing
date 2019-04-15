@@ -20,7 +20,16 @@ then
 fi
 #for cts, android-cts.zip
 #for gts, android-gts.zip
-TEST_SUITE=`ls $BUILD_DIR/test_suite`
+if [[ `ls $BUILD_DIR/test_suite` == *"cts"* ]]
+then
+    TEST_SUITE="android-cts.zip"
+elif [[ `ls $BUILD_DIR/test_suite` == *"gts"* ]]
+then
+    TEST_SUITE="android-gts.zip"
+else
+    echo "Test suite does not exist"
+    exit 1
+fi
 echo "$TEST_SUITE"
 
 mkdir -p $BUILD_DIR/emulator
