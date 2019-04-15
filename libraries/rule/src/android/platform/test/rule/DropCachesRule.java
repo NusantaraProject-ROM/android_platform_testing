@@ -17,6 +17,8 @@ package android.platform.test.rule;
 
 import org.junit.runner.Description;
 
+import android.os.SystemClock;
+
 /**
  * This rule will drop caches before running each test method.
  */
@@ -24,5 +26,7 @@ public class DropCachesRule extends TestWatcher {
     @Override
     protected void starting(Description description) {
         executeShellCommand("echo 3 > /proc/sys/vm/drop_caches");
+        // TODO: b/117868612 to identify the root cause for additional wait.
+        SystemClock.sleep(3000);
     }
 }
