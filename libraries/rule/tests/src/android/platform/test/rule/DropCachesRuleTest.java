@@ -17,6 +17,8 @@ package android.platform.test.rule;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.os.Bundle;
+
 import org.junit.Test;
 import org.junit.runner.Description;
 import org.junit.runner.RunWith;
@@ -36,7 +38,7 @@ public class DropCachesRuleTest {
      */
     @Test
     public void testDropCachesCommand() throws Throwable {
-        TestableDropCachesRule rule = new TestableDropCachesRule();
+        TestableDropCachesRule rule = new TestableDropCachesRule(new Bundle());
         rule.apply(rule.getTestStatement(), Description.createTestDescription("clzz", "mthd"))
             .evaluate();
         assertThat(rule.getOperations()).containsExactly(
@@ -44,13 +46,38 @@ public class DropCachesRuleTest {
             .inOrder();
     }
 
+    /**
+     * Tests no drop cache if the drop-cache flag is set to false.
+     */
+    @Test
+    public void testNoDropCacheFlag() throws Throwable {
+        Bundle noDropCacheBundle = new Bundle();
+        noDropCacheBundle.putString(DropCachesRule.KEY_DROP_CACHE, "false");
+        TestableDropCachesRule rule = new TestableDropCachesRule(noDropCacheBundle);
+
+        rule.apply(rule.getTestStatement(), Description.createTestDescription("clzz", "mthd"))
+            .evaluate();
+        assertThat(rule.getOperations()).containsExactly("test")
+            .inOrder();
+    }
+
     private static class TestableDropCachesRule extends DropCachesRule {
         private List<String> mOperations = new ArrayList<>();
+        private Bundle mBundle;
+
+        public TestableDropCachesRule(Bundle bundle) {
+            mBundle = bundle;
+        }
 
         @Override
         protected String executeShellCommand(String cmd) {
             mOperations.add(cmd);
             return "";
+        }
+
+        @Override
+        protected Bundle getArguments() {
+            return mBundle;
         }
 
         public List<String> getOperations() {
