@@ -51,6 +51,7 @@ platform_tests += \
     FrameworkPerf \
     FrameworkPermissionTests \
     FrameworksCoreTests \
+    FrameworksMockingCoreTests \
     FrameworksPrivacyLibraryTests \
     FrameworksUtilTests \
     InternalLocTestApp \
