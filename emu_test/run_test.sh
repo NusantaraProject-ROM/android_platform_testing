@@ -1,66 +1,56 @@
 #!/bin/bash
-# It is to be used with BYOB setup to run CTS tests.
+# It is to be used with BYOB setup to run tests on cloud VMs.
+# It will run UI and boot tests on them.
 #
-# It takes 1 command line argument.
+# It takes 3 command line arguments.
 # DIST_DIR => Absolute path for the distribution directory.
+# API => API number for the system image
+# ORI => branch code for the system image
 #
 # It will return 0 if it is able to execute tests, otherwise
 # it will return 1.
 #
+# For the test results please refer to go/dashboard-adt
+#
 # Owner: akagrawal@google.com
 
 DIST_DIR=$1
+API=$2
+ORI=$3
+
+function run_with_timeout () {
+   ( $1 $2 $3 $4 ) & pid=$!
+   ( sleep $5 && kill -HUP $pid ) 2>/dev/null & watcher=$!
+   if wait $pid 2>/dev/null; then
+      pkill -HUP -P $watcher
+      wait $watcher
+   else
+      echo "Test time out."
+      exit 1
+   fi
+}
+
+echo "Checkout adt-infra repo"
+# $ADT_INFRA has to be set on the build machine. It should have absolute path
+# where adt-infra needs to be checked out.
+rm -rf $ADT_INFRA
+git clone https://android.googlesource.com/platform/external/adt-infra -b emu-master-dev $ADT_INFRA
 
 BUILD_DIR="out/prebuilt_cached/builds"
 
-if [ ! -d "$BUILD_DIR/test_suite" ];
-then
-    echo "Test suite does not exist"
-    exit 1
-fi
-#for cts, android-cts.zip
-#for gts, android-gts.zip
-if [[ `ls $BUILD_DIR/test_suite` == *"cts"* ]]
-then
-    TEST_SUITE="android-cts.zip"
-elif [[ `ls $BUILD_DIR/test_suite` == *"gts"* ]]
-then
-    TEST_SUITE="android-gts.zip"
-else
-    echo "Test suite does not exist"
-    exit 1
-fi
-echo "$TEST_SUITE"
+export ANDROID_HOME=$SDK_SYS_IMAGE
+export ANDROID_SDK_ROOT=$SDK_SYS_IMAGE
 
-mkdir -p $BUILD_DIR/emulator
-#fetch_artifact --bid 5441626 --target sdk_tools_linux sdk-repo-linux-emulator-5441626.zip $BUILD_DIR/emulator/
-fetch_artifact --target sdk_tools_linux --branch aosp-emu-master-dev --latest "sdk-repo-linux-emulator-[0-9]*" $BUILD_DIR/emulator/
-EMU_BIN=`ls $BUILD_DIR/emulator`
-echo "$EMU_BIN"
+echo "Setup builds"
+$ADT_INFRA/emu_test/utils/setup_builds.sh $BUILD_DIR $API
 
-if [ -d "$BUILD_DIR/gphone_x86-user" ];
-then
-    SYS_IMAGE=`ls $BUILD_DIR/gphone_x86-user`
-    if [[ $TEST_SUITE == *"cts"* ]]
-    then
-        echo "Run CTS with $SYS_IMAGE"
-    elif [[ $TEST_SUITE == *"gts"* ]]
-    then
-        echo "Run GTS with $SYS_IMAGE"
-    fi
-fi
+echo "Run Boot tests from $ADT_INFRA"
+cmd="$ADT_INFRA/emu_test/utils/run_boot_test.sh"
+run_with_timeout $cmd $DIST_DIR $ORI $API 5400
 
-if [ -d "$BUILD_DIR/gphone_x86-user" ];
-then
-    SYS_IMAGE_64=`ls $BUILD_DIR/gphone_x86_64-user`
-    if [[ $TEST_SUITE == *"cts"* ]]
-    then
-        echo "Run CTS with $SYS_IMAGE_64"
-    elif [[ $TEST_SUITE == *"gts"* ]]
-    then
-        echo "Run GTS with $SYS_IMAGE_64"
-    fi
-fi
+echo "Run UI tests from $ADT_INFRA"
+cmd="$ADT_INFRA/emu_test/utils/run_ui_test.sh"
+run_with_timeout $cmd $DIST_DIR $ORI $API 10800
 
 echo "Cleanup prebuilts"
 rm -rf /buildbot/prebuilt/*
