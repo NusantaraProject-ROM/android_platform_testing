@@ -72,6 +72,7 @@ instrumentation_tests := \
     NexusLauncherOutOfProcTests\
     NexusLauncherDebug\
     NexusLauncherTests\
+    FrameworksNetSmokeTests\
 
 
 # Android Things specific tests
