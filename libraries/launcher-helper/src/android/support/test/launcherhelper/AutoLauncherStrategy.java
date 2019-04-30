@@ -34,11 +34,15 @@ public class AutoLauncherStrategy implements IAutoLauncherStrategy {
             "am start -n com.android.car.carlauncher/.AppGridActivity";
 
     private static final long APP_INIT_WAIT = 10000;
+    private static final int UI_WAIT_TIME = 5000;
     private static final int OPEN_FACET_RETRY_TIME = 5;
 
     //todo: Remove x and y axis and use resource ID's.
     private static final int FACET_APPS = 560;
     private static final int MAP_FACET = 250;
+
+    private static final BySelector UP_BTN = By.res(CAR_LENSPICKER, "page_up");
+    private static final BySelector DOWN_BTN = By.res(CAR_LENSPICKER, "page_down");
 
     protected UiDevice mDevice;
     private Instrumentation mInstrumentation;
@@ -119,17 +123,20 @@ public class AutoLauncherStrategy implements IAutoLauncherStrategy {
     public boolean checkApplicationExists(String appName) {
         CommandsHelper.getInstance(mInstrumentation).executeShellCommand(
                 OPEN_APP_GRID_COMMAND);
-        BySelector selector = By.scrollable(true);
-        UiObject2 scrollable = mDevice.wait(Until.findObject(selector), APP_INIT_WAIT);
-        UiObject2 object = mDevice.wait(
-                Until.findObject(By.text(appName)), APP_INIT_WAIT);
-        boolean flag = true;
-        while (flag && object == null) {
-            flag = scrollable.scroll(Direction.DOWN, 0.5f);
-            object = mDevice.wait(
-                Until.findObject(By.text(appName)), APP_INIT_WAIT);
+        UiObject2 up = mDevice.wait(Until.findObject(UP_BTN), APP_INIT_WAIT);
+        UiObject2 down = mDevice.wait(Until.findObject(DOWN_BTN), APP_INIT_WAIT);
+        while (up.isEnabled()) {
+            up.click();
+            up = mDevice.wait(Until.findObject(UP_BTN), UI_WAIT_TIME);
         }
-        return object != null ? true : false;
+        UiObject2 object = mDevice.wait(Until.findObject(By.text(appName)), UI_WAIT_TIME);
+        while (down.isEnabled() && object == null) {
+            down.click();
+            object = mDevice.wait(
+                Until.findObject(By.text(appName)), UI_WAIT_TIME);
+            down = mDevice.wait(Until.findObject(DOWN_BTN), UI_WAIT_TIME);
+        }
+        return object != null;
     }
 
     @Override

@@ -15,16 +15,29 @@
  */
 package android.platform.test.rule;
 
+import androidx.annotation.VisibleForTesting;
 import org.junit.runner.Description;
 
 import android.os.SystemClock;
+import android.util.Log;
 
 /**
  * This rule will drop caches before running each test method.
  */
 public class DropCachesRule extends TestWatcher {
+    private static final String LOG_TAG = DropCachesRule.class.getSimpleName();
+
+    @VisibleForTesting static final String KEY_DROP_CACHE = "drop-cache";
+    private static boolean mDropCache = true;
+
     @Override
     protected void starting(Description description) {
+        // Identify the filter option to use.
+        mDropCache = Boolean.parseBoolean(getArguments().getString(KEY_DROP_CACHE, "true"));
+        if (mDropCache == false) {
+            return;
+        }
+
         executeShellCommand("echo 3 > /proc/sys/vm/drop_caches");
         // TODO: b/117868612 to identify the root cause for additional wait.
         SystemClock.sleep(3000);
