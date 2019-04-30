@@ -33,6 +33,7 @@ public class NotificationPressureRule extends TestWatcher {
     private INotificationHelper mNotificationHelper = initNotificationHelper();
 
     private final int mNotificationCount;
+    private final String mPackage;
 
     public NotificationPressureRule() {
         this(DEFAULT_NOTIFICATION_COUNT);
@@ -44,7 +45,21 @@ public class NotificationPressureRule extends TestWatcher {
                     "Notifications are limited to %d per package.", MAX_NOTIFICATION_COUNT));
         }
         mNotificationCount = notificationCount;
+        mPackage = null;
     }
+
+    public NotificationPressureRule(int notificationCount, String pkg)
+            throws IllegalArgumentException {
+        if (notificationCount > MAX_NOTIFICATION_COUNT) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            "Notifications are limited to %d per package.",
+                            MAX_NOTIFICATION_COUNT));
+        }
+        mNotificationCount = notificationCount;
+        mPackage = pkg;
+    }
+
 
     @VisibleForTesting
     INotificationHelper initNotificationHelper() {
@@ -55,7 +70,7 @@ public class NotificationPressureRule extends TestWatcher {
 
     @Override
     protected void starting(Description description) {
-        mNotificationHelper.postNotifications(mNotificationCount);
+        mNotificationHelper.postNotifications(mNotificationCount, mPackage);
     }
 
     @Override
