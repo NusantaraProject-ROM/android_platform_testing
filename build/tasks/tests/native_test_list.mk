@@ -114,7 +114,6 @@ native_tests := \
     posix_async_io_test \
     prioritydumper_test \
     puffin_unittest \
-    recovery_component_test \
     recovery_unit_test \
     resolv_integration_test \
     resolv_unit_test \
