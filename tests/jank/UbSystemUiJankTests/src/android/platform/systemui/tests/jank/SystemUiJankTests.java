@@ -70,7 +70,7 @@ public class SystemUiJankTests extends JankTestBase {
     private static final BySelector RECENTS = By.res(SYSTEMUI_PACKAGE, "recents_view");
     private static final String LOG_TAG = SystemUiJankTests.class.getSimpleName();
     private static final int SWIPE_MARGIN = 5;
-    private static final int DEFAULT_SCROLL_STEPS = 15;
+    private static final int DEFAULT_SCROLL_STEPS = 130;
     private static final int BRIGHTNESS_SCROLL_STEPS = 30;
     private static final int DEFAULT_FLING_SPEED = 15000;
 
