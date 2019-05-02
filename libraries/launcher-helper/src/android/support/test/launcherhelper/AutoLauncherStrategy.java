@@ -224,6 +224,7 @@ public class AutoLauncherStrategy implements IAutoLauncherStrategy {
     @SuppressWarnings("unused")
     @Override
     public long launch(String appName, String packageName) {
+        openApp(appName);
         return 0;
     }
 }
