@@ -15,6 +15,7 @@
  */
 package android.platform.test.rule;
 
+import androidx.annotation.VisibleForTesting;
 import org.junit.runner.Description;
 import org.junit.runners.model.InitializationError;
 
@@ -23,6 +24,10 @@ import org.junit.runners.model.InitializationError;
  */
 public class KillAppsRule extends TestWatcher {
     private final String[] mApplications;
+
+    @VisibleForTesting
+    static final String KILL_APP = "kill-app";
+    private static boolean mKillApp;
 
     public KillAppsRule() throws InitializationError {
         throw new InitializationError("Must supply an application to kill.");
@@ -34,9 +39,16 @@ public class KillAppsRule extends TestWatcher {
 
     @Override
     protected void starting(Description description) {
-        // Force stop each application in sequence.
+        // Check if killing the app after launch is selected or not.
+        mKillApp = Boolean.parseBoolean(getArguments().getString(KILL_APP, "true"));
+        if (!mKillApp) {
+            return;
+        }
+
+        // Force stop each application in sequence if the kill app option is selected.
         for (String app : mApplications) {
             executeShellCommand(String.format("am force-stop %s", app));
         }
+
     }
 }
