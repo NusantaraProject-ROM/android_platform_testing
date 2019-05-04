@@ -66,7 +66,7 @@ public class SystemUiJankTests extends JankTestBase {
     private static final String SYSTEMUI_PACKAGE = "com.android.systemui";
     private static final String SETTINGS_PACKAGE = "com.android.settings";
     private static final int SWIPE_MARGIN = 5;
-    private static final int DEFAULT_SCROLL_STEPS = 15;
+    private static final int DEFAULT_SCROLL_STEPS = 130;
     private static final int BRIGHTNESS_SCROLL_STEPS = 30;
 
     // short transitions should be repeated within the test function, otherwise frame stats
