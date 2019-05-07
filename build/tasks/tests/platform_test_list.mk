@@ -119,3 +119,9 @@ platform_tests += \
     VersatileTestApp_Internal \
     VersatileTestApp_None \
     VoiceInteraction \
+
+ifneq ($(filter vsoc_x86 vsoc_x86_64, $(TARGET_DEVICE)),)
+  platform_tests += \
+    CuttlefishRilTests \
+    CuttlefishWifiTests
+endif

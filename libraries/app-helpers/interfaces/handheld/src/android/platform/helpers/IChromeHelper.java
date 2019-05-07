@@ -20,6 +20,7 @@ import android.support.test.uiautomator.Direction;
 
 public interface IChromeHelper extends IAppHelper {
   public enum MenuItem {
+    BOOKMARKS("Bookmarks"),
     NEW_TAB("New tab"),
     DOWNLOADS("Downloads"),
     HISTORY("History"),
@@ -111,6 +112,16 @@ public interface IChromeHelper extends IAppHelper {
   /**
    * Setup expectations: Chrome is open on a page.
    *
+   * This method will stop loading page then reload the page by clicking the refresh button,
+   * and block until the page is reopened.
+   */
+  default public void stopAndReloadPage() {
+    throw new UnsupportedOperationException("Not yet implemented.");
+  }
+
+  /**
+   * Setup expectations: Chrome is open on a page.
+   *
    * This method is getter for contentDescription of Tab elements.
    */
   public abstract String getTabDescription();
@@ -135,4 +146,16 @@ public interface IChromeHelper extends IAppHelper {
    * This method clicks on Privacy setting on Settings page.
    */
   public abstract void openPrivacySettings();
+
+  /**
+   * Setup expectations: Chrome is open on a Bookmarks page.
+   *
+   * This method selects a bookmark from the Bookmarks page.
+   *
+   * @param index The Index of bookmark to select.
+   */
+  default public void openBookmark(int index) {
+    throw new UnsupportedOperationException("Not yet implemented.");
+  }
 }
+
