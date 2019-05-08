@@ -17,7 +17,6 @@ package android.device.collectors;
 
 import android.device.collectors.annotations.OptionClass;
 import android.os.Bundle;
-import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
 import androidx.annotation.VisibleForTesting;
@@ -27,12 +26,11 @@ import org.junit.runner.notification.Failure;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
 import java.util.Date;
-import java.text.DateFormat;
+import java.util.HashMap;
 import java.text.SimpleDateFormat;
+
+import java.util.Arrays;
 
 /**
  * A {@link BaseMetricListener} that captures logcat after each test case failure.
@@ -43,12 +41,19 @@ import java.text.SimpleDateFormat;
  */
 @OptionClass(alias = "logcat-failure-collector")
 public class LogcatOnFailureCollector extends BaseMetricListener {
+    @VisibleForTesting
+    static final SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("MM-dd HH:mm:ss.SSS");
+
+    @VisibleForTesting static final String METRIC_SEP = "-";
 
     public static final String DEFAULT_DIR = "run_listeners/logcats";
     private static final int BUFFER_SIZE = 16 * 1024;
 
     private File mDestDir;
     private String mStartTime = null;
+
+    // Map to keep track of test iterations for multiple test iterations.
+    private HashMap<Description, Integer> mTestIterations = new HashMap<>();
 
     public LogcatOnFailureCollector() {
         super();
@@ -66,12 +71,19 @@ public class LogcatOnFailureCollector extends BaseMetricListener {
     @Override
     public void onTestRunStart(DataRecord runData, Description description) {
         mDestDir = createAndEmptyDirectory(DEFAULT_DIR);
+        // Capture the start time in case onTestStart() is never called due to failure during
+        // @BeforeClass.
+        mStartTime = getCurrentDate();
     }
 
     @Override
     public void onTestStart(DataRecord testData, Description description) {
-        // Capture the start time for logcat purpose
+        // Capture the start time for logcat purpose.
+        // Overwrites any start time set prior to the test.
         mStartTime = getCurrentDate();
+        // Keep track of test iterations.
+        mTestIterations.computeIfPresent(description, (desc, iteration) -> iteration + 1);
+        mTestIterations.computeIfAbsent(description, desc -> 1);
     }
 
     @Override
@@ -80,34 +92,42 @@ public class LogcatOnFailureCollector extends BaseMetricListener {
         if (mDestDir == null) {
             return;
         }
-        String command = String.format("logcat -T \"%s\"", mStartTime);
-        try (InputStream is = getLogcat(command);) {
-            final String fileName = String.format("%s.%s.txt", description.getClassName(),
-                                description.getMethodName());
-            // TODO: Refactor in a fileUtil like tradefed one
+        try {
+            int iteration = mTestIterations.get(description);
+            final String fileName =
+                    String.format(
+                            "%s.%s%s.txt",
+                            description.getClassName(),
+                            description.getMethodName(),
+                            iteration == 1 ? "" : (METRIC_SEP + String.valueOf(iteration)));
             File logcat = new File(mDestDir, fileName);
-            OutputStream out = new FileOutputStream(logcat);
-            byte[] buf = new byte[BUFFER_SIZE];
-            int length;
-            while ((length = is.read(buf)) >= 0) {
-                out.write(buf, 0, length);
-            }
+            getLogcatSince(mStartTime, logcat);
             testData.addFileMetric(String.format("%s_%s", getTag(), logcat.getName()), logcat);
-        } catch (IOException e) {
-            Log.e(getTag(), "Error executing: " + command, e);
+        } catch (IOException | InterruptedException e) {
+            Log.e(getTag(), "Error trying to retrieve logcat.", e);
         }
     }
 
+    /** @hide */
     @VisibleForTesting
-    protected InputStream getLogcat(String command) {
-        return new ParcelFileDescriptor.AutoCloseInputStream(
-                getInstrumentation().getUiAutomation().executeShellCommand(command));
+    protected void getLogcatSince(String startTime, File saveTo)
+            throws IOException, InterruptedException {
+        // ProcessBuilder is used here in favor of UiAutomation.executeShellCommand() because the
+        // logcat command requires the timestamp to be quoted which in Java requires
+        // Runtime.exec(String[]) or ProcessBuilder to work properly, and UiAutomation does not
+        // support this for now.
+        ProcessBuilder pb = new ProcessBuilder(Arrays.asList("logcat", "-t", startTime));
+        pb.redirectOutput(saveTo);
+        Process proc = pb.start();
+        // Make the process blocking to ensure consistent behavior.
+        proc.waitFor();
     }
 
-    private String getCurrentDate() {
-        Date date = new Date();
-        String strDateFormat = "MM-DD hh:mm:ss.mmm";
-        DateFormat dateFormat = new SimpleDateFormat(strDateFormat);
-        return dateFormat.format(date);
+    /** @hide */
+    @VisibleForTesting
+    protected String getCurrentDate() {
+        // Get time using system (wall clock) time since this is the time that logcat is based on.
+        Date date = new Date(System.currentTimeMillis());
+        return DATE_FORMATTER.format(date);
     }
 }
