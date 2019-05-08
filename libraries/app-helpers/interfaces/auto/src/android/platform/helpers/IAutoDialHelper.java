@@ -18,7 +18,7 @@ package android.platform.helpers;
 
 public interface IAutoDialHelper extends IAppHelper {
     /**
-     * Setup expectations: The app is open and the drawer is open
+     * Setup expectations: The app is open and the dialpad is open
      *
      * <p>This method is used to dial the phonenumber on dialpad
      *
@@ -57,11 +57,18 @@ public interface IAutoDialHelper extends IAppHelper {
     void deleteDialedNumber();
 
     /**
-     * Setup expectations: The app is open and in Dialpad.
+     * Setup expectations: The app is open and in Dialpad
+     *
+     * <p>This method is used to get the number entered on dialing screen.
+     */
+    String getDialedNumber();
+
+    /**
+     * Setup expectations: The app is open and in Dialpad
      *
      * <p>This method is used to get the number entered on dialpad
      */
-    String getDialedNumber();
+    String getDialInNumber();
 
     /**
      * Setup expectations: The app is open and there is an ongoing call.
