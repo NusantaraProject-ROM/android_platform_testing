@@ -34,20 +34,22 @@ import org.mockito.Mockito;
 public class NotificationPressureRuleTest {
 
     private static final int TEST_NOTIFICATION_COUNT = 50;
+    private static final String TEST_PACKAGE = "package.name";
 
-    /**
-     * Tests that notifications are posted before the test method and cancelled at the end.
-     */
+    /** Tests that notifications are posted before the test method and cancelled at the end. */
     @Test
-    public void testPostsNotifications() throws Throwable {
-        TestableNotificationPressureRule rule = new TestableNotificationPressureRule();
-        Statement testStatement = new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                // Assert that device posted new notifications.
-                verify(rule.initNotificationHelper()).postNotifications(TEST_NOTIFICATION_COUNT);
-            }
-        };
+    public void testPostNotifications_withoutPackage() throws Throwable {
+        TestableNotificationPressureRule rule =
+                new TestableNotificationPressureRule(TEST_NOTIFICATION_COUNT);
+        Statement testStatement =
+                new Statement() {
+                    @Override
+                    public void evaluate() throws Throwable {
+                        // Assert that device posted new notifications.
+                        verify(rule.initNotificationHelper())
+                                .postNotifications(TEST_NOTIFICATION_COUNT, null);
+                    }
+                };
 
         rule.apply(testStatement, Description.createTestDescription("clzz", "mthd"))
                 .evaluate();
@@ -56,11 +58,39 @@ public class NotificationPressureRuleTest {
         verify(rule.initNotificationHelper()).cancelNotifications();
     }
 
+    /**
+     * Tests that notifications are posted with package before the test method and cancelled at the
+     * end.
+     */
+    @Test
+    public void testPostNotifications_withPackage() throws Throwable {
+        TestableNotificationPressureRule rule =
+                new TestableNotificationPressureRule(TEST_NOTIFICATION_COUNT, TEST_PACKAGE);
+        Statement testStatement =
+                new Statement() {
+                    @Override
+                    public void evaluate() throws Throwable {
+                        // Assert that device posted new notifications.
+                        verify(rule.initNotificationHelper())
+                                .postNotifications(TEST_NOTIFICATION_COUNT, TEST_PACKAGE);
+                    }
+                };
+
+        rule.apply(testStatement, Description.createTestDescription("clzz", "mthd")).evaluate();
+
+        // Assert that all notifications are cancelled at the end of the test.
+        verify(rule.initNotificationHelper()).cancelNotifications();
+    }
+
     private static final class TestableNotificationPressureRule extends NotificationPressureRule {
         private INotificationHelper mNotificationHelper;
 
-        TestableNotificationPressureRule() {
-            super(TEST_NOTIFICATION_COUNT);
+        TestableNotificationPressureRule(int notificationCount) {
+            super(notificationCount);
+        }
+
+        TestableNotificationPressureRule(int notificationCount, String pkg) {
+            super(notificationCount, pkg);
         }
 
         @Override
