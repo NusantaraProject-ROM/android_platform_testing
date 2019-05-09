@@ -53,6 +53,13 @@ public class AppStartupHelperTest {
     private static final String COLD_LAUNCH_KEY_TEMPLATE = "cold_startup_%s";
     private static final String COLD_LAUNCH_PROCESSS_FG_KEY_TEMPLATE =
             "cold_startup_process_start_delay_%s_fg";
+    private static final String COLD_LAUNCH_TRANSITION_DELAY_MILLIS_KEY_TEMPLATE =
+            "cold_startup_transition_delay_millis_%s";
+    private static final String WARM_LAUNCH_TRANSITION_DELAY_MILLIS_KEY_TEMPLATE =
+            "warm_startup_transition_delay_millis_%s";
+    private static final String HOT_LAUNCH_TRANSITION_DELAY_MILLIS_KEY_TEMPLATE =
+            "hot_startup_transition_delay_millis_%s";
+
     private static final String COLD_LAUNCH_COUNT_PKG_KEY_TEMPLATE = "cold_startup_count_%s";
     private static final String COLD_LAUNCH_PROCESS_COUNT_FG_KEY_TEMPLATE =
             "cold_startup_process_start_count_%s_fg";
@@ -117,6 +124,14 @@ public class AppStartupHelperTest {
         assertEquals(1, Integer.parseInt(appLaunchMetrics.get(coldLaunchCountPkgKey).toString()));
         assertEquals(1, Integer.parseInt(appLaunchMetrics.get(COLD_LAUNCH_TOTAL_COUNT_KEY_TEMPLATE)
                 .toString()));
+
+        // Verify transition metrics.
+        String coldLaunchTransitionMetricKey = String.format(
+                COLD_LAUNCH_TRANSITION_DELAY_MILLIS_KEY_TEMPLATE,
+                CALENDAR_PKG_NAME);
+        assertTrue(appLaunchMetrics.keySet().contains(coldLaunchTransitionMetricKey));
+        assertEquals(1,
+                appLaunchMetrics.get(coldLaunchTransitionMetricKey).toString().split(",").length);
 
         // Verify process start values.
         String coldLaunchProcessMetricKey = String.format(COLD_LAUNCH_PROCESSS_FG_KEY_TEMPLATE,
@@ -223,6 +238,20 @@ public class AppStartupHelperTest {
         assertEquals(2, Integer.parseInt(appLaunchMetrics.get(COLD_LAUNCH_TOTAL_COUNT_KEY_TEMPLATE)
                 .toString()));
 
+        // Verify transition metrics.
+        String coldLaunchTransCalMetricKey = String.format(
+                COLD_LAUNCH_TRANSITION_DELAY_MILLIS_KEY_TEMPLATE,
+                CALENDAR_PKG_NAME);
+        String coldLaunchTransSetMetricKey = String.format(
+                COLD_LAUNCH_TRANSITION_DELAY_MILLIS_KEY_TEMPLATE,
+                SETTINGS_PKG_NAME);
+        assertTrue(appLaunchMetrics.keySet().contains(coldLaunchTransCalMetricKey));
+        assertTrue(appLaunchMetrics.keySet().contains(coldLaunchTransSetMetricKey));
+        assertEquals(1,
+                appLaunchMetrics.get(coldLaunchTransCalMetricKey).toString().split(",").length);
+        assertEquals(1,
+                appLaunchMetrics.get(coldLaunchTransSetMetricKey).toString().split(",").length);
+
         // Verify process start values.
         String coldLaunchProcessMetricKey = String.format(COLD_LAUNCH_PROCESSS_FG_KEY_TEMPLATE,
                 CALENDAR_PKG_NAME);
@@ -277,6 +306,15 @@ public class AppStartupHelperTest {
         assertTrue(appLaunchMetrics.keySet().contains(calendarWarmLaunchKey));
         assertEquals(1, appLaunchMetrics.get(calendarWarmLaunchKey).toString().split(",").length);
         assertTrue(mAppStartupHelper.stopCollecting());
+
+        // Verify transition metrics.
+        String warmLaunchTransitionMetricKey = String.format(
+                WARM_LAUNCH_TRANSITION_DELAY_MILLIS_KEY_TEMPLATE,
+                CALENDAR_PKG_NAME);
+        assertTrue(appLaunchMetrics.keySet().contains(warmLaunchTransitionMetricKey));
+        assertEquals(1,
+                appLaunchMetrics.get(warmLaunchTransitionMetricKey).toString().split(",").length);
+
         mHelper.get().exit();
     }
 
@@ -303,6 +341,15 @@ public class AppStartupHelperTest {
         SystemClock.sleep(HelperTestUtility.ACTION_DELAY);
         HelperTestUtility.clearApp(String.format(KILL_TEST_APP_CMD_TEMPLATE, SETTINGS_PKG_NAME));
         SystemClock.sleep(HelperTestUtility.ACTION_DELAY);
+
+        // Verify transition metrics.
+        String hotLaunchTransitionMetricKey = String.format(
+                HOT_LAUNCH_TRANSITION_DELAY_MILLIS_KEY_TEMPLATE,
+                SETTINGS_PKG_NAME);
+        assertTrue(appLaunchMetrics.keySet().contains(hotLaunchTransitionMetricKey));
+        assertEquals(1,
+                appLaunchMetrics.get(hotLaunchTransitionMetricKey).toString().split(",").length);
+
     }
 
     /**

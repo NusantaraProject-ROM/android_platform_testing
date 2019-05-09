@@ -54,6 +54,7 @@ public class AppStartupHelper implements ICollectorHelper<StringBuilder> {
 
     private static final String PROCESS_START = "process_start";
     private static final String PROCESS_START_DELAY = "process_start_delay";
+    private static final String TRANSITION_DELAY_MILLIS = "transition_delay_millis";
     private boolean isProcStartDetailsDisabled;
 
     private StatsdHelper mStatsdHelper = new StatsdHelper();
@@ -87,11 +88,13 @@ public class AppStartupHelper implements ICollectorHelper<StringBuilder> {
                 String pkgName = appStartAtom.getPkgName();
                 String transitionType = appStartAtom.getType().toString();
                 int windowsDrawnMillis = appStartAtom.getWindowsDrawnDelayMillis();
+                int transitionDelayMillis = appStartAtom.getTransitionDelayMillis();
                 Log.i(LOG_TAG, String.format("Pkg Name: %s, Transition Type: %s, "
-                        + "WindowDrawnDelayMillis: %s",
-                        pkgName, transitionType, windowsDrawnMillis));
+                        + "WindowDrawnDelayMillis: %s, TransitionDelayMillis: %s",
+                        pkgName, transitionType, windowsDrawnMillis, transitionDelayMillis));
 
-                String metricKey = "";
+                String metricTypeKey = "";
+                String metricTransitionKey = "";
                 // To track number of startups per type per package.
                 String metricCountKey = "";
                 // To track total number of startups per type.
@@ -111,13 +114,20 @@ public class AppStartupHelper implements ICollectorHelper<StringBuilder> {
                         break;
                 }
                 if (!typeKey.isEmpty()) {
-                    metricKey = MetricUtility.constructKey(typeKey, pkgName);
+                    metricTypeKey = MetricUtility.constructKey(typeKey, pkgName);
                     metricCountKey = MetricUtility.constructKey(typeKey, COUNT, pkgName);
                     totalCountKey = MetricUtility.constructKey(typeKey, TOTAL_COUNT);
-                    // Update the metrics.
-                    MetricUtility.addMetric(metricKey, windowsDrawnMillis, appStartResultMap);
+
+                    // Update the windows drawn delay metrics.
+                    MetricUtility.addMetric(metricTypeKey, windowsDrawnMillis, appStartResultMap);
                     MetricUtility.addMetric(metricCountKey, appStartCountMap);
                     MetricUtility.addMetric(totalCountKey, appStartCountMap);
+
+                    // Update the transition delay metrics.
+                    metricTransitionKey = MetricUtility.constructKey(typeKey,
+                            TRANSITION_DELAY_MILLIS, pkgName);
+                    MetricUtility.addMetric(metricTransitionKey, transitionDelayMillis,
+                            appStartResultMap);
                 }
             }
             if (atom.hasAppStartFullyDrawn()) {
@@ -188,7 +198,7 @@ public class AppStartupHelper implements ICollectorHelper<StringBuilder> {
                     totalCountKey = MetricUtility.constructKey(typeKey, PROCESS_START,
                             TOTAL_COUNT);
                     // Update the metrics
-                    if(isProcStartDetailsDisabled) {
+                    if (isProcStartDetailsDisabled) {
                         MetricUtility.addMetric(metricCountKey, tempResultCountMap);
                     } else {
                         MetricUtility.addMetric(metricKey, processStartDelayMillis,
