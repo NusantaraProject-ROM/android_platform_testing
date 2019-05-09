@@ -45,9 +45,37 @@ public interface INotificationHelper extends IAppHelper {
     /**
      * Setup Expectations: None
      *
+     * <p>Posts a number of notifications to the device with a package to launch. Successive calls
+     * to this should post new notifications in addition to those previously posted. Note that this
+     * may fail if the helper has surpassed the system-defined limit for per-package notifications.
+     *
+     * @param count The number of notifications to post.
+     * @param pkg The application that will be launched by notifications.
+     */
+    public default void postNotifications(int count, String pkg) {
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
+
+    /**
+     * Setup Expectations: None
+     *
      * <p>Cancel any notifications posted by this helper.
      */
     default public void cancelNotifications() {
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
+
+    /**
+     * Setup expectations: Notification shade opened.
+     *
+     * <p>Opens the first notification by the specified title and checks if the expected application
+     * is in foreground or not
+     *
+     * @param title The title of the notification to open.
+     * @param expectedPkg The foreground application after opening a notification. Won't check the
+     *     foreground application if the application is null
+     */
+    public default void openNotificationByTitle(String title, String expectedPkg) {
         throw new UnsupportedOperationException("Not yet implemented.");
     }
 }
