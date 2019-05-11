@@ -33,8 +33,7 @@ fi
 echo "$TEST_SUITE"
 
 mkdir -p $BUILD_DIR/emulator
-#fetch_artifact --bid 5441626 --target sdk_tools_linux sdk-repo-linux-emulator-5441626.zip $BUILD_DIR/emulator/
-fetch_artifact --target sdk_tools_linux --branch aosp-emu-master-dev --latest "sdk-repo-linux-emulator-[0-9]*" $BUILD_DIR/emulator/
+fetch_artifacts.py -build_target linux-sdk_tools_linux -branch aosp-emu-master-dev -image_path gs://android-build-emu/builds -dest $BUILD_DIR/emulator/
 EMU_BIN=`ls $BUILD_DIR/emulator`
 echo "$EMU_BIN"
 
