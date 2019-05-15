@@ -10,6 +10,7 @@
 # Owner: akagrawal@google.com
 
 DIST_DIR=$1
+BUILD_ID=$2
 
 BUILD_DIR="out/prebuilt_cached/builds"
 
@@ -49,7 +50,7 @@ then
     fi
 fi
 
-if [ -d "$BUILD_DIR/gphone_x86-user" ];
+if [ -d "$BUILD_DIR/gphone_x86_64-user" ];
 then
     SYS_IMAGE_64=`ls $BUILD_DIR/gphone_x86_64-user`
     if [[ $TEST_SUITE == *"cts"* ]]
