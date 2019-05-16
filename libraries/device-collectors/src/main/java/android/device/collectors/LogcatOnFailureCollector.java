@@ -26,11 +26,10 @@ import org.junit.runner.notification.Failure;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.text.SimpleDateFormat;
-
-import java.util.Arrays;
 
 /**
  * A {@link BaseMetricListener} that captures logcat after each test case failure.
@@ -45,12 +44,14 @@ public class LogcatOnFailureCollector extends BaseMetricListener {
     static final SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("MM-dd HH:mm:ss.SSS");
 
     @VisibleForTesting static final String METRIC_SEP = "-";
+    @VisibleForTesting static final String FILENAME_SUFFIX = "logcat";
 
     public static final String DEFAULT_DIR = "run_listeners/logcats";
     private static final int BUFFER_SIZE = 16 * 1024;
 
     private File mDestDir;
     private String mStartTime = null;
+    private boolean mTestFailed = false;
 
     // Map to keep track of test iterations for multiple test iterations.
     private HashMap<Description, Integer> mTestIterations = new HashMap<>();
@@ -86,26 +87,45 @@ public class LogcatOnFailureCollector extends BaseMetricListener {
         mTestIterations.computeIfAbsent(description, desc -> 1);
     }
 
+    /**
+     * Mark the test as failed if this is called. The actual collection will be done in {@link
+     * onTestEnd} to ensure that all actions around a test failure end up in the logcat.
+     */
     @Override
     public void onTestFail(DataRecord testData, Description description, Failure failure) {
-        // Capture logcat from start time
-        if (mDestDir == null) {
-            return;
+        mTestFailed = true;
+    }
+
+    /** If the test fails, collect logcat since test start time. */
+    @Override
+    public void onTestEnd(DataRecord testData, Description description) {
+        if (mTestFailed) {
+            // Capture logcat from start time
+            if (mDestDir == null) {
+                return;
+            }
+            try {
+                int iteration = mTestIterations.get(description);
+                final String fileName =
+                        String.format(
+                                "%s.%s%s%s.txt",
+                                description.getClassName(),
+                                description.getMethodName(),
+                                iteration == 1 ? "" : (METRIC_SEP + String.valueOf(iteration)),
+                                METRIC_SEP + FILENAME_SUFFIX);
+                File logcat = new File(mDestDir, fileName);
+                getLogcatSince(mStartTime, logcat);
+                testData.addFileMetric(String.format("%s_%s", getTag(), logcat.getName()), logcat);
+            } catch (IOException | InterruptedException e) {
+                Log.e(getTag(), "Error trying to retrieve logcat.", e);
+            }
         }
-        try {
-            int iteration = mTestIterations.get(description);
-            final String fileName =
-                    String.format(
-                            "%s.%s%s.txt",
-                            description.getClassName(),
-                            description.getMethodName(),
-                            iteration == 1 ? "" : (METRIC_SEP + String.valueOf(iteration)));
-            File logcat = new File(mDestDir, fileName);
-            getLogcatSince(mStartTime, logcat);
-            testData.addFileMetric(String.format("%s_%s", getTag(), logcat.getName()), logcat);
-        } catch (IOException | InterruptedException e) {
-            Log.e(getTag(), "Error trying to retrieve logcat.", e);
-        }
+        // Reset the flag here, as onTestStart might not have been called if a @BeforeClass method
+        // fails.
+        mTestFailed = false;
+        // Update the start time here in case onTestStart() is not called for the next test. If it
+        // is called, the start time will be overwritten.
+        mStartTime = getCurrentDate();
     }
 
     /** @hide */
