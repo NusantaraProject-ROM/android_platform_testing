@@ -446,12 +446,9 @@ public class AppStartupHelperTest {
         assertFalse(appLaunchMetrics.keySet().contains(coldLaunchProcessMetricKey));
         assertTrue(appLaunchMetrics.keySet().contains(coldLaunchProcessCountPkgKey));
 
-        // Only the total count is tracked.
-        assertEquals(
-                1,
-                Integer.parseInt(appLaunchMetrics.get(
-                        COLD_LAUNCH_PROCESS_START_TOTAL_COUNT_KEY_TEMPLATE)
-                        .toString()));
+        // Total process count should not be there.
+        assertFalse(appLaunchMetrics.keySet().contains(
+                        COLD_LAUNCH_PROCESS_START_TOTAL_COUNT_KEY_TEMPLATE));
         assertTrue(mAppStartupHelper.stopCollecting());
         mHelper.get().exit();
     }
