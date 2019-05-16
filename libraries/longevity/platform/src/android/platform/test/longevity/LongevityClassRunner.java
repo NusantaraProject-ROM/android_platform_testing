@@ -40,7 +40,7 @@ import org.junit.runners.model.Statement;
  */
 public class LongevityClassRunner extends BlockJUnit4ClassRunner {
     private boolean mTestFailed = true;
-    private boolean mTestHasRun = false;
+    private boolean mTestAttempted = false;
 
     public LongevityClassRunner(Class<?> klass) throws InitializationError {
         super(klass);
@@ -116,9 +116,9 @@ public class LongevityClassRunner extends BlockJUnit4ClassRunner {
 
     @VisibleForTesting
     protected boolean hasTestFailed() {
-        if (!mTestHasRun) {
+        if (!mTestAttempted) {
             throw new IllegalStateException(
-                    "Test success status should not be checked before the test is run.");
+                    "Test success status should not be checked before the test is attempted.");
         }
         return mTestFailed;
     }
@@ -148,17 +148,12 @@ public class LongevityClassRunner extends BlockJUnit4ClassRunner {
         @Override
         public void evaluate() throws Throwable {
             Statement withAfters = new RunAfters(mStatement, mAfterMethods, mTarget);
-            try {
-                withAfters.evaluate();
-                // If the evaluation fails, the part from here on will not be executed, and
-                // RunAfterClassMethodsOnTestFailure will then know to run the @AfterClass methods.
-                LongevityClassRunner.this.mTestFailed = false;
-                invokeAndCollectErrors(mAfterClassMethods, mTarget);
-            } catch (Throwable e) {
-                throw e;
-            } finally {
-                LongevityClassRunner.this.mTestHasRun = true;
-            }
+            LongevityClassRunner.this.mTestAttempted = true;
+            withAfters.evaluate();
+            // If the evaluation fails, the part from here on will not be executed, and
+            // RunAfterClassMethodsOnTestFailure will then know to run the @AfterClass methods.
+            LongevityClassRunner.this.mTestFailed = false;
+            invokeAndCollectErrors(mAfterClassMethods, mTarget);
         }
     }
 
