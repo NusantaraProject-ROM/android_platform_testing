@@ -59,11 +59,13 @@ public class BaseCollectionListener<T> extends BaseMetricListener {
         Bundle args = getArgsBundle();
         mIsCollectPerRun = "true".equals(args.getString(COLLECT_PER_RUN));
 
+        // Setup additional args before starting the collection.
+        setupAdditionalArgs();
+
         if (mIsCollectPerRun) {
             mHelper.startCollecting();
         }
 
-        setupAdditionalArgs();
     }
 
     @Override
