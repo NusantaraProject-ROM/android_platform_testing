@@ -142,7 +142,14 @@ public final class LogcatOnFailureCollectorTest {
         assertEquals(1, check.size());
         // The only key is ours
         for (String key: check.keySet()) {
-            assertTrue(key.contains("run.test.txt"));
+            assertTrue(
+                    key.contains(
+                            String.join(
+                                    "",
+                                    "run.test",
+                                    LogcatOnFailureCollector.METRIC_SEP
+                                            + LogcatOnFailureCollector.FILENAME_SUFFIX,
+                                    ".txt")));
         }
     }
 
@@ -341,17 +348,31 @@ public final class LogcatOnFailureCollectorTest {
         // The first bundle should have the first logcat file, for the first iteration.
         Bundle check1 = capturedBundles.get(0);
         assertEquals(1, check1.size());
+        String expectedKey1 =
+                String.join(
+                        "",
+                        "run.test",
+                        LogcatOnFailureCollector.METRIC_SEP
+                                + LogcatOnFailureCollector.FILENAME_SUFFIX,
+                        ".txt");
         for (String key : check1.keySet()) {
             // The first iteration should not have an iteration number.
-            assertTrue(key.contains("run.test.txt"));
+            assertTrue(key.contains(expectedKey1));
         }
 
         // The second bundle should have the second logcat file, for the third iteration.
         Bundle check2 = capturedBundles.get(1);
         assertEquals(1, check2.size());
+        String expectedKey2 =
+                String.join(
+                        "",
+                        "run.test-3",
+                        LogcatOnFailureCollector.METRIC_SEP
+                                + LogcatOnFailureCollector.FILENAME_SUFFIX,
+                        ".txt");
         for (String key : check2.keySet()) {
             // The third iteration should have an iteration number, 3.
-            assertTrue(key.contains("run.test-3.txt"));
+            assertTrue(key.contains(expectedKey2));
         }
     }
 }
