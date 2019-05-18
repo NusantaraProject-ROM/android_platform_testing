@@ -1,8 +1,20 @@
-/**
- * Copyright 2018 Google Inc. All Rights Reserved.
+/*
+ * Copyright (C) 2018 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
-package android.platform.test.scenario.common.system;
+package android.platform.test.scenario.system;
 
 import android.os.RemoteException;
 import android.os.SystemClock;
@@ -16,12 +28,12 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /**
- * Shuts the screen off and waits for a specified amount of time.
+ * Turns the screen on and waits for a specified amount of time.
  */
 @Scenario
 @RunWith(JUnit4.class)
-public class ScreenOff {
-    private static final String DURATION_OPTION = "screenOffDurationMs";
+public class ScreenOn {
+    private static final String DURATION_OPTION = "screenOnDurationMs";
     private static final String DURATION_DEFAULT = "1000";
 
     private long mDurationMs = 0L;
@@ -43,8 +55,8 @@ public class ScreenOff {
     }
 
     @Test
-    public void testScreenOff() throws RemoteException {
-        mDevice.sleep();
+    public void testScreenOn() throws RemoteException {
+        mDevice.wakeUp();
         SystemClock.sleep(mDurationMs);
     }
 }
