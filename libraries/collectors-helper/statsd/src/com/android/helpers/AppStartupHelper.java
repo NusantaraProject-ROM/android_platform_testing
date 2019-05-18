@@ -68,7 +68,9 @@ public class AppStartupHelper implements ICollectorHelper<StringBuilder> {
         List<Integer> atomIdList = new ArrayList<>();
         atomIdList.add(Atom.APP_START_OCCURRED_FIELD_NUMBER);
         atomIdList.add(Atom.APP_START_FULLY_DRAWN_FIELD_NUMBER);
-        atomIdList.add(Atom.PROCESS_START_TIME_FIELD_NUMBER);
+        if (!isProcStartDetailsDisabled) {
+            atomIdList.add(Atom.PROCESS_START_TIME_FIELD_NUMBER);
+        }
         return mStatsdHelper.addEventConfig(atomIdList);
     }
 
