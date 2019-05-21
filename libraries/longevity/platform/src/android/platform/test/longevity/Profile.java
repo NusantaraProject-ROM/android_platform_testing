@@ -163,6 +163,12 @@ public class Profile extends RunListener {
         mScenarioIndex += 1;
     }
 
+    @Override
+    public void testIgnored(Description description) {
+        // Increments the index to move onto the next scenario.
+        mScenarioIndex += 1;
+    }
+
     /**
      * Returns true if there is a next scheduled scenario to run. If no profile is supplied, returns
      * false.
