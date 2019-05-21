@@ -142,7 +142,6 @@ public class BaseMetricListener extends InstrumentationRunListener {
 
     @Override
     public final void testFailure(Failure failure) throws Exception {
-        super.testFailure(failure);
         Description description = failure.getDescription();
         if (shouldRun(description)) {
             try {
@@ -152,6 +151,7 @@ public class BaseMetricListener extends InstrumentationRunListener {
                 Log.e(getTag(), "Exception during onTestFail.", e);
             }
         }
+        super.testFailure(failure);
     }
 
     @Override
