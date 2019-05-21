@@ -45,17 +45,26 @@ public class ScheduledScenarioRunner extends LongevityClassRunner {
     private final Scenario mScenario;
     private final long mTotalTimeoutMs;
     private final boolean mShouldIdle;
+    private final Bundle mArguments;
 
     private long mStartTimeMs;
 
     public ScheduledScenarioRunner(
             Class<?> klass, Scenario scenario, long timeout, boolean shouldIdle)
             throws InitializationError {
-        super(klass);
+        this(klass, scenario, timeout, shouldIdle, InstrumentationRegistry.getArguments());
+    }
+
+    @VisibleForTesting
+    ScheduledScenarioRunner(
+            Class<?> klass, Scenario scenario, long timeout, boolean shouldIdle, Bundle arguments)
+            throws InitializationError {
+        super(klass, arguments);
         mScenario = scenario;
         // Ensure that the timeout is non-negative.
         mTotalTimeoutMs = max(timeout, 0);
         mShouldIdle = shouldIdle;
+        mArguments = arguments;
     }
 
     @Override
@@ -100,8 +109,7 @@ public class ScheduledScenarioRunner extends LongevityClassRunner {
     protected void runChild(final FrameworkMethod method, RunNotifier notifier) {
         mStartTimeMs = System.currentTimeMillis();
         // Keep a copy of the bundle arguments for restoring later.
-        Bundle initialArguments = InstrumentationRegistry.getArguments();
-        Bundle modifiedArguments = initialArguments.deepCopy();
+        Bundle modifiedArguments = mArguments.deepCopy();
         for (ExtraArg argPair : mScenario.getExtrasList()) {
             if (argPair.getKey() == null || argPair.getValue() == null) {
                 throw new IllegalArgumentException(
@@ -117,7 +125,7 @@ public class ScheduledScenarioRunner extends LongevityClassRunner {
         super.runChild(method, notifier);
         // Restore the arguments to the state prior to the scenario.
         InstrumentationRegistry.registerInstance(
-                InstrumentationRegistry.getInstrumentation(), initialArguments);
+                InstrumentationRegistry.getInstrumentation(), mArguments);
         // If there are remaining scenarios, idle until the next one starts.
         if (mShouldIdle) {
             performIdleBeforeNextScenario(getTimeRemaining());
