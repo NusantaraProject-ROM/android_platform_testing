@@ -195,8 +195,7 @@ public class LongevitySuite extends android.host.test.longevity.LongevitySuite {
      */
     protected Runner getSuiteRunner(Runner runner) {
         try {
-            // Cast is safe as we have verified that the runner is BlockJUnit4Runner during
-            // initialization.
+            // Cast is safe as we verified the runner is BlockJUnit4Runner at initialization.
             return new LongevityClassRunner(
                     ((BlockJUnit4ClassRunner) runner).getTestClass().getJavaClass());
         } catch (InitializationError e) {
