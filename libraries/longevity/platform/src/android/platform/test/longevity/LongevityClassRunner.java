@@ -16,10 +16,15 @@
 
 package android.platform.test.longevity;
 
+import android.os.Bundle;
 import androidx.annotation.VisibleForTesting;
+import androidx.test.InstrumentationRegistry;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -39,11 +44,24 @@ import org.junit.runners.model.Statement;
  * longevity tests.
  */
 public class LongevityClassRunner extends BlockJUnit4ClassRunner {
+    @VisibleForTesting static final String FILTER_OPTION = "exclude-class";
+
+    private String[] mExcludedClasses;
+
     private boolean mTestFailed = true;
     private boolean mTestAttempted = false;
 
     public LongevityClassRunner(Class<?> klass) throws InitializationError {
+        this(klass, InstrumentationRegistry.getArguments());
+    }
+
+    @VisibleForTesting
+    LongevityClassRunner(Class<?> klass, Bundle args) throws InitializationError {
         super(klass);
+        mExcludedClasses =
+                args.containsKey(FILTER_OPTION)
+                        ? args.getString(FILTER_OPTION).split(",")
+                        : new String[] {};
     }
 
     /**
@@ -121,6 +139,17 @@ public class LongevityClassRunner extends BlockJUnit4ClassRunner {
                     "Test success status should not be checked before the test is attempted.");
         }
         return mTestFailed;
+    }
+
+
+    @Override
+    protected boolean isIgnored(FrameworkMethod child) {
+        if (super.isIgnored(child)) return true;
+        // Check if this class has been filtered.
+        String name = getTestClass().getJavaClass().getCanonicalName();
+        return Arrays.stream(mExcludedClasses)
+                .map(f -> Pattern.compile(f).matcher(name))
+                .anyMatch(Matcher::matches);
     }
 
     /**
