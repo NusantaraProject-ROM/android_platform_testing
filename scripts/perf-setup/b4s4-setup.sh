@@ -16,10 +16,9 @@
 
 # performance test setup for b4/s4 devices
 
-stop thermal-engine
-stop perfd
 stop vendor.thermal-engine
-stop vendor.perfd
+setprop vendor.powerhal.init 0
+setprop ctl.interface_restart android.hardware.power@1.0::IPower/default
 
 cpubase=/sys/devices/system/cpu
 gov=cpufreq/scaling_governor
