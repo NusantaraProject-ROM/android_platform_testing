@@ -20,6 +20,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.longThat;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -39,6 +40,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runner.notification.Failure;
+import org.junit.runner.notification.RunListener;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.JUnit4;
 import org.junit.runners.model.InitializationError;
@@ -251,6 +253,42 @@ public class ScheduledScenarioRunnerTest {
         runner.run(mRunNotifier);
         // There should not be idle before teardown.
         verify(runner, never()).performIdleBeforeTeardown(anyLong());
+        // Idles before the next scenario; duration should be roughly equal to the timeout.
+        verify(runner, times(1))
+                .performIdleBeforeNextScenario(
+                        getWithinMarginMatcher(timeoutMs, TIMEOUT_ERROR_MARGIN_MS));
+    }
+
+    /** Test that an ignored scenario still includes the timeout dictated in a profile. */
+    @Test
+    public void testIgnoredScenario_doesIdle() throws InitializationError, Exception {
+        long timeoutMs = TimeUnit.SECONDS.toMillis(5);
+        Scenario testScenario =
+                Scenario.newBuilder()
+                        .setAt("00:00:00")
+                        .setJourney(SampleProfileSuite.PassingTest.class.getName())
+                        .setAfterTest(AfterTest.EXIT)
+                        .build();
+        Bundle ignores = new Bundle();
+        ignores.putString(
+                LongevityClassRunner.FILTER_OPTION,
+                SampleProfileSuite.PassingTest.class.getCanonicalName());
+        ScheduledScenarioRunner runner =
+                spy(
+                        new ScheduledScenarioRunner(
+                                SampleProfileSuite.PassingTest.class,
+                                testScenario,
+                                timeoutMs,
+                                true,
+                                ignores));
+        RunNotifier notifier = spy(new RunNotifier());
+        RunListener listener = mock(RunListener.class);
+        notifier.addListener(listener);
+        runner.run(notifier);
+        // There should not be idle before teardown.
+        verify(runner, never()).performIdleBeforeTeardown(anyLong());
+        // Ensure the test was ignored via listener.
+        verify(listener, times(1)).testIgnored(any());
         // Idles before the next scenario; duration should be roughly equal to the timeout.
         verify(runner, times(1))
                 .performIdleBeforeNextScenario(
