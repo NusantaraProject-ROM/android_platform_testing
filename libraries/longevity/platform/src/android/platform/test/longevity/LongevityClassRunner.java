@@ -141,7 +141,6 @@ public class LongevityClassRunner extends BlockJUnit4ClassRunner {
         return mTestFailed;
     }
 
-
     @Override
     protected boolean isIgnored(FrameworkMethod child) {
         if (super.isIgnored(child)) return true;
