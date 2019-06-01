@@ -27,6 +27,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import android.os.Bundle;
+
 import java.util.List;
 
 import org.junit.Assert;
@@ -37,12 +39,14 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runner.notification.Failure;
+import org.junit.runner.notification.RunListener;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.JUnit4;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.exceptions.base.MockitoAssertionError;
 
 
@@ -350,6 +354,19 @@ public class LongevityClassRunnerTest {
         mRunner.run(mRunNotifier);
         verify(mRunner, times(1))
                 .invokeAndCollectErrors(getMethodNameMatcher("afterClassMethod"), any());
+    }
+
+    /** Test that excluded classes are not executed. */
+    @Test
+    public void testIgnore_excludedClasses() throws Throwable {
+        RunNotifier notifier = Mockito.spy(new RunNotifier());
+        RunListener listener = Mockito.mock(RunListener.class);
+        notifier.addListener(listener);
+        Bundle ignores = new Bundle();
+        ignores.putString(LongevityClassRunner.FILTER_OPTION, FailingTest.class.getCanonicalName());
+        mRunner = spy(new LongevityClassRunner(FailingTest.class, ignores));
+        mRunner.run(notifier);
+        verify(listener, times(1)).testIgnored(any());
     }
 
     private List<FrameworkMethod> getMethodNameMatcher(String methodName) {
