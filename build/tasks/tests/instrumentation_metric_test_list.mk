@@ -20,6 +20,7 @@ instrumentation_metric_tests := \
     MtpDocumentsProviderPerfTests \
     RsBlasBenchmark \
     ImageProcessingJB \
+    MultiUserPerfDummyApp \
     MultiUserPerfTests \
     NeuralNetworksApiBenchmark \
     TextClassifierPerfTests
