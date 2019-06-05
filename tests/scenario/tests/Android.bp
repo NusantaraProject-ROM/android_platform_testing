@@ -49,6 +49,7 @@ android_test {
         "common-profile-text-protos",
         "longevity-device-lib",
         "platform-test-composers",
+        "platform-test-options",
         "platform-test-rules",
     ],
     srcs: ["src/**/*.java"],

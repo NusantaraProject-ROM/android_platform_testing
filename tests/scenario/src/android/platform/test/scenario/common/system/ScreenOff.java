@@ -6,11 +6,13 @@ package android.platform.test.scenario.common.system;
 
 import android.os.RemoteException;
 import android.os.SystemClock;
+import android.platform.test.option.LongOption;
 import android.platform.test.scenario.annotation.Scenario;
 import android.support.test.uiautomator.UiDevice;
 import androidx.test.InstrumentationRegistry;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -21,30 +23,19 @@ import org.junit.runners.JUnit4;
 @Scenario
 @RunWith(JUnit4.class)
 public class ScreenOff {
-    private static final String DURATION_OPTION = "screenOffDurationMs";
-    private static final String DURATION_DEFAULT = "1000";
+    @Rule
+    public final LongOption mDurationMs = new LongOption("screenOffDurationMs").setDefault(1000L);
 
-    private long mDurationMs = 0L;
     private UiDevice mDevice;
 
     @Before
     public void setUp() {
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-        String durationMsString = InstrumentationRegistry.getArguments()
-                .getString(DURATION_OPTION, DURATION_DEFAULT);
-        try {
-            mDurationMs = Long.parseLong(durationMsString);
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(
-                    String.format(
-                            "Failed to parse option %s: %s", DURATION_OPTION, durationMsString));
-        }
-
     }
 
     @Test
     public void testScreenOff() throws RemoteException {
         mDevice.sleep();
-        SystemClock.sleep(mDurationMs);
+        SystemClock.sleep(mDurationMs.get());
     }
 }
