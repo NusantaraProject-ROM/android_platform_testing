@@ -232,4 +232,13 @@ public interface IGmailHelper extends IAppHelper {
     default public void swipeEmail(Direction direction) {
         throw new UnsupportedOperationException("Not yet implemented.");
     }
+
+    /**
+     * Setup expectations: Gmail is open and a mailbox is open.
+     *
+     * <p>This method open account menu.
+     */
+    public default void openAccountMenu() {
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
 }
