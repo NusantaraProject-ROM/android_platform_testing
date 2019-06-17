@@ -28,11 +28,9 @@ import org.junit.runners.Suite.SuiteClasses;
 @RunWith(LongevitySuite.class)
 @SuiteClasses({
     SimpleSuite.PassingTest.class,
-    SimpleSuite.FailingTest.class
+    SimpleSuite.FailingTest.class,
 })
-/**
- * Sample device-side test cases.
- */
+/** Sample device-side test cases. */
 public class SimpleSuite {
     // no local test cases.
 
