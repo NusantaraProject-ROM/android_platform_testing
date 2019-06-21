@@ -68,6 +68,8 @@ android.platform.test.longevity.samples/androidx.test.runner.AndroidJUnitRunner`
 *   `timeout_msec <long>` - a timeout for individual test methods.
 *   `quitter <bool>` - quit the suite if any test errors are encountered.
 *   `profile <string>` - use a profile under assets/ or at your own path.
+*   `rename-iterations <bool>` - rename each iteration by appending the iteration number to the
+    class name.
 
 ## Tests
 
