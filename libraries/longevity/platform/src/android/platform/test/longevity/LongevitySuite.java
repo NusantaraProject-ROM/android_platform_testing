@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.runner.Description;
 import org.junit.runner.Runner;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
@@ -49,11 +50,16 @@ import org.junit.runners.model.RunnerBuilder;
 public class LongevitySuite extends android.host.test.longevity.LongevitySuite {
     private static final String LOG_TAG = LongevitySuite.class.getSimpleName();
 
+    public static final String RENAME_ITERATION_OPTION = "rename-iterations";
+    private boolean mRenameIterations;
+
     private Instrumentation mInstrumentation;
     private Context mContext;
 
     // Cached {@link TimeoutTerminator} instance.
     private TimeoutTerminator mTimeoutTerminator;
+
+    private Map<Description, Integer> mIterations = new HashMap<>();
 
     /**
      * Takes a {@link Bundle} and maps all String K/V pairs into a {@link Map<String, String>}.
@@ -92,6 +98,9 @@ public class LongevitySuite extends android.host.test.longevity.LongevitySuite {
         super(klass, runners, toMap(args));
         mInstrumentation = InstrumentationRegistry.getInstrumentation();
         mContext = InstrumentationRegistry.getContext();
+
+        // Parse out additional options.
+        mRenameIterations = Boolean.valueOf(args.getString(RENAME_ITERATION_OPTION));
     }
 
     /**
@@ -155,7 +164,15 @@ public class LongevitySuite extends android.host.test.longevity.LongevitySuite {
 
     @Override
     protected void runChild(Runner runner, final RunNotifier notifier) {
-        super.runChild(getSuiteRunner(runner), notifier);
+        // Update iterations.
+        mIterations.computeIfPresent(runner.getDescription(), (k, v) -> v + 1);
+        mIterations.computeIfAbsent(runner.getDescription(), k -> 1);
+
+        LongevityClassRunner suiteRunner = getSuiteRunner(runner);
+        if (mRenameIterations) {
+            suiteRunner.setIteration(mIterations.get(runner.getDescription()));
+        }
+        super.runChild(suiteRunner, notifier);
     }
 
     /**
@@ -193,7 +210,7 @@ public class LongevitySuite extends android.host.test.longevity.LongevitySuite {
      * Returns a {@link Runner} specific for the suite, if any. Can be overriden by subclasses to
      * supply different runner implementations.
      */
-    protected Runner getSuiteRunner(Runner runner) {
+    protected LongevityClassRunner getSuiteRunner(Runner runner) {
         try {
             // Cast is safe as we verified the runner is BlockJUnit4Runner at initialization.
             return new LongevityClassRunner(
