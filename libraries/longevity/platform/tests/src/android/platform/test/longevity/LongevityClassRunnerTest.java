@@ -21,6 +21,7 @@ import static org.mockito.Mockito.argThat;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -37,6 +38,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
@@ -46,7 +48,6 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.exceptions.base.MockitoAssertionError;
 
 
@@ -359,14 +360,46 @@ public class LongevityClassRunnerTest {
     /** Test that excluded classes are not executed. */
     @Test
     public void testIgnore_excludedClasses() throws Throwable {
-        RunNotifier notifier = Mockito.spy(new RunNotifier());
-        RunListener listener = Mockito.mock(RunListener.class);
+        RunNotifier notifier = spy(new RunNotifier());
+        RunListener listener = mock(RunListener.class);
         notifier.addListener(listener);
         Bundle ignores = new Bundle();
         ignores.putString(LongevityClassRunner.FILTER_OPTION, FailingTest.class.getCanonicalName());
         mRunner = spy(new LongevityClassRunner(FailingTest.class, ignores));
         mRunner.run(notifier);
         verify(listener, times(1)).testIgnored(any());
+    }
+
+    /** Test that the runner does not report iteration when iteration is not set. */
+    @Test
+    public void testReportIteration_noIterationSet() throws Throwable {
+        ArgumentCaptor<Description> captor = ArgumentCaptor.forClass(Description.class);
+        RunNotifier notifier = mock(RunNotifier.class);
+        mRunner = spy(new LongevityClassRunner(NoOpTest.class));
+        mRunner.run(notifier);
+        verify(notifier).fireTestStarted(captor.capture());
+        Assert.assertFalse(
+                "Description class name should not contain the iteration number.",
+                captor.getValue()
+                        .getClassName()
+                        .matches(
+                                String.join(LongevityClassRunner.ITERATION_SEP, "^.*", "[0-9]+$")));
+    }
+
+    /** Test that the runner reports iteration when set. */
+    @Test
+    public void testReportIteration_withIteration() throws Throwable {
+        ArgumentCaptor<Description> captor = ArgumentCaptor.forClass(Description.class);
+        RunNotifier notifier = mock(RunNotifier.class);
+        mRunner = spy(new LongevityClassRunner(NoOpTest.class));
+        mRunner.setIteration(7);
+        mRunner.run(notifier);
+        verify(notifier).fireTestStarted(captor.capture());
+        Assert.assertTrue(
+                "Description class name should contain the iteration number.",
+                captor.getValue()
+                        .getClassName()
+                        .matches(String.join(LongevityClassRunner.ITERATION_SEP, "^.*", "7$")));
     }
 
     private List<FrameworkMethod> getMethodNameMatcher(String methodName) {
