@@ -136,7 +136,7 @@ public class ProfileSuite extends LongevitySuite {
      * features expand.
      */
     @Override
-    protected Runner getSuiteRunner(Runner runner) {
+    protected LongevityClassRunner getSuiteRunner(Runner runner) {
         if (mProfile.getConfiguration() == null) {
             return super.getSuiteRunner(runner);
         }
