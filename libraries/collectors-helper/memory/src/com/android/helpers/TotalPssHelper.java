@@ -35,7 +35,7 @@ import java.util.Map;
  * Helper to collect totalpss memory usage per process tracked by the ActivityManager
  * memoryinfo.
  */
-public final class TotalPssHelper implements ICollectorHelper<Long> {
+public class TotalPssHelper implements ICollectorHelper<Long> {
 
     private static final String TAG = TotalPssHelper.class.getSimpleName();
 
