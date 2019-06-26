@@ -16,6 +16,7 @@
 package android.platform.test.longevity;
 
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -26,15 +27,20 @@ import android.content.Intent;
 import android.os.BatteryManager;
 import android.os.Bundle;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.internal.builders.AllDefaultPossibilitiesBuilder;
+import org.junit.runner.Runner;
 import org.junit.runner.RunWith;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.JUnit4;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.Suite.SuiteClasses;
 import org.mockito.Mockito;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Unit tests for the {@link LongevitySuite} runner.
@@ -50,19 +56,22 @@ public class LongevitySuiteTest {
     private LongevitySuite mSuite;
 
     @Before
-    public void setUpSuite() throws InitializationError {
+    public void setUp() {
         // Android context mocking.
         when(mContext.registerReceiver(any(), any())).thenReturn(mBatteryIntent);
-        // Create the core suite to test.
-        mSuite = new LongevitySuite(TestSuite.class, new AllDefaultPossibilitiesBuilder(true),
-                mInstrumentation, mContext, new Bundle());
     }
 
-    /**
-     * Tests that devices with batteries terminate on low battery.
-     */
+    /** Tests that devices with batteries terminate on low battery. */
     @Test
-    public void testDeviceWithBattery_registersReceiver() {
+    public void testDeviceWithBattery_registersReceiver() throws InitializationError {
+        // Create the core suite to test.
+        mSuite =
+                new LongevitySuite(
+                        TestSuite.class,
+                        new AllDefaultPossibilitiesBuilder(true),
+                        mInstrumentation,
+                        mContext,
+                        new Bundle());
         mBatteryIntent.putExtra(BatteryManager.EXTRA_PRESENT, true);
         mBatteryIntent.putExtra(BatteryManager.EXTRA_LEVEL, 1);
         mBatteryIntent.putExtra(BatteryManager.EXTRA_SCALE, 100);
@@ -70,11 +79,17 @@ public class LongevitySuiteTest {
         verify(mRunNotifier).pleaseStop();
     }
 
-    /**
-     * Tests that devices without batteries do not terminate on low battery.
-     */
+    /** Tests that devices without batteries do not terminate on low battery. */
     @Test
-    public void testDeviceWithoutBattery_doesNotRegisterReceiver() {
+    public void testDeviceWithoutBattery_doesNotRegisterReceiver() throws InitializationError {
+        // Create the core suite to test.
+        mSuite =
+                new LongevitySuite(
+                        TestSuite.class,
+                        new AllDefaultPossibilitiesBuilder(true),
+                        mInstrumentation,
+                        mContext,
+                        new Bundle());
         mBatteryIntent.putExtra(BatteryManager.EXTRA_PRESENT, false);
         mBatteryIntent.putExtra(BatteryManager.EXTRA_LEVEL, 1);
         mBatteryIntent.putExtra(BatteryManager.EXTRA_SCALE, 100);
@@ -82,20 +97,109 @@ public class LongevitySuiteTest {
         verify(mRunNotifier, never()).pleaseStop();
     }
 
+    /** Test that the runner does not report iterations when the option is not set. */
+    @Test
+    public void testReportingIteration_notSet() throws InitializationError {
+        // Create and spy the core suite to test. The option is not set as the args bundle is empty.
+        mSuite =
+                Mockito.spy(
+                        new LongevitySuite(
+                                IterationSuite.class,
+                                new AllDefaultPossibilitiesBuilder(true),
+                                mInstrumentation,
+                                mContext,
+                                new Bundle()));
+        // Store the runners that the tests are executing. Since these are object references,
+        // subsequent modifications to the runners (setting the iteration) will still be observable
+        // here.
+        List<LongevityClassRunner> runners = new ArrayList<>();
+        doAnswer(
+                        invocation -> {
+                            LongevityClassRunner runner =
+                                    (LongevityClassRunner) invocation.callRealMethod();
+                            runners.add(runner);
+                            return runner;
+                        })
+                .when(mSuite)
+                .getSuiteRunner(any(Runner.class));
+        mSuite.run(mRunNotifier);
+        Assert.assertEquals(runners.size(), 3);
+        // No runner should have a iteration number set.
+        Assert.assertEquals(runners.get(0).getIteration(), LongevityClassRunner.ITERATION_NOT_SET);
+        Assert.assertEquals(runners.get(1).getIteration(), LongevityClassRunner.ITERATION_NOT_SET);
+        Assert.assertEquals(runners.get(2).getIteration(), LongevityClassRunner.ITERATION_NOT_SET);
+    }
 
+    /** Test that the runner reports iterations when the option is set. */
+    @Test
+    public void testReportingIteration_set() throws InitializationError {
+        Bundle args = new Bundle();
+        args.putString(LongevitySuite.RENAME_ITERATION_OPTION, String.valueOf(true));
+        // Create and spy the core suite to test.
+        mSuite =
+                Mockito.spy(
+                        new LongevitySuite(
+                                IterationSuite.class,
+                                new AllDefaultPossibilitiesBuilder(true),
+                                mInstrumentation,
+                                mContext,
+                                args));
+        // Store the runners that the tests are executing. Since these are object references,
+        // subsequent modifications to the runners (setting the iteration) will still be observable
+        // here.
+        List<LongevityClassRunner> runners = new ArrayList<>();
+        doAnswer(
+                        invocation -> {
+                            LongevityClassRunner runner =
+                                    (LongevityClassRunner) invocation.callRealMethod();
+                            runners.add(runner);
+                            return runner;
+                        })
+                .when(mSuite)
+                .getSuiteRunner(any(Runner.class));
+        mSuite.run(mRunNotifier);
+        Assert.assertEquals(runners.size(), 3);
+        // Check the runners and their corresponding iterations.
+        Assert.assertTrue(runners.get(0).getDescription().getDisplayName().contains("TestOne"));
+        Assert.assertEquals(runners.get(0).getIteration(), 1);
+        Assert.assertTrue(runners.get(1).getDescription().getDisplayName().contains("TestTwo"));
+        Assert.assertEquals(runners.get(1).getIteration(), 1);
+        Assert.assertTrue(runners.get(2).getDescription().getDisplayName().contains("TestOne"));
+        Assert.assertEquals(runners.get(2).getIteration(), 2);
+    }
+
+    /** Sample device-side test cases. */
     @RunWith(LongevitySuite.class)
     @SuiteClasses({
         TestSuite.BasicTest.class,
     })
-    /**
-     * Sample device-side test cases.
-     */
     public static class TestSuite {
         // no local test cases.
 
         public static class BasicTest {
             @Test
             public void testNothing() { }
+        }
+    }
+
+    /** Sample test class with multiple iterations of the same test. */
+    @RunWith(LongevitySuite.class)
+    @SuiteClasses({
+        IterationSuite.TestOne.class,
+        IterationSuite.TestTwo.class,
+        IterationSuite.TestOne.class,
+    })
+    public static class IterationSuite {
+        // no local test cases.
+
+        public static class TestOne {
+            @Test
+            public void testNothing() {}
+        }
+
+        public static class TestTwo {
+            @Test
+            public void testNothing() {}
         }
     }
 }
