@@ -20,8 +20,10 @@ import android.annotation.Nullable;
 import android.app.ActivityManager;
 import android.app.UserSwitchObserver;
 import android.car.userlib.CarUserManagerHelper;
+import android.content.Context;
 import android.content.pm.UserInfo;
 import android.os.RemoteException;
+import android.os.UserManager;
 import androidx.test.InstrumentationRegistry;
 
 import java.util.concurrent.CountDownLatch;
@@ -44,9 +46,12 @@ public class MultiUserHelper {
 
     private static MultiUserHelper sMultiUserHelper;
     private CarUserManagerHelper mUserManagerHelper;
+    private UserManager mUserManager;
 
     private MultiUserHelper() {
-        mUserManagerHelper = new CarUserManagerHelper(InstrumentationRegistry.getTargetContext());
+        Context context = InstrumentationRegistry.getTargetContext();
+        mUserManagerHelper = new CarUserManagerHelper(context);
+        mUserManager = UserManager.get(context);
     }
 
     /**
@@ -63,7 +68,7 @@ public class MultiUserHelper {
 
     @Nullable
     public UserInfo createNewAdminUser(String userName) {
-        return mUserManagerHelper.createNewAdminUser(userName);
+        return mUserManager.createUser(userName, UserInfo.FLAG_ADMIN);
     }
 
     @Nullable
