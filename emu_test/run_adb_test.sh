@@ -38,15 +38,16 @@ export ANDROID_HOME=$SDK_EMULATOR
 export ANDROID_SDK_ROOT=$SDK_SYS_IMAGE
 
 echo "Setup new ADB"
-unzip -o $BUILD_DIR/* -d $DIST_DIR
-export PATH=$DIST_DIR/platform-tools:$PATH
+mv $ANDROID_SDK_ROOT/platform-tools $DIST_DIR/
+unzip -o $BUILD_DIR/* -d $ANDROID_SDK_ROOT
 
 echo "Run ADB tests from $ADT_INFRA"
 cmd="$ADT_INFRA/emu_test/utils/run_adb_test.sh"
 run_with_timeout $cmd $DIST_DIR 5400
 
 echo "Cleanup platform-tools"
-rm -rf $DIST_DIR/platform-tools
+rm -rf $ANDROID_SDK_ROOT/platform-tools
+mv $DIST_DIR/platform-tools $ANDROID_SDK_ROOT/
 
 echo "Cleanup prebuilts"
 rm -rf /buildbot/prebuilt/*
