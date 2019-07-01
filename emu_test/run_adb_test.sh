@@ -42,7 +42,7 @@ mv $ANDROID_SDK_ROOT/platform-tools $DIST_DIR/
 unzip -o $BUILD_DIR/* -d $ANDROID_SDK_ROOT
 
 echo "Run ADB tests from $ADT_INFRA"
-cmd="$ADT_INFRA/emu_test/utils/run_adb_test.sh"
+cmd="$ADT_INFRA/emu_test/utils/run_test_adb.sh"
 run_with_timeout $cmd $DIST_DIR 5400
 
 echo "Cleanup platform-tools"
