@@ -26,4 +26,3 @@
         android:targetPackage="android.platform.test.composer.tests"
         android:label="Platform Composer Library Tests" />
 </manifest>
-

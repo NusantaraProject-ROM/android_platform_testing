@@ -56,6 +56,8 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
     private static final String ERROR_NOT_FOUND =
         "Element %s %s is not found in the application %s";
 
+    private static final long EXIT_WAIT_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
+
     private static File sScreenshotDirectory;
 
     public UiDevice mDevice;
@@ -111,13 +113,13 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
         if (mFavorShellCommands) {
             String output = null;
             try {
+                Log.i(LOG_TAG, String.format("Sending command to launch: %s", pkg));
                 Intent intent =
                         mInstrumentation
                                 .getContext()
                                 .getPackageManager()
                                 .getLaunchIntentForPackage(pkg);
                 mInstrumentation.getContext().startActivity(intent);
-                Log.i(LOG_TAG, String.format("Sent command to launch: %s", pkg));
             } catch (ActivityNotFoundException e) {
                 removeDialogWatchers();
                 throw new RuntimeException(String.format("Failed to find package: %s", pkg), e);
@@ -147,12 +149,10 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
      */
     @Override
     public void exit() {
+        Log.i(LOG_TAG, "Exiting the current application.");
         if (mPressHomeToExit) {
             mDevice.pressHome();
             mDevice.waitForIdle();
-            if (!mDevice.hasObject(getLauncherStrategy().getWorkspaceSelector())) {
-                throw new IllegalStateException("Pressing Home failed to exit the app.");
-            }
         } else {
             int maxBacks = 4;
             while (!mDevice.hasObject(getLauncherStrategy().getWorkspaceSelector())
@@ -165,6 +165,10 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
             if (maxBacks == 0) {
                 mDevice.pressHome();
             }
+        }
+        if (!mDevice.wait(
+                Until.hasObject(mLauncherStrategy.getWorkspaceSelector()), EXIT_WAIT_TIMEOUT)) {
+            throw new IllegalStateException("Failed to exit the app to launcher.");
         }
     }
 

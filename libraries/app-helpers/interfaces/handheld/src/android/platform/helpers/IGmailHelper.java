@@ -17,7 +17,6 @@
 package android.platform.helpers;
 
 import android.support.test.uiautomator.Direction;
-
 import java.util.List;
 
 public interface IGmailHelper extends IAppHelper {
@@ -152,6 +151,13 @@ public interface IGmailHelper extends IAppHelper {
      * This method will scroll the navigation drawer and block until idle. Only accepts UP and DOWN.
      */
     public void scrollNavigationDrawer(Direction dir);
+
+    /**
+     * Setup expectations: Gmail is open and the navigation drawer is open.
+     *
+     * This method will fling the navigation drawer and block until idle. Only accepts UP and DOWN.
+     */
+    public void flingNavigationDrawer(Direction dir);
 
     /**
      * Setup expectations: Gmail is open and a mailbox is open.
