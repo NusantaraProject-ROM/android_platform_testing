@@ -4,7 +4,7 @@ android_test {
     // omit gradle 'build' dir
     srcs: ["src/**/*.java"],
 
-    static_libs: ["android-support-v4"],
+    static_libs: ["androidx.legacy_legacy-support-v4"],
     resource_dirs: ["res"],
     sdk_version: "current",
     certificate: "platform",

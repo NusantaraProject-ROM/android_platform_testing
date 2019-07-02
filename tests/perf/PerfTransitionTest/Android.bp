@@ -27,6 +27,7 @@ android_test {
         "sysui-helper",
         "collector-device-lib",
         "settings-helper",
+        "launcher-aosp-tapl",
     ],
 
     test_suites: ["device-tests"],

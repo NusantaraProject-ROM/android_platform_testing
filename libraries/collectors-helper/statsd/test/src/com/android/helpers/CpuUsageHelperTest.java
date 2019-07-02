@@ -78,7 +78,8 @@ public class CpuUsageHelperTest {
         assertTrue(mCpuUsageHelper.startCollecting());
         mHelper.get().open();
         Map<String, Long> cpuUsage = mCpuUsageHelper.getMetrics();
-        assertTrue(cpuUsage.size() > 0);
+        // Which includes two default total usage per pkg and per freq
+        assertTrue(cpuUsage.size() > 2);
         assertTrue(mCpuUsageHelper.stopCollecting());
         mHelper.get().exit();
     }

@@ -19,6 +19,7 @@ instrumentation_tests := \
     LongevityPlatformLibTests \
     ManagedProvisioningTests \
     FrameworksCoreTests \
+    FrameworksMockingCoreTests \
     BinderProxyCountingTestApp \
     BinderProxyCountingTestService \
     FrameworksNetTests \
@@ -50,7 +51,7 @@ instrumentation_tests := \
     BlockedNumberProviderTest \
     DownloadAppFunctionalTests \
     NotificationFunctionalTests \
-    DexLoggerIntegrationTests \
+    DynamicCodeLoggerIntegrationTests \
     UsbTests \
     DownloadProviderTests \
     EmergencyInfoUnitTests \
@@ -67,13 +68,20 @@ instrumentation_tests := \
     FrameworksLocationTests \
     FrameworksPrivacyLibraryTests \
     SettingsUITests \
-    ExtServicesUnitTests
+    ExtServicesUnitTests\
+    NexusLauncherOutOfProcTests\
+    NexusLauncherDebug\
+    NexusLauncherTests\
+    FrameworksNetSmokeTests\
+
 
 # Android Things specific tests
 ifeq ($(PRODUCT_IOT),true)
 
 instrumentation_tests += \
     AndroidThingsTests \
+    BluetoothControlServiceTests \
+    NetworkingServicesUnitTests \
     ThingsIntegrationTests \
     WifiSetupUnitTests
 
