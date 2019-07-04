@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.RunWith;
+import org.junit.runner.notification.Failure;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -65,8 +66,8 @@ public class BaseCollectionListenerTest {
     }
 
     /**
-     * Verify start and stop collection happens only during test run started
-     * and test run ended when per_run option is enabled.
+     * Verify start and stop collection happens only during test run started and test run ended when
+     * per_run option is enabled.
      */
     @Test
     public void testPerRunFlow() throws Exception {
@@ -85,9 +86,8 @@ public class BaseCollectionListenerTest {
     }
 
     /**
-     * Verify start and stop collection happens before and after each test
-     * and not during test run started and test run ended when per_run option is
-     * disabled.
+     * Verify start and stop collection happens before and after each test and not during test run
+     * started and test run ended when per_run option is disabled.
      */
     @Test
     public void testPerTestFlow() throws Exception {
@@ -100,18 +100,20 @@ public class BaseCollectionListenerTest {
         mListener.onTestStart(mListener.createDataRecord(), FAKE_DESCRIPTION);
         verify(helper, times(1)).startCollecting();
         mListener.onTestEnd(mListener.createDataRecord(), FAKE_DESCRIPTION);
+        verify(helper, times(1)).getMetrics();
         verify(helper, times(1)).stopCollecting();
         mListener.onTestStart(mListener.createDataRecord(), FAKE_DESCRIPTION);
         verify(helper, times(2)).startCollecting();
         mListener.onTestEnd(mListener.createDataRecord(), FAKE_DESCRIPTION);
         verify(helper, times(2)).stopCollecting();
+        verify(helper, times(2)).getMetrics();
         mListener.onTestRunEnd(mListener.createDataRecord(), new Result());
         verify(helper, times(2)).stopCollecting();
     }
 
     /**
-     * Verify start and stop collection happens before and after each test
-     * and not during test run started and test run ended by default.
+     * Verify start and stop collection happens before and after each test and not during test run
+     * started and test run ended by default.
      */
     @Test
     public void testDefaultOptionFlow() throws Exception {
@@ -130,5 +132,110 @@ public class BaseCollectionListenerTest {
         verify(helper, times(2)).stopCollecting();
         mListener.onTestRunEnd(mListener.createDataRecord(), new Result());
         verify(helper, times(2)).stopCollecting();
+    }
+
+    /**
+     * Verify metrics is collected when skip on test failure is explictly set
+     * to false.
+     */
+    @Test
+    public void testPerTestFailureFlowNotCollectMetrics() throws Exception {
+        Bundle b = new Bundle();
+        b.putString(BaseCollectionListener.COLLECT_PER_RUN, "false");
+        b.putString(BaseCollectionListener.SKIP_TEST_FAILURE_METRICS, "false");
+        mListener = initListener(b);
+
+        mListener.onTestRunStart(mListener.createDataRecord(), FAKE_DESCRIPTION);
+        verify(helper, times(0)).startCollecting();
+        mListener.onTestStart(mListener.createDataRecord(), FAKE_DESCRIPTION);
+        verify(helper, times(1)).startCollecting();
+        Failure failureDesc = new Failure(Description.createSuiteDescription("run"),
+                new Exception());
+        mListener.testFailure(failureDesc);
+        mListener.onTestEnd(mListener.createDataRecord(), FAKE_DESCRIPTION);
+        verify(helper, times(1)).getMetrics();
+        verify(helper, times(1)).stopCollecting();
+    }
+
+    /**
+     * Verify default behaviour to collect the metrics on test failure.
+     */
+    @Test
+    public void testPerTestFailureFlowDefault() throws Exception {
+        Bundle b = new Bundle();
+        b.putString(BaseCollectionListener.COLLECT_PER_RUN, "false");
+        mListener = initListener(b);
+
+        mListener.onTestRunStart(mListener.createDataRecord(), FAKE_DESCRIPTION);
+        verify(helper, times(0)).startCollecting();
+        mListener.onTestStart(mListener.createDataRecord(), FAKE_DESCRIPTION);
+        verify(helper, times(1)).startCollecting();
+        Failure failureDesc = new Failure(Description.createSuiteDescription("run"),
+                new Exception());
+        mListener.testFailure(failureDesc);
+        mListener.onTestEnd(mListener.createDataRecord(), FAKE_DESCRIPTION);
+        // Metrics should be called by default on test failure by default.
+        verify(helper, times(1)).getMetrics();
+        verify(helper, times(1)).stopCollecting();
+    }
+
+    /**
+     * Verify metrics collection is skipped if the skip on failure metrics
+     * is enabled and if the test is failed.
+     */
+    @Test
+    public void testPerTestFailureSkipMetrics() throws Exception {
+        Bundle b = new Bundle();
+        b.putString(BaseCollectionListener.COLLECT_PER_RUN, "false");
+        b.putString(BaseCollectionListener.SKIP_TEST_FAILURE_METRICS, "true");
+        mListener = initListener(b);
+
+        mListener.onTestRunStart(mListener.createDataRecord(), FAKE_DESCRIPTION);
+        verify(helper, times(0)).startCollecting();
+        mListener.onTestStart(mListener.createDataRecord(), FAKE_DESCRIPTION);
+        verify(helper, times(1)).startCollecting();
+        Failure failureDesc = new Failure(Description.createSuiteDescription("run"),
+                new Exception());
+        mListener.testFailure(failureDesc);
+        mListener.onTestEnd(mListener.createDataRecord(), FAKE_DESCRIPTION);
+        // Metrics should not be collected.
+        verify(helper, times(0)).getMetrics();
+        verify(helper, times(1)).stopCollecting();
+    }
+
+    /**
+     * Verify metrics not collected for test failure in between two test that
+     * succeeded when skip metrics on test failure is enabled.
+     */
+    @Test
+    public void testInterleavingTestFailureMetricsSkip() throws Exception {
+        Bundle b = new Bundle();
+        b.putString(BaseCollectionListener.COLLECT_PER_RUN, "false");
+        b.putString(BaseCollectionListener.SKIP_TEST_FAILURE_METRICS, "true");
+        mListener = initListener(b);
+
+        mListener.onTestRunStart(mListener.createDataRecord(), FAKE_DESCRIPTION);
+        verify(helper, times(0)).startCollecting();
+        mListener.testStarted(FAKE_DESCRIPTION);
+        verify(helper, times(1)).startCollecting();
+        mListener.onTestEnd(mListener.createDataRecord(), FAKE_DESCRIPTION);
+        verify(helper, times(1)).getMetrics();
+        verify(helper, times(1)).stopCollecting();
+
+        mListener.testStarted(FAKE_DESCRIPTION);
+        verify(helper, times(2)).startCollecting();
+        Failure failureDesc = new Failure(Description.createSuiteDescription("run"),
+                new Exception());
+        mListener.testFailure(failureDesc);
+        mListener.onTestEnd(mListener.createDataRecord(), FAKE_DESCRIPTION);
+        // Metric collection should not be done on failure.
+        verify(helper, times(1)).getMetrics();
+        verify(helper, times(2)).stopCollecting();
+
+        mListener.testStarted(FAKE_DESCRIPTION);
+        verify(helper, times(3)).startCollecting();
+        mListener.onTestEnd(mListener.createDataRecord(), FAKE_DESCRIPTION);
+        verify(helper, times(2)).getMetrics();
+        verify(helper, times(3)).stopCollecting();
     }
 }
