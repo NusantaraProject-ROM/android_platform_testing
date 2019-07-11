@@ -51,6 +51,10 @@ public class CpuUsageHelperTest {
     private static final String TOTAL_CPU_USAGE = "total_cpu_usage";
     // Key used for total CPU usage in frequency buckets
     private static final String TOTAL_CPU_USAGE_FREQ = "total_cpu_usage_freq";
+    // key used for total CPU time
+    private static final String TOTAL_CPU_TIME = "total_cpu_time";
+    // Key used for CPU utilization average over each core
+    private static final String CPU_UTILIZATION = "cpu_utilization_average_per_core_percent";
 
     private CpuUsageHelper mCpuUsageHelper;
     private HelperAccessor<ICalendarHelper> mHelper =
@@ -203,6 +207,29 @@ public class CpuUsageHelperTest {
         for (Map.Entry<String, Long> cpuUsageEntry : mCpuUsageHelper.getMetrics().entrySet()) {
             assertTrue(cpuUsageEntry.getKey().startsWith(CPU_USAGE_FREQ_PREFIX));
         }
+        assertTrue(mCpuUsageHelper.stopCollecting());
+        mHelper.get().exit();
+    }
+
+    /**
+     * Test cpu utilization is collected.
+     */
+    @Test
+    public void testCpuEnableCpuUtilization() throws Exception {
+        mCpuUsageHelper.setEnableCpuUtilization();
+        assertTrue(mCpuUsageHelper.startCollecting());
+        mHelper.get().open();
+        Map<String, Long> cpuUsage = mCpuUsageHelper.getMetrics();
+        assertTrue(cpuUsage.size() > 3);
+        assertTrue(cpuUsage.containsKey(TOTAL_CPU_USAGE));
+        assertTrue(cpuUsage.containsKey(TOTAL_CPU_TIME));
+        assertTrue(cpuUsage.containsKey(CPU_UTILIZATION));
+        // TOTAL_CPU_TIME >= TOTAL_CPU_USAGE > 0
+        assertTrue(cpuUsage.get(TOTAL_CPU_TIME) >= cpuUsage.get(TOTAL_CPU_USAGE));
+        assertTrue(cpuUsage.get(TOTAL_CPU_USAGE) > 0);
+        // 100 >= CPU_UTILIZATION >=0 (%), it could be equal to 0 due to rounding.
+        assertTrue(100 >= cpuUsage.get(CPU_UTILIZATION));
+        assertTrue(cpuUsage.get(CPU_UTILIZATION) >= 0);
         assertTrue(mCpuUsageHelper.stopCollecting());
         mHelper.get().exit();
     }
