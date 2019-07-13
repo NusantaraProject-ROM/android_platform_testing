@@ -33,6 +33,7 @@ public class CpuUsageListener extends BaseCollectionListener<Long> {
     private static final String DISABLE_PER_FREQ = "disable_per_freq";
     private static final String DISABLE_TOTAL_PKG = "disable_total_pkg";
     private static final String DISABLE_TOTAL_FREQ = "disable_total_freq";
+    private static final String ENABLE_CPU_UTILIZATION = "enable_cpu_utilization";
 
     public CpuUsageListener() {
         createHelperInstance(new CpuUsageHelper());
@@ -59,6 +60,10 @@ public class CpuUsageListener extends BaseCollectionListener<Long> {
 
         if ("true".equals(args.getString(DISABLE_TOTAL_FREQ))) {
             cpuUsageHelper.setDisableTotalFrequency();
+        }
+
+        if ("true".equals(args.getString(ENABLE_CPU_UTILIZATION))) {
+            cpuUsageHelper.setEnableCpuUtilization();
         }
     }
 }
