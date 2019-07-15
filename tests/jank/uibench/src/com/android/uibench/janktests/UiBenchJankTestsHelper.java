@@ -49,7 +49,7 @@ public class UiBenchJankTestsHelper {
 
     public static final String PACKAGE_NAME = "com.android.test.uibench";
 
-    private static final int SLOW_FLING_SPEED = 3000; // compare to UiObject2#DEFAULT_FLING_SPEED
+    private static final int SLOW_FLING_SPEED = 6000; // compare to UiObject2#DEFAULT_FLING_SPEED
 
     private static UiBenchJankTestsHelper sInstance;
     private UiDevice mDevice;
