@@ -109,7 +109,6 @@ native_tests := \
     netdutils_test \
     nfc_test_utils \
     perfetto_integrationtests \
-    perfprofd_test \
     posix_async_io_test \
     prioritydumper_test \
     puffin_unittest \
