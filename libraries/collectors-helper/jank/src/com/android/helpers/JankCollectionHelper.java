@@ -43,7 +43,7 @@ public class JankCollectionHelper implements ICollectorHelper<Double> {
     @VisibleForTesting static final String GFXINFO_METRICS_PREFIX = "gfxinfo";
     // Shell dump commands to get and reset the tracked gfxinfo metrics.
     @VisibleForTesting static final String GFXINFO_COMMAND_GET = "dumpsys gfxinfo %s";
-    @VisibleForTesting static final String GFXINFO_COMMAND_RESET = GFXINFO_COMMAND_GET + " --reset";
+    @VisibleForTesting static final String GFXINFO_COMMAND_RESET = GFXINFO_COMMAND_GET + " reset";
     // Pattern matchers and enumerators to verify and pull gfxinfo metrics.
     // Example: "** Graphics info for pid 853 [com.google.android.leanbacklauncher] **"
     private static final String GFXINFO_OUTPUT_HEADER = "Graphics info for pid (\\d+) \\[(%s)\\]";
@@ -231,11 +231,19 @@ public class JankCollectionHelper implements ICollectorHelper<Double> {
     @VisibleForTesting
     void clearGfxInfo(String pkg) {
         try {
-            String command = String.format(GFXINFO_COMMAND_RESET, pkg);
-            String output = getDevice().executeShellCommand(command);
-            // Success if the (specified package or any if unspecified) header exists in the output.
-            verifyMatches(output, getHeaderMatcher(pkg), "Did not find package header in output.");
-            Log.v(LOG_TAG, String.format("Cleared %s gfxinfo.", pkg.isEmpty() ? "all" : pkg));
+            if (pkg.isEmpty()) {
+                String command = String.format(GFXINFO_COMMAND_RESET, "--");
+                String output = getDevice().executeShellCommand(command);
+                // Success if any header (set by passing an empty-string) exists in the output.
+                verifyMatches(output, getHeaderMatcher(""), "No package headers in output.");
+                Log.v(LOG_TAG, "Cleared all gfxinfo.");
+            } else {
+                String command = String.format(GFXINFO_COMMAND_RESET, pkg);
+                String output = getDevice().executeShellCommand(command);
+                // Success if the specified package header exists in the output.
+                verifyMatches(output, getHeaderMatcher(pkg), "No package header in output.");
+                Log.v(LOG_TAG, String.format("Cleared %s gfxinfo.", pkg));
+            }
         } catch (IOException e) {
             throw new RuntimeException("Failed to clear gfxinfo.", e);
         }
