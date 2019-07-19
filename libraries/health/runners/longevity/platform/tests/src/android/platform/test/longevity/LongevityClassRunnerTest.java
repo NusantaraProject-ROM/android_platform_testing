@@ -383,12 +383,15 @@ public class LongevityClassRunnerTest {
                 captor.getValue()
                         .getClassName()
                         .matches(
-                                String.join(LongevityClassRunner.ITERATION_SEP, "^.*", "[0-9]+$")));
+                                String.join(
+                                        LongevityClassRunner.ITERATION_SEP_DEFAULT,
+                                        "^.*",
+                                        "[0-9]+$")));
     }
 
-    /** Test that the runner reports iteration when set. */
+    /** Test that the runner reports iteration when set and the default separator was used. */
     @Test
-    public void testReportIteration_withIteration() throws Throwable {
+    public void testReportIteration_withIteration_withDefaultSeparator() throws Throwable {
         ArgumentCaptor<Description> captor = ArgumentCaptor.forClass(Description.class);
         RunNotifier notifier = mock(RunNotifier.class);
         mRunner = spy(new LongevityClassRunner(NoOpTest.class));
@@ -399,7 +402,27 @@ public class LongevityClassRunnerTest {
                 "Description class name should contain the iteration number.",
                 captor.getValue()
                         .getClassName()
-                        .matches(String.join(LongevityClassRunner.ITERATION_SEP, "^.*", "7$")));
+                        .matches(
+                                String.join(
+                                        LongevityClassRunner.ITERATION_SEP_DEFAULT, "^.*", "7$")));
+    }
+
+    /** Test that the runner reports iteration when set and a custom separator was supplied. */
+    @Test
+    public void testReportIteration_withIteration_withCustomSeparator() throws Throwable {
+        String sep = "--";
+        Bundle args = new Bundle();
+        args.putString(LongevityClassRunner.ITERATION_SEP_OPTION, sep);
+
+        ArgumentCaptor<Description> captor = ArgumentCaptor.forClass(Description.class);
+        RunNotifier notifier = mock(RunNotifier.class);
+        mRunner = spy(new LongevityClassRunner(NoOpTest.class, args));
+        mRunner.setIteration(7);
+        mRunner.run(notifier);
+        verify(notifier).fireTestStarted(captor.capture());
+        Assert.assertTrue(
+                "Description class name should contain the iteration number.",
+                captor.getValue().getClassName().matches(String.join(sep, "^.*", "7$")));
     }
 
     private List<FrameworkMethod> getMethodNameMatcher(String methodName) {
