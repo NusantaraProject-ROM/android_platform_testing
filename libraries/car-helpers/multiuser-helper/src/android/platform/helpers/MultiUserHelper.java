@@ -123,6 +123,16 @@ public class MultiUserHelper {
         return mUserManagerHelper.getInitialUser();
     }
 
+    @Nullable
+    public UserInfo getUserByName(String name) {
+        return mUserManagerHelper
+                .getAllUsers()
+                .stream()
+                .filter(user -> user.name.equals(name))
+                .findFirst()
+                .orElse(null);
+    }
+
     private void registerUserSwitchObserver(final CountDownLatch switchLatch, final int userId)
             throws RemoteException {
         ActivityManager.getService()
