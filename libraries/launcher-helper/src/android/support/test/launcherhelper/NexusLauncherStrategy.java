@@ -57,7 +57,7 @@ public class NexusLauncherStrategy extends BaseLauncher3Strategy {
      */
     @Override
     public BySelector getAllAppsSelector() {
-        return By.res(getSupportedLauncherPackage(), "apps_view");
+        return By.res(getSupportedLauncherPackage(), "apps_list_view");
     }
 
     /**
