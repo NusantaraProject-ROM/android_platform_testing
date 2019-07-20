@@ -149,7 +149,7 @@ public final class LogcatOnFailureCollectorTest {
                                     "run.test",
                                     LogcatOnFailureCollector.METRIC_SEP
                                             + LogcatOnFailureCollector.FILENAME_SUFFIX,
-                                    ".txt")));
+                                    "-logcat-on-failure.txt")));
         }
     }
 
@@ -354,7 +354,7 @@ public final class LogcatOnFailureCollectorTest {
                         "run.test",
                         LogcatOnFailureCollector.METRIC_SEP
                                 + LogcatOnFailureCollector.FILENAME_SUFFIX,
-                        ".txt");
+                        "-logcat-on-failure.txt");
         for (String key : check1.keySet()) {
             // The first iteration should not have an iteration number.
             assertTrue(key.contains(expectedKey1));
@@ -369,7 +369,7 @@ public final class LogcatOnFailureCollectorTest {
                         "run.test-3",
                         LogcatOnFailureCollector.METRIC_SEP
                                 + LogcatOnFailureCollector.FILENAME_SUFFIX,
-                        ".txt");
+                        "-logcat-on-failure.txt");
         for (String key : check2.keySet()) {
             // The third iteration should have an iteration number, 3.
             assertTrue(key.contains(expectedKey2));
