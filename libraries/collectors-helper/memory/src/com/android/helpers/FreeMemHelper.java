@@ -37,7 +37,7 @@ import java.util.regex.Pattern;
  * freeMemHelper.getMetrics();
  * freeMemHelper.stopCollecting();
  */
-public final class FreeMemHelper implements ICollectorHelper<Long> {
+public class FreeMemHelper implements ICollectorHelper<Long> {
     private static final String TAG = FreeMemHelper.class.getSimpleName();
     private static final String SEPARATOR = "\\s+";
     private static final String CACHED_PROCESSES =
