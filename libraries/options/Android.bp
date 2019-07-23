@@ -1,4 +1,4 @@
-// Copyright (C) 2018 The Android Open Source Project
+// Copyright (C) 2019 The Android Open Source Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,13 +13,11 @@
 // limitations under the License.
 
 java_library_static {
-    name: "common-platform-scenarios",
+    name: "platform-test-options",
     sdk_version: "24",
     srcs: [ "src/**/*.java" ],
     libs: [
         "androidx.test.runner",
         "junit",
-        "platform-test-options",
-        "ub-uiautomator",
     ],
 }
