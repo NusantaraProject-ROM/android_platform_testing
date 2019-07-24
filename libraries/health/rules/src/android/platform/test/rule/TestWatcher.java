@@ -15,6 +15,7 @@
  */
 package android.platform.test.rule;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.test.uiautomator.UiDevice;
 import android.util.Log;
@@ -63,5 +64,10 @@ public class TestWatcher extends org.junit.rules.TestWatcher {
      */
     protected Bundle getArguments() {
         return InstrumentationRegistry.getArguments();
+    }
+
+    /** Returns the {@link Context} for this application. */
+    protected Context getContext() {
+        return InstrumentationRegistry.getContext();
     }
 }
