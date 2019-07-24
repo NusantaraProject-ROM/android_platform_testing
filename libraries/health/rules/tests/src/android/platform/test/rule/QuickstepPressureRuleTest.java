@@ -49,7 +49,7 @@ public class QuickstepPressureRuleTest {
         rule.apply(rule.getTestStatement(), Description.createTestDescription("clzz", "mthd"))
                 .evaluate();
         assertThat(rule.getOperations())
-                .containsExactly("am start example.package.name", "test")
+                .containsExactly("start example.package.name", "test")
                 .inOrder();
     }
 
@@ -63,10 +63,7 @@ public class QuickstepPressureRuleTest {
                 .evaluate();
         assertThat(rule.getOperations())
                 .containsExactly(
-                        "am start package.name1",
-                        "am start package.name2",
-                        "am start package.name3",
-                        "test")
+                        "start package.name1", "start package.name2", "start package.name3", "test")
                 .inOrder();
     }
 
@@ -82,9 +79,8 @@ public class QuickstepPressureRuleTest {
         }
 
         @Override
-        protected String executeShellCommand(String cmd) {
-            mOperations.add(cmd);
-            return "";
+        void startActivity(String pkg) {
+            mOperations.add(String.format("start %s", pkg));
         }
 
         public List<String> getOperations() {
