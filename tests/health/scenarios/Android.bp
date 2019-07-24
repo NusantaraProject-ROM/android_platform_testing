@@ -18,7 +18,6 @@ java_library_static {
     srcs: [ "src/**/*.java" ],
     libs: [
         "androidx.test.runner",
-        "junit",
         "platform-test-options",
         "ub-uiautomator",
     ],
