@@ -25,9 +25,19 @@ public interface IAutoLauncherStrategy extends ILauncherStrategy {
     void setInstrumentation(Instrumentation instrumentation);
 
     /**
-     * Open Dial Facet.
+     * Open Home Facet.
      */
-    void openDialFacet();
+    void openHomeFacet();
+
+    /**
+     * Open Maps Facet.
+     */
+    void openMapsFacet();
+
+    /**
+     * Open Media Facet.
+     */
+    void openMediaFacet();
 
     /**
      * Open Media Facet.
@@ -36,26 +46,39 @@ public interface IAutoLauncherStrategy extends ILauncherStrategy {
     void openMediaFacet(String appName);
 
     /**
-     * Open Settings Facet.
-     * @param appName open app from Settings facet.
+     * Open Dial Facet.
      */
-    void openSettingsFacet(String appName);
+    void openDialFacet();
 
     /**
-     * Open Maps Facet.
-     * @param appName open app from maps facet.
+     * Open App Grid Facet.
      */
-    void openMapsFacet(String appName);
+    void openAppGridFacet();
 
     /**
-     * Open Home Facet to select Dial/Media cards.
+     * Open Notification Facet.
      */
-    void openHomeFacet();
+    void openNotificationFacet();
 
     /**
      * Open Google Assistant Facet.
      */
     void openAssistantFacet();
+
+    /**
+     * Open Quick Settings.
+     */
+    void openQuickSettings();
+
+    /**
+     * Click on left HVAC.
+     */
+    void clickLeftHvac();
+
+    /**
+     * Click on right HVAC.
+     */
+    void clickRightHvac();
 
     /**
      * This method is to check if an application is visible on UI
