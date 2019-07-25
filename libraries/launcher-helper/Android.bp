@@ -21,6 +21,7 @@ java_library {
         "android-support-test",
         "androidx.test.runner",
         "activity-helper",
+        "guava",
     ],
     static_libs: [
         "dpad-util",
