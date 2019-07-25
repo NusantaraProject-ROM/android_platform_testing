@@ -46,11 +46,13 @@ import org.junit.runners.model.Statement;
  */
 public class LongevityClassRunner extends BlockJUnit4ClassRunner {
     @VisibleForTesting static final String FILTER_OPTION = "exclude-class";
-    @VisibleForTesting static final String ITERATION_SEP = "@";
+    @VisibleForTesting static final String ITERATION_SEP_OPTION = "iteration-separator";
+    @VisibleForTesting static final String ITERATION_SEP_DEFAULT = "@";
     // A constant to indicate that the iteration number is not set.
     @VisibleForTesting static final int ITERATION_NOT_SET = -1;
 
     private String[] mExcludedClasses;
+    private String mIterationSep = ITERATION_SEP_DEFAULT;
 
     private boolean mTestFailed = true;
     private boolean mTestAttempted = false;
@@ -68,6 +70,10 @@ public class LongevityClassRunner extends BlockJUnit4ClassRunner {
                 args.containsKey(FILTER_OPTION)
                         ? args.getString(FILTER_OPTION).split(",")
                         : new String[] {};
+        mIterationSep =
+                args.containsKey(ITERATION_SEP_OPTION)
+                        ? args.getString(ITERATION_SEP_OPTION)
+                        : mIterationSep;
     }
 
     /** Set the iteration of the test that this runner is running. */
@@ -268,7 +274,7 @@ public class LongevityClassRunner extends BlockJUnit4ClassRunner {
             return original;
         }
         return Description.createTestDescription(
-                String.join(ITERATION_SEP, original.getClassName(), String.valueOf(mIteration)),
+                String.join(mIterationSep, original.getClassName(), String.valueOf(mIteration)),
                 original.getMethodName());
     }
 }
