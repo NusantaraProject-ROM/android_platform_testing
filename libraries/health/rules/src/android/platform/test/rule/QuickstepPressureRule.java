@@ -18,27 +18,44 @@ package android.platform.test.rule;
 
 import org.junit.runner.Description;
 
+import android.os.SystemClock;
+import android.support.test.uiautomator.By;
+import android.support.test.uiautomator.Until;
+import androidx.annotation.VisibleForTesting;
+
 /** This rule opens apps then goes to home before a test class. */
 public class QuickstepPressureRule extends TestWatcher {
-    private final String[] mApplications;
+    private final String[] mPackages;
+    private final long MIN_CRASH_WAIT_TIMEOUT = 2500;
     private final long UI_RESPONSE_TIMEOUT_MSECS = 3000;
 
-    public QuickstepPressureRule(String... applications) {
-        if (applications.length == 0) {
+    public QuickstepPressureRule(String... packages) {
+        if (packages.length == 0) {
             throw new IllegalArgumentException("Must supply an application to open.");
         }
-        mApplications = applications;
+        mPackages = packages;
     }
 
     @Override
     protected void starting(Description description) {
-        // Force start each application in sequence.
-        for (String app : mApplications) {
-            executeShellCommand(String.format("am start %s", app));
-            getUiDevice().waitForWindowUpdate(app, UI_RESPONSE_TIMEOUT_MSECS);
+        // Start each app in sequence.
+        for (String pkg : mPackages) {
+            startActivity(pkg);
         }
 
-        // Goes to home
+        // Press the home button.
         getUiDevice().pressHome();
+    }
+
+    /** Launches the specified activity and keeps it open briefly. */
+    @VisibleForTesting
+    void startActivity(String pkg) {
+        // Open the application and ensure it reaches the foreground.
+        getContext().startActivity(getContext().getPackageManager().getLaunchIntentForPackage(pkg));
+        if (!getUiDevice().wait(Until.hasObject(By.pkg(pkg).depth(0)), UI_RESPONSE_TIMEOUT_MSECS)) {
+            throw new RuntimeException("Application not found in foreground.");
+        }
+        // Ensure the app doesn't immediately crash in the foreground.
+        SystemClock.sleep(MIN_CRASH_WAIT_TIMEOUT);
     }
 }
