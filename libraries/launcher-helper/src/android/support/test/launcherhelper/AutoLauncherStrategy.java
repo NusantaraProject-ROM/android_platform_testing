@@ -23,9 +23,9 @@ import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
 
-import com.google.common.collect.ImmutableMap;
-
 import java.util.Map;
+import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 public class AutoLauncherStrategy implements IAutoLauncherStrategy {
     private static final String LOG_TAG = AutoLauncherStrategy.class.getSimpleName();
@@ -48,15 +48,15 @@ public class AutoLauncherStrategy implements IAutoLauncherStrategy {
     private static final BySelector RIGHT_HVAC = By.res(SYSTEM_UI_PACKAGE, "hvacright");
 
     private static final Map<String, BySelector> FACET_MAP =
-            ImmutableMap.<String, BySelector>builder()
-                    .put("Home", By.res(SYSTEM_UI_PACKAGE, "home").clickable(true))
-                    .put("Maps", By.res(SYSTEM_UI_PACKAGE, "maps_nav").clickable(true))
-                    .put("Media", By.res(SYSTEM_UI_PACKAGE, "music_nav").clickable(true))
-                    .put("Dial", By.res(SYSTEM_UI_PACKAGE, "phone_nav").clickable(true))
-                    .put("App Grid", By.res(SYSTEM_UI_PACKAGE, "grid_nav").clickable(true))
-                    .put("Notification", By.res(SYSTEM_UI_PACKAGE, "notifications").clickable(true))
-                    .put("Google Assistant", By.res(SYSTEM_UI_PACKAGE, "assist").clickable(true))
-                    .build();
+            Stream.of(new Object[][] {
+                { "Home", By.res(SYSTEM_UI_PACKAGE, "home").clickable(true) },
+                { "Maps", By.res(SYSTEM_UI_PACKAGE, "maps_nav").clickable(true) },
+                { "Media", By.res(SYSTEM_UI_PACKAGE, "music_nav").clickable(true) },
+                { "Dial", By.res(SYSTEM_UI_PACKAGE, "phone_nav").clickable(true) },
+                { "App Grid", By.res(SYSTEM_UI_PACKAGE, "grid_nav").clickable(true) },
+                { "Notification", By.res(SYSTEM_UI_PACKAGE, "notifications").clickable(true) },
+                { "Google Assistant", By.res(SYSTEM_UI_PACKAGE, "assist").clickable(true) },
+            }).collect(Collectors.toMap(data -> (String) data[0], data -> (BySelector) data[1]));
 
     protected UiDevice mDevice;
     private Instrumentation mInstrumentation;
