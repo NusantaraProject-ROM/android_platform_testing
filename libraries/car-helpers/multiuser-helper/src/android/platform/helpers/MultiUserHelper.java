@@ -24,6 +24,8 @@ import android.content.Context;
 import android.content.pm.UserInfo;
 import android.os.RemoteException;
 import android.os.UserManager;
+import android.os.SystemClock;
+
 import androidx.test.InstrumentationRegistry;
 
 import java.util.concurrent.CountDownLatch;
@@ -36,8 +38,7 @@ import java.util.concurrent.TimeUnit;
  * testing requirements.
  */
 public class MultiUserHelper {
-    /** Exposing default guest user name to integration tests */
-    public static final String DEFAULT_GUEST_NAME = "Guest";
+    private static final String DEFAULT_GUEST_NAME = "Guest";
 
     private static final String TAG = MultiUserHelper.class.getSimpleName();
 
@@ -54,6 +55,12 @@ public class MultiUserHelper {
         mUserManager = UserManager.get(context);
     }
 
+    public enum UserType {
+        GUEST,
+        ADMIN,
+        NON_ADMIN
+    }
+
     /**
      * It will always be used as a singleton class
      *
@@ -66,30 +73,47 @@ public class MultiUserHelper {
         return sMultiUserHelper;
     }
 
+    /**
+     * Creates a user given the user name and type, e.g. guest, admin or non-admin
+     *
+     * @param name the name of the user
+     * @param userType the type of user as defined by the helper
+     * @return A {@link UserInfo} for newly created user or {@code null} if fail to create one
+     */
     @Nullable
-    public UserInfo createNewAdminUser(String userName) {
-        return mUserManager.createUser(userName, UserInfo.FLAG_ADMIN);
-    }
-
-    @Nullable
-    public UserInfo createNewNonAdminUser(String userName) {
-        return mUserManagerHelper.createNewNonAdminUser(userName);
-    }
-
-    @Nullable
-    public UserInfo createNewOrFindExistingGuest(String guestName) {
-        return mUserManagerHelper.createNewOrFindExistingGuest(guestName);
+    public UserInfo createUser(String name, UserType userType) throws Exception {
+        switch (userType) {
+            case GUEST:
+                return mUserManagerHelper.createNewOrFindExistingGuest(name);
+            case ADMIN:
+                return mUserManager.createUser(name, UserInfo.FLAG_ADMIN);
+            case NON_ADMIN:
+                return mUserManagerHelper.createNewNonAdminUser(name);
+            default:
+                throw new Exception("Unsupported user type: " + userType);
+        }
     }
 
     /**
-     * Switch to the target user at API level. Always wait until user switch complete.
+     * Switches to the target user at API level. Always waits until user switch complete. Besides,
+     * it waits for an additional amount of time for switched user to become idle (stable)
+     *
+     * @param id user id
+     * @param timeoutMs the time to wait (in msec) after user switch complete
+     */
+    public void switchAndWaitForStable(int id, long timeoutMs) throws Exception {
+        switchToUserId(id);
+        SystemClock.sleep(timeoutMs);
+    }
+
+    /**
+     * Switches to the target user at API level. Always wait until user switch complete.
      *
      * <p>User switch complete only means the user ready at API level. It doesn't mean the UI is
      * completely ready for the target user. It doesn't include unlocking user data and loading car
      * launcher page
      *
      * @param id Id of the user to switch to
-     * @throws Exception
      */
     public void switchToUserId(int id) throws Exception {
         final CountDownLatch latch = new CountDownLatch(1);
@@ -106,10 +130,10 @@ public class MultiUserHelper {
     }
 
     /**
-     * Remove the target user. For now it is a non-blocking call.
+     * Removes the target user. For now it is a non-blocking call.
      *
-     * @param userInfo
-     * @return
+     * @param userInfo info of the user to be removed
+     * @return true if removed successfully
      */
     public boolean removeUser(UserInfo userInfo) {
         return mUserManagerHelper.removeUser(userInfo, DEFAULT_GUEST_NAME);
@@ -123,6 +147,12 @@ public class MultiUserHelper {
         return mUserManagerHelper.getInitialUser();
     }
 
+    /**
+     * Tries to find an existing user with the given name
+     *
+     * @param name the name of the user
+     * @return A {@link UserInfo} if the user is found, or {@code null} if not found
+     */
     @Nullable
     public UserInfo getUserByName(String name) {
         return mUserManagerHelper

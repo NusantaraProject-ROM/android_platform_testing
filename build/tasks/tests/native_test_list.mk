@@ -67,6 +67,7 @@ native_tests := \
     liblog-unit-tests \
     libminijail_unittest_gtest \
     libnetdbpf_test \
+    libperfmgr_test \
     libprocinfo_test \
     libtextclassifier_tests \
     libsurfaceflinger_unittest \
