@@ -134,24 +134,3 @@ native_tests := \
     SurfaceFlinger_test \
     lmkd_unit_test \
     vrflinger_test
-
-# Android Things specific tests
-ifeq ($(PRODUCT_IOT),true)
-
-native_tests += \
-    audiomap_test \
-    coprocman_tests \
-    crash_reporter_tests \
-    libandroidthings_pio_tests \
-    libaudiodevicedriver_test \
-    libbootanimation_iot_test \
-    libbrillo_test \
-    libchrome_test \
-    libusersensors_binder_test \
-    metricsd_tests \
-    peripheralman_unittests \
-    pio_unittests \
-    sensors_userdriver_test \
-    userinputdriver_test
-
-endif  # PRODUCT_IOT == true
