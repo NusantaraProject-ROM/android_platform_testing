@@ -30,11 +30,13 @@ import android.util.Log;
 import androidx.annotation.VisibleForTesting;
 import androidx.test.InstrumentationRegistry;
 
+import java.lang.reflect.Field;
 import java.util.function.BiFunction;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.internal.runners.ErrorReportingRunner;
 import org.junit.runner.Description;
 import org.junit.runner.Runner;
 import org.junit.runner.notification.RunNotifier;
@@ -138,6 +140,11 @@ public class LongevitySuite extends android.host.test.longevity.LongevitySuite {
             } catch (Throwable t) {
                 throw new InitializationError(t);
             }
+            // If a scenario is an ErrorReportingRunner, an InitializationError has occurred when
+            // initializing the runner. Throw out a new error with the causes.
+            if (runner instanceof ErrorReportingRunner) {
+                throw new InitializationError(getCauses((ErrorReportingRunner) runner));
+            }
             // All scenarios must extend BlockJUnit4ClassRunner.
             if (!(runner instanceof BlockJUnit4ClassRunner)) {
                 throw new InitializationError(
@@ -231,5 +238,31 @@ public class LongevitySuite extends android.host.test.longevity.LongevitySuite {
         final Intent batteryInfo =
                 mContext.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         return batteryInfo.getBooleanExtra(BatteryManager.EXTRA_PRESENT, true);
+    }
+
+    /** Gets the first cause out of a {@link ErrorReportingRunner}. Also logs the rest. */
+    private static List<Throwable> getCauses(ErrorReportingRunner runner) {
+        // Reflection is used for this operation as the runner itself does not allow the errors
+        // to be read directly, and masks everything as an InitializationError in its description,
+        // which is not very useful.
+        // It is ok to throw RuntimeException here as we have already entered a failure state. It is
+        // helpful to know that a ErrorReportingRunner has occurred even if we can't decipher it.
+        try {
+            Field causesField = runner.getClass().getDeclaredField("causes");
+            causesField.setAccessible(true);
+            return (List<Throwable>) causesField.get(runner);
+        } catch (NoSuchFieldException e) {
+            throw new RuntimeException(
+                    String.format(
+                            "Unable to find a \"causes\" field in the ErrorReportingRunner %s.",
+                            runner.getDescription()),
+                    e);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(
+                    String.format(
+                            "Unable to access the \"causes\" field in the ErrorReportingRunner %s.",
+                            runner.getDescription()),
+                    e);
+        }
     }
 }
