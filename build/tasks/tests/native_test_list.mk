@@ -130,18 +130,3 @@ native_tests := \
     NeuralNetworksTest_static \
     SurfaceFlinger_test \
     lmkd_unit_test
-
-# Android Things specific tests
-ifeq ($(PRODUCT_IOT),true)
-
-native_tests += \
-    crash_reporter_tests \
-    libandroidthings_pio_tests \
-    libbrillo_test \
-    libchrome_test \
-    libusersensors_binder_test \
-    peripheralman_unittests \
-    sensors_userdriver_test \
-    userinputdriver_test
-
-endif  # PRODUCT_IOT == true
