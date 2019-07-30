@@ -58,7 +58,6 @@ native_tests := \
     libbpf_android_test \
     libcutils_test \
     libcutils_test_static \
-    libdemangle_test \
     libgui_test \
     libhidl_test \
     libinput_tests \
