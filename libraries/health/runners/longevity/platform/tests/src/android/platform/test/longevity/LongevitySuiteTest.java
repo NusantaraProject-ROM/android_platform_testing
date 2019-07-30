@@ -17,6 +17,7 @@ package android.platform.test.longevity;
 
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -31,15 +32,19 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.internal.builders.AllDefaultPossibilitiesBuilder;
+import org.junit.internal.runners.ErrorReportingRunner;
 import org.junit.runner.Runner;
 import org.junit.runner.RunWith;
 import org.junit.runner.notification.RunNotifier;
+import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.JUnit4;
 import org.junit.runners.model.InitializationError;
+import org.junit.runners.model.RunnerBuilder;
 import org.junit.runners.Suite.SuiteClasses;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -166,6 +171,37 @@ public class LongevitySuiteTest {
         Assert.assertEquals(runners.get(1).getIteration(), 1);
         Assert.assertTrue(runners.get(2).getDescription().getDisplayName().contains("TestOne"));
         Assert.assertEquals(runners.get(2).getIteration(), 2);
+    }
+
+    /**
+     * Test that when a builder ends up being a {@link ErrorReportingRunner}, the underlying error
+     * is reported as an InitializationError.
+     */
+    @Test
+    public void testThrowingErrorReportingRunnerCauses() throws Throwable {
+        RunnerBuilder builder = mock(RunnerBuilder.class);
+        InitializationError expected =
+                new InitializationError(
+                        Arrays.asList(
+                                new RuntimeException("Cause 1"), new RuntimeException("Cause 2")));
+        when(builder.runnerForClass(IterationSuite.TestOne.class))
+                .thenReturn(new BlockJUnit4ClassRunner(IterationSuite.TestOne.class));
+        when(builder.runnerForClass(IterationSuite.TestTwo.class))
+                .thenReturn(new ErrorReportingRunner(IterationSuite.TestTwo.class, expected));
+        try {
+            mSuite =
+                    new LongevitySuite(
+                            IterationSuite.class,
+                            builder,
+                            mInstrumentation,
+                            mContext,
+                            new Bundle());
+            Assert.fail("An InitializationError should have been thrown");
+        } catch (InitializationError e) {
+            Assert.assertEquals(e.getCauses().size(), 2);
+            Assert.assertEquals(e.getCauses().get(0).getMessage(), "Cause 1");
+            Assert.assertEquals(e.getCauses().get(1).getMessage(), "Cause 2");
+        }
     }
 
     /** Sample device-side test cases. */
