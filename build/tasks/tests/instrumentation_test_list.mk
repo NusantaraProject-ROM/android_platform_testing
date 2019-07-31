@@ -69,16 +69,6 @@ instrumentation_tests := \
     SettingsUITests \
     ExtServicesUnitTests
 
-# Android Things specific tests
-ifeq ($(PRODUCT_IOT),true)
-
-instrumentation_tests += \
-    AndroidThingsTests \
-    ThingsIntegrationTests \
-    WifiSetupUnitTests
-
-endif  # PRODUCT_IOT == true
-
 # Storage Manager may not exist on device
 ifneq ($(filter StorageManager, $(PRODUCT_PACKAGES)),)
 
