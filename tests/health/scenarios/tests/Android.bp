@@ -66,6 +66,8 @@ android_test {
         "platform-test-composers",
         "platform-test-options",
         "platform-test-rules",
+        "handheld-app-helpers",
+        "launcher-helper-lib",
     ],
     srcs: ["src/**/*.java"],
     test_suites: ["device-tests"],
