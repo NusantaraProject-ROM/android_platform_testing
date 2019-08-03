@@ -37,5 +37,5 @@ java_library_static {
         "guava",
         "platform-test-composers",
     ],
-    min_sdk_version: "26",
+    sdk_version: "26",
 }

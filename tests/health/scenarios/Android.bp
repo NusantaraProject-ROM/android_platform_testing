@@ -14,14 +14,11 @@
 
 java_library_static {
     name: "common-platform-scenarios",
-    min_sdk_version: "24",
+    sdk_version: "24",
     srcs: [ "src/**/*.java" ],
     libs: [
         "androidx.test.runner",
         "platform-test-options",
         "ub-uiautomator",
-        "app-helpers-handheld-interfaces",
-        "platform-test-rules",
-        "handheld-app-helpers"
     ],
 }

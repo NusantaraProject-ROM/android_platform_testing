@@ -43,7 +43,7 @@ java_genrule {
 
 android_test {
     name: "LongevityPlatformLibSamples",
-    min_sdk_version: "24",
+    sdk_version: "24",
     static_libs: [
         "androidx.test.runner",
         "common-platform-scenarios",
