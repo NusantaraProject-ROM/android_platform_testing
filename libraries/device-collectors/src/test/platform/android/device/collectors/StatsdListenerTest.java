@@ -149,7 +149,7 @@ public class StatsdListenerTest {
                         any());
         verify(runData, times(1))
                 .addFileMetric(
-                        eq(CONFIG_NAME_1),
+                        eq(StatsdListener.REPORT_KEY_PREFIX + CONFIG_NAME_1),
                         getExactFileNameMatcher(
                                 Paths.get(
                                                 StatsdListener.REPORT_PATH_ROOT,
@@ -167,7 +167,7 @@ public class StatsdListenerTest {
                         any());
         verify(runData, times(1))
                 .addFileMetric(
-                        eq(CONFIG_NAME_2),
+                        eq(StatsdListener.REPORT_KEY_PREFIX + CONFIG_NAME_2),
                         getExactFileNameMatcher(
                                 Paths.get(
                                                 StatsdListener.REPORT_PATH_ROOT,
@@ -234,7 +234,7 @@ public class StatsdListenerTest {
                         any());
         verify(testData, times(1))
                 .addFileMetric(
-                        eq(CONFIG_NAME_1),
+                        eq(StatsdListener.REPORT_KEY_PREFIX + CONFIG_NAME_1),
                         getPartialFileNameMatcher(
                                 Paths.get(
                                                 StatsdListener.REPORT_PATH_ROOT,
@@ -258,7 +258,7 @@ public class StatsdListenerTest {
                         any());
         verify(testData, times(1))
                 .addFileMetric(
-                        eq(CONFIG_NAME_2),
+                        eq(StatsdListener.REPORT_KEY_PREFIX + CONFIG_NAME_2),
                         getPartialFileNameMatcher(
                                 Paths.get(
                                                 StatsdListener.REPORT_PATH_ROOT,
@@ -292,7 +292,7 @@ public class StatsdListenerTest {
 
         verify(testData1, times(1))
                 .addFileMetric(
-                        eq(CONFIG_NAME_1),
+                        eq(StatsdListener.REPORT_KEY_PREFIX + CONFIG_NAME_1),
                         getPartialFileNameMatcher(
                                 Paths.get(
                                                 StatsdListener.REPORT_PATH_ROOT,
@@ -311,7 +311,7 @@ public class StatsdListenerTest {
 
         verify(testData2, times(1))
                 .addFileMetric(
-                        eq(CONFIG_NAME_1),
+                        eq(StatsdListener.REPORT_KEY_PREFIX + CONFIG_NAME_1),
                         getPartialFileNameMatcher(
                                 Paths.get(
                                                 StatsdListener.REPORT_PATH_ROOT,
@@ -345,7 +345,7 @@ public class StatsdListenerTest {
         // The metric file name should contain the iteration number (1).
         verify(testData1, times(1))
                 .addFileMetric(
-                        eq(CONFIG_NAME_1),
+                        eq(StatsdListener.REPORT_KEY_PREFIX + CONFIG_NAME_1),
                         getPartialFileNameMatcher(
                                 Paths.get(
                                                 StatsdListener.REPORT_PATH_ROOT,
@@ -365,7 +365,7 @@ public class StatsdListenerTest {
         // The metric file name should contain the iteration number (2).
         verify(testData2, times(1))
                 .addFileMetric(
-                        eq(CONFIG_NAME_1),
+                        eq(StatsdListener.REPORT_KEY_PREFIX + CONFIG_NAME_1),
                         getPartialFileNameMatcher(
                                 Paths.get(
                                                 StatsdListener.REPORT_PATH_ROOT,
@@ -402,7 +402,7 @@ public class StatsdListenerTest {
 
         verify(testData, times(1))
                 .addFileMetric(
-                        eq(CONFIG_NAME_1),
+                        eq(StatsdListener.REPORT_KEY_PREFIX + CONFIG_NAME_1),
                         getPartialFileNameMatcher(
                                 Paths.get(
                                                 StatsdListener.REPORT_PATH_ROOT,
@@ -416,7 +416,7 @@ public class StatsdListenerTest {
 
         verify(runData, times(1))
                 .addFileMetric(
-                        eq(CONFIG_NAME_1),
+                        eq(StatsdListener.REPORT_KEY_PREFIX + CONFIG_NAME_1),
                         getExactFileNameMatcher(
                                 Paths.get(
                                                 StatsdListener.REPORT_PATH_ROOT,
