@@ -67,6 +67,9 @@ public class StatsdListener extends BaseMetricListener {
     // Prefix template for test-level metric report files.
     static final String TEST_PREFIX_TEMPLATE = "%s-%d_";
 
+    // Common prefix for the metric key pointing to the report path.
+    static final String REPORT_KEY_PREFIX = "statsd-";
+
     // Configs used for the test run and each test, respectively.
     private Map<String, StatsdConfig> mRunLevelConfigs = new HashMap<String, StatsdConfig>();
     private Map<String, StatsdConfig> mTestLevelConfigs = new HashMap<String, StatsdConfig>();
@@ -103,7 +106,7 @@ public class StatsdListener extends BaseMetricListener {
                 pullReportsAndRemoveConfigs(
                         mRunLevelConfigIds, Paths.get(REPORT_PATH_ROOT, REPORT_PATH_RUN_LEVEL), "");
         for (String configName : configReports.keySet()) {
-            runData.addFileMetric(configName, configReports.get(configName));
+            runData.addFileMetric(REPORT_KEY_PREFIX + configName, configReports.get(configName));
         }
     }
 
@@ -128,7 +131,7 @@ public class StatsdListener extends BaseMetricListener {
                         Paths.get(REPORT_PATH_ROOT, REPORT_PATH_TEST_LEVEL),
                         getTestPrefix(description));
         for (String configName : configReports.keySet()) {
-            testData.addFileMetric(configName, configReports.get(configName));
+            testData.addFileMetric(REPORT_KEY_PREFIX + configName, configReports.get(configName));
         }
     }
 
