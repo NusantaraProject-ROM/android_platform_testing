@@ -50,6 +50,10 @@ public class FreeMemHelperTest {
         Map<String, Long> freeMemMetrics = mFreeMemHelper.getMetrics();
         assertFalse(freeMemMetrics.isEmpty());
         assertTrue(freeMemMetrics.containsKey(FreeMemHelper.MEM_AVAILABLE_CACHE_PROC_DIRTY));
+        assertTrue(freeMemMetrics.containsKey(FreeMemHelper.PROC_MEMINFO_MEM_AVAILABLE));
+        assertTrue(freeMemMetrics.containsKey(FreeMemHelper.DUMPSYS_CACHED_PROC_MEMORY));
         assertTrue(freeMemMetrics.get(FreeMemHelper.MEM_AVAILABLE_CACHE_PROC_DIRTY) > 0);
+        assertTrue(freeMemMetrics.get(FreeMemHelper.PROC_MEMINFO_MEM_AVAILABLE) > 0);
+        assertTrue(freeMemMetrics.get(FreeMemHelper.DUMPSYS_CACHED_PROC_MEMORY) > 0);
     }
 }
