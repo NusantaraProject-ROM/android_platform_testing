@@ -32,7 +32,7 @@ instrumentation_tests := \
     JobTestApp \
     SuspendTestApp \
     FrameworksUtilTests \
-    MtpDocumentsProviderTests \
+    MtpServiceTests \
     MtpTests \
     DocumentsUITests \
     ShellTests \
