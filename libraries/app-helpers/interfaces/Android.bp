@@ -29,9 +29,10 @@ java_library {
     libs: [
         "ub-uiautomator",
         "app-helpers-core",
+        "androidx.test.runner",
     ],
     static_libs: ["app-helpers-common-interfaces"],
-    srcs: ["auto/**/*.java"],
+    srcs: ["auto/**/*.java", "handheld/**/INotificationHelper.java"],
     sdk_version: "test_current",
 }
 
