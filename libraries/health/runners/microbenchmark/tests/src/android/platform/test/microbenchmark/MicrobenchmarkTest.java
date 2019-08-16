@@ -80,6 +80,106 @@ public final class MicrobenchmarkTest {
     }
 
     /**
+     * Test iterations number are added to the test name with default suffix.
+     *
+     * Before --> TightBefore --> Trace (begin) with suffix @1 --> Test --> Trace(end)
+     *  --> TightAfter --> After --> Before --> TightBefore --> Trace (begin) with suffix @2
+     *  --> Test --> Trace(end) --> TightAfter --> After
+     */
+    @Test
+    public void testMultipleIterationsWithRename() throws InitializationError {
+        Bundle args = new Bundle();
+        args.putString("iterations", "2");
+        args.putString("rename-iterations", "true");
+        LoggingMicrobenchmark loggingRunner = new LoggingMicrobenchmark(LoggingTest.class, args);
+        loggingRunner.setOperationLog(new ArrayList<String>());
+        Result result = new JUnitCore().run(loggingRunner);
+        assertThat(result.wasSuccessful()).isTrue();
+        assertThat(loggingRunner.getOperationLog()).containsExactly(
+                "before",
+                "tight before",
+                "begin: testMethod("
+                    + "android.platform.test.microbenchmark.MicrobenchmarkTest$LoggingTest$1)",
+                "test",
+                "end",
+                "tight after",
+                "after",
+                "before",
+                "tight before",
+                "begin: testMethod("
+                    + "android.platform.test.microbenchmark.MicrobenchmarkTest$LoggingTest$2)",
+                "test",
+                "end",
+                "tight after",
+                "after")
+            .inOrder();
+    }
+
+    /**
+     * Test iterations number are added to the test name with custom suffix.
+     *
+     * Before --> TightBefore --> Trace (begin) with suffix --1 --> Test --> Trace(end)
+     *  --> TightAfter --> After --> Before --> TightBefore --> Trace (begin) with suffix --2
+     *   --> Test --> Trace(end) --> TightAfter --> After
+     */
+    @Test
+    public void testMultipleIterationsWithDifferentSuffix() throws InitializationError {
+        Bundle args = new Bundle();
+        args.putString("iterations", "2");
+        args.putString("rename-iterations", "true");
+        args.putString("iteration-separator", "--");
+        LoggingMicrobenchmark loggingRunner = new LoggingMicrobenchmark(LoggingTest.class, args);
+        loggingRunner.setOperationLog(new ArrayList<String>());
+        Result result = new JUnitCore().run(loggingRunner);
+        assertThat(result.wasSuccessful()).isTrue();
+        assertThat(loggingRunner.getOperationLog()).containsExactly(
+                "before",
+                "tight before",
+                "begin: testMethod("
+                    + "android.platform.test.microbenchmark.MicrobenchmarkTest$LoggingTest--1)",
+                "test",
+                "end",
+                "tight after",
+                "after",
+                "before",
+                "tight before",
+                "begin: testMethod("
+                    + "android.platform.test.microbenchmark.MicrobenchmarkTest$LoggingTest--2)",
+                "test",
+                "end",
+                "tight after",
+                "after")
+            .inOrder();
+    }
+
+    /**
+     * Test iteration number are not added to the test name when explictly disabled.
+     *
+     * Before --> TightBefore --> Trace (begin) --> Test --> Trace(end) --> TightAfter
+     *  --> After
+     */
+    @Test
+    public void testMultipleIterationsWithoutRename() throws InitializationError {
+        Bundle args = new Bundle();
+        args.putString("iterations", "1");
+        args.putString("rename-iterations", "false");
+        LoggingMicrobenchmark loggingRunner = new LoggingMicrobenchmark(LoggingTest.class, args);
+        loggingRunner.setOperationLog(new ArrayList<String>());
+        Result result = new JUnitCore().run(loggingRunner);
+        assertThat(result.wasSuccessful()).isTrue();
+        assertThat(loggingRunner.getOperationLog()).containsExactly(
+                "before",
+                "tight before",
+                "begin: testMethod("
+                    + "android.platform.test.microbenchmark.MicrobenchmarkTest$LoggingTest)",
+                "test",
+                "end",
+                "tight after",
+                "after")
+            .inOrder();
+    }
+
+    /**
      * An extensions of the {@link Microbenchmark} runner that logs the start and end of collecting
      * traces. It also passes the operation log to the provided test {@code Class}, if it is a
      * {@link LoggingTest}. This is used for ensuring the proper order for evaluating test {@link
