@@ -19,6 +19,7 @@ import static org.mockito.Mockito.when;
 
 import android.os.TemperatureTypeEnum;
 import android.os.ThrottlingSeverityEnum;
+import android.support.test.uiautomator.UiDevice;
 import androidx.test.runner.AndroidJUnit4;
 
 import com.android.os.AtomsProto.Atom;
@@ -34,6 +35,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 
@@ -46,15 +48,24 @@ import static org.junit.Assert.assertEquals;
  */
 @RunWith(AndroidJUnit4.class)
 public class ThermalHelperTest {
+    private static final String THROTTLING_KEY =
+            MetricUtility.constructKey("thermal", "throttling", "severity");
+    private static final String FAKE_SERVICE_DUMP = "F\nA\nK\nE\nThermal Status: 2\nO\nK";
 
     private ThermalHelper mThermalHelper;
     private StatsdHelper mStatsdHelper;
+    private UiDevice mDevice;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         mThermalHelper = new ThermalHelper();
+        // Set up the statsd helper to mock statsd calls.
         mStatsdHelper = Mockito.spy(new StatsdHelper());
         mThermalHelper.setStatsdHelper(mStatsdHelper);
+        // Set up the fake device for mocking shell commands.
+        mDevice = Mockito.mock(UiDevice.class);
+        mThermalHelper.setUiDevice(mDevice);
+        when(mDevice.executeShellCommand("dumpsys thermalservice")).thenReturn(FAKE_SERVICE_DUMP);
     }
 
     /** Test registering and unregistering the thermal config. */
@@ -64,16 +75,25 @@ public class ThermalHelperTest {
         assertTrue(mThermalHelper.stopCollecting());
     }
 
-    /** Test that no metrics show up when there are no events. */
+    /** Test registering the thermal config fails when no initial throttling value is found. */
     @Test
-    public void testNoMetricsWithoutEvents() throws Exception {
+    public void testThermalConfigRegistration_noInitialValue() throws Exception {
+        when(mDevice.executeShellCommand("dumpsys thermalservice")).thenReturn("FAKE RESPONSE");
+        assertFalse(mThermalHelper.startCollecting());
+    }
+
+    /** Test that only the initial value shows up when there are no events. */
+    @Test
+    public void testInitialMetricsWithoutEvents() throws Exception {
         when(mStatsdHelper.getEventMetrics()).thenReturn(new ArrayList<EventMetricData>());
         assertTrue(mThermalHelper.startCollecting());
-        assertTrue(mThermalHelper.getMetrics().isEmpty());
+        assertEquals(
+                mThermalHelper.getMetrics().get(THROTTLING_KEY).toString(),
+                String.valueOf(ThrottlingSeverityEnum.MODERATE.getNumber()));
         assertTrue(mThermalHelper.stopCollecting());
     }
 
-    /** Test that a single event shows up as a single metric event. */
+    /** Test that the initial value and a single event show up from a single metric event. */
     @Test
     public void testSingleEvent() throws Exception {
         when(mStatsdHelper.getEventMetrics())
@@ -82,52 +102,19 @@ public class ThermalHelperTest {
                                 getThermalThrottlingSeverityStateChangedEvent(
                                         TemperatureTypeEnum.TEMPERATURE_TYPE_SKIN,
                                         "sensor_name",
-                                        ThrottlingSeverityEnum.NONE)));
-
+                                        ThrottlingSeverityEnum.LIGHT)));
         assertTrue(mThermalHelper.startCollecting());
         Map<String, StringBuilder> metrics = mThermalHelper.getMetrics();
-        String key = getMetricKey(TemperatureTypeEnum.TEMPERATURE_TYPE_SKIN, "sensor_name");
-        assertTrue(metrics.containsKey(key));
         assertEquals(
-                metrics.get(key).toString(),
-                String.valueOf(ThrottlingSeverityEnum.NONE.getNumber()));
-        assertTrue(mThermalHelper.stopCollecting());
-    }
-
-    /** Test that multiple, similar events shows up as a single metric with multiple values. */
-    @Test
-    public void testMultipleSimilarEvents() throws Exception {
-        when(mStatsdHelper.getEventMetrics())
-                .thenReturn(
-                        getFakeEventMetrics(
-                                getThermalThrottlingSeverityStateChangedEvent(
-                                        TemperatureTypeEnum.TEMPERATURE_TYPE_SKIN,
-                                        "sensor_name",
-                                        ThrottlingSeverityEnum.NONE),
-                                getThermalThrottlingSeverityStateChangedEvent(
-                                        TemperatureTypeEnum.TEMPERATURE_TYPE_SKIN,
-                                        "sensor_name",
-                                        ThrottlingSeverityEnum.LIGHT),
-                                getThermalThrottlingSeverityStateChangedEvent(
-                                        TemperatureTypeEnum.TEMPERATURE_TYPE_SKIN,
-                                        "sensor_name",
-                                        ThrottlingSeverityEnum.MODERATE)));
-
-        assertTrue(mThermalHelper.startCollecting());
-        Map<String, StringBuilder> metrics = mThermalHelper.getMetrics();
-        String key = getMetricKey(TemperatureTypeEnum.TEMPERATURE_TYPE_SKIN, "sensor_name");
-        assertTrue(metrics.containsKey(key));
-        assertEquals(
-                metrics.get(key).toString(),
+                metrics.get(THROTTLING_KEY).toString(),
                 String.join(
                         ",",
-                        String.valueOf(ThrottlingSeverityEnum.NONE.getNumber()),
-                        String.valueOf(ThrottlingSeverityEnum.LIGHT.getNumber()),
-                        String.valueOf(ThrottlingSeverityEnum.MODERATE.getNumber())));
+                        String.valueOf(ThrottlingSeverityEnum.MODERATE.getNumber()),
+                        String.valueOf(ThrottlingSeverityEnum.LIGHT.getNumber())));
         assertTrue(mThermalHelper.stopCollecting());
     }
 
-    /** Test that multiple, different events shows up as a multiple metrics with a single value. */
+    /** Test that multiple throttling events with different sources show up together. */
     @Test
     public void testMultipleDifferentEvents() throws Exception {
         when(mStatsdHelper.getEventMetrics())
@@ -140,7 +127,7 @@ public class ThermalHelperTest {
                                 getThermalThrottlingSeverityStateChangedEvent(
                                         TemperatureTypeEnum.TEMPERATURE_TYPE_CPU,
                                         "sensor2_name",
-                                        ThrottlingSeverityEnum.LIGHT),
+                                        ThrottlingSeverityEnum.MODERATE),
                                 getThermalThrottlingSeverityStateChangedEvent(
                                         TemperatureTypeEnum.TEMPERATURE_TYPE_GPU,
                                         "sensor3_name",
@@ -148,21 +135,14 @@ public class ThermalHelperTest {
 
         assertTrue(mThermalHelper.startCollecting());
         Map<String, StringBuilder> metrics = mThermalHelper.getMetrics();
-        String skinKey = getMetricKey(TemperatureTypeEnum.TEMPERATURE_TYPE_SKIN, "sensor1_name");
-        String cpuKey = getMetricKey(TemperatureTypeEnum.TEMPERATURE_TYPE_CPU, "sensor2_name");
-        String gpuKey = getMetricKey(TemperatureTypeEnum.TEMPERATURE_TYPE_GPU, "sensor3_name");
-        assertTrue(metrics.containsKey(skinKey));
-        assertTrue(metrics.containsKey(cpuKey));
-        assertTrue(metrics.containsKey(gpuKey));
         assertEquals(
-                metrics.get(skinKey).toString(),
-                String.valueOf(ThrottlingSeverityEnum.LIGHT.getNumber()));
-        assertEquals(
-                metrics.get(cpuKey).toString(),
-                String.valueOf(ThrottlingSeverityEnum.LIGHT.getNumber()));
-        assertEquals(
-                metrics.get(gpuKey).toString(),
-                String.valueOf(ThrottlingSeverityEnum.NONE.getNumber()));
+                metrics.get(THROTTLING_KEY).toString(),
+                String.join(
+                        ",",
+                        String.valueOf(ThrottlingSeverityEnum.MODERATE.getNumber()),
+                        String.valueOf(ThrottlingSeverityEnum.LIGHT.getNumber()),
+                        String.valueOf(ThrottlingSeverityEnum.MODERATE.getNumber()),
+                        String.valueOf(ThrottlingSeverityEnum.NONE.getNumber())));
         assertTrue(mThermalHelper.stopCollecting());
     }
 

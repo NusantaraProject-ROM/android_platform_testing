@@ -50,7 +50,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.exceptions.base.MockitoAssertionError;
 
-
 /** Unit tests for the {@link LongevityClassRunner}. */
 public class LongevityClassRunnerTest {
     // A sample test class to test the runner with.
