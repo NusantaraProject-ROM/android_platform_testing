@@ -28,36 +28,36 @@ public interface IAutoAppGridHelper extends IAppHelper {
     /**
      * Setup expectations: None.
      *
-     * Scroll up from the bottom of the scrollable region to top in <code>durationMs</code>
+     * <p>Scroll up from the bottom of the scrollable region to top in <code>durationMs</code>
      * milliseconds only if app grid is currently open.
      */
-    public void scrollUp(int durationMs);
+    public void scrollUpOnePage(long durationMs);
 
     /**
      * Setup expectations: None.
      *
-     * Scroll up from the bottom of the scrollable region towards top by <code>percent</code>
-     * percent of the whole scrollable region in <code>durationMs</code> milliseconds only if
-     * app grid is currently open.
+     * <p>Scroll up from the bottom of the scrollable region towards top by <code>percent</code>
+     * percent of the whole scrollable region in <code>durationMs</code> milliseconds only if app
+     * grid is currently open.
      */
-    public void scrollUp(float percent, int durationMs);
+    public void scrollUp(float percent, long durationMs);
 
     /**
      * Setup expectations: None.
      *
-     * Scroll down from the top of the scrollable region to bottom in <code>durationMs</code>
+     * <p>Scroll down from the top of the scrollable region to bottom in <code>durationMs</code>
      * seconds only if app grid is currently open.
      */
-    public void scrollDown(int durationMs);
+    public void scrollDownOnePage(long durationMs);
 
     /**
      * Setup expectations: None.
      *
-     * Scroll down from the top of the scrollable region towards bottom by <code>percent</code>
-     * percent of the whole scrollable region in <code>durationMs</code> milliseconds only if
-     * app grid is currently open.
+     * <p>Scroll down from the top of the scrollable region towards bottom by <code>percent</code>
+     * percent of the whole scrollable region in <code>durationMs</code> milliseconds only if app
+     * grid is currently open.
      */
-    public void scrollDown(float percent, int durationMs);
+    public void scrollDown(float percent, long durationMs);
 
     /**
      * Setup expectations: In App grid.
