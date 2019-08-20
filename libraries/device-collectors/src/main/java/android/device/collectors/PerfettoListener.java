@@ -288,16 +288,22 @@ public class PerfettoListener extends BaseMetricListener {
     @VisibleForTesting
     public void acquireWakelock(WakeLock wakelock) {
         if (wakelock != null) {
+            Log.d(getTag(), "wakelock.isHeld: " + wakelock.isHeld());
             Log.d(getTag(), "acquiring wakelock.");
             wakelock.acquire();
+            Log.d(getTag(), "wakelock acquired.");
+            Log.d(getTag(), "wakelock.isHeld: " + wakelock.isHeld());
         }
     }
 
     @VisibleForTesting
     public void releaseWakelock(WakeLock wakelock) {
         if (wakelock != null) {
+            Log.d(getTag(), "wakelock.isHeld: " + wakelock.isHeld());
             Log.d(getTag(), "releasing wakelock.");
             wakelock.release();
+            Log.d(getTag(), "wakelock released.");
+            Log.d(getTag(), "wakelock.isHeld: " + wakelock.isHeld());
         }
     }
 
