@@ -17,14 +17,6 @@
 package android.platform.helpers;
 
 public interface IAutoAppGridHelper extends IAppHelper {
-
-    /**
-     * Setup expectations: None.
-     *
-     * Check if the device is currently in app grid.
-     */
-    public boolean isOpen();
-
     /**
      * Setup expectations: None.
      *
