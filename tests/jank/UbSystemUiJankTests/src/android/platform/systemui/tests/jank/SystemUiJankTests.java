@@ -44,7 +44,6 @@ import android.support.test.jank.JankTestBase;
 import android.support.test.launcherhelper.LauncherStrategyFactory;
 import android.support.test.timeresulthelper.TimeResultLogger;
 import android.support.test.uiautomator.By;
-import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObject2;
@@ -54,7 +53,6 @@ import android.system.helpers.OverviewHelper;
 import android.widget.Button;
 import android.widget.ImageView;
 
-import com.android.internal.widget.ViewPager;
 import com.android.launcher3.tapl.LauncherInstrumentation;
 import com.android.launcher3.tapl.Overview;
 
@@ -628,16 +626,15 @@ public class SystemUiJankTests extends JankTestBase {
     }
 
     public void beforeChangeBrightness() throws Exception {
-        mDevice.openQuickSettings();
+        swipeDown();
 
         // Wait until animation is starting.
         SystemClock.sleep(200);
         mDevice.waitForIdle();
-        if (!mDevice.hasObject(By.clazz(ViewPager.class))) {
-            UiObject2 screenCenter = mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "scrim_in_front"));
-            screenCenter.swipe(Direction.DOWN, 1.0f);
-            mDevice.waitForIdle();
-        }
+        UiObject2 screen = mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "scrim_in_front"));
+        UiObject2 handle = mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "qs_drag_handle_view"));
+        handle.drag(screen.getVisibleCenter());
+        mDevice.waitForIdle();
         TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
                 getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
     }
