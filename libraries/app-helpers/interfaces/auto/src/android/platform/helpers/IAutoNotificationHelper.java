@@ -16,20 +16,12 @@
 
 package android.platform.helpers;
 
-public interface IAutoAppGridHelper extends IAppHelper {
-
-    /**
-     * Setup expectations: None.
-     *
-     * Check if the device is currently in app grid.
-     */
-    public boolean isOpen();
-
+public interface IAutoNotificationHelper extends INotificationHelper {
     /**
      * Setup expectations: None.
      *
      * <p>Scroll up from the bottom of the scrollable region to top in <code>durationMs</code>
-     * milliseconds only if app grid is currently open.
+     * milliseconds only if notification app is currently open.
      */
     public void scrollUpOnePage(long durationMs);
 
@@ -37,8 +29,8 @@ public interface IAutoAppGridHelper extends IAppHelper {
      * Setup expectations: None.
      *
      * <p>Scroll up from the bottom of the scrollable region towards top by <code>percent</code>
-     * percent of the whole scrollable region in <code>durationMs</code> milliseconds only if app
-     * grid is currently open.
+     * percent of the whole scrollable region in <code>durationMs</code> milliseconds only if
+     * notification app is currently open.
      */
     public void scrollUp(float percent, long durationMs);
 
@@ -46,7 +38,7 @@ public interface IAutoAppGridHelper extends IAppHelper {
      * Setup expectations: None.
      *
      * <p>Scroll down from the top of the scrollable region to bottom in <code>durationMs</code>
-     * seconds only if app grid is currently open.
+     * seconds only if notification app is currently open.
      */
     public void scrollDownOnePage(long durationMs);
 
@@ -54,22 +46,8 @@ public interface IAutoAppGridHelper extends IAppHelper {
      * Setup expectations: None.
      *
      * <p>Scroll down from the top of the scrollable region towards bottom by <code>percent</code>
-     * percent of the whole scrollable region in <code>durationMs</code> milliseconds only if app
-     * grid is currently open.
+     * percent of the whole scrollable region in <code>durationMs</code> milliseconds only if
+     * notification app is currently open.
      */
     public void scrollDown(float percent, long durationMs);
-
-    /**
-     * Setup expectations: In App grid.
-     *
-     * Check if device is currently at the top of app grid.
-     */
-    public boolean isTop();
-
-    /**
-     * Setup expectations: In App grid.
-     *
-     * Check if device is currently at the bottom of app grid.
-     */
-    public boolean isBottom();
 }
