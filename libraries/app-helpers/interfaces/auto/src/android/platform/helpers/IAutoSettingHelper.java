@@ -16,10 +16,8 @@
 
 package android.platform.helpers;
 
-/**
- * Helper class for functional tests of Settings facet
- */
-public interface IAutoSettingHelper extends IAppHelper {
+/** Helper class for functional tests of Settings facet */
+public interface IAutoSettingHelper extends IAppHelper, Scrollable {
 
     /**
      * enum for Day/Night mode.
