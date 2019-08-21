@@ -16,38 +16,4 @@
 
 package android.platform.helpers;
 
-public interface IAutoNotificationHelper extends INotificationHelper {
-    /**
-     * Setup expectations: None.
-     *
-     * <p>Scroll up from the bottom of the scrollable region to top in <code>durationMs</code>
-     * milliseconds only if notification app is currently open.
-     */
-    public void scrollUpOnePage(long durationMs);
-
-    /**
-     * Setup expectations: None.
-     *
-     * <p>Scroll up from the bottom of the scrollable region towards top by <code>percent</code>
-     * percent of the whole scrollable region in <code>durationMs</code> milliseconds only if
-     * notification app is currently open.
-     */
-    public void scrollUp(float percent, long durationMs);
-
-    /**
-     * Setup expectations: None.
-     *
-     * <p>Scroll down from the top of the scrollable region to bottom in <code>durationMs</code>
-     * seconds only if notification app is currently open.
-     */
-    public void scrollDownOnePage(long durationMs);
-
-    /**
-     * Setup expectations: None.
-     *
-     * <p>Scroll down from the top of the scrollable region towards bottom by <code>percent</code>
-     * percent of the whole scrollable region in <code>durationMs</code> milliseconds only if
-     * notification app is currently open.
-     */
-    public void scrollDown(float percent, long durationMs);
-}
+public interface IAutoNotificationHelper extends INotificationHelper, Scrollable {}
