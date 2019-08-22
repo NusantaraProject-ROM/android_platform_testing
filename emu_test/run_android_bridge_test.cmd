@@ -28,7 +28,7 @@ call refreshenv
 
 echo "Setup new ADB"
 mv %ANDROID_SDK_ROOT%\platform-tools %DIST_DIR%\
-7z x -aoa %BUILD_DIR%\* -o%ANDROID_HOME%\
+7z x -aoa %BUILD_DIR%\sdk-repo* -o%ANDROID_SDK_ROOT%\
 
 echo "Run ADB tests from $ADT_INFRA"
 set count=0
