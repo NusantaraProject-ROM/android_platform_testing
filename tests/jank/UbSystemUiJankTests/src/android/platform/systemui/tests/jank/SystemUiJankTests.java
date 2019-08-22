@@ -626,15 +626,13 @@ public class SystemUiJankTests extends JankTestBase {
     }
 
     public void beforeChangeBrightness() throws Exception {
-        swipeDown();
+        prepareNotifications(GROUP_MODE_UNGROUPED);
+        mDevice.openNotification();
 
         // Wait until animation is starting.
         SystemClock.sleep(200);
         mDevice.waitForIdle();
-        UiObject2 screen = mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "scrim_in_front"));
-        UiObject2 handle = mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "qs_drag_handle_view"));
-        handle.drag(screen.getVisibleCenter());
-        mDevice.waitForIdle();
+
         TimeResultLogger.writeTimeStampLogStart(String.format("%s-%s",
                 getClass().getSimpleName(), getName()), TIMESTAMP_FILE);
     }
@@ -657,6 +655,8 @@ public class SystemUiJankTests extends JankTestBase {
             afterTest = "afterChangeBrightness")
     @GfxMonitor(processName = SYSTEMUI_PACKAGE)
     public void testChangeBrightness() throws Exception {
+        swipeDown();
+        mDevice.waitForIdle();
         UiObject2 brightness = mDevice.findObject(By.res(SYSTEMUI_PACKAGE, "slider"));
         Rect bounds = brightness.getVisibleBounds();
         for (int i = 0; i < INNER_LOOP; i++) {
