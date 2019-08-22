@@ -39,7 +39,7 @@ export ANDROID_SDK_ROOT=$SDK_SYS_IMAGE
 
 echo "Setup new ADB"
 mv $ANDROID_SDK_ROOT/platform-tools $DIST_DIR/
-unzip -o $BUILD_DIR/* -d $ANDROID_SDK_ROOT
+unzip -o $BUILD_DIR/sdk-repo* -d $ANDROID_SDK_ROOT
 
 echo "Run ADB tests from $ADT_INFRA"
 cmd="$ADT_INFRA/emu_test/utils/run_test_android_bridge.sh"
