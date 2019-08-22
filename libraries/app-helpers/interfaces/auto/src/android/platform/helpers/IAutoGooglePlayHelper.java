@@ -16,7 +16,7 @@
 
 package android.platform.helpers;
 
-public interface IAutoGooglePlayHelper extends IAppHelper {
+public interface IAutoGooglePlayHelper extends IAppHelper, Scrollable {
 
     /**
      * Setup expectations: Google Play app is open.

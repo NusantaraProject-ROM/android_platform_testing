@@ -42,13 +42,6 @@ public interface IAutoMapsHelper extends IAppHelper {
     void stopNavigation();
 
     /**
-     * Setup expectations: None
-     *
-     * <p>Check if maps app is open. Maps can be opened either in full screen or in home screen.
-     */
-    boolean isOpen();
-
-    /**
      * Setup expectations: Maps app is open
      *
      * <p>Swipe upwards by <code>percent</code> percent of maps region in <code>durationMs</code>
