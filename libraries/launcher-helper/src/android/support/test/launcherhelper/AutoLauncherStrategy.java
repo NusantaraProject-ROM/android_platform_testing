@@ -16,6 +16,7 @@
 package android.support.test.launcherhelper;
 
 import android.app.Instrumentation;
+import android.os.SystemClock;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.Direction;
@@ -23,26 +24,37 @@ import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.stream.Collectors;
+
 
 public class AutoLauncherStrategy implements IAutoLauncherStrategy {
     private static final String LOG_TAG = AutoLauncherStrategy.class.getSimpleName();
     private static final String CAR_LENSPICKER = "com.android.car.carlauncher";
     private static final String SYSTEM_UI_PACKAGE = "com.android.systemui";
+    private static final String MAPS_PACKAGE = "com.google.android.apps.maps";
     private static final String MEDIA_PACKAGE = "com.android.car.media";
     private static final String RADIO_PACKAGE = "com.android.car.radio";
+    private static final String DIAL_PACKAGE = "com.android.car.dialer";
+    private static final String ASSISTANT_PACKAGE = "com.google.android.googlequicksearchbox";
+    private static final String SETTINGS_PACKAGE = "com.android.car.settings";
+    private static final String APP_SWITCH_ID = "app_switch_container";
+    private static final String APP_LIST_ID = "apps_grid";
 
     private static final long APP_LAUNCH_TIMEOUT = 10000;
     private static final long UI_WAIT_TIMEOUT = 5000;
+    private static final long POLL_INTERVAL = 100;
 
-    private static final BySelector UP_BTN = By.res(CAR_LENSPICKER, "page_up");
-    private static final BySelector DOWN_BTN = By.res(CAR_LENSPICKER, "page_down");
-    private static final BySelector MEDIA_APP_SWITCH =
-            By.res(MEDIA_PACKAGE, "app_switch_container");
-    private static final BySelector RADIO_APP_SWITCH =
-            By.res(RADIO_PACKAGE, "app_switch_container");
+    private static final BySelector UP_BTN = By.res(Pattern.compile(".*:id/page_up"));
+    private static final BySelector DOWN_BTN = By.res(Pattern.compile(".*:id/page_down"));
+    private static final BySelector APP_SWITCH = By.res(Pattern.compile(".*:id/" + APP_SWITCH_ID));
+    private static final BySelector APP_LIST = By.res(Pattern.compile(".*:id/" + APP_LIST_ID));
+    private static final BySelector SCROLLABLE_APP_LIST =
+            By.res(Pattern.compile(".*:id/" + APP_LIST_ID)).scrollable(true);
     private static final BySelector QUICK_SETTINGS = By.res(SYSTEM_UI_PACKAGE, "qs");
     private static final BySelector LEFT_HVAC = By.res(SYSTEM_UI_PACKAGE, "hvacleft");
     private static final BySelector RIGHT_HVAC = By.res(SYSTEM_UI_PACKAGE, "hvacright");
@@ -56,6 +68,22 @@ public class AutoLauncherStrategy implements IAutoLauncherStrategy {
                 { "App Grid", By.res(SYSTEM_UI_PACKAGE, "grid_nav").clickable(true) },
                 { "Notification", By.res(SYSTEM_UI_PACKAGE, "notifications").clickable(true) },
                 { "Google Assistant", By.res(SYSTEM_UI_PACKAGE, "assist").clickable(true) },
+            }).collect(Collectors.toMap(data -> (String) data[0], data -> (BySelector) data[1]));
+
+    private static final Map<String, BySelector> APP_OPEN_VERIFIERS =
+            Stream.of(new Object[][] {
+                { "Home", By.hasDescendant(By.res(CAR_LENSPICKER, "maps"))
+                            .hasDescendant(By.res(CAR_LENSPICKER, "contextual"))
+                            .hasDescendant(By.res(CAR_LENSPICKER, "playback"))
+                },
+                { "Maps", By.pkg(MAPS_PACKAGE).depth(0) },
+                { "Media", By.pkg(MEDIA_PACKAGE).depth(0) },
+                { "Radio", By.pkg(RADIO_PACKAGE).depth(0) },
+                { "Dial",  By.pkg(DIAL_PACKAGE).depth(0) },
+                { "App Grid", By.res(CAR_LENSPICKER, "apps_grid") },
+                { "Notification", By.res(SYSTEM_UI_PACKAGE, "notifications") },
+                { "Google Assistant", By.pkg(ASSISTANT_PACKAGE) },
+                { "Settings", By.pkg(SETTINGS_PACKAGE).depth(0) },
             }).collect(Collectors.toMap(data -> (String) data[0], data -> (BySelector) data[1]));
 
     protected UiDevice mDevice;
@@ -124,23 +152,29 @@ public class AutoLauncherStrategy implements IAutoLauncherStrategy {
     public void openMediaFacet(String appName) {
         openMediaFacet();
 
-        // Radio has its own app switch from other media apps, check for both.
-        UiObject2 appSwitch = mDevice.findObject(MEDIA_APP_SWITCH);
-        if (appSwitch == null) {
-            appSwitch = mDevice.findObject(RADIO_APP_SWITCH);
-        }
+        // Click on app switch to open app list.
+        UiObject2 appSwitch = mDevice.wait(Until.findObject(APP_SWITCH), APP_LAUNCH_TIMEOUT);
         if (appSwitch == null) {
             throw new RuntimeException("Failed to find app switch.");
-        } else {
-            appSwitch.click();
-            BySelector appSelector = By.clickable(true).hasChild(By.text(appName));
-            if (mDevice.wait(Until.hasObject(appSelector), UI_WAIT_TIMEOUT)) {
-                mDevice.findObject(appSelector).clickAndWait(Until.newWindow(), APP_LAUNCH_TIMEOUT);
-            } else {
-                throw new RuntimeException(
-                        String.format("Failed to find %s app in media.", appName));
-            }
         }
+        appSwitch.clickAndWait(Until.newWindow(), UI_WAIT_TIMEOUT);
+        mDevice.waitForIdle();
+
+        // Click the targeted app in app list.
+        UiObject2 app = findApplication(appName);
+        if (app == null) {
+            throw new RuntimeException(String.format("Failed to find %s app in media.", appName));
+        }
+        app.click();
+        mDevice.wait(Until.gone(APP_LIST), UI_WAIT_TIMEOUT);
+
+        // Verify either a Radio or Media app is in foreground for success.
+        if (appName.equals("Radio")) {
+            waitUntilAppOpen("Radio", APP_LAUNCH_TIMEOUT);
+        } else {
+            waitUntilAppOpen("Media", APP_LAUNCH_TIMEOUT);
+        }
+
     }
 
     /**
@@ -179,8 +213,14 @@ public class AutoLauncherStrategy implements IAutoLauncherStrategy {
         BySelector facetSelector = FACET_MAP.get(facetName);
         UiObject2 facet = mDevice.findObject(facetSelector);
         if (facet != null) {
-            mDevice.waitForIdle();
-            facet.clickAndWait(Until.newWindow(), APP_LAUNCH_TIMEOUT);
+            facet.click();
+            if (!facetName.equals("Media")) {
+                // Verify the corresponding app has been open in the foregorund for success.
+                waitUntilAppOpen(facetName, APP_LAUNCH_TIMEOUT);
+            } else {
+                // For Media facet, it could open either radio app or some media app.
+                waitUntilOneOfTheAppOpen(Arrays.asList("Radio", "Media"), APP_LAUNCH_TIMEOUT);
+            }
         } else {
             throw new RuntimeException(String.format("Failed to find %s facet.", facetName));
         }
@@ -193,10 +233,47 @@ public class AutoLauncherStrategy implements IAutoLauncherStrategy {
     public void openQuickSettings() {
         UiObject2 quickSettings = mDevice.findObject(QUICK_SETTINGS);
         if (quickSettings != null) {
-            mDevice.waitForIdle();
-            quickSettings.clickAndWait(Until.newWindow(), APP_LAUNCH_TIMEOUT);
+            quickSettings.click();
+            waitUntilAppOpen("Settings", APP_LAUNCH_TIMEOUT);
         } else {
             throw new RuntimeException("Failed to find quick settings.");
+        }
+    }
+
+    /**
+     * Wait for <code>timeout</code> milliseconds until the BySelector which can verify that the app
+     * corresponding to <code>appName</code> is in foreground has been found. If the BySelector
+     * isn't found after timeout, throw an error.
+     */
+    private void waitUntilAppOpen(String appName, long timeout) {
+        waitUntilOneOfTheAppOpen(Arrays.asList(appName), timeout);
+    }
+
+    /**
+     * Wait for <code>time</code> milliseconds until one of the app in <code>appNames</code> has
+     * been found in the foreground.
+     */
+    private void waitUntilOneOfTheAppOpen(List<String> appNames, long timeout) {
+        long startTime = SystemClock.uptimeMillis();
+
+        boolean isAnyOpen = false;
+        while (SystemClock.uptimeMillis() - startTime < timeout) {
+            isAnyOpen =
+                    appNames.stream()
+                            .map(appName -> mDevice.hasObject(APP_OPEN_VERIFIERS.get(appName)))
+                            .anyMatch(isOpen -> isOpen == true);
+            if (isAnyOpen) {
+                break;
+            }
+
+            SystemClock.sleep(POLL_INTERVAL);
+        }
+
+        if (!isAnyOpen) {
+            throw new IllegalStateException(
+                    String.format(
+                            "Did not find any app of %s in foreground after %d ms.",
+                            String.join(", ", appNames), timeout));
         }
     }
 
@@ -219,13 +296,13 @@ public class AutoLauncherStrategy implements IAutoLauncherStrategy {
     private void clickHvac(BySelector hvacSelector) {
         UiObject2 hvac = mDevice.findObject(hvacSelector);
         if (hvac != null) {
-            mDevice.waitForIdle();
             // Hvac is not verifiable from uiautomator. It does not starts a new window, nor does
             // it spawn any specific identifiable ui components from uiautomator's perspective.
             // Therefore, this wait does not verify a new window, but rather it always timeout
             // after <code>APP_LAUNCH_TIMEOUT</code> amount of time so that hvac has sufficient
             // time to be opened/closed.
             hvac.clickAndWait(Until.newWindow(), APP_LAUNCH_TIMEOUT);
+            mDevice.waitForIdle();
         } else {
             throw new RuntimeException("Failed to find hvac.");
         }
@@ -234,29 +311,43 @@ public class AutoLauncherStrategy implements IAutoLauncherStrategy {
     @Override
     public boolean checkApplicationExists(String appName) {
         openAppGridFacet();
-        UiObject2 up = mDevice.wait(Until.findObject(UP_BTN), APP_LAUNCH_TIMEOUT);
-        UiObject2 down = mDevice.wait(Until.findObject(DOWN_BTN), APP_LAUNCH_TIMEOUT);
-        while (up.isEnabled()) {
-            up.click();
-            up = mDevice.wait(Until.findObject(UP_BTN), UI_WAIT_TIMEOUT);
-        }
-        UiObject2 object = mDevice.wait(Until.findObject(By.text(appName)), UI_WAIT_TIMEOUT);
-        while (down.isEnabled() && object == null) {
-            down.click();
-            object = mDevice.wait(Until.findObject(By.text(appName)), UI_WAIT_TIMEOUT);
-            down = mDevice.wait(Until.findObject(DOWN_BTN), UI_WAIT_TIMEOUT);
-        }
-        return object != null;
+        UiObject2 app = findApplication(appName);
+        return app != null;
     }
 
     @Override
     public void openApp(String appName) {
         if (checkApplicationExists(appName)) {
-            UiObject2 app = mDevice.wait(Until.findObject(By.text(appName)), APP_LAUNCH_TIMEOUT);
-            app.click();
+            UiObject2 app = mDevice.findObject(By.clickable(true).hasDescendant(By.text(appName)));
+            app.clickAndWait(Until.newWindow(), APP_LAUNCH_TIMEOUT);
             mDevice.waitForIdle();
         } else {
             throw new RuntimeException(String.format("Application %s not found", appName));
+        }
+    }
+
+    private UiObject2 findApplication(String appName) {
+        BySelector appSelector = By.clickable(true).hasDescendant(By.text(appName));
+        if (mDevice.hasObject(SCROLLABLE_APP_LIST)) {
+            // App list has more than 1 page. Scroll if necessary when searching for app.
+            UiObject2 down = mDevice.findObject(DOWN_BTN);
+            UiObject2 up = mDevice.findObject(UP_BTN);
+
+            while (up.isEnabled()) {
+                up.click();
+                mDevice.waitForIdle();
+            }
+
+            UiObject2 app = mDevice.findObject(appSelector);
+            while (app == null && down.isEnabled()) {
+                down.click();
+                mDevice.waitForIdle();
+                app = mDevice.findObject(appSelector);
+            }
+            return app;
+        } else {
+            // App list only has 1 page.
+            return mDevice.findObject(appSelector);
         }
     }
 
