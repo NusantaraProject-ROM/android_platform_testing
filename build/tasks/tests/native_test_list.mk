@@ -45,7 +45,6 @@ native_tests := \
     hwui_unit_tests \
     incident_helper_test \
     incidentd_test \
-    init_tests \
     inputflinger_tests \
     installd_cache_test \
     installd_dexopt_test \
