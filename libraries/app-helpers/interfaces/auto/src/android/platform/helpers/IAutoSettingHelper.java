@@ -58,6 +58,13 @@ public interface IAutoSettingHelper extends IAppHelper, Scrollable {
     /**
      * Setup expectations: The app is open
      *
+     * <p>Open full settings page
+     */
+    void openFullSettings();
+
+    /**
+     * Setup expectations: The app is open
+     *
      * <p>Open quick settings page
      */
     void openQuickSettings();
