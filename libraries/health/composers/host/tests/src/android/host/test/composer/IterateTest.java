@@ -33,6 +33,11 @@ public class IterateTest extends IterateTestBase<Map<String, String>> {
             if (mIterations != null) {
                 args.put(IterateTestBase.ITERATIONS_OPTION_NAME, String.valueOf(mIterations));
             }
+            if (mAlternateIterations != null) {
+                args.put(
+                        IterateTestBase.ITERATIONS_OPTION_ALTERNATE_NAME,
+                        String.valueOf(mAlternateIterations));
+            }
             if (mOrder != null) {
                 args.put(IterateTestBase.ORDER_OPTION_NAME, mOrder);
             }
