@@ -19,6 +19,7 @@ import static com.android.helper.aoa.AoaDevice.ACCESSORY_REGISTER_HID;
 import static com.android.helper.aoa.AoaDevice.ACCESSORY_SEND_HID_EVENT;
 import static com.android.helper.aoa.AoaDevice.ACCESSORY_SET_HID_REPORT_DESC;
 import static com.android.helper.aoa.AoaDevice.ACCESSORY_START;
+import static com.android.helper.aoa.AoaDevice.ACCESSORY_START_MAX_RETRIES;
 import static com.android.helper.aoa.AoaDevice.ACCESSORY_UNREGISTER_HID;
 import static com.android.helper.aoa.AoaDevice.DEVICE_NOT_FOUND;
 import static com.android.helper.aoa.AoaDevice.FLING_STEPS;
@@ -34,6 +35,7 @@ import static com.android.helper.aoa.AoaDevice.TOUCH_UP;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyByte;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -117,7 +119,6 @@ public class AoaDeviceTest {
         // not in accessory mode initially
         when(mDelegate.getVendorId())
                 .thenReturn(INVALID_VID)
-                .thenReturn(INVALID_VID)
                 .thenReturn(GOOGLE_VID);
 
         mDevice = createDevice();
@@ -129,6 +130,20 @@ public class AoaDeviceTest {
         verifyRequest(never(), ACCESSORY_UNREGISTER_HID);
         verifyRequest(times(HID_COUNT), ACCESSORY_REGISTER_HID);
         verifyRequest(times(HID_COUNT), ACCESSORY_SET_HID_REPORT_DESC);
+    }
+
+    @Test
+    public void testRetriesAccessoryMode() {
+        // never in accessory mode
+        when(mDelegate.getVendorId()).thenReturn(INVALID_VID);
+
+        try {
+            mDevice = createDevice();
+            fail("UsbException expected");
+        } catch (UsbException e) {
+            // retried starting accessory mode before giving up
+            verifyRequest(times(ACCESSORY_START_MAX_RETRIES), ACCESSORY_START);
+        }
     }
 
     @Test
