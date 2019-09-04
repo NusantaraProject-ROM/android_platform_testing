@@ -64,11 +64,13 @@ public class StatsdListener extends BaseMetricListener {
     static final String REPORT_PATH_RUN_LEVEL = "run-level";
     // Sub-directory for test-level reports.
     static final String REPORT_PATH_TEST_LEVEL = "test-level";
-    // Prefix template for test-level metric report files.
-    static final String TEST_PREFIX_TEMPLATE = "%s-%d_";
+    // Suffix template for test-level metric report files.
+    static final String TEST_SUFFIX_TEMPLATE = "_%s-%d";
 
     // Common prefix for the metric key pointing to the report path.
     static final String REPORT_KEY_PREFIX = "statsd-";
+    // Common prefix for the metric file.
+    static final String REPORT_FILENAME_PREFIX = "statsd-";
 
     // Configs used for the test run and each test, respectively.
     private Map<String, StatsdConfig> mRunLevelConfigs = new HashMap<String, StatsdConfig>();
@@ -129,7 +131,7 @@ public class StatsdListener extends BaseMetricListener {
                 pullReportsAndRemoveConfigs(
                         mTestLevelConfigIds,
                         Paths.get(REPORT_PATH_ROOT, REPORT_PATH_TEST_LEVEL),
-                        getTestPrefix(description));
+                        getTestSuffix(description));
         for (String configName : configReports.keySet()) {
             testData.addFileMetric(REPORT_KEY_PREFIX + configName, configReports.get(configName));
         }
@@ -171,12 +173,12 @@ public class StatsdListener extends BaseMetricListener {
      * @param configIds Map of (config name, config Id)
      * @param directory relative directory on external storage to dump the report in. Each report
      *     will be named after its config.
-     * @param prefix a prefix to prepend to the metric report file name, used to differentiate
+     * @param suffix a suffix to append to the metric report file name, used to differentiate
      *     between tests and left empty for the test run.
      * @return Map of (config name, config report file)
      */
     private Map<String, File> pullReportsAndRemoveConfigs(
-            final Map<String, Long> configIds, Path directory, String prefix) {
+            final Map<String, Long> configIds, Path directory, String suffix) {
         File externalStorage = Environment.getExternalStorageDirectory();
         File saveDirectory = new File(externalStorage, directory.toString());
         if (!saveDirectory.isDirectory()) {
@@ -191,7 +193,10 @@ public class StatsdListener extends BaseMetricListener {
                 reportList =
                         ConfigMetricsReportList.parseFrom(
                                 getStatsReports(configIds.get(configName)));
-                File reportFile = new File(saveDirectory, prefix + configName + PROTO_EXTENSION);
+                File reportFile =
+                        new File(
+                                saveDirectory,
+                                REPORT_FILENAME_PREFIX + configName + suffix + PROTO_EXTENSION);
                 writeToFile(reportFile, reportList.toByteArray());
                 savedConfigFiles.put(configName, reportFile);
             } catch (StatsUnavailableException e) {
@@ -264,11 +269,11 @@ public class StatsdListener extends BaseMetricListener {
         return mStatsManager;
     }
 
-    /** Get the prefix for a test + iteration combination to differentiate it from other files. */
+    /** Get the suffix for a test + iteration combination to differentiate it from other files. */
     @VisibleForTesting
-    String getTestPrefix(Description description) {
+    String getTestSuffix(Description description) {
         return String.format(
-                TEST_PREFIX_TEMPLATE,
+                TEST_SUFFIX_TEMPLATE,
                 formatDescription(description),
                 mTestIterations.get(description.getDisplayName()));
     }
