@@ -145,7 +145,9 @@ public class StatsdListenerTest {
                                                 StatsdListener.REPORT_PATH_ROOT,
                                                 StatsdListener.REPORT_PATH_RUN_LEVEL)
                                         .toString(),
-                                CONFIG_NAME_1 + StatsdListener.PROTO_EXTENSION),
+                                StatsdListener.REPORT_FILENAME_PREFIX
+                                        + CONFIG_NAME_1
+                                        + StatsdListener.PROTO_EXTENSION),
                         any());
         verify(runData, times(1))
                 .addFileMetric(
@@ -155,7 +157,9 @@ public class StatsdListenerTest {
                                                 StatsdListener.REPORT_PATH_ROOT,
                                                 StatsdListener.REPORT_PATH_RUN_LEVEL)
                                         .toString(),
-                                CONFIG_NAME_1 + StatsdListener.PROTO_EXTENSION));
+                                StatsdListener.REPORT_FILENAME_PREFIX
+                                        + CONFIG_NAME_1
+                                        + StatsdListener.PROTO_EXTENSION));
         verify(mListener, times(1))
                 .writeToFile(
                         getExactFileNameMatcher(
@@ -163,7 +167,9 @@ public class StatsdListenerTest {
                                                 StatsdListener.REPORT_PATH_ROOT,
                                                 StatsdListener.REPORT_PATH_RUN_LEVEL)
                                         .toString(),
-                                CONFIG_NAME_2 + StatsdListener.PROTO_EXTENSION),
+                                StatsdListener.REPORT_FILENAME_PREFIX
+                                        + CONFIG_NAME_2
+                                        + StatsdListener.PROTO_EXTENSION),
                         any());
         verify(runData, times(1))
                 .addFileMetric(
@@ -173,7 +179,9 @@ public class StatsdListenerTest {
                                                 StatsdListener.REPORT_PATH_ROOT,
                                                 StatsdListener.REPORT_PATH_RUN_LEVEL)
                                         .toString(),
-                                CONFIG_NAME_2 + StatsdListener.PROTO_EXTENSION));
+                                StatsdListener.REPORT_FILENAME_PREFIX
+                                        + CONFIG_NAME_2
+                                        + StatsdListener.PROTO_EXTENSION));
     }
 
     /** Test that the collector has correct interactions with statsd for per-test collection. */
@@ -227,6 +235,7 @@ public class StatsdListenerTest {
                                                 StatsdListener.REPORT_PATH_ROOT,
                                                 StatsdListener.REPORT_PATH_TEST_LEVEL)
                                         .toString(),
+                                StatsdListener.REPORT_FILENAME_PREFIX,
                                 TEST_CLASS.getCanonicalName(),
                                 TEST_METHOD_NAME_1,
                                 CONFIG_NAME_1,
@@ -240,6 +249,7 @@ public class StatsdListenerTest {
                                                 StatsdListener.REPORT_PATH_ROOT,
                                                 StatsdListener.REPORT_PATH_TEST_LEVEL)
                                         .toString(),
+                                StatsdListener.REPORT_FILENAME_PREFIX,
                                 TEST_CLASS.getCanonicalName(),
                                 TEST_METHOD_NAME_1,
                                 CONFIG_NAME_1,
@@ -251,6 +261,7 @@ public class StatsdListenerTest {
                                                 StatsdListener.REPORT_PATH_ROOT,
                                                 StatsdListener.REPORT_PATH_TEST_LEVEL)
                                         .toString(),
+                                StatsdListener.REPORT_FILENAME_PREFIX,
                                 TEST_CLASS.getCanonicalName(),
                                 TEST_METHOD_NAME_1,
                                 CONFIG_NAME_2,
@@ -264,6 +275,7 @@ public class StatsdListenerTest {
                                                 StatsdListener.REPORT_PATH_ROOT,
                                                 StatsdListener.REPORT_PATH_TEST_LEVEL)
                                         .toString(),
+                                StatsdListener.REPORT_FILENAME_PREFIX,
                                 TEST_CLASS.getCanonicalName(),
                                 TEST_METHOD_NAME_1,
                                 CONFIG_NAME_2,
@@ -422,7 +434,9 @@ public class StatsdListenerTest {
                                                 StatsdListener.REPORT_PATH_ROOT,
                                                 StatsdListener.REPORT_PATH_RUN_LEVEL)
                                         .toString(),
-                                CONFIG_NAME_1 + StatsdListener.PROTO_EXTENSION));
+                                StatsdListener.REPORT_FILENAME_PREFIX
+                                        + CONFIG_NAME_1
+                                        + StatsdListener.PROTO_EXTENSION));
     }
 
     /** Test that the collector parses the configs from arguments correctly for valid configs. */
