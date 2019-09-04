@@ -32,6 +32,7 @@ native_tests := \
     bsdiff_unittest \
     camera_client_test \
     clatd_test \
+    confirmationui_invocation_test \
     crashcollector \
     debuggerd_test \
     dumpstate_test \
@@ -121,10 +122,14 @@ native_tests := \
     update_engine_unittests \
     vintf_object_test \
     wificond_unit_test \
-    wifilogd_unit_test \
     ziparchive-tests \
+    BufferHub_test \
+    BufferHubServer_test \
+    GraphicBuffer_test \
     NeuralNetworksTest_mt_static \
     NeuralNetworksTest_operations \
     NeuralNetworksTest_static \
+    NeuralNetworksTest_static_asan \
     SurfaceFlinger_test \
-    lmkd_unit_test
+    lmkd_unit_test \
+    vrflinger_test

@@ -24,9 +24,12 @@ android_test {
         "timeresult-helper-lib",
         "sysui-helper",
         "collector-device-lib",
+        "launcher-aosp-tapl",
     ],
 
     libs: ["android.test.base"],
-
+    optimize: {
+        enabled: false,
+    },
     test_suites: ["device-tests"],
 }

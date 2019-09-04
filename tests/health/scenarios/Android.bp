@@ -18,11 +18,11 @@ java_library_static {
     srcs: [ "src/**/*.java" ],
     libs: [
         "androidx.test.runner",
+        "app-helpers-handheld-interfaces",
+        "handheld-app-helpers",
         "junit",
         "platform-test-options",
-        "ub-uiautomator",
-        "app-helpers-handheld-interfaces",
         "platform-test-rules",
-        "handheld-app-helpers"
+        "ub-uiautomator",
     ],
 }
