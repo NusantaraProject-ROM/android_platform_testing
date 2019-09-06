@@ -21,10 +21,12 @@ import android.platform.test.rule.TracePointRule;
 import androidx.annotation.VisibleForTesting;
 import androidx.test.InstrumentationRegistry;
 
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,8 +87,23 @@ public class Microbenchmark extends BlockJUnit4ClassRunner {
      */
     @Override
     protected Statement methodInvoker(FrameworkMethod method, Object test) {
-        Statement start = super.methodInvoker(method, test);
-        // Wrap the inner-most test method with trace points.
+        // Iterate on the test method multiple times for more data. If unset, defaults to 1.
+        Iterate<Statement> methodIterator = new Iterate<Statement>();
+        methodIterator.setOptionName("method-iterations");
+        final List<Statement> testMethodStatement =
+                methodIterator.apply(
+                        mArguments,
+                        Arrays.asList(new Statement[] {super.methodInvoker(method, test)}));
+        Statement start =
+                new Statement() {
+                    @Override
+                    public void evaluate() throws Throwable {
+                        for (Statement method : testMethodStatement) {
+                            method.evaluate();
+                        }
+                    }
+                };
+        // Wrap the multiple-iteration test method with trace points.
         start = getTracePointRule().apply(start, describeChild(method));
         // Invoke special @TightMethodRules that wrap @Test methods.
         List<TestRule> tightMethodRules =

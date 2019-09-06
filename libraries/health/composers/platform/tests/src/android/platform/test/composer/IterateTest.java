@@ -34,6 +34,11 @@ public class IterateTest extends IterateTestBase<Bundle> {
             if (mIterations != null) {
                 args.putString(IterateTestBase.ITERATIONS_OPTION_NAME, String.valueOf(mIterations));
             }
+            if (mAlternateIterations != null) {
+                args.putString(
+                        IterateTestBase.ITERATIONS_OPTION_ALTERNATE_NAME,
+                        String.valueOf(mAlternateIterations));
+            }
             if (mOrder != null) {
                 args.putString(IterateTestBase.ORDER_OPTION_NAME, String.valueOf(mOrder));
             }
