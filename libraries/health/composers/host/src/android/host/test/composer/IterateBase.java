@@ -33,6 +33,7 @@ public abstract class IterateBase<T, U> implements Compose<T, U> {
     protected static final OrderOptions ORDER_DEFAULT_VALUE = OrderOptions.CYCLIC;
 
     protected final int mDefaultValue;
+    protected String mOptionName = ITERATIONS_OPTION_NAME;
 
     public IterateBase() {
         this(ITERATIONS_DEFAULT_VALUE);
@@ -68,4 +69,14 @@ public abstract class IterateBase<T, U> implements Compose<T, U> {
 
     /** Returns the order that the iteration should happen in from {@code args}. */
     protected abstract OrderOptions getOrdersArgument(T args);
+
+    /** Returns the option name to supply values to this iterator. */
+    protected String getOptionName() {
+        return mOptionName;
+    }
+
+    /** Sets the option name for supply values to this iterator. */
+    public void setOptionName(String name) {
+        mOptionName = name;
+    }
 }
