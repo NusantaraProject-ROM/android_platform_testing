@@ -27,7 +27,6 @@ import java.util.stream.IntStream;
 import com.google.common.collect.Lists;
 import com.google.common.collect.ImmutableList;
 
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
@@ -38,6 +37,7 @@ import org.junit.rules.ExpectedException;
 public abstract class IterateTestBase<T> {
     protected static final int NUM_TESTS = 10;
     protected static final String ITERATIONS_OPTION_NAME = "iterations";
+    protected static final String ITERATIONS_OPTION_ALTERNATE_NAME = "iterationsAlternate";
     protected static final String ORDER_OPTION_NAME = "order";
     protected static final String ORDER_VAL_CYCLIC = "cyclic";
     protected static final String ORDER_VAL_SEQUENTIAL = "sequential";
@@ -60,8 +60,10 @@ public abstract class IterateTestBase<T> {
         Map<Integer, Long> countMap = output.stream()
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
         // Ensure each of the integers have N entries.
-        boolean respected = countMap.entrySet().stream()
-                .noneMatch(entry -> (entry.getValue() != EXPECTED_ITERATIONS));
+        boolean respected =
+                countMap.entrySet()
+                        .stream()
+                        .allMatch(entry -> (entry.getValue() == EXPECTED_ITERATIONS));
         assertThat(respected).isTrue();
     }
 
@@ -104,6 +106,31 @@ public abstract class IterateTestBase<T> {
         assertThat(testRunsFollowInputOrder).isTrue();
     }
 
+    /** Unit test that the option name change is respected. */
+    @Test
+    public void testOverrideOptionName() {
+        // Apply the iteration function.
+        IterateBase<T, Integer> iterator = getIterate();
+        iterator.setOptionName(ITERATIONS_OPTION_ALTERNATE_NAME);
+        List<Integer> output =
+                iterator.apply(
+                        getArgumentsBuilder()
+                                .setIteration(1)
+                                .setAlternateIteration(EXPECTED_ITERATIONS)
+                                .build(),
+                        SIMPLE_INPUT);
+        // Count occurrences of each integer into a map.
+        Map<Integer, Long> countMap =
+                output.stream()
+                        .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+        // Ensure each of the integers have N entries.
+        boolean respected =
+                countMap.entrySet()
+                        .stream()
+                        .allMatch(entry -> (entry.getValue() == EXPECTED_ITERATIONS));
+        assertThat(respected).isTrue();
+    }
+
     /**
      * Unit test that an exception is thrown for an invalid order argument.
      */
@@ -128,10 +155,16 @@ public abstract class IterateTestBase<T> {
     // Test arguments builder and factory method.
     protected abstract class ArgumentsBuilder {
         protected Integer mIterations;
+        protected Integer mAlternateIterations;
         protected String mOrder;
 
         public ArgumentsBuilder setIteration(Integer iterations) {
             mIterations = iterations;
+            return this;
+        }
+
+        public ArgumentsBuilder setAlternateIteration(Integer iterations) {
+            mAlternateIterations = iterations;
             return this;
         }
 

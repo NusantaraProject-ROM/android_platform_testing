@@ -24,8 +24,7 @@ import android.os.Bundle;
 public class Iterate<U> extends IterateBase<Bundle, U> {
     @Override
     protected int getIterationsArgument(Bundle args) {
-        return Integer.parseInt(
-                args.getString(ITERATIONS_OPTION_NAME, String.valueOf(mDefaultValue)));
+        return Integer.parseInt(args.getString(getOptionName(), String.valueOf(mDefaultValue)));
     }
 
     @Override
