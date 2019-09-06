@@ -23,8 +23,8 @@ import java.util.Map;
 public class Iterate<U> extends IterateBase<Map<String, String>, U> {
     @Override
     protected int getIterationsArgument(Map<String, String> args) {
-        if (args.containsKey(ITERATIONS_OPTION_NAME)) {
-            String iterations = args.get(ITERATIONS_OPTION_NAME);
+        if (args.containsKey(getOptionName())) {
+            String iterations = args.get(getOptionName());
             try {
                 return Integer.parseInt(iterations);
             } catch (NumberFormatException e) {
