@@ -167,16 +167,57 @@ public final class MicrobenchmarkTest {
         loggingRunner.setOperationLog(new ArrayList<String>());
         Result result = new JUnitCore().run(loggingRunner);
         assertThat(result.wasSuccessful()).isTrue();
-        assertThat(loggingRunner.getOperationLog()).containsExactly(
-                "before",
-                "tight before",
-                "begin: testMethod("
-                    + "android.platform.test.microbenchmark.MicrobenchmarkTest$LoggingTest)",
-                "test",
-                "end",
-                "tight after",
-                "after")
-            .inOrder();
+        assertThat(loggingRunner.getOperationLog())
+                .containsExactly(
+                        "before",
+                        "tight before",
+                        "begin: testMethod("
+                                + "android.platform.test.microbenchmark.MicrobenchmarkTest"
+                                + "$LoggingTest)",
+                        "test",
+                        "end",
+                        "tight after",
+                        "after")
+                .inOrder();
+    }
+
+    /**
+     * Test method iteration will iterate the inner-most test method N times.
+     *
+     * <p>Before --> TightBefore --> Trace (begin) --> Test x N --> Trace(end) --> TightAfter -->
+     * After
+     */
+    @Test
+    public void testMultipleMethodIterations() throws InitializationError {
+        Bundle args = new Bundle();
+        args.putString("iterations", "1");
+        args.putString("method-iterations", "10");
+        args.putString("rename-iterations", "false");
+        LoggingMicrobenchmark loggingRunner = new LoggingMicrobenchmark(LoggingTest.class, args);
+        loggingRunner.setOperationLog(new ArrayList<String>());
+        Result result = new JUnitCore().run(loggingRunner);
+        assertThat(result.wasSuccessful()).isTrue();
+        assertThat(loggingRunner.getOperationLog())
+                .containsExactly(
+                        "before",
+                        "tight before",
+                        "begin: testMethod("
+                                + "android.platform.test.microbenchmark.MicrobenchmarkTest"
+                                + "$LoggingTest)",
+                        "test",
+                        "test",
+                        "test",
+                        "test",
+                        "test",
+                        "test",
+                        "test",
+                        "test",
+                        "test",
+                        "test",
+                        "end",
+                        "tight after",
+                        "after")
+                .inOrder();
     }
 
     /**
