@@ -16,16 +16,17 @@
 
 package android.platform.test.scenario.profile;
 
-import android.platform.test.longevity.LongevitySuite;
+import android.platform.test.longevity.ProfileSuite;
 import android.platform.test.rule.NaturalOrientationRule;
 
 import org.junit.ClassRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite.SuiteClasses;
 
-@RunWith(LongevitySuite.class)
+@RunWith(ProfileSuite.class)
 @SuiteClasses({
     // Referenced package names to avoid overlap.
+    android.platform.test.scenario.generic.OpenApp.class,
     android.platform.test.scenario.sleep.Idle.class,
 })
 public class CommonUserProfileTest {
