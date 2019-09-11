@@ -61,6 +61,8 @@ android_test {
         "common-platform-scenarios",
         "common-profile-text-protos",
         "guava",
+        "handheld-app-helpers",
+        "launcher-helper-lib",
         "longevity-device-lib",
         "microbenchmark-device-lib",
         "platform-test-composers",

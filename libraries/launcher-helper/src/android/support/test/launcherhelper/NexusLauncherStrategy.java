@@ -52,7 +52,7 @@ public class NexusLauncherStrategy extends BaseLauncher3Strategy {
         try {
             mLauncher = new LauncherInstrumentation(InstrumentationRegistry.getInstrumentation());
 
-        } catch (IllegalStateException e) {
+        } catch (IllegalStateException | NoClassDefFoundError e) {
             mLauncher =
                     new LauncherInstrumentation(
                             androidx.test.InstrumentationRegistry.getInstrumentation());
