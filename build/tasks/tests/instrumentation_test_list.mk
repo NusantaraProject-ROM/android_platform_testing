@@ -59,7 +59,7 @@ instrumentation_tests := \
     SettingsLibTests \
     RSTest \
     PrintSpoolerOutOfProcessTests \
-    CellBroadcastReceiverUnitTests \
+    CellBroadcastReceiverPlatformUnitTests \
     TelephonyProviderTests \
     CarrierConfigTests \
     TeleServiceTests \
