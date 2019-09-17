@@ -41,6 +41,14 @@ echo "Setup new ADB"
 mv $ANDROID_SDK_ROOT/platform-tools $DIST_DIR/
 unzip -o $BUILD_DIR/sdk-repo* -d $ANDROID_SDK_ROOT
 
+echo "Extract tests from general-tests.zip"
+unzip -l $BUILD_DIR/general-tests.zip | grep -q adb_integration_test
+if [[ "$?" == "0" ]]
+then
+    mkdir -p $DIST_DIR/general-tests
+    unzip $BUILD_DIR/general-tests.zip host/testcases/adb_integration_test_*/* -d $DIST_DIR/general-tests
+fi
+
 echo "Run ADB tests from $ADT_INFRA"
 cmd="$ADT_INFRA/emu_test/utils/run_test_android_bridge.sh"
 run_with_timeout $cmd $DIST_DIR 5400
