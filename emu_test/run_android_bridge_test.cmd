@@ -28,8 +28,16 @@ call refreshenv
 
 echo "Setup new ADB"
 mv %ANDROID_SDK_ROOT%\platform-tools %DIST_DIR%\
-7z x -aoa %BUILD_DIR%\sdk-repo* -o%ANDROID_SDK_ROOT%\
+7z x -aoa %BUILD_DIR%\sdk_x86-sdk\sdk-repo* -o%ANDROID_SDK_ROOT%\
 
+echo "Extract tests from general-tests.zip"
+7z l %BUILD_DIR%\test_suites_x86_64\general-tests.zip | findstr "adb_integration_test"
+if errorlevel 1 goto StartTest
+
+mkdir %DIST_DIR%\general-tests
+7z x -aoa %BUILD_DIR%\test_suites_x86_64\general-tests.zip -o%DIST_DIR%\general-tests\ host\testcases\adb_integration_test_*
+
+:StartTest
 echo "Run ADB tests from $ADT_INFRA"
 set count=0
 start %ADT_INFRA%\emu_test\utils\run_test_android_bridge.cmd %DIST_DIR%
