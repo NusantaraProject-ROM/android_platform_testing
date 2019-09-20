@@ -17,6 +17,7 @@
 package android.platform.helpers;
 
 import android.graphics.Rect;
+import android.platform.helpers.exceptions.TestHelperException;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiDevice;
@@ -108,10 +109,10 @@ public interface Scrollable {
                 int scrollSpeed = calcScrollSpeed(scrollable, durationMs);
                 scrollable.scroll(direction, percent / 100, scrollSpeed);
             } else {
-                throw new RuntimeException("There is nothing that can scroll.");
+                throw new TestHelperException("There is nothing that can scroll.");
             }
         } else {
-            throw new RuntimeException("App is not open.");
+            throw new TestHelperException("App is not open.");
         }
     }
 

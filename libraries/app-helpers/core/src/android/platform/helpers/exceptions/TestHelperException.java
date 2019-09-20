@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,19 +17,19 @@
 package android.platform.helpers.exceptions;
 
 /**
- * An AccountException is an exception specific to UI-driven app helpers. This should be thrown
- * under two circumstances:
- *
- * <p>1. When an account is explicitly required to complete an action, but one is not logged in.
- *
- * <p>2. When no account is explicitly required to complete an action, but one is logged in.
+ * TestHelperException is a superclass of all other exceptions thrown by test helpers. It is
+ * intended to allow users to catch all app helper exceptions without catching RuntimeException.
  */
-public class AccountException extends TestHelperException {
-    public AccountException(String msg) {
-        super(msg);
+public class TestHelperException extends RuntimeException {
+    public TestHelperException(String message) {
+        super(message);
     }
 
-    public AccountException(String msg, Throwable cause) {
-        super(msg, cause);
+    public TestHelperException(Throwable cause) {
+        super(cause);
+    }
+
+    public TestHelperException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

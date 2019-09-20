@@ -26,11 +26,12 @@ import java.util.stream.Collectors;
  * Custom exception that holds exceptions from multiple classes and print them all out upon
  * throwing.
  */
-public class MappedMultiException extends RuntimeException {
+public class MappedMultiException extends TestHelperException {
     private final Map<Object, Throwable> mThrowables = new HashMap<>();
     private final String mMessage;
 
     public MappedMultiException(String message, Map<Object, Throwable> throwables) {
+        super(message);
         mThrowables.putAll(throwables);
         mMessage = message;
     }
