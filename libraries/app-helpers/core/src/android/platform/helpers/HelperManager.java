@@ -139,7 +139,7 @@ public class HelperManager {
      * @throws RuntimeException if no implementation is found
      * @return a concrete implementation of base
      */
-    public <T extends IAppHelper> T get(Class<T> base) {
+    public <T extends ITestHelper> T get(Class<T> base) {
         return get(base, "");
     }
 
@@ -151,7 +151,7 @@ public class HelperManager {
      * @throws RuntimeException if no implementation is found
      * @return a list of all concrete implementations we could find
      */
-    public <T extends IAppHelper> T get(Class<T> base, String keyword) {
+    public <T extends ITestHelper> T get(Class<T> base, String keyword) {
         List<T> matching = getAll(base, keyword);
         Log.i(
                 LOG_TAG,
@@ -167,7 +167,7 @@ public class HelperManager {
      * @throws RuntimeException if no implementation is found
      * @return a concrete implementation of base
      */
-    private <T extends IAppHelper> List<T> getAll(Class<T> base, String keyword) {
+    private <T extends ITestHelper> List<T> getAll(Class<T> base, String keyword) {
         ClassLoader loader = HelperManager.class.getClassLoader();
         List<T> implementations = new ArrayList<>();
         Map<Object, Throwable> mappedExceptions = new HashMap<>();
