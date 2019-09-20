@@ -38,6 +38,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -169,11 +170,40 @@ public class HelperManager {
      * Returns a concrete implementation of the helper interface supplied, if available.
      *
      * @param base the interface base class to find an implementation for
+     * @param regex a regular expression for matching the helper implementation, if multiple exist
+     * @throws TestHelperException if no implementation is found
+     * @return a list of all concrete implementations we could find
+     */
+    public <T extends ITestHelper> T get(Class<T> base, Pattern regex) {
+        List<T> matching = getAll(base, regex);
+        Log.i(
+                LOG_TAG,
+                String.format("Selecting implementation %s", matching.get(0).getClass().getName()));
+        return matching.get(0);
+    }
+
+    /**
+     * Returns a concrete implementation of the helper interface supplied, if available.
+     *
+     * @param base the interface base class to find an implementation for
      * @param keyword a keyword for matching the helper implementation, if multiple exist
      * @throws TestHelperException if no implementation is found
      * @return a concrete implementation of base
      */
     private <T extends ITestHelper> List<T> getAll(Class<T> base, String keyword) {
+        Pattern p = Pattern.compile(".*\\Q" + keyword + "\\E.*");
+        return getAll(base, p);
+    }
+
+    /**
+     * Returns a concrete implementation of the helper interface supplied, if available.
+     *
+     * @param base the interface base class to find an implementation for
+     * @param regex a regular expression for matching the helper implementation, if multiple exist
+     * @throws TestHelperException if no implementation is found
+     * @return a concrete implementation of base
+     */
+    private <T extends ITestHelper> List<T> getAll(Class<T> base, Pattern regex) {
         List<T> implementations = new ArrayList<>();
         Map<Object, Throwable> mappedExceptions = new HashMap<>();
 
@@ -192,7 +222,7 @@ public class HelperManager {
             }
             if (base.isAssignableFrom(clazz)
                     && !clazz.equals(base)
-                    && className.contains(keyword)) {
+                    && regex.matcher(className).matches()) {
                 // Instantiate the implementation class and return
                 try {
                     Constructor<?> constructor = clazz.getConstructor(Instrumentation.class);
