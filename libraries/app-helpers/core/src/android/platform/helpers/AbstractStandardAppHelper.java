@@ -29,6 +29,7 @@ import android.os.Environment;
 import android.os.RemoteException;
 import android.os.SystemClock;
 import android.platform.helpers.exceptions.AccountException;
+import android.platform.helpers.exceptions.TestHelperException;
 import android.platform.helpers.exceptions.UnknownUiException;
 import android.platform.helpers.watchers.AppIsNotRespondingWatcher;
 import android.support.test.launcherhelper.ILauncherStrategy;
@@ -98,7 +99,7 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
                 mDevice.wakeUp();
             }
         } catch (RemoteException e) {
-            throw new RuntimeException("Could not unlock the device.", e);
+            throw new TestHelperException("Could not unlock the device.", e);
         }
         // Unlock the screen if necessary.
         if (mDevice.hasObject(By.res("com.android.systemui", "keyguard_bottom_area"))) {
@@ -122,7 +123,7 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
                 mInstrumentation.getContext().startActivity(intent);
             } catch (ActivityNotFoundException e) {
                 removeDialogWatchers();
-                throw new RuntimeException(String.format("Failed to find package: %s", pkg), e);
+                throw new TestHelperException(String.format("Failed to find package: %s", pkg), e);
             }
         } else {
             // Launch using the UI and launcher strategy.
@@ -180,13 +181,14 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
         String pkg = getPackage();
 
         if (null == pkg || pkg.isEmpty()) {
-            throw new RuntimeException("Cannot find version of empty package");
+            throw new TestHelperException("Cannot find version of empty package");
         }
         PackageManager pm = mInstrumentation.getContext().getPackageManager();
         PackageInfo pInfo = pm.getPackageInfo(pkg, 0);
         String version = pInfo.versionName;
         if (null == version || version.isEmpty()) {
-            throw new RuntimeException(String.format("Version isn't found for package, %s", pkg));
+            throw new TestHelperException(
+                    String.format("Version isn't found for package, %s", pkg));
         }
 
         return version;
@@ -241,8 +243,7 @@ public abstract class AbstractStandardAppHelper implements IAppHelper {
             sScreenshotDirectory = new File(storage, SCREENSHOT_DIR);
             if (!sScreenshotDirectory.exists()) {
                 if (!sScreenshotDirectory.mkdirs()) {
-                    throw new RuntimeException(
-                            "Failed to create a screenshot directory.");
+                    throw new TestHelperException("Failed to create a screenshot directory.");
                 }
             }
         }
