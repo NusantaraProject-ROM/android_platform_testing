@@ -235,13 +235,13 @@ public class AutomationUtils {
                 destHeight,
                 10);
         // divider.drag(new Point(device.getDisplayWidth() / 2, destHeight), 400)
-        divider = device.wait(Until.findObject(dividerSelector), FIND_TIMEOUT);
+        device.wait(Until.findObject(dividerSelector), FIND_TIMEOUT);
 
         // Wait for animation to complete.
         sleep(2000);
     }
 
-    private static BySelector getPipWindowSelector() {
+    public static BySelector getPipWindowSelector() {
         return By.res(SYSTEMUI_PACKAGE, "background");
     }
 
