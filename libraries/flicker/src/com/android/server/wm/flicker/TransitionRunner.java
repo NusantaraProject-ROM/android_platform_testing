@@ -328,7 +328,7 @@ public class TransitionRunner {
         private int mIterations = 1;
         private String mTestTag = "";
 
-        private boolean mRecordAllRuns = false;
+        private boolean mRecordAllRuns = true;
 
         private TransitionBuilder(@NonNull Path outputDir) {
             mScreenRecorder = new ScreenRecorder();
