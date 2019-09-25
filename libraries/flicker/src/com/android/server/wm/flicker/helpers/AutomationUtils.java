@@ -36,6 +36,7 @@ import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
 import android.util.Log;
 import android.util.Rational;
+import android.view.Surface;
 import android.view.View;
 import android.view.ViewConfiguration;
 
@@ -213,7 +214,16 @@ public class AutomationUtils {
         assertNotNull("Unable to find Split screen divider", divider);
 
         // Drag the split screen divider to the top of the screen
-        divider.drag(new Point(device.getDisplayWidth() / 2, 0), 400);
+        int rotation = device.getDisplayRotation();
+        boolean isRotated = rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270;
+
+        Point dstPoint;
+        if (isRotated) {
+            dstPoint = new Point(0, device.getDisplayWidth() / 2);
+        } else {
+            dstPoint = new Point(device.getDisplayWidth() / 2, 0);
+        }
+        divider.drag(dstPoint, 400);
         // Wait for animation to complete.
         sleep(2000);
     }
