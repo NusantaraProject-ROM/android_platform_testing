@@ -21,6 +21,7 @@ import android.platform.helpers.HelperAccessor;
 import android.platform.test.option.LongOption;
 import android.platform.test.option.StringOption;
 import android.platform.test.rule.NaturalOrientationRule;
+import android.platform.test.scenario.annotation.AppSetup;
 import android.platform.test.scenario.annotation.Scenario;
 
 import org.junit.ClassRule;
@@ -30,6 +31,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Opens multiple applications generically and exits after, based on the provided options. */
+@AppSetup
 @Scenario
 @RunWith(JUnit4.class)
 public class OpenApps {
