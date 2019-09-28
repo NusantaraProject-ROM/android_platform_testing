@@ -21,13 +21,13 @@ git clone https://android.googlesource.com/platform/external/adt-infra -b emu-ma
 
 set BUILD_DIR=C:\buildbot\prebuilt\%BUILD_NUMBER%
 
-setx ANDROID_HOME %SDK_SYS_IMAGE% /M
-setx ANDROID_SDK_ROOT %SDK_SYS_IMAGE% /M
+setx ANDROID_HOME %SDK_PLAT_TOOLS% /M
+setx ANDROID_SDK_ROOT %SDK_PLAT_TOOLS% /M
 
 call refreshenv
 
 echo "Setup new ADB"
-mv %ANDROID_SDK_ROOT%\platform-tools %DIST_DIR%\
+rmdir /s /q %ANDROID_SDK_ROOT%\platform-tools
 7z x -aoa %BUILD_DIR%\sdk_x86-sdk\sdk-repo* -o%ANDROID_SDK_ROOT%\
 
 echo "Extract tests from general-tests.zip"
@@ -57,9 +57,5 @@ taskkill /fi "windowtitle eq run_test_android_bridge*"
 
 :cmdDone
 cmd.exe /c %ANDROID_HOME%\platform-tools\adb.exe kill-server
-
-echo "Cleanup platform-tools"
-rmdir /s /q %ANDROID_SDK_ROOT%\platform-tools
-mv %DIST_DIR%\platform-tools %ANDROID_SDK_ROOT%\
 
 exit 0
