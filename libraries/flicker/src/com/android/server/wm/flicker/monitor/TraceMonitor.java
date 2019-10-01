@@ -58,15 +58,25 @@ public abstract class TraceMonitor implements ITransitionMonitor {
         mOutputDir.toFile().mkdirs();
         Path traceFileCopy = getOutputTraceFilePath(testTag);
 
-        // Read the input stream fully.
+        // Move the trace file to the output directory
+        // Note: Due to b/141386109, certain devices do not allow moving the files between
+        //       directories with different encryption policies, so manually copy and then
+        //       remove the original file
         String copyCommand =
                 String.format(
                         Locale.getDefault(),
-                        "mv %s%s %s",
+                        "cp %s%s %s",
                         TRACE_DIR,
                         mTraceFileName,
                         traceFileCopy.toString());
         runShellCommand(copyCommand);
+        String removeCommand =
+                String.format(
+                        Locale.getDefault(),
+                        "rm %s%s",
+                        TRACE_DIR,
+                        mTraceFileName);
+        runShellCommand(removeCommand);
         return traceFileCopy;
     }
 
