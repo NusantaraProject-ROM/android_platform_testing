@@ -281,8 +281,11 @@ public class StatsdListener extends BaseMetricListener {
     /** Format a JUnit {@link Description} to a desired string format. */
     @VisibleForTesting
     String formatDescription(Description description) {
-        return String.join(
-                "#", description.getTestClass().getCanonicalName(), description.getMethodName());
+        // Use String.valueOf() to guard agaist a null class name. This normally should not happen
+        // but the Description class does not explicitly guarantee it.
+        String className = String.valueOf(description.getClassName());
+        String methodName = description.getMethodName();
+        return methodName == null ? className : String.join("#", className, methodName);
     }
 
     /**
