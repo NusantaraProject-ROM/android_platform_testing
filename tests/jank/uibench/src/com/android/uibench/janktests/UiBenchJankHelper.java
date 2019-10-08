@@ -28,6 +28,7 @@ import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.Until;
 import android.util.DisplayMetrics;
+import android.view.KeyEvent;
 import android.widget.ListView;
 
 import junit.framework.Assert;
@@ -39,6 +40,8 @@ public class UiBenchJankHelper extends AbstractStandardAppHelper implements IUiB
     public static final int SHORT_TIMEOUT = 2000;
     public static final int EXPECTED_FRAMES = 100;
     public static final int KEY_DELAY = 1000;
+    public static final String EXTRA_BITMAP_UPLOAD = "extra_bitmap_upload";
+    public static final String EXTRA_SHOW_FAST_LANE = "extra_show_fast_lane";
 
     /**
      * Only to be used for initial-fling tests, or similar cases where perf during brief experience
@@ -52,6 +55,7 @@ public class UiBenchJankHelper extends AbstractStandardAppHelper implements IUiB
 
     private static final int SLOW_FLING_SPEED = 3000; // compare to UiObject2#DEFAULT_FLING_SPEED
 
+    // Main UiObject2 exercised by the test.
     private UiObject2 mContents;
 
     public UiBenchJankHelper(Instrumentation instr) {
@@ -144,15 +148,197 @@ public class UiBenchJankHelper extends AbstractStandardAppHelper implements IUiB
     }
 
     @Override
-    public void pressKeyCode(int keyCode) {
+    public void openDialogList() {
+        launchActivity("DialogListActivity", "Dialog");
+        mContents = mDevice.wait(Until.findObject(By.clazz(ListView.class)), FIND_OBJECT_TIMEOUT);
+        Assert.assertNotNull("Dialog List View isn't found", mContents);
+    }
+
+    @Override
+    public void openFullscreenOverdraw() {
+        launchActivity("FullscreenOverdrawActivity", "General/Fullscreen Overdraw");
+    }
+
+    @Override
+    public void openGLTextureView() {
+        launchActivity("GlTextureViewActivity", "General/GL TextureView");
+    }
+
+    @Override
+    public void openInvalidate() {
+        launchActivity("InvalidateActivity", "General/Invalidate");
+    }
+
+    @Override
+    public void openInvalidateTree() {
+        launchActivity("InvalidateTreeActivity", "General/Invalidate Tree");
+    }
+
+    @Override
+    public void openTrivialAnimation() {
+        launchActivity("TrivialAnimationActivity", "General/Trivial Animation");
+    }
+
+    @Override
+    public void openTrivialListView() {
+        launchActivityAndAssert("TrivialListActivity", "General/Trivial ListView");
+    }
+
+    @Override
+    public void openFadingEdgeListView() {
+        launchActivityAndAssert("FadingEdgeListActivity", "General/Fading Edge ListView");
+    }
+
+    @Override
+    public void openSaveLayerInterleaveActivity() {
+        launchActivityAndAssert("SaveLayerInterleaveActivity", "General/SaveLayer Animation");
+    }
+
+    @Override
+    public void openTrivialRecyclerView() {
+        launchActivityAndAssert("TrivialRecyclerViewActivity", "General/Trivial RecyclerView");
+    }
+
+    @Override
+    public void openSlowBindRecyclerView() {
+        launchActivityAndAssert("SlowBindRecyclerViewActivity", "General/Slow Bind RecyclerView");
+    }
+
+    @Override
+    public void openSlowNestedRecyclerView() {
+        launchActivityAndAssert(
+                "SlowNestedRecyclerViewActivity", "General/Slow Nested RecyclerView");
+    }
+
+    @Override
+    public void openInflatingListView() {
+        launchActivityAndAssert("InflatingListActivity", "Inflation/Inflating ListView");
+    }
+
+    @Override
+    public void openInflatingEmojiListView() {
+        launchActivityAndAssert(
+                "InflatingEmojiListActivity", "Inflation/Inflating ListView with Emoji");
+    }
+
+    @Override
+    public void openInflatingHanListView() {
+        launchActivityAndAssert(
+                "InflatingHanListActivity", "Inflation/Inflating ListView with Han Characters");
+    }
+
+    @Override
+    public void openInflatingLongStringListView() {
+        launchActivityAndAssert(
+                "InflatingLongStringListActivity", "Inflation/Inflating ListView with long string");
+    }
+
+    @Override
+    public void openNavigationDrawerActivity() {
+        launchActivityAndAssert("NavigationDrawerActivity", "Navigation Drawer Activity");
+        mContents.setGestureMargins(0, 0, 10, 0);
+    }
+
+    @Override
+    public void openNotificationShade() {
+        launchActivityAndAssert("NotificationShadeActivity", "Notification Shade");
+    }
+
+    @Override
+    public void openResizeHWLayer() {
+        launchActivity("ResizeHWLayerActivity", "General/Resize HW Layer");
+    }
+
+    @Override
+    public void openClippedListView() {
+        launchActivityAndAssert("ClippedListActivity", "General/Clipped ListView");
+    }
+
+    @Override
+    public void openLeanbackActivity(
+            boolean extraBitmapUpload,
+            boolean extraShowFastLane,
+            String activityName,
+            String expectedText) {
+        Bundle extrasBundle = new Bundle();
+        extrasBundle.putBoolean(EXTRA_BITMAP_UPLOAD, extraBitmapUpload);
+        extrasBundle.putBoolean(EXTRA_SHOW_FAST_LANE, extraShowFastLane);
+        launchActivity(activityName, extrasBundle, expectedText);
+    }
+
+    void pressKeyCode(int keyCode) {
         SystemClock.sleep(KEY_DELAY);
         mDevice.pressKeyCode(keyCode);
     }
 
     @Override
-    public void openDialogList() {
-        launchActivity("DialogListActivity", "Dialog");
+    public void scrollDownAndUp(int count) {
+        for (int i = 0; i < count; i++) {
+            pressKeyCode(KeyEvent.KEYCODE_DPAD_DOWN);
+        }
+        for (int i = 0; i < count; i++) {
+            pressKeyCode(KeyEvent.KEYCODE_DPAD_UP);
+        }
+    }
+
+    // Open Bitmap Upload
+    @Override
+    public void openBitmapUpload() {
+        launchActivity("BitmapUploadActivity", "Rendering/Bitmap Upload");
+    }
+
+    // Open Shadow Grid
+    @Override
+    public void openRenderingList() {
+        launchActivity("ShadowGridActivity", "Rendering/Shadow Grid");
         mContents = mDevice.wait(Until.findObject(By.clazz(ListView.class)), FIND_OBJECT_TIMEOUT);
-        Assert.assertNotNull("Dialog List View isn't found", mContents);
+        Assert.assertNotNull("Shadow Grid list isn't found", mContents);
+    }
+
+    // Open EditText Typing
+    @Override
+    public void openEditTextTyping() {
+        launchActivity("EditTextTypeActivity", "Text/EditText Typing");
+    }
+
+    // Open Layout Cache High Hitrate
+    @Override
+    public void openLayoutCacheHighHitrate() {
+        launchActivity("TextCacheHighHitrateActivity", "Text/Layout Cache High Hitrate");
+        mContents = mDevice.wait(Until.findObject(By.clazz(ListView.class)), FIND_OBJECT_TIMEOUT);
+        Assert.assertNotNull("LayoutCacheHighHitrateContents isn't found", mContents);
+    }
+
+    // Open Layout Cache Low Hitrate
+    @Override
+    public void openLayoutCacheLowHitrate() {
+        launchActivity("TextCacheLowHitrateActivity", "Text/Layout Cache Low Hitrate");
+        mContents = mDevice.wait(Until.findObject(By.clazz(ListView.class)), FIND_OBJECT_TIMEOUT);
+        Assert.assertNotNull("LayoutCacheLowHitrateContents isn't found", mContents);
+    }
+
+    // Open Transitions
+    @Override
+    public void openActivityTransition() {
+        launchActivity("ActivityTransition", "Transitions/Activity Transition");
+    }
+
+    // Get the image to click
+    @Override
+    public void clickImage(String imageName) {
+        UiObject2 image =
+                mDevice.wait(
+                        Until.findObject(By.res(PACKAGE_NAME, imageName)), FIND_OBJECT_TIMEOUT);
+        Assert.assertNotNull(imageName + "Image not found", image);
+        image.clickAndWait(Until.newWindow(), FIND_OBJECT_TIMEOUT);
+        mDevice.pressBack();
+    }
+
+    // Open Scrollable WebView from WebView test
+    @Override
+    public void openScrollableWebView() {
+        launchActivity("ScrollableWebViewActivity", "WebView/Scrollable WebView");
+        mContents =
+                mDevice.wait(Until.findObject(By.res("android", "content")), FIND_OBJECT_TIMEOUT);
     }
 }
