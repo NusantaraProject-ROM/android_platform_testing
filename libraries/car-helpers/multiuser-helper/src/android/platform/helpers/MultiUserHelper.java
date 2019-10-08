@@ -155,8 +155,8 @@ public class MultiUserHelper {
      */
     @Nullable
     public UserInfo getUserByName(String name) {
-        return mUserManagerHelper
-                .getAllUsers()
+        return mUserManager
+                .getUsers(/* excludeDying= */ true)
                 .stream()
                 .filter(user -> user.name.equals(name))
                 .findFirst()
