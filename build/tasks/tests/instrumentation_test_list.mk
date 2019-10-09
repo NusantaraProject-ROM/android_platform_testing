@@ -69,9 +69,6 @@ instrumentation_tests := \
     FrameworksPrivacyLibraryTests \
     SettingsUITests \
     ExtServicesUnitTests\
-    NexusLauncherOutOfProcTests\
-    NexusLauncherDebug\
-    NexusLauncherTests\
     FrameworksNetSmokeTests\
 
 
