@@ -23,7 +23,6 @@ platform_tests += \
     BootHelperApp \
     BusinessCard \
     CalculatorFunctionalTests \
-    CalendarTests \
     camera_client_test \
     camera_metadata_tests \
     CellBroadcastReceiverTests \
@@ -82,7 +81,6 @@ platform_tests += \
     PermissionFunctionalTests \
     PermissionTestAppMV1 \
     PermissionUtils \
-    PlatformCommonScenarioTests \
     PowerPerfTest \
     SettingsUITests \
     SimpleServiceTestApp \
