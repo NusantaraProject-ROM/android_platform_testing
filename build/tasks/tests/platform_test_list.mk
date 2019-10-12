@@ -20,6 +20,8 @@ platform_tests += \
     BandwidthEnforcementTest \
     BandwidthTests \
     BluetoothTests \
+    bluetooth_cert_stack \
+    bluetooth_stack_with_facade \
     BootHelperApp \
     BusinessCard \
     CalculatorFunctionalTests \
@@ -82,6 +84,7 @@ platform_tests += \
     PermissionUtils \
     PlatformScenarioTests \
     PowerPerfTest \
+    root-canal \
     SettingsUITests \
     SimpleTestApp \
     skia_dm \
