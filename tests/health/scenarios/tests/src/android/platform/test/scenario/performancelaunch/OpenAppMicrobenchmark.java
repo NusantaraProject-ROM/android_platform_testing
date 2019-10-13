@@ -22,21 +22,18 @@ import android.platform.test.rule.KillAppsRule;
 import android.platform.test.rule.PressHomeRule;
 
 import org.junit.Rule;
+import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 
 @RunWith(Microbenchmark.class)
 public class OpenAppMicrobenchmark extends OpenApp {
+    private static final String PACKAGE = "com.android.performanceLaunch";
+
     // Method-level rules
     @Rule
-    public KillAppsRule killAppsRule = new KillAppsRule("com.android.performanceLaunch");
-
-    @Rule
-    public DropCachesRule dropCachesRule = new DropCachesRule();
-
-    @Rule
-    public CompilationFilterRule compilationFilterRule =
-            new CompilationFilterRule("com.android.performanceLaunch");
-
-    @Rule
-    public PressHomeRule pressHomeRule = new PressHomeRule();
+    public RuleChain rules =
+            RuleChain.outerRule(new KillAppsRule(PACKAGE))
+                    .around(new DropCachesRule())
+                    .around(new CompilationFilterRule(PACKAGE))
+                    .around(new PressHomeRule());
 }

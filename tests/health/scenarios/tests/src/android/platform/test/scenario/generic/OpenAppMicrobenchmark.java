@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.platform.test.scenario.businesscard;
+package android.platform.test.scenario.generic;
 
 import android.platform.test.microbenchmark.Microbenchmark;
 import android.platform.test.rule.CompilationFilterRule;
@@ -27,14 +27,11 @@ import org.junit.runner.RunWith;
 
 @RunWith(Microbenchmark.class)
 public class OpenAppMicrobenchmark extends OpenApp {
-    private static final String PACKAGE = "com.example.android.businesscard";
-
     // Method-level rules
     @Rule
     public RuleChain rules =
-            RuleChain.outerRule(new KillAppsRule(PACKAGE))
+            RuleChain.outerRule(new KillAppsRule(mPkgOption.get()))
                     .around(new DropCachesRule())
-                    .around(new CompilationFilterRule(PACKAGE))
+                    .around(new CompilationFilterRule(mPkgOption.get()))
                     .around(new PressHomeRule());
 }
-
