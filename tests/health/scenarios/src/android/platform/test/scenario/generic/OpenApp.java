@@ -26,7 +26,6 @@ import android.platform.test.scenario.annotation.Scenario;
 
 import org.junit.AfterClass;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -38,8 +37,8 @@ public class OpenApp {
     // Class-level rules
     @ClassRule public static NaturalOrientationRule orientationRule = new NaturalOrientationRule();
 
-    @Rule public StringOption mNameOption = new StringOption("name").setRequired(true);
-    @Rule public StringOption mPkgOption = new StringOption("pkg").setRequired(true);
+    @ClassRule public static StringOption sNameOption = new StringOption("name").setRequired(true);
+    @ClassRule public static StringOption sPkgOption = new StringOption("pkg").setRequired(true);
 
     private static HelperAccessor<IGenericAppHelper> sHelper =
             new HelperAccessor<>(IGenericAppHelper.class);
@@ -47,8 +46,8 @@ public class OpenApp {
     @Test
     public void testOpen() {
         IGenericAppHelper helper = sHelper.get();
-        helper.setLauncherName(mNameOption.get());
-        helper.setPackage(mPkgOption.get());
+        helper.setLauncherName(sNameOption.get());
+        helper.setPackage(sPkgOption.get());
         helper.open();
     }
 
