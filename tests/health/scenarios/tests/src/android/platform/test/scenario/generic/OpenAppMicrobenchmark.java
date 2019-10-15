@@ -30,8 +30,8 @@ public class OpenAppMicrobenchmark extends OpenApp {
     // Method-level rules
     @Rule
     public RuleChain rules =
-            RuleChain.outerRule(new KillAppsRule(mPkgOption.get()))
+            RuleChain.outerRule(new KillAppsRule(sPkgOption.get()))
                     .around(new DropCachesRule())
-                    .around(new CompilationFilterRule(mPkgOption.get()))
+                    .around(new CompilationFilterRule(sPkgOption.get()))
                     .around(new PressHomeRule());
 }
