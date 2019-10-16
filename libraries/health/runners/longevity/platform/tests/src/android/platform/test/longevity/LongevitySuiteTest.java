@@ -74,6 +74,7 @@ public class LongevitySuiteTest {
                 new LongevitySuite(
                         TestSuite.class,
                         new AllDefaultPossibilitiesBuilder(true),
+                        new ArrayList<Runner>(),
                         mInstrumentation,
                         mContext,
                         new Bundle());
@@ -92,6 +93,7 @@ public class LongevitySuiteTest {
                 new LongevitySuite(
                         TestSuite.class,
                         new AllDefaultPossibilitiesBuilder(true),
+                        new ArrayList<Runner>(),
                         mInstrumentation,
                         mContext,
                         new Bundle());
@@ -111,6 +113,7 @@ public class LongevitySuiteTest {
                         new LongevitySuite(
                                 IterationSuite.class,
                                 new AllDefaultPossibilitiesBuilder(true),
+                                new ArrayList<Runner>(),
                                 mInstrumentation,
                                 mContext,
                                 new Bundle()));
@@ -146,6 +149,7 @@ public class LongevitySuiteTest {
                         new LongevitySuite(
                                 IterationSuite.class,
                                 new AllDefaultPossibilitiesBuilder(true),
+                                new ArrayList<Runner>(),
                                 mInstrumentation,
                                 mContext,
                                 args));
@@ -173,6 +177,55 @@ public class LongevitySuiteTest {
         Assert.assertEquals(runners.get(2).getIteration(), 2);
     }
 
+    /** Test that appending classes to a suite will properly append them and iterate on them. */
+    @Test
+    public void testAdditionalRunners() throws InitializationError {
+        Bundle args = new Bundle();
+        // TODO: Access the iterations option name directly.
+        args.putString("iterations", String.valueOf(2));
+        List<Runner> additions = new ArrayList<>();
+        additions.add(new BlockJUnit4ClassRunner(AdditionalTest.class));
+        additions.add(new BlockJUnit4ClassRunner(AdditionalTest.class));
+        // Construct the suite with additional classes to run.
+        mSuite =
+                Mockito.spy(
+                        new LongevitySuite(
+                                IterationSuite.class,
+                                new AllDefaultPossibilitiesBuilder(true),
+                                additions,
+                                mInstrumentation,
+                                mContext,
+                                args));
+        // Store the runners that the tests are executing. Since these are object references,
+        // subsequent modifications to the runners (setting the iteration) will still be observable
+        // here.
+        List<LongevityClassRunner> runners = new ArrayList<>();
+        doAnswer(
+                        invocation -> {
+                            LongevityClassRunner runner =
+                                    (LongevityClassRunner) invocation.callRealMethod();
+                            runners.add(runner);
+                            return runner;
+                        })
+                .when(mSuite)
+                .getSuiteRunner(any(Runner.class));
+        mSuite.run(mRunNotifier);
+        Assert.assertEquals(runners.size(), 10);
+        // Check the runners and their corresponding iterations.
+        Assert.assertTrue(runners.get(0).getDescription().getDisplayName().contains("TestOne"));
+        Assert.assertTrue(runners.get(1).getDescription().getDisplayName().contains("TestTwo"));
+        Assert.assertTrue(runners.get(2).getDescription().getDisplayName().contains("TestOne"));
+        Assert.assertTrue(
+                runners.get(3).getDescription().getDisplayName().contains("AdditionalTest"));
+        Assert.assertTrue(
+                runners.get(4).getDescription().getDisplayName().contains("AdditionalTest"));
+        // 5, 6, and 7 are repetitions of "TestOne", "TestTwo", and "TestOne".
+        Assert.assertTrue(
+                runners.get(8).getDescription().getDisplayName().contains("AdditionalTest"));
+        Assert.assertTrue(
+                runners.get(9).getDescription().getDisplayName().contains("AdditionalTest"));
+    }
+
     /**
      * Test that when a builder ends up being a {@link ErrorReportingRunner}, the underlying error
      * is reported as an InitializationError.
@@ -193,6 +246,7 @@ public class LongevitySuiteTest {
                     new LongevitySuite(
                             IterationSuite.class,
                             builder,
+                            new ArrayList<Runner>(),
                             mInstrumentation,
                             mContext,
                             new Bundle());
@@ -237,5 +291,12 @@ public class LongevitySuiteTest {
             @Test
             public void testNothing() {}
         }
+    }
+
+    /** Additional test class to add to append to the longevity suite. */
+    // @RunWith(JUnit4.class)
+    public static class AdditionalTest {
+        @Test
+        public void testNothing() {}
     }
 }
