@@ -140,11 +140,7 @@ public class MultiUserHelper {
     }
 
     public UserInfo getCurrentForegroundUserInfo() {
-        return mUserManagerHelper.getCurrentForegroundUserInfo();
-    }
-
-    public int getInitialUser() {
-        return mUserManagerHelper.getInitialUser();
+        return mUserManager.getUserInfo(ActivityManager.getCurrentUser());
     }
 
     /**
