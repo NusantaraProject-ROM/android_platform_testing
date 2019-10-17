@@ -52,4 +52,11 @@ public interface IAutoMediaCenterMinimizeControlBarHelper extends IAppHelper {
    * @return to get current playing track name from home screen.
    */
   String getTrackName();
+
+  /**
+   * Setup expectations: media test app is open and Minimize control bar present.
+   *
+   * This method is used to maximize the play back screen.
+   */
+  void maximizeNowPlaying();
 }
