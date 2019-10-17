@@ -3,6 +3,9 @@ platform_tests += \
     apex_manifest_test \
     apexservice_test \
     ActivityManagerPerfTests \
+    ActivityManagerPerfTestsStubApp1 \
+    ActivityManagerPerfTestsStubApp2 \
+    ActivityManagerPerfTestsStubApp3 \
     ActivityManagerPerfTestsTestApp \
     AndroidTVJankTests \
     ApiDemos \
