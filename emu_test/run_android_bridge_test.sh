@@ -34,11 +34,11 @@ git clone https://android.googlesource.com/platform/external/adt-infra -b emu-ma
 
 BUILD_DIR="out/prebuilt_cached/builds"
 
-export ANDROID_HOME=$SDK_EMULATOR
-export ANDROID_SDK_ROOT=$SDK_SYS_IMAGE
+export ANDROID_HOME=$SDK_PLAT_TOOLS
+export ANDROID_SDK_ROOT=$SDK_PLAT_TOOLS
 
 echo "Setup new ADB"
-mv $ANDROID_SDK_ROOT/platform-tools $DIST_DIR/
+rm -rf $ANDROID_SDK_ROOT/platform-tools
 unzip -o $BUILD_DIR/sdk-repo* -d $ANDROID_SDK_ROOT
 
 echo "Extract tests from general-tests.zip"
@@ -52,10 +52,6 @@ fi
 echo "Run ADB tests from $ADT_INFRA"
 cmd="$ADT_INFRA/emu_test/utils/run_test_android_bridge.sh"
 run_with_timeout $cmd $DIST_DIR 5400
-
-echo "Cleanup platform-tools"
-rm -rf $ANDROID_SDK_ROOT/platform-tools
-mv $DIST_DIR/platform-tools $ANDROID_SDK_ROOT/
 
 echo "Cleanup prebuilts"
 rm -rf /buildbot/prebuilt/*
