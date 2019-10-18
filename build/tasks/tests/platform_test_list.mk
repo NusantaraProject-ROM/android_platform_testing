@@ -86,6 +86,7 @@ platform_tests += \
     PowerPerfTest \
     root-canal \
     SettingsUITests \
+    SimpleServiceTestApp \
     SimpleTestApp \
     skia_dm \
     skia_nanobench \
