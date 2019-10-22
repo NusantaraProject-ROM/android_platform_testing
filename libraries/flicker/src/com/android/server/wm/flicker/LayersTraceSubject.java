@@ -31,6 +31,7 @@ import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
 
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /** Truth subject for {@link LayersTrace} objects. */
@@ -58,8 +59,14 @@ public class LayersTraceSubject extends Subject<LayersTraceSubject, LayersTrace>
 
     // User-defined entry point
     public static LayersTraceSubject assertThat(@Nullable TransitionResult result) {
-        LayersTrace entries =
-                LayersTrace.parseFrom(result.getLayersTrace(), result.getLayersTracePath());
+        return assertThat(result, null /* orphanLayerCallback */);
+    }
+
+    // User-defined entry point
+    public static LayersTraceSubject assertThat(@Nullable TransitionResult result,
+            Consumer<LayersTrace.Layer> orphanLayerCallback) {
+        LayersTrace entries = LayersTrace.parseFrom(result.getLayersTrace(),
+                result.getLayersTracePath(), orphanLayerCallback);
         return assertWithMessage(result.toString()).about(FACTORY).that(entries);
     }
 
