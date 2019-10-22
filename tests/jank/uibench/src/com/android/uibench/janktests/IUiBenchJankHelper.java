@@ -19,15 +19,75 @@ package com.android.uibench.janktests;
 import android.platform.helpers.IAppHelper;
 
 public interface IUiBenchJankHelper extends IAppHelper {
-    void flingUpDown(int flingCount);
+    void clickImage(String imageName);
 
     void flingDownUp(int flingCount);
 
-    void swipeRightLeft(int swipeCount);
+    void flingUpDown(int flingCount);
+
+    void openActivityTransition();
+
+    void openBitmapUpload();
+
+    void openClippedListView();
+
+    void openDialogList();
+
+    void openEditTextTyping();
+
+    void openFadingEdgeListView();
+
+    void openFullscreenOverdraw();
+
+    void openGLTextureView();
+
+    void openInflatingEmojiListView();
+
+    void openInflatingHanListView();
+
+    void openInflatingListView();
+
+    void openInflatingLongStringListView();
+
+    void openInvalidate();
+
+    void openInvalidateTree();
+
+    void openLayoutCacheHighHitrate();
+
+    void openLayoutCacheLowHitrate();
+
+    void openLeanbackActivity(
+            boolean extraBitmapUpload,
+            boolean extraShowFastLane,
+            String activityName,
+            String expectedText);
+
+    void openNavigationDrawerActivity();
+
+    void openNotificationShade();
+
+    void openSaveLayerInterleaveActivity();
+
+    void openScrollableWebView();
+
+    void openSlowBindRecyclerView();
+
+    void openSlowNestedRecyclerView();
+
+    void openTrivialAnimation();
+
+    void openTrivialListView();
+
+    void openTrivialRecyclerView();
+
+    void openRenderingList();
+
+    void openResizeHWLayer();
+
+    void scrollDownAndUp(int count);
 
     void slowSingleFlingDown();
 
-    void pressKeyCode(int keyCode);
-
-    void openDialogList();
+    void swipeRightLeft(int swipeCount);
 }
