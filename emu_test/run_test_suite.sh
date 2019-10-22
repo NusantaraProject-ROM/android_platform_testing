@@ -73,28 +73,6 @@ function fetch_latest_emulator {
   echo $(echo $fetch_stdout | grep "Fetching latest build" | awk '{ print $4 }')
 }
 
-function fetch_latest_cts {
-  local target_dir=$1
-  mkdir -p $target_dir
-  # Note fetch_artifacts.py is currently blowing up on this, it seems to expect
-  # a number only at the build id location.
-  #
-  # Example latest_cts_dir:
-  #    gs://android-build-emu-sysimage/builds/
-  #         git_qt-release-linux-test_suites_x86_64/QP1A.190711.020-5800535/
-  local latest_cts_dir=$(gsutil ls gs://android-build-emu-sysimage/builds/git_qt-release-linux-test_suites_x86_64/ | sort | tail -1)
-  local build_id=$(basename $latest_cts_dir | cut -d- -f2)
-  # now we need to determine the hashed dir name.
-  # Example:
-  #     gs://android-build-emu-sysimage/builds/
-  #         git_qt-release-linux-test_suites_x86_64/QP1A.190711.020-5800535/
-  #         b162c0b944603f1b8fff5ef1a27aaf77c551c336c210d42a9c168140e5af7401/
-  local hash_dir=$(gsutil ls $latest_cts_dir)
-  # Note the missing / after hash_dir is intentional.
-  gsutil cp ${hash_dir}android-cts.zip $target_dir > /dev/null
-  echo $build_id
-}
-
 function find_zip_in_dir {
   local target_name=$1
   local zip_dir=$2
@@ -132,10 +110,6 @@ EMU_BUILD_ID=$(fetch_latest_emulator $EMU_DIR)
 EMU_ZIP=$(find_zip_in_dir emulator $EMU_DIR)
 ls -l $EMU_ZIP
 
-# Fetch the latest android-cts.zip (qt-release)
-CTS_DIR=$WORK_DIR/android-cts
-CTS_BUILD_ID=$(fetch_latest_cts $CTS_DIR)
-
 # Directory where system images, and cts can be found
 BUILD_DIR=out/prebuilt_cached/builds
 
@@ -147,8 +121,10 @@ if [[ -f "$BUILD_DIR/test_suite/android-cts.zip" ]]; then
   TEST_SUITE=cts
 elif [[ -f "$BUILD_DIR/test_suite/android-gts.zip" ]]; then
   TEST_SUITE=gts
+elif [[ -f "$BUILD_DIR/test_suite/android-vts.zip" ]]; then
+  TEST_SUITE=vts
 else
-  die "Could not find android-cts.zip or android-gts.zip in $BUILD_DIR/test_suite"
+  die "Could not find android-cts.zip, android-gts.zip or android-vts.zip in $BUILD_DIR/test_suite"
 fi
 
 # Setup the testing configuration
@@ -164,7 +140,7 @@ $TRADEFED_MAKE_DIR/make-config \
     vars.emulator.flags.feature=PlayStoreImage,GLAsyncSwap,GLESDynamicVersion \
     vars.emulator.flags.gpu=$GPU_FLAG \
     vars.image.files.local_zip_path.user=$IMAGE_ZIP \
-    vars.image.files.download.branch=git_qt-emu-dev \
+    vars.image.files.download.branch=git_rvc-release \
     vars.image.files.download.build_id=$BUILD_ID \
     vars.image.flavor.default=user \
     vars.root_dir=$TEST_DIR \
@@ -174,26 +150,8 @@ $TRADEFED_MAKE_DIR/make-config \
     vars.tools.files.local_dir.platforms=$PLATFORMS_DIR \
     vars.tools.files.local_dir.platform_tools=$PLATFORM_TOOLS_DIR \
     vars.tools.files.local_dir.sdk_tools=$SDK_TOOLS_DIR \
-
-if [[ "$TEST_SUITE" == "cts" ]]; then
-  $TRADEFED_MAKE_DIR/make-config \
-    $CONFIG_PATH \
-    --inline \
-    --override \
-      vars.tradefed.files.download.build_id=$CTS_BUILD_ID \
-      vars.tradefed.files.download.branch=git_qt-release \
-      vars.tradefed.files.local_zip_path.cts=$CTS_DIR/android-cts.zip \
-
-else
-  $TRADEFED_MAKE_DIR/make-config \
-    $CONFIG_PATH \
-    --inline \
-    --override \
-      vars.tradefed.files.download.build_id=$BUILD_ID \
-      vars.tradefed.files.local_zip_path.gts=$BUILD_DIR/test_suite/android-gts.zip \
-
-fi
-
+    vars.tradefed.files.download.build_id=$BUILD_ID \
+    vars.tradefed.files.local_zip_path.$TEST_SUITE=$BUILD_DIR/test_suite/android-$TEST_SUITE.zip \
 
 # Start the tests
 set +x
