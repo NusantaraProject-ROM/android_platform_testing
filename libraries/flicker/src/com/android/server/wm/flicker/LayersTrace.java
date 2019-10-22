@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -55,8 +56,10 @@ public class LayersTrace {
      *
      * @param data binary proto data
      * @param source Path to source of data for additional debug information
+     * @param orphanLayerCallback a callback to handle any unexpected orphan layers
      */
-    public static LayersTrace parseFrom(byte[] data, Path source) {
+    public static LayersTrace parseFrom(byte[] data, Path source,
+            Consumer<Layer> orphanLayerCallback) {
         List<Entry> entries = new ArrayList<>();
         LayersTraceFileProto fileProto;
         try {
@@ -67,10 +70,22 @@ public class LayersTrace {
         for (LayersTraceProto traceProto : fileProto.entry) {
             Entry entry =
                     Entry.fromFlattenedLayers(
-                            traceProto.elapsedRealtimeNanos, traceProto.layers.layers);
+                            traceProto.elapsedRealtimeNanos, traceProto.layers.layers,
+                            orphanLayerCallback);
             entries.add(entry);
         }
         return new LayersTrace(entries, source);
+    }
+
+    /**
+     * Parses {@code LayersTraceFileProto} from {@code data} and uses the proto to generates a list
+     * of trace entries, storing the flattened layers into its hierarchical structure.
+     *
+     * @param data binary proto data
+     * @param source Path to source of data for additional debug information
+     */
+    public static LayersTrace parseFrom(byte[] data, Path source) {
+        return parseFrom(data, source, null /* orphanLayerCallback */);
     }
 
     /**
@@ -112,7 +127,8 @@ public class LayersTrace {
         }
 
         /** Constructs the layer hierarchy from a flattened list of layers. */
-        public static Entry fromFlattenedLayers(long timestamp, LayerProto[] protos) {
+        public static Entry fromFlattenedLayers(long timestamp, LayerProto[] protos,
+                Consumer<Layer> orphanLayerCallback) {
             SparseArray<Layer> layerMap = new SparseArray<>();
             ArrayList<Layer> orphans = new ArrayList<>();
             for (LayerProto proto : protos) {
@@ -145,6 +161,11 @@ public class LayersTrace {
             // Fail if we find orphan layers.
             orphans.forEach(
                     orphan -> {
+                        if (orphanLayerCallback != null) {
+                            // Workaround for b/141326137, ignore the existance of an orphan layer
+                            orphanLayerCallback.accept(orphan);
+                            return;
+                        }
                         String childNodes =
                                 orphan.mChildren
                                         .stream()
