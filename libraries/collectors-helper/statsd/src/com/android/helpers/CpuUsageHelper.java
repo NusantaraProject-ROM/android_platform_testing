@@ -25,10 +25,12 @@ import com.android.os.StatsLog.GaugeMetricData;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * CpuUsageHelper consist of helper methods to set the app
@@ -47,12 +49,18 @@ public class CpuUsageHelper implements ICollectorHelper<Long> {
     private static final String FREQ_INDEX = "freq_index";
     private static final String USER_TIME = "user_time";
     private static final String SYSTEM_TIME = "system_time";
+    private static final String TOTAL_CPU_TIME = "total_cpu_time";
+    private static final String CPU_UTILIZATION = "cpu_utilization_average_per_core_percent";
 
     private StatsdHelper mStatsdHelper = new StatsdHelper();
     private boolean isPerFreqDisabled;
     private boolean isPerPkgDisabled;
     private boolean isTotalPkgDisabled;
     private boolean isTotalFreqDisabled;
+    private boolean isCpuUtilizationEnabled;
+    private long mStartTime;
+    private long mEndTime;
+    private Integer mCpuCores = null;
 
     @Override
     public boolean startCollecting() {
@@ -62,6 +70,10 @@ public class CpuUsageHelper implements ICollectorHelper<Long> {
         atomIdList.add(Atom.CPU_TIME_PER_UID_FIELD_NUMBER);
         atomIdList.add(Atom.CPU_TIME_PER_FREQ_FIELD_NUMBER);
 
+        if (isCpuUtilizationEnabled) {
+            mStartTime = System.currentTimeMillis();
+        }
+
         return mStatsdHelper.addGaugeConfig(atomIdList);
     }
 
@@ -70,6 +82,11 @@ public class CpuUsageHelper implements ICollectorHelper<Long> {
         Map<String, Long> cpuUsageFinalMap = new HashMap<>();
 
         List<GaugeMetricData> gaugeMetricList = mStatsdHelper.getGaugeMetrics();
+
+        if (isCpuUtilizationEnabled) {
+            mEndTime = System.currentTimeMillis();
+        }
+
         ListMultimap<String, Long> cpuUsageMap = ArrayListMultimap.create();
 
         for (GaugeMetricData gaugeMetric : gaugeMetricList) {
@@ -94,14 +111,20 @@ public class CpuUsageHelper implements ICollectorHelper<Long> {
                         // It is possible to have multiple bucket info. Track all the gauge info
                         // and take the difference of the first and last to compute the
                         // final usage.
-                        String finalUserTimeKey = MetricUtility.constructKey(CPU_USAGE_PKG_UID,
+
+                        // Add uid suffix to CPU_USAGE_PKG_UID type of key to tell apart processes
+                        // with the same package name but different uid in multi-user situations,
+                        // so that cpu gauge info won't get mixed up when taking the difference. All
+                        // uid suffix will be removed subsequently in final result.
+
+                        String UserTimeKey = MetricUtility.constructKey(CPU_USAGE_PKG_UID,
                                 (packageName == null) ? String.valueOf(uId) : packageName,
-                                USER_TIME);
-                        String finalSystemTimeKey = MetricUtility.constructKey(CPU_USAGE_PKG_UID,
+                                USER_TIME, String.valueOf(uId));
+                        String SystemTimeKey = MetricUtility.constructKey(CPU_USAGE_PKG_UID,
                                 (packageName == null) ? String.valueOf(uId) : packageName,
-                                SYSTEM_TIME);
-                        cpuUsageMap.put(finalUserTimeKey, userTimeMillis);
-                        cpuUsageMap.put(finalSystemTimeKey, sysTimeMillis);
+                                SYSTEM_TIME, String.valueOf(uId));
+                        cpuUsageMap.put(UserTimeKey, userTimeMillis);
+                        cpuUsageMap.put(SystemTimeKey, sysTimeMillis);
                     }
 
                     // Track cpu usage per cluster_id and freq_index
@@ -134,7 +157,15 @@ public class CpuUsageHelper implements ICollectorHelper<Long> {
                 if (cpuUsage > 0) {
                     if (key.startsWith(CPU_USAGE_PKG_UID)
                             && !isPerPkgDisabled) {
-                        cpuUsageFinalMap.put(key, cpuUsage);
+                        // remove uid suffix from key.
+                        String finalKey = key.substring(0, key.lastIndexOf('_'));
+                        if (cpuUsageFinalMap.containsKey(finalKey)) {
+                            // accumulate cpu time of the same package from different uid.
+                            cpuUsageFinalMap.put(
+                                    finalKey, cpuUsage + cpuUsageFinalMap.get(finalKey));
+                        } else {
+                            cpuUsageFinalMap.put(finalKey, cpuUsage);
+                        }
                     }
                     if (key.startsWith(CPU_USAGE_FREQ)
                             && !isPerFreqDisabled) {
@@ -158,6 +189,18 @@ public class CpuUsageHelper implements ICollectorHelper<Long> {
         if (!isTotalFreqDisabled) {
             cpuUsageFinalMap.put(TOTAL_CPU_USAGE_FREQ, totalCpuFreq);
         }
+
+        // Calculate cpu utilization
+        if (isCpuUtilizationEnabled) {
+            long totalCpuTime = (mEndTime - mStartTime) * getCores();
+            cpuUsageFinalMap.put(TOTAL_CPU_TIME, totalCpuTime);
+            if (!isTotalPkgDisabled) {
+                double utilization =
+                        ((double) cpuUsageFinalMap.get(TOTAL_CPU_USAGE) / totalCpuTime) * 100;
+                cpuUsageFinalMap.put(CPU_UTILIZATION, (long) utilization);
+            }
+        }
+
         return cpuUsageFinalMap;
     }
 
@@ -195,5 +238,31 @@ public class CpuUsageHelper implements ICollectorHelper<Long> {
      */
     public void setDisableTotalFrequency() {
         isTotalFreqDisabled = true;
+    }
+
+    /**
+     * Enable the collection of cpu utilization.
+     */
+    public void setEnableCpuUtilization() {
+        isCpuUtilizationEnabled = true;
+    }
+
+    /**
+     * return the number of cores that the device has.
+     */
+    private int getCores() {
+        if (mCpuCores == null) {
+            int count = 0;
+            // every core corresponds to a folder named "cpu[0-9]+" under /sys/devices/system/cpu
+            File cpuDir = new File("/sys/devices/system/cpu");
+            File[] files = cpuDir.listFiles();
+            for (File file : files) {
+                if (Pattern.matches("cpu[0-9]+", file.getName())) {
+                    ++count;
+                }
+            }
+            mCpuCores = count;
+        }
+        return mCpuCores.intValue();
     }
 }
