@@ -25,6 +25,7 @@ java_library {
         "memory-helper",
         "perfetto-helper",
         "ub-uiautomator",
+        "system-metric-helper",
     ],
 
     sdk_version: "current",
