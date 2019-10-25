@@ -49,9 +49,16 @@ public interface IAutoMediaCenterNowPlayingHelper extends IAppHelper {
   /**
    * Setup expectations: Now Playing is open.
    *
-   * @return to get current playing track name from home screen.
+   * @return to get current playing track name from screen.
    */
   String getTrackName();
+
+  /**
+   * Setup expectations: Now Playing is open.
+   *
+   * @return to get current playing track's artist name from screen.
+   */
+  String getArtistName();
 
   /**
    * Setup expectations: Now Playing is open.
