@@ -72,6 +72,28 @@ public interface INotificationHelper extends IAppHelper {
     /**
      * Setup Expectations: None
      *
+     * <p>Posts a notification using {@link android.app.Notification.BigPictureStyle}.
+     *
+     * @param pkg App to launch, when clicking on notification.
+     */
+    default UiObject2 postBigPictureNotification(String pkg) {
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
+
+    /**
+     * Setup Expectations: None
+     *
+     * <p>Posts a notification using {@link android.app.Notification.MessagingStyle}.
+     *
+     * @param pkg App to launch, when clicking on notification.
+     */
+    default UiObject2 postMessagingStyleNotification(String pkg) {
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
+
+    /**
+     * Setup Expectations: None
+     *
      * <p>Posts a number of notifications to the device with a package to launch. Successive calls
      * to this should post new notifications in addition to those previously posted. Note that this
      * may fail if the helper has surpassed the system-defined limit for per-package notifications.
