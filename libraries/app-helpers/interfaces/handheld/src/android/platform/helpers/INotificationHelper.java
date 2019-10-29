@@ -118,4 +118,22 @@ public interface INotificationHelper extends IAppHelper {
     default void expandNotification(UiObject2 notification, boolean dragging) {
         throw new UnsupportedOperationException("Not yet implemented.");
     }
+
+    /**
+     * Long press on notification to show its hidden menu (a.k.a. guts)
+     *
+     * @param notification Notification.
+     */
+    default void showGuts(UiObject2 notification) {
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
+
+    /**
+     * Taps the "Done" button on the notification guts.
+     *
+     * @param notification Notification.
+     */
+    default void hideGuts(UiObject2 notification) {
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
 }
