@@ -269,12 +269,16 @@ public class LongevityClassRunner extends BlockJUnit4ClassRunner {
      */
     @Override
     protected Description describeChild(FrameworkMethod method) {
-        Description original = super.describeChild(method);
+        return addIterationIfEnabled(super.describeChild(method));
+    }
+
+    /** Rename the class name to add iterations if the renaming iteration option is enabled. */
+    protected Description addIterationIfEnabled(Description input) {
         if (mIteration == ITERATION_NOT_SET) {
-            return original;
+            return input;
         }
         return Description.createTestDescription(
-                String.join(mIterationSep, original.getClassName(), String.valueOf(mIteration)),
-                original.getMethodName());
+                String.join(mIterationSep, input.getClassName(), String.valueOf(mIteration)),
+                input.getMethodName());
     }
 }
