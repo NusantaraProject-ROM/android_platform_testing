@@ -83,6 +83,11 @@ function find_zip_in_dir {
   echo $zip_path
 }
 
+# Check that we have the expected version of java.
+EXPECTED_VERSION=9.0.4
+export PATH=~/jdk-${EXPECTED_VERSION}/bin:$PATH
+java --version | grep $EXPECTED_VERSION  # Fails if version string not found.
+
 MODULE_LIST_PATH=$(dirname ${BASH_SOURCE[0]})/$MODULE_LIST_FILE
 [[ -f $MODULE_LIST_PATH ]] || die "The module list path $MODULE_LIST_PATH was not found"
 
