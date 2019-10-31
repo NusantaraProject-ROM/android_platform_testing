@@ -33,6 +33,8 @@ public interface INotificationHelper extends IAppHelper {
             + "lorem ipsum dolor sit amet\n"
             + "lorem ipsum dolor sit amet";
     String NOTIFICATION_CHANNEL_NAME = "Test Channel";
+    String EXPAND_BUTTON_ID = "expand_button";
+    String APP_ICON_ID = "icon";
 
     /**
      * Setup expectations: Notification shade opened.
