@@ -61,7 +61,7 @@ public interface INotificationHelper extends IAppHelper {
     }
 
     /**
-     * Setup Expectations: None
+     * Setup Expectations: Shade is open
      *
      * <p>Posts a notification using {@link android.app.Notification.BigTextStyle}.
      *
@@ -72,7 +72,7 @@ public interface INotificationHelper extends IAppHelper {
     }
 
     /**
-     * Setup Expectations: None
+     * Setup Expectations: Shade is open
      *
      * <p>Posts a notification using {@link android.app.Notification.BigPictureStyle}.
      *
@@ -83,7 +83,7 @@ public interface INotificationHelper extends IAppHelper {
     }
 
     /**
-     * Setup Expectations: None
+     * Setup Expectations: Shade is open
      *
      * <p>Posts a notification using {@link android.app.Notification.MessagingStyle}.
      *
@@ -104,6 +104,21 @@ public interface INotificationHelper extends IAppHelper {
      * @param pkg The application that will be launched by notifications.
      */
     default void postNotifications(int count, String pkg) {
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
+
+    /**
+     * Setup Expectations: None
+     *
+     * <p>Posts a number of notifications to the device with a package to launch. Successive calls
+     * to this should post new notifications in addition to those previously posted. Note that this
+     * may fail if the helper has surpassed the system-defined limit for per-package notifications.
+     *
+     * @param count The number of notifications to post.
+     * @param pkg The application that will be launched by notifications.
+     * @param interrupting If notification should make sounds and be on top section of the shade.
+     */
+    default void postNotifications(int count, String pkg, boolean interrupting) {
         throw new UnsupportedOperationException("Not yet implemented.");
     }
 
