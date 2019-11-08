@@ -26,9 +26,4 @@
             android:name="android.support.test.runner.AndroidJUnitRunner"
             android:targetPackage="com.android.uibench.janktests"
             android:label="Platform UiBench Jank Tests" />
-
-    <instrumentation
-        android:name="androidx.test.runner.AndroidJUnitRunner"
-        android:targetPackage="com.android.uibench.janktests"
-        android:label="Platform UiBench Scenario-Based Jank Tests" />
 </manifest>
