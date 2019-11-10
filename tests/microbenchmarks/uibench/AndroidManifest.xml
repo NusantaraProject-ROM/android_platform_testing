@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2015 The Android Open Source Project
+<!-- Copyright (C) 2019 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.android.uibench.janktests">
+    package="com.android.uibench.microbenchmark">
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application>
@@ -23,7 +23,7 @@
     </application>
 
     <instrumentation
-            android:name="android.support.test.runner.AndroidJUnitRunner"
-            android:targetPackage="com.android.uibench.janktests"
-            android:label="Platform UiBench Jank Tests" />
+        android:name="androidx.test.runner.AndroidJUnitRunner"
+        android:targetPackage="com.android.uibench.microbenchmark"
+        android:label="Platform UiBench Scenario-Based microbenchmark Tests" />
 </manifest>

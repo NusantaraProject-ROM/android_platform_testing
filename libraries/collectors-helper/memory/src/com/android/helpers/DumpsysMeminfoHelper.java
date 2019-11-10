@@ -16,38 +16,35 @@
 
 package com.android.helpers;
 
-import android.support.test.uiautomator.UiDevice;
+import android.app.UiAutomation;
+import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
 import androidx.test.InstrumentationRegistry;
 
+import com.android.server.am.nano.MemInfoDumpProto;
+
+import com.google.protobuf.nano.InvalidProtocolBufferNanoException;
+
+import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
- * This is a collector helper to use adb "dumpsys meminfo -a" command to get important memory
- * metrics like PSS, Shared Dirty, Private Dirty, e.t.c. for the specified packages
+ * This is a collector helper to use adb "dumpsys meminfo -a --proto" command to get important
+ * memory metrics like PSS, Shared Dirty, Private Dirty, e.t.c. for the specified packages.
  */
 public class DumpsysMeminfoHelper implements ICollectorHelper<Long> {
 
     private static final String TAG = DumpsysMeminfoHelper.class.getSimpleName();
 
-    private static final String SEPARATOR = "\\s+";
-    private static final String LINE_SEPARATOR = "\\n";
-
-    private static final String DUMPSYS_MEMINFO_CMD = "dumpsys meminfo -a %s";
-    private static final String PIDOF_CMD = "pidof %s";
+    private static final String DUMPSYS_MEMINFO_CMD = "dumpsys meminfo -a --proto %s";
 
     private static final String METRIC_SOURCE = "dumpsys";
     private static final String METRIC_UNIT = "kb";
-
-    // Prefixes of the lines in the output of "dumpsys meminfo -a" command that will be parsed
-    private static final String NATIVE_HEAP_PREFIX = "Native Heap";
-    private static final String DALVIK_HEAP_PREFIX = "Dalvik Heap";
-    private static final String TOTAL_PREFIX = "TOTAL";
 
     // The metric names corresponding to the columns in the output of "dumpsys meminfo -a" command
     private static final String PSS_TOTAL = "pss_total";
@@ -55,32 +52,14 @@ public class DumpsysMeminfoHelper implements ICollectorHelper<Long> {
     private static final String PRIVATE_DIRTY = "private_dirty";
     private static final String HEAP_SIZE = "heap_size";
     private static final String HEAP_ALLOC = "heap_alloc";
-    private static final String PSS = "pss";
 
-    // Mapping from prefixes of lines to metric category names
-    private static final Map<String, String> CATEGORIES =
-            Stream.of(
-                    new String[][] {
-                            {NATIVE_HEAP_PREFIX, "native"},
-                            {DALVIK_HEAP_PREFIX, "dalvik"},
-                            {TOTAL_PREFIX, "total"},
-                    }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
-
-    // Mapping from metric keys to its column index (exclude prefix) in dumpsys meminfo output.
-    // The index might change across different Android releases
-    private static final Map<String, Integer> METRIC_POSITIONS =
-            Stream.of(
-                    new Object[][] {
-                            {PSS_TOTAL, 0},
-                            {SHARED_DIRTY, 2},
-                            {PRIVATE_DIRTY, 3},
-                            {HEAP_SIZE, 7},
-                            {HEAP_ALLOC, 8},
-                    })
-            .collect(Collectors.toMap(data -> (String) data[0], data -> (Integer) data[1]));
+    // Metric category names, which are the names of the heaps
+    private static final String NATIVE_HEAP = "native";
+    private static final String DALVIK_HEAP = "dalvik";
+    private static final String TOTAL_HEAP = "total";
 
     private String[] mProcessNames = {};
-    private UiDevice mUiDevice;
+    private UiAutomation mUiAutomation;
 
     public void setUp(String... processNames) {
         if (processNames == null) {
@@ -91,7 +70,7 @@ public class DumpsysMeminfoHelper implements ICollectorHelper<Long> {
 
     @Override
     public boolean startCollecting() {
-        mUiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+        mUiAutomation = InstrumentationRegistry.getInstrumentation().getUiAutomation();
         return true;
     }
 
@@ -99,7 +78,11 @@ public class DumpsysMeminfoHelper implements ICollectorHelper<Long> {
     public Map<String, Long> getMetrics() {
         Map<String, Long> metrics = new HashMap<>();
         for (String processName : mProcessNames) {
-            String rawOutput = getRawDumpsysMeminfo(processName);
+            byte[] rawOutput = getRawDumpsysMeminfo(processName);
+            if (rawOutput == null) {
+                Log.e(TAG, "Missing meminfo output for process " + processName);
+                continue;
+            }
             metrics.putAll(parseMetrics(processName, rawOutput));
         }
         return metrics;
@@ -110,64 +93,103 @@ public class DumpsysMeminfoHelper implements ICollectorHelper<Long> {
         return true;
     }
 
-    private String getRawDumpsysMeminfo(String processName) {
-        if (isEmpty(processName)) {
-            return "";
+    private byte[] getRawDumpsysMeminfo(String processName) {
+        if (processName == null || processName.isEmpty()) {
+            return null;
         }
-        try {
-            String pidStr = mUiDevice.executeShellCommand(String.format(PIDOF_CMD, processName));
-            if (isEmpty(pidStr)) {
-                return "";
-            }
-            return mUiDevice.executeShellCommand(String.format(DUMPSYS_MEMINFO_CMD, pidStr));
+        final String cmd = String.format(DUMPSYS_MEMINFO_CMD, processName);
+        ParcelFileDescriptor pfd = mUiAutomation.executeShellCommand(cmd);
+        try (FileInputStream fis = new ParcelFileDescriptor.AutoCloseInputStream(pfd)) {
+            return readInputStreamFully(fis);
         } catch (IOException e) {
-            Log.e(TAG, String.format("Failed to execute command. %s", e));
-            return "";
+            Log.e(TAG, "Failed to execute command. " + cmd, e);
+            return null;
         }
     }
 
-    private Map<String, Long> parseMetrics(String processName, String rawOutput) {
-        String[] lines = rawOutput.split(LINE_SEPARATOR);
+    private Map<String, Long> parseMetrics(String processName, byte[] rawOutput) {
         Map<String, Long> metrics = new HashMap<>();
-        for (String line : lines) {
-            String[] tokens = line.trim().split(SEPARATOR);
-            if (tokens.length < 2) {
-                continue;
+        try {
+            MemInfoDumpProto memInfo = MemInfoDumpProto.parseFrom(rawOutput);
+            MemInfoDumpProto.ProcessMemory processMemory = findProcessMemory(memInfo, processName);
+            if (processMemory != null) {
+                putHeapMetrics(metrics, processMemory.nativeHeap, NATIVE_HEAP, processName);
+                putHeapMetrics(metrics, processMemory.dalvikHeap, DALVIK_HEAP, processName);
+                putHeapMetric(
+                        metrics,
+                        processMemory.totalHeap.memInfo.totalPssKb,
+                        TOTAL_HEAP,
+                        PSS_TOTAL,
+                        processName);
             }
-            String firstToken = tokens[0];
-            String firstTwoTokens = String.join(" ", tokens[0], tokens[1]);
-            if (firstTwoTokens.equals(NATIVE_HEAP_PREFIX)
-                    || firstTwoTokens.equals(DALVIK_HEAP_PREFIX)) {
-                if (tokens.length < 11) {
-                    continue;
-                }
-                int offset = 2;
-                for (Map.Entry<String, Integer> metric : METRIC_POSITIONS.entrySet()) {
-                    metrics.put(
-                            MetricUtility.constructKey(
-                                    METRIC_SOURCE,
-                                    CATEGORIES.get(firstTwoTokens),
-                                    metric.getKey(),
-                                    METRIC_UNIT,
-                                    processName),
-                            Long.parseLong(tokens[offset + metric.getValue()]));
-                }
-            } else if (firstToken.equals(TOTAL_PREFIX)) {
-                int offset = 1;
-                metrics.put(
-                        MetricUtility.constructKey(
-                                METRIC_SOURCE,
-                                CATEGORIES.get(firstToken),
-                                PSS_TOTAL,
-                                METRIC_UNIT,
-                                processName),
-                        Long.parseLong(tokens[offset + METRIC_POSITIONS.get(PSS_TOTAL)]));
-            }
+        } catch (InvalidProtocolBufferNanoException ex) {
+            Log.e(TAG, "Invalid protobuf obtained from `dumpsys meminfo --proto`", ex);
         }
         return metrics;
     }
 
-    private boolean isEmpty(String input) {
-        return input == null || input.isEmpty();
+    /** Find ProcessMemory by name. Looks in app and native process. Returns null on failure. */
+    private static MemInfoDumpProto.ProcessMemory findProcessMemory(
+            MemInfoDumpProto memInfo, String processName) {
+        // Look in app processes first.
+        for (MemInfoDumpProto.AppData appData : memInfo.appProcesses) {
+            if (appData.processMemory == null) {
+                continue;
+            }
+            if (processName.equals(appData.processMemory.processName)) {
+                return appData.processMemory;
+            }
+        }
+        // If not found yet, then look in native processes.
+        for (MemInfoDumpProto.ProcessMemory procMem : memInfo.nativeProcesses) {
+            if (processName.equals(procMem.processName)) {
+                return procMem;
+            }
+        }
+        return null;
+    }
+
+    private static void putHeapMetrics(
+            Map<String, Long> metrics,
+            MemInfoDumpProto.ProcessMemory.HeapInfo heapInfo,
+            String heapName,
+            String processName) {
+        if (heapInfo == null || heapInfo.memInfo == null) {
+            return;
+        }
+        putHeapMetric(metrics, heapInfo.memInfo.totalPssKb, heapName, PSS_TOTAL, processName);
+        putHeapMetric(metrics, heapInfo.memInfo.sharedDirtyKb, heapName, SHARED_DIRTY, processName);
+        putHeapMetric(
+                metrics, heapInfo.memInfo.privateDirtyKb, heapName, PRIVATE_DIRTY, processName);
+        putHeapMetric(metrics, heapInfo.heapSizeKb, heapName, HEAP_SIZE, processName);
+        putHeapMetric(metrics, heapInfo.heapAllocKb, heapName, HEAP_ALLOC, processName);
+    }
+
+    private static void putHeapMetric(
+            Map<String, Long> metrics,
+            long value,
+            String heapName,
+            String metricName,
+            String processName) {
+        metrics.put(
+                MetricUtility.constructKey(
+                        METRIC_SOURCE, heapName, metricName, METRIC_UNIT, processName),
+                value);
+    }
+
+    /** Copied from {@link com.android.compatibility.common.util.FileUtils#readInputStreamFully}. */
+    private static byte[] readInputStreamFully(InputStream is) {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        byte[] buffer = new byte[32768];
+        int count;
+        try {
+            while ((count = is.read(buffer)) != -1) {
+                os.write(buffer, 0, count);
+            }
+            is.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return os.toByteArray();
     }
 }
