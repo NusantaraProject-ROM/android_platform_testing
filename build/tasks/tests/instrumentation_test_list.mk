@@ -60,6 +60,7 @@ instrumentation_tests := \
     RSTest \
     PrintSpoolerOutOfProcessTests \
     CellBroadcastReceiverUnitTests \
+    CellBroadcastServiceTests \
     TelephonyProviderTests \
     CarrierConfigTests \
     TeleServiceTests \
