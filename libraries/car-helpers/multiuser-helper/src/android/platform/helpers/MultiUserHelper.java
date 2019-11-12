@@ -38,8 +38,6 @@ import java.util.concurrent.TimeUnit;
  * testing requirements.
  */
 public class MultiUserHelper {
-    private static final String DEFAULT_GUEST_NAME = "Guest";
-
     private static final String TAG = MultiUserHelper.class.getSimpleName();
 
     /** For testing purpose we allow a wide range of switching time. */
@@ -136,7 +134,7 @@ public class MultiUserHelper {
      * @return true if removed successfully
      */
     public boolean removeUser(UserInfo userInfo) {
-        return mUserManagerHelper.removeUser(userInfo, DEFAULT_GUEST_NAME);
+        return mUserManager.removeUser(userInfo.id);
     }
 
     public UserInfo getCurrentForegroundUserInfo() {
