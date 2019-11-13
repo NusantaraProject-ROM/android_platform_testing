@@ -138,7 +138,6 @@ $TRADEFED_MAKE_DIR/make-config \
   $CONFIG_PATH \
   --override \
     config.key_zip_extract.emulator=emulator/emulator-headless \
-    config.emulator.command_prefix='vglrun +v -c proxy' \
     config.tradefed.ape_api_key=/home/android-build/gts-android-emulator.json \
     vars.emulator.files.download.build_id=$EMU_BUILD_ID \
     vars.emulator.files.local_zip_path=$EMU_ZIP \
