@@ -82,7 +82,7 @@ public class MultiUserHelper {
     public UserInfo createUser(String name, UserType userType) throws Exception {
         switch (userType) {
             case GUEST:
-                return mUserManagerHelper.createNewOrFindExistingGuest(name);
+                return createNewOrFindExistingGuest(name);
             case ADMIN:
                 return mUserManager.createUser(name, UserInfo.FLAG_ADMIN);
             case NON_ADMIN:
@@ -170,5 +170,18 @@ public class MultiUserHelper {
                             }
                         },
                         TAG);
+    }
+
+    @Nullable
+    private UserInfo createNewOrFindExistingGuest(String guestName) {
+        Context context = InstrumentationRegistry.getTargetContext();
+
+        // CreateGuest will return null if a guest already exists.
+        UserInfo newGuest = mUserManager.createGuest(context, guestName);
+        if (newGuest != null) {
+            return newGuest;
+        }
+
+        return mUserManager.findCurrentGuestUser();
     }
 }
