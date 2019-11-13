@@ -27,6 +27,7 @@ import androidx.annotation.VisibleForTesting;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Locale;
 
 /** Captures screen contents and saves it as a mp4 video file. */
 public class ScreenRecorder implements ITransitionMonitor {
@@ -34,7 +35,18 @@ public class ScreenRecorder implements ITransitionMonitor {
     public static final Path DEFAULT_OUTPUT_PATH = OUTPUT_DIR.resolve("transition.mp4");
 
     private static final String TAG = "FLICKER";
+    private int mWidth;
+    private int mHeight;
     private Thread mRecorderThread;
+
+    public ScreenRecorder() {
+        this(720, 1280);
+    }
+
+    public ScreenRecorder(int width, int height) {
+        mWidth = width;
+        mHeight = height;
+    }
 
     @VisibleForTesting
     public static Path getPath(String testTag) {
@@ -44,7 +56,13 @@ public class ScreenRecorder implements ITransitionMonitor {
     @Override
     public void start() {
         OUTPUT_DIR.toFile().mkdirs();
-        String command = "screenrecord " + DEFAULT_OUTPUT_PATH;
+        String command =
+                String.format(
+                        Locale.getDefault(),
+                        "screenrecord --size %dx%d %s",
+                        mWidth,
+                        mHeight,
+                        DEFAULT_OUTPUT_PATH);
         mRecorderThread =
                 new Thread(
                         () -> {
