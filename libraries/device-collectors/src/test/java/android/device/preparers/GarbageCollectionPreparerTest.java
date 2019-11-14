@@ -16,6 +16,7 @@
 
 package android.device.preparers;
 
+import static android.device.preparers.GarbageCollectionPreparer.GC_RUN_END;
 import static android.device.preparers.GarbageCollectionPreparer.GC_WAIT_TIME_KEY;
 import static android.device.preparers.GarbageCollectionPreparer.PROCESS_NAMES_KEY;
 import static android.device.preparers.GarbageCollectionPreparer.PROCESS_SEPARATOR;
@@ -144,5 +145,33 @@ public class GarbageCollectionPreparerTest {
         mPreparer.testFinished(mRunDesc);
 
         verify(mGcHelper, times(2)).garbageCollect(TEST_WAIT_TIME);
+    }
+
+    @Test
+    public void testHelperGcsNoRunEnd() throws Exception {
+        Bundle b = new Bundle();
+        b.putString(PROCESS_NAMES_KEY, TEST_PROCESS_NAME_1);
+        b.putString(GC_RUN_END, "false");
+        mPreparer = initPreparer(b);
+        mPreparer.testRunStarted(mRunDesc);
+
+        mPreparer.testStarted(mRunDesc);
+        mPreparer.testFinished(mRunDesc);
+
+        verify(mGcHelper, times(1)).garbageCollect();
+    }
+
+    @Test
+    public void testHelperGcsRunEnd() throws Exception {
+        Bundle b = new Bundle();
+        b.putString(PROCESS_NAMES_KEY, TEST_PROCESS_NAME_1);
+        b.putString(GC_RUN_END, "true");
+        mPreparer = initPreparer(b);
+        mPreparer.testRunStarted(mRunDesc);
+
+        mPreparer.testStarted(mRunDesc);
+        mPreparer.testFinished(mRunDesc);
+
+        verify(mGcHelper, times(2)).garbageCollect();
     }
 }
