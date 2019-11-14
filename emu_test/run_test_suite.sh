@@ -16,6 +16,8 @@ BUILD_ID=$2
 MODULE_LIST_FILE=$3
 # Emulator GPU option
 GPU_FLAG=$4
+# Directory containing the system image to run the tests against. Default is gphone_x86_64-user
+PRODUCT_DIR=${5:-gphone_x86_64-user}
 
 # Kill any emulators that might still be active from older sessions.
 killall qemu-system-x86_64-headless
@@ -118,16 +120,19 @@ ls -l $EMU_ZIP
 # Directory where system images, and cts can be found
 BUILD_DIR=out/prebuilt_cached/builds
 
-IMAGE_DIR=$BUILD_DIR/gphone_x86_64-user
+IMAGE_DIR=$BUILD_DIR/$PRODUCT_DIR
 IMAGE_ZIP=$(find_zip_in_dir image $IMAGE_DIR)
 ls -l $IMAGE_ZIP
 
 if [[ -f "$BUILD_DIR/test_suite/android-cts.zip" ]]; then
   TEST_SUITE=cts
+  IMAGE_FLAVOR=user
 elif [[ -f "$BUILD_DIR/test_suite/android-gts.zip" ]]; then
   TEST_SUITE=gts
+  IMAGE_FLAVOR=user
 elif [[ -f "$BUILD_DIR/test_suite/android-vts.zip" ]]; then
   TEST_SUITE=vts
+  IMAGE_FLAVOR=userdebug
 else
   die "Could not find android-cts.zip, android-gts.zip or android-vts.zip in $BUILD_DIR/test_suite"
 fi
@@ -137,13 +142,12 @@ $TRADEFED_MAKE_DIR/make-config \
   $TRADEFED_MAKE_DIR/config.yaml \
   $CONFIG_PATH \
   --override \
-    config.key_zip_extract.emulator=emulator/emulator-headless \
     config.tradefed.ape_api_key=/home/android-build/gts-android-emulator.json \
     vars.emulator.files.download.build_id=$EMU_BUILD_ID \
     vars.emulator.files.local_zip_path=$EMU_ZIP \
     vars.emulator.flags.feature=PlayStoreImage,GLAsyncSwap,GLESDynamicVersion \
     vars.emulator.flags.gpu=$GPU_FLAG \
-    vars.image.files.local_zip_path.user=$IMAGE_ZIP \
+    vars.image.files.local_zip_path.${IMAGE_FLAVOR}=$IMAGE_ZIP \
     vars.image.files.download.branch=git_rvc-release \
     vars.image.files.download.build_id=$BUILD_ID \
     vars.image.flavor.default=user \
@@ -156,6 +160,9 @@ $TRADEFED_MAKE_DIR/make-config \
     vars.tools.files.local_dir.sdk_tools=$SDK_TOOLS_DIR \
     vars.tradefed.files.download.build_id=$BUILD_ID \
     vars.tradefed.files.local_zip_path.$TEST_SUITE=$BUILD_DIR/test_suite/android-$TEST_SUITE.zip \
+  --add \
+    vars.emulator.flags.no-window=True \
+
 
 # Start the tests
 set +x
