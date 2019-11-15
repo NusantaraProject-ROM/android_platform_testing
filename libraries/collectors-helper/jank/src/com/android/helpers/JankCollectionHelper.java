@@ -116,7 +116,27 @@ public class JankCollectionHelper implements ICollectorHelper<Double> {
         NUM_FRAME_DEADLINE_MISSED(
                 Pattern.compile(".*Number Frame deadline missed: (\\d+).*", Pattern.DOTALL),
                 1,
-                "deadline_missed");
+                "deadline_missed"),
+        // Example: "50th gpu percentile: 9ms"
+        GPU_FRAME_TIME_50TH(
+                Pattern.compile(".*50th gpu percentile: (\\d+)ms.*", Pattern.DOTALL),
+                1,
+                "gpu_jank_percentile_50"),
+        // Example: "90th gpu percentile: 9ms"
+        GPU_FRAME_TIME_90TH(
+                Pattern.compile(".*90th gpu percentile: (\\d+)ms.*", Pattern.DOTALL),
+                1,
+                "gpu_jank_percentile_90"),
+        // Example: "95th gpu percentile: 9ms"
+        GPU_FRAME_TIME_95TH(
+                Pattern.compile(".*95th gpu percentile: (\\d+)ms.*", Pattern.DOTALL),
+                1,
+                "gpu_jank_percentile_95"),
+        // Example: "99th gpu percentile: 9ms"
+        GPU_FRAME_TIME_99TH(
+                Pattern.compile(".*99th gpu percentile: (\\d+)ms.*", Pattern.DOTALL),
+                1,
+                "gpu_jank_percentile_99");
 
         private Pattern mPattern;
         private int mGroupIndex;
