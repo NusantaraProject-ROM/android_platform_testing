@@ -101,4 +101,22 @@ public interface IMapsHelper extends IAppHelper {
     public default void startSearch() {
         throw new UnsupportedOperationException("Not yet implemented.");
     }
+
+    /**
+     * Setup expectation: Destination is selected.
+     *
+     * <p>Go to the street view screen for the selected destination.
+     */
+    public default void openStreetView() {
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
+
+    /**
+     * Setup expectation: On the street view screen.
+     *
+     * <p>Swipe the street view screen.
+     */
+    public default void swipeStreetView() {
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
 }
