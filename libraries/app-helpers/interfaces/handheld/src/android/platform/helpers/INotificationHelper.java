@@ -16,6 +16,7 @@
 
 package android.platform.helpers;
 
+import android.app.Notification;
 import android.support.test.uiautomator.UiObject2;
 
 import androidx.annotation.Nullable;
@@ -119,6 +120,17 @@ public interface INotificationHelper extends IAppHelper {
      * @param interrupting If notification should make sounds and be on top section of the shade.
      */
     default void postNotifications(int count, String pkg, boolean interrupting) {
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
+
+    /**
+     * Setup Expectations: None
+     *
+     * <p>Posts notification.
+     *
+     * @param builder Builder for notification to post.
+     */
+    default void postNotification(Notification.Builder builder) {
         throw new UnsupportedOperationException("Not yet implemented.");
     }
 
