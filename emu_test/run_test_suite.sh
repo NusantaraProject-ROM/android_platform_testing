@@ -167,6 +167,8 @@ $TRADEFED_MAKE_DIR/make-config \
 # Start the tests
 set +x
 set -e
+# Override the jdk's built-in certs to use the system ones.
+export RDBG_FLAG=-Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts
 export DISPLAY=:0
 $TRADEFED_MAKE_DIR/tradefed-make $CONFIG_PATH -j4 prepare.$TEST_SUITE.all_modules
 $TRADEFED_MAKE_DIR/tradefed-make $CONFIG_PATH -j4 $(cat $MODULE_LIST_PATH | sed 's/^/run./')
