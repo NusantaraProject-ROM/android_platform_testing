@@ -133,6 +133,11 @@ elif [[ -f "$BUILD_DIR/test_suite/android-gts.zip" ]]; then
 elif [[ -f "$BUILD_DIR/test_suite/android-vts.zip" ]]; then
   TEST_SUITE=vts
   IMAGE_FLAVOR=userdebug
+  export VTS_PYPI_PATH=$WORK_DIR/venv
+  pip install --user virtualenv
+  virtualenv $VTS_PYPI_PATH
+  curl https://android.googlesource.com/platform/test/vts/+/master/script/pip_requirements.txt?format=TEXT | base64 -d > $WORK_DIR/pip_requirements.txt
+  pip download -d $VTS_PYPI_PATH -r $WORK_DIR/pip_requirements.txt --no-binary protobuf,grpcio,matplotlib,numpy,Pillow,scipy==1.2.2
 else
   die "Could not find android-cts.zip, android-gts.zip or android-vts.zip in $BUILD_DIR/test_suite"
 fi
