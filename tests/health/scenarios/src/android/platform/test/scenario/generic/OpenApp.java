@@ -17,9 +17,11 @@
 package android.platform.test.scenario.generic;
 
 import android.app.Instrumentation;
+import android.os.SystemClock;
 import android.platform.helpers.AbstractStandardAppHelper;
 import android.platform.helpers.HelperAccessor;
 import android.platform.helpers.IAppHelper;
+import android.platform.test.option.LongOption;
 import android.platform.test.option.StringOption;
 import android.platform.test.rule.NaturalOrientationRule;
 import android.platform.test.scenario.annotation.Scenario;
@@ -40,6 +42,10 @@ public class OpenApp {
     @ClassRule public static StringOption sNameOption = new StringOption("name").setRequired(true);
     @ClassRule public static StringOption sPkgOption = new StringOption("pkg").setRequired(true);
 
+    @ClassRule
+    public static LongOption sIdleMsOption =
+            new LongOption("idleMs").setRequired(false).setDefault(0L);
+
     private static HelperAccessor<IGenericAppHelper> sHelper =
             new HelperAccessor<>(IGenericAppHelper.class);
 
@@ -49,6 +55,8 @@ public class OpenApp {
         helper.setLauncherName(sNameOption.get());
         helper.setPackage(sPkgOption.get());
         helper.open();
+        // Idle for specified time
+        SystemClock.sleep(sIdleMsOption.get());
     }
 
     @AfterClass
