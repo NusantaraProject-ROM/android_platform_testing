@@ -16,19 +16,16 @@
 package com.android.helpers;
 
 import static com.android.helpers.MetricUtility.constructKey;
-import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.Mockito.when;
+import static com.android.helpers.SfStatsCollectionHelper.SFSTATS_COMMAND_DISABLE_AND_CLEAR;
 import static com.android.helpers.SfStatsCollectionHelper.SFSTATS_COMMAND_DUMP;
 import static com.android.helpers.SfStatsCollectionHelper.SFSTATS_COMMAND_ENABLE_AND_CLEAR;
-import static com.android.helpers.SfStatsCollectionHelper.SFSTATS_COMMAND_DISABLE_AND_CLEAR;
 import static com.android.helpers.SfStatsCollectionHelper.SFSTATS_METRICS_PREFIX;
+import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.when;
 
 import android.support.test.uiautomator.UiDevice;
-
 import java.io.IOException;
 import java.util.Map;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -47,6 +44,10 @@ public class SfStatsCollectionHelperTest {
                     + "displayConfigStats is as below:\n"
                     + "90fps=3700ms 60fps=297492ms\n"
                     + "totalP2PTime = 2674034 ms\n"
+                    + "frameDuration histogram is as below:\n"
+                    + "0ms=0 1ms=0 2ms=0 3ms=0 4ms=0 5ms=50 6ms=50 7ms=0 8ms=0 9ms=0\n"
+                    + "renderEngineTiming histogram is as below:\n"
+                    + "0ms=0 1ms=0 2ms=0 3ms=0 4ms=0 5ms=0 6ms=50 7ms=50 8ms=0 9ms=0\n"
                     + "presentToPresent histogram is as below:\n"
                     + "0ms=0 1ms=0 2ms=0 3ms=0 4ms=0 5ms=0 6ms=0 7ms=0 8ms=5791 9ms=0\n"
                     + "\n"
@@ -134,6 +135,20 @@ public class SfStatsCollectionHelperTest {
                                         "GLOBAL",
                                         "missedFrames".toUpperCase())))
                 .isEqualTo(Double.valueOf(82));
+        assertThat(
+                        metrics.get(
+                                constructKey(
+                                        SFSTATS_METRICS_PREFIX,
+                                        "GLOBAL",
+                                        "FRAME_CPU_DURATION_AVG")))
+                .isEqualTo(Double.valueOf(5.5));
+        assertThat(
+                        metrics.get(
+                                constructKey(
+                                        SFSTATS_METRICS_PREFIX,
+                                        "GLOBAL",
+                                        "RENDER_ENGINE_DURATION_AVG")))
+                .isEqualTo(Double.valueOf(6.5));
         assertThat(
                         metrics.get(
                                 constructKey(
