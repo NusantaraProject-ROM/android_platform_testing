@@ -93,4 +93,11 @@ public interface IAutoMediaHelper extends IAppHelper {
      * @return to get current playing track name.
      */
     String getMediaTrackName();
+
+    /**
+     * Setup expectations: Media app is open. User navigates to sub-page of the Media Player
+     *
+     * This method is to go back to the Media Player main page from any sub-page.
+     */
+    void goBackToMediaHomePage();
 }
