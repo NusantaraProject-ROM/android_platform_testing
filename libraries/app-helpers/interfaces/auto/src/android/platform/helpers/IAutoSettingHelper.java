@@ -84,6 +84,13 @@ public interface IAutoSettingHelper extends IAppHelper, Scrollable {
     void turnOnOffBluetooth(boolean turnOn);
 
     /**
+     * Setup expectations: The app is open and Hotspot & tethering setting options is selected
+     *
+     * @param turnOn to turn on/off Hotspot
+     */
+    void turnOnOffHotspot(boolean turnOn);
+
+    /**
      * Setup expectations: The app is open.
      *
      * Checks if the wifi is enabled.
@@ -96,6 +103,13 @@ public interface IAutoSettingHelper extends IAppHelper, Scrollable {
      * Checks if the bluetooth is enabled.
      */
     boolean isBluetoothOn();
+
+    /**
+     * Setup expectations: The app is open.
+     *
+     * Checks if hotspot is enabled.
+     */
+    boolean isHotspotOn();
 
     /**
      * Setup expectations: The app is open and the settings facet is open
