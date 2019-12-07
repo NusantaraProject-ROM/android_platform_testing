@@ -38,10 +38,6 @@ import org.junit.runners.model.RunnerBuilder;
  * profile.
  */
 public class ProfileSuite extends LongevitySuite {
-    // An arbiturary leeway that hopefully allows the @After and @AfterClass methods of a scenario
-    // to finish execution.
-    @VisibleForTesting static final long ENDTIME_LEEWAY_MS = 3000;
-
     private static final String LOG_TAG = ProfileSuite.class.getSimpleName();
 
     // Profile instance for scheduling tests.
