@@ -53,7 +53,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-
 /** Unit tests for the {@link ScheduledScenarioRunner} runner. */
 @RunWith(JUnit4.class)
 public class ScheduledScenarioRunnerTest {
@@ -109,9 +108,9 @@ public class ScheduledScenarioRunnerTest {
     @Test
     public void testOverTimeTest_throwsTestTimedOutException() throws InitializationError {
         ArgumentCaptor<Failure> failureCaptor = ArgumentCaptor.forClass(Failure.class);
-        // Set a over time test with a 5-second window that will idle until the end of the window is
+        // Set a over time test with a 6-second window that will idle until the end of the window is
         // reached.
-        long timeoutMs = TimeUnit.SECONDS.toMillis(5);
+        long timeoutMs = TimeUnit.SECONDS.toMillis(6);
         Scenario testScenario =
                 Scenario.newBuilder()
                         .setAt("00:00:00")
@@ -143,7 +142,7 @@ public class ScheduledScenarioRunnerTest {
                                                     .getTimeUnit()
                                                     .toMillis(exception.getTimeout());
                                     long expectedTimeout =
-                                            timeoutMs - ScheduledScenarioRunner.ENDTIME_LEEWAY_MS;
+                                            timeoutMs - ScheduledScenarioRunner.TEARDOWN_LEEWAY_MS;
                                     return abs(exceptionTimeout - expectedTimeout)
                                             <= TIMEOUT_ERROR_MARGIN_MS;
                                 });
@@ -153,7 +152,7 @@ public class ScheduledScenarioRunnerTest {
     /** Test that an over time test does not idle before teardown. */
     @Test
     public void testOverTimeTest_doesNotIdleBeforeTeardown() throws InitializationError {
-        // Set a over time test with a 5-second window that will idle until the end of the window is
+        // Set a over time test with a 6-second window that will idle until the end of the window is
         // reached.
         Scenario testScenario =
                 Scenario.newBuilder()
@@ -166,7 +165,7 @@ public class ScheduledScenarioRunnerTest {
                         new ScheduledScenarioRunner(
                                 SampleProfileSuite.LongIdleTest.class,
                                 testScenario,
-                                TimeUnit.SECONDS.toMillis(5),
+                                TimeUnit.SECONDS.toMillis(6),
                                 true));
         runner.run(mRunNotifier);
         // There should not be idle before teardown as the test should not have left itself enough
@@ -177,7 +176,7 @@ public class ScheduledScenarioRunnerTest {
     /** Test that an over time test still idles until tne next scenario is supposed to begin. */
     @Test
     public void testOverTimeTest_idlesAfterTeardownUntilNextScenario() throws InitializationError {
-        // Set a over time test with a 5-second window that will idle until the end of the window is
+        // Set a over time test with a 6-second window that will idle until the end of the window is
         // reached.
         Scenario testScenario =
                 Scenario.newBuilder()
@@ -190,7 +189,7 @@ public class ScheduledScenarioRunnerTest {
                         new ScheduledScenarioRunner(
                                 SampleProfileSuite.LongIdleTest.class,
                                 testScenario,
-                                TimeUnit.SECONDS.toMillis(5),
+                                TimeUnit.SECONDS.toMillis(6),
                                 true));
         runner.run(mRunNotifier);
         // Verify that it still idles until the next scenario; duration should be roughly equal to
@@ -198,16 +197,16 @@ public class ScheduledScenarioRunnerTest {
         verify(runner, times(1))
                 .performIdleBeforeNextScenario(
                         getWithinMarginMatcher(
-                                ScheduledScenarioRunner.ENDTIME_LEEWAY_MS,
+                                ScheduledScenarioRunner.TEARDOWN_LEEWAY_MS,
                                 TIMEOUT_ERROR_MARGIN_MS));
     }
 
     /** Test that a test set to stay in the app after the test idles after its @Test method. */
     @Test
     public void testRespectsAfterTestPolicy_stayInApp() throws InitializationError {
-        // Set a passing test with a 5-second timeout that will idle after its @Test method and
+        // Set a passing test with a 6-second timeout that will idle after its @Test method and
         // idle until the end of the timeout is reached.
-        long timeoutMs = TimeUnit.SECONDS.toMillis(5);
+        long timeoutMs = TimeUnit.SECONDS.toMillis(6);
         Scenario testScenario =
                 Scenario.newBuilder()
                         .setAt("00:00:00")
@@ -222,21 +221,24 @@ public class ScheduledScenarioRunnerTest {
                                 timeoutMs,
                                 true));
         runner.run(mRunNotifier);
-        // Idles before teardown; duration should be roughly equal to the timeout minus the leeway
-        // set in {@link ScheduledScenarioRunner}.
+        // Idles before teardown; duration should be roughly equal to the timeout minus two times
+        // the leeway set in {@link ScheduledScenarioRunner}. Please see that class to see why two
+        // times the leeway is expected here.
         verify(runner, times(1))
                 .performIdleBeforeTeardown(
                         getWithinMarginMatcher(
-                                timeoutMs - ScheduledScenarioRunner.ENDTIME_LEEWAY_MS,
+                                timeoutMs - 2 * ScheduledScenarioRunner.TEARDOWN_LEEWAY_MS,
                                 TIMEOUT_ERROR_MARGIN_MS));
+        // Test should have passed.
+        verify(mRunNotifier, never()).fireTestFailure(any(Failure.class));
     }
 
     /** Test that a test set to exit the app after the test does not idle after its @Test method. */
     @Test
     public void testRespectsAfterTestPolicy_exit() throws InitializationError {
-        // Set a passing test with a 5-second timeout that does not idle after its @Test method and
+        // Set a passing test with a 6-second timeout that does not idle after its @Test method and
         // will idle until the end of the timeout is reached.
-        long timeoutMs = TimeUnit.SECONDS.toMillis(5);
+        long timeoutMs = TimeUnit.SECONDS.toMillis(6);
         Scenario testScenario =
                 Scenario.newBuilder()
                         .setAt("00:00:00")
@@ -257,12 +259,14 @@ public class ScheduledScenarioRunnerTest {
         verify(runner, times(1))
                 .performIdleBeforeNextScenario(
                         getWithinMarginMatcher(timeoutMs, TIMEOUT_ERROR_MARGIN_MS));
+        // Test should have passed.
+        verify(mRunNotifier, never()).fireTestFailure(any(Failure.class));
     }
 
     /** Test that an ignored scenario still includes the timeout dictated in a profile. */
     @Test
     public void testIgnoredScenario_doesIdle() throws InitializationError, Exception {
-        long timeoutMs = TimeUnit.SECONDS.toMillis(5);
+        long timeoutMs = TimeUnit.SECONDS.toMillis(6);
         Scenario testScenario =
                 Scenario.newBuilder()
                         .setAt("00:00:00")
@@ -298,7 +302,7 @@ public class ScheduledScenarioRunnerTest {
     /** Test that the last test does not have idle after it, regardless of its AfterTest policy. */
     @Test
     public void testLastScenarioDoesNotIdle() throws InitializationError {
-        // Set a passing test with a 5-second timeout that is set to idle after its @Test method and
+        // Set a passing test with a 6-second timeout that is set to idle after its @Test method and
         // but should not idle as it will be the last test in practice.
         Scenario testScenario =
                 Scenario.newBuilder()
@@ -311,7 +315,7 @@ public class ScheduledScenarioRunnerTest {
                         new ScheduledScenarioRunner(
                                 SampleProfileSuite.PassingTest.class,
                                 testScenario,
-                                TimeUnit.SECONDS.toMillis(5),
+                                TimeUnit.SECONDS.toMillis(6),
                                 false));
         runner.run(mRunNotifier);
         // There should not be idle of any form.
@@ -338,7 +342,7 @@ public class ScheduledScenarioRunnerTest {
                         new ScheduledScenarioRunner(
                                 ArgumentTest.class,
                                 testScenario,
-                                TimeUnit.SECONDS.toMillis(5),
+                                TimeUnit.SECONDS.toMillis(6),
                                 false));
         runner.run(mRunNotifier);
         verifyForAssertionFailures(mRunNotifier);
@@ -360,7 +364,7 @@ public class ScheduledScenarioRunnerTest {
                         .build();
         ScheduledScenarioRunner runner =
                 new ScheduledScenarioRunner(
-                        ArgumentTest.class, testScenario, TimeUnit.SECONDS.toMillis(5), false);
+                        ArgumentTest.class, testScenario, TimeUnit.SECONDS.toMillis(6), false);
         runner.run(mRunNotifier);
         Bundle argsAfterTest = InstrumentationRegistry.getArguments();
         Assert.assertTrue(bundlesContainSameStringKeyValuePairs(argsBeforeTest, argsAfterTest));

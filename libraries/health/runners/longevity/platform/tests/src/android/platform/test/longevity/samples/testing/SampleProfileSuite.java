@@ -20,6 +20,7 @@ import android.os.SystemClock;
 import android.platform.test.longevity.ProfileSuite;
 import android.platform.test.scenario.annotation.Scenario;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -42,6 +43,12 @@ public class SampleProfileSuite {
         public void testLongIdle() {
             SystemClock.sleep(TimeUnit.SECONDS.toMillis(10));
         }
+
+        // Simulates a quick teardown step.
+        @AfterClass
+        public static void dummyTearDown() {
+            SystemClock.sleep(100);
+        }
     }
 
     @Scenario
@@ -50,6 +57,12 @@ public class SampleProfileSuite {
         @Test
         public void testPassing() {
             Assert.assertEquals(1, 1);
+        }
+
+        // Simulates a quick teardown step.
+        @AfterClass
+        public static void dummyTearDown() {
+            SystemClock.sleep(100);
         }
     }
 }
