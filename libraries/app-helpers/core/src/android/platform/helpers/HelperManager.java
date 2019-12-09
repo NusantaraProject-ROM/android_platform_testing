@@ -26,6 +26,7 @@ import android.platform.helpers.exceptions.TestHelperException;
 import android.util.Log;
 
 import dalvik.system.DexFile;
+import dalvik.system.PathClassLoader;
 
 import java.io.File;
 import java.io.IOException;
@@ -118,6 +119,7 @@ public class HelperManager {
 
     private Instrumentation mInstrumentation;
     private List<String> mClasses;
+    private ClassLoader mLoader;
 
     private HelperManager(List<String> paths, Instrumentation instr) {
         mInstrumentation = instr;
@@ -128,6 +130,9 @@ public class HelperManager {
                 DexFile dex = new DexFile(path);
                 mClasses.addAll(Collections.list(dex.entries()));
             }
+            mLoader =
+                    new PathClassLoader(
+                            String.join(":", paths), HelperManager.class.getClassLoader());
         } catch (IOException e) {
             throw new TestHelperException("Failed to retrieve the dex file.");
         }
@@ -169,7 +174,6 @@ public class HelperManager {
      * @return a concrete implementation of base
      */
     private <T extends ITestHelper> List<T> getAll(Class<T> base, String keyword) {
-        ClassLoader loader = HelperManager.class.getClassLoader();
         List<T> implementations = new ArrayList<>();
         Map<Object, Throwable> mappedExceptions = new HashMap<>();
 
@@ -177,7 +181,7 @@ public class HelperManager {
         for (String className : mClasses) {
             Class<?> clazz = null;
             try {
-                clazz = loader.loadClass(className);
+                clazz = mLoader.loadClass(className);
                 // Skip non-instantiable classes
                 if (isAbstract(clazz.getModifiers()) || isInterface(clazz.getModifiers())) {
                     continue;
