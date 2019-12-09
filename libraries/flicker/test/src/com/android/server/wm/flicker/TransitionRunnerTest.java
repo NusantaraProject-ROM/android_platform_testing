@@ -58,7 +58,7 @@ public class TransitionRunnerTest {
     @Mock private WindowManagerTraceMonitor mWindowManagerTraceMonitorMock;
     @Mock private LayersTraceMonitor mLayersTraceMonitorMock;
     @Mock private WindowAnimationFrameStatsMonitor mWindowAnimationFrameStatsMonitor;
-    @InjectMocks private TransitionBuilder mTransitionBuilder;
+    @InjectMocks private TransitionBuilder mTransitionBuilder = TransitionRunner.newBuilder();
 
     @Before
     public void init() {
