@@ -78,11 +78,12 @@ public interface IAppHelper extends ITestHelper {
 
     /**
      * Setup expectations: None
-     * <p>
-     * Captures a screenshot and UI XML with the supplied name.
+     *
+     * <p>Captures a screenshot and UI XML with the supplied name.
+     *
      * @param name the screenshot prefix
      * @throws IOException if there is a capture failure
-     * @throws RuntimeException if creating the screenshot directory fails.
+     * @throws TestHelperException if creating the screenshot directory fails.
      */
     abstract boolean captureScreenshot(String name) throws IOException;
 

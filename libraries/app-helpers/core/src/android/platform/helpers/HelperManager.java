@@ -22,6 +22,7 @@ import static java.lang.reflect.Modifier.isInterface;
 import android.app.Instrumentation;
 import android.content.Context;
 import android.platform.helpers.exceptions.MappedMultiException;
+import android.platform.helpers.exceptions.TestHelperException;
 import android.util.Log;
 
 import dalvik.system.DexFile;
@@ -128,7 +129,7 @@ public class HelperManager {
                 mClasses.addAll(Collections.list(dex.entries()));
             }
         } catch (IOException e) {
-            throw new RuntimeException("Failed to retrieve the dex file.");
+            throw new TestHelperException("Failed to retrieve the dex file.");
         }
     }
 
@@ -136,7 +137,7 @@ public class HelperManager {
      * Returns a concrete implementation of the helper interface supplied, if available.
      *
      * @param base the interface base class to find an implementation for
-     * @throws RuntimeException if no implementation is found
+     * @throws TestHelperException if no implementation is found
      * @return a concrete implementation of base
      */
     public <T extends ITestHelper> T get(Class<T> base) {
@@ -148,7 +149,7 @@ public class HelperManager {
      *
      * @param base the interface base class to find an implementation for
      * @param keyword a keyword for matching the helper implementation, if multiple exist
-     * @throws RuntimeException if no implementation is found
+     * @throws TestHelperException if no implementation is found
      * @return a list of all concrete implementations we could find
      */
     public <T extends ITestHelper> T get(Class<T> base, String keyword) {
@@ -164,7 +165,7 @@ public class HelperManager {
      *
      * @param base the interface base class to find an implementation for
      * @param keyword a keyword for matching the helper implementation, if multiple exist
-     * @throws RuntimeException if no implementation is found
+     * @throws TestHelperException if no implementation is found
      * @return a concrete implementation of base
      */
     private <T extends ITestHelper> List<T> getAll(Class<T> base, String keyword) {
@@ -223,7 +224,7 @@ public class HelperManager {
 
         if (implementations.isEmpty()) {
             if (mappedExceptions.isEmpty()) {
-                throw new RuntimeException(
+                throw new TestHelperException(
                         String.format(
                                 "Could not find an implementation for %s. %s.",
                                 base, NO_MATCH_ERROR_MESSAGE));
@@ -249,13 +250,13 @@ public class HelperManager {
         return implementations;
     }
 
-    /** Wrap the {@link Throwable} in a {@link RuntimeException} with a custom error message. */
-    private RuntimeException wrapThrowable(String message, Throwable t) {
+    /** Wrap the {@link Throwable} in a {@link TestHelperException} with a custom error message. */
+    private TestHelperException wrapThrowable(String message, Throwable t) {
         Throwable causeIfPresent = getCauseIfPresent(t);
         // According to the documentation of RuntimeException the message for the causing Throwable
         // needs to be included explicitly.
-        RuntimeException re =
-                new RuntimeException(
+        TestHelperException re =
+                new TestHelperException(
                         String.format("%s:\n%s.", message, causeIfPresent.getMessage()),
                         causeIfPresent);
         return re;
