@@ -21,7 +21,7 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.support.test.uiautomator.UiWatcher;
 import java.io.IOException;
 
-public interface IAppHelper {
+public interface IAppHelper extends ITestHelper {
 
     /**
      * Setup expectation: On the launcher home screen.
