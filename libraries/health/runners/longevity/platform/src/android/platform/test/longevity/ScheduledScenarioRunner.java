@@ -40,10 +40,18 @@ import org.junit.runners.model.Statement;
  * performs an idle before teardown (staying inside the app for Android CUJs).
  */
 public class ScheduledScenarioRunner extends LongevityClassRunner {
-    @VisibleForTesting static final long ENDTIME_LEEWAY_MS = 3000;
+    // A leeway to ensure that the teardown steps in @After and @AfterClass has time to finish.
+    // Regardless of test passing (in which case teardown is considered in test timeout) or failing
+    // (in which case teardown happens outside the scope of the timeout).
+    // Please note that in most cases (when the CUJ does not time out) the actual cushion for
+    // teardown is double the value below, as a cushion needs to be created inside the timeout
+    // rule and also outside of it.
+    @VisibleForTesting static final long TEARDOWN_LEEWAY_MS = 2000;
 
     private final Scenario mScenario;
     private final long mTotalTimeoutMs;
+    // Timeout after the teardown leeway is taken into account.
+    private final long mEnforcedTimeoutMs;
     private final boolean mShouldIdle;
     private final Bundle mArguments;
 
@@ -63,6 +71,9 @@ public class ScheduledScenarioRunner extends LongevityClassRunner {
         mScenario = scenario;
         // Ensure that the timeout is non-negative.
         mTotalTimeoutMs = max(timeout, 0);
+        // Ensure that the enforced timeout is non-negative. This cushion is built in so that the
+        // CUJ still has time for teardown steps when the test portion times out.
+        mEnforcedTimeoutMs = max(mTotalTimeoutMs - TEARDOWN_LEEWAY_MS, 0);
         mShouldIdle = shouldIdle;
         mArguments = arguments;
     }
@@ -71,7 +82,7 @@ public class ScheduledScenarioRunner extends LongevityClassRunner {
     protected List<TestRule> getTestRules(Object target) {
         List<TestRule> rules = super.getTestRules(target);
         // Ensure that the timeout rule has a non-negative timeout.
-        rules.add(0, Timeout.millis(max(mTotalTimeoutMs - ENDTIME_LEEWAY_MS, 0)));
+        rules.add(0, Timeout.millis(mEnforcedTimeoutMs));
         return rules;
     }
 
@@ -85,9 +96,9 @@ public class ScheduledScenarioRunner extends LongevityClassRunner {
                             // Run the underlying test and report exceptions.
                             statement.evaluate();
                         } finally {
-                            // If there is time left for idling (i.e. more than ENDTIME_LEEWAY_MS),
+                            // If there is time left for idling (i.e. more than TEARDOWN_LEEWAY_MS),
                             // and the scenario is set to stay in app, idle for the remainder of
-                            // its timeout window until ENDTIME_LEEWAY_MS before the start time of
+                            // its timeout window until TEARDOWN_LEEWAY_MS before the start time of
                             // the next scenario, before executing the scenario's @After methods.
                             // The above does not apply if current scenario is the last one, in
                             // which case the idle is never performed regardless of its after_test
@@ -96,8 +107,13 @@ public class ScheduledScenarioRunner extends LongevityClassRunner {
                                     && mScenario
                                             .getAfterTest()
                                             .equals(Scenario.AfterTest.STAY_IN_APP)) {
+                                // Subtract the teardown leeway so that teardown methods can finish
+                                // within the scope of the timeout rule.
                                 performIdleBeforeTeardown(
-                                        max(getTimeRemaining() - ENDTIME_LEEWAY_MS, 0));
+                                        max(
+                                                getTimeRemainingForTimeoutRule()
+                                                        - TEARDOWN_LEEWAY_MS,
+                                                0));
                             }
                         }
                     }
@@ -128,17 +144,20 @@ public class ScheduledScenarioRunner extends LongevityClassRunner {
                 InstrumentationRegistry.getInstrumentation(), mArguments);
         // If there are remaining scenarios, idle until the next one starts.
         if (mShouldIdle) {
-            performIdleBeforeNextScenario(getTimeRemaining());
+            performIdleBeforeNextScenario(getTimeRemainingForScenario());
         }
     }
 
-    /**
-     * Get the duration to idle after the current scenario. If the current scenario is the last one
-     * in the profile, returns 0.
-     */
-    private long getTimeRemaining() {
+    /** Get the remaining time within the current scenario. */
+    private long getTimeRemainingForScenario() {
         // The idle time is total time minus time elapsed since the current scenario started.
         return max(mTotalTimeoutMs - (System.currentTimeMillis() - mStartTimeMs), 0);
+    }
+
+    /** Get the remaining time within the current timeout rule. */
+    private long getTimeRemainingForTimeoutRule() {
+        // The idle time is total time minus time elapsed since the current scenario started.
+        return max(mEnforcedTimeoutMs - (System.currentTimeMillis() - mStartTimeMs), 0);
     }
 
     @VisibleForTesting
