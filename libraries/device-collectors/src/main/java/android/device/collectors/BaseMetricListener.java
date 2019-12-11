@@ -38,7 +38,9 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.List;
 import java.util.Set;
 
@@ -65,6 +67,8 @@ import java.util.Set;
 public class BaseMetricListener extends InstrumentationRunListener {
 
     public static final int BUFFER_SIZE = 1024;
+    // Default collect iteration interval.
+    private static final int DEFAULT_COLLECT_INTERVAL = 1;
 
     /** Options keys that the collector can receive. */
     // Filter groups, comma separated list of group name to be included or excluded
@@ -72,6 +76,8 @@ public class BaseMetricListener extends InstrumentationRunListener {
     public static final String EXCLUDE_FILTER_GROUP_KEY = "exclude-filter-group";
     // Argument passed to AndroidJUnitRunner to make it log-only, we shouldn't collect on log only.
     public static final String ARGUMENT_LOG_ONLY = "log";
+    // Collect metric every nth iteration of a test with the same name.
+    public static final String COLLECT_ITERATION_INTERVAL = "collect_iteration_interval";
 
     private static final String NAMESPACE_SEPARATOR = ":";
 
@@ -82,6 +88,9 @@ public class BaseMetricListener extends InstrumentationRunListener {
     private final List<String> mIncludeFilters;
     private final List<String> mExcludeFilters;
     private boolean mLogOnly = false;
+    // Store the method name and invocation count.
+    private Map<String, Integer> mTestIdInvocationCount = new HashMap<>();
+    private int mCollectIterationInterval = 1;
 
     public BaseMetricListener() {
         mIncludeFilters = new ArrayList<>();
@@ -128,6 +137,8 @@ public class BaseMetricListener extends InstrumentationRunListener {
 
     @Override
     public final void testStarted(Description description) throws Exception {
+        mTestIdInvocationCount.compute(description.toString(),
+                (key, value) -> (value == null) ? 1 : value + 1);
         if (shouldRun(description)) {
             try {
                 mTestData = createDataRecord();
@@ -332,6 +343,14 @@ public class BaseMetricListener extends InstrumentationRunListener {
         if (excludeGroup != null) {
             mExcludeFilters.addAll(Arrays.asList(excludeGroup.split(",")));
         }
+        mCollectIterationInterval = Integer.parseInt(args.getString(
+                COLLECT_ITERATION_INTERVAL, String.valueOf(DEFAULT_COLLECT_INTERVAL)));
+        if (mCollectIterationInterval < 1) {
+            Log.i(getTag(), "Metric collection iteration interval cannot be less than 1."
+                    + "Switching to collect for all the iterations.");
+            // Reset to collect for all the iterations.
+            mCollectIterationInterval = 1;
+        }
         String logOnly = args.getString(ARGUMENT_LOG_ONLY);
         if (logOnly != null) {
             mLogOnly = Boolean.parseBoolean(logOnly);
@@ -406,6 +425,13 @@ public class BaseMetricListener extends InstrumentationRunListener {
                 }
             }
             // We have include filter and did not match them.
+            return false;
+        }
+
+        // Check for iteration interval metric collection criteria.
+        if ((mTestIdInvocationCount.containsKey(desc.toString()))
+                && (mTestIdInvocationCount.get(desc.toString())
+                        % mCollectIterationInterval != 0)) {
             return false;
         }
         return true;
