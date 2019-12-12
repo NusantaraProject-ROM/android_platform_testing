@@ -57,7 +57,7 @@ public class ScheduledScenarioRunner extends LongevityClassRunner {
     // Please note that in most cases (when the CUJ does not time out) the actual cushion for
     // teardown is double the value below, as a cushion needs to be created inside the timeout
     // rule and also outside of it.
-    @VisibleForTesting static final long TEARDOWN_LEEWAY_MS = 2000;
+    @VisibleForTesting static final long TEARDOWN_LEEWAY_MS = 3000;
 
     private static final String LOG_TAG = ScheduledScenarioRunner.class.getSimpleName();
 
