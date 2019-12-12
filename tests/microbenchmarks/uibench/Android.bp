@@ -26,6 +26,8 @@ android_test {
 
     libs: ["android.test.base.stubs"],
 
+    data: [":perfetto_artifacts"],
+
     sdk_version: "test_current",
 
     test_suites: ["device-tests"],
