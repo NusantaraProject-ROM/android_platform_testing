@@ -17,6 +17,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.uibench.microbenchmark">
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.REAL_GET_TASKS" />
 
     <application>
         <uses-library android:name="android.test.runner" />

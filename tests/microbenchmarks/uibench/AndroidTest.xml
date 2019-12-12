@@ -38,8 +38,7 @@
     <test class="com.android.tradefed.testtype.AndroidJUnitTest" >
         <option name="package" value="com.android.uibench.microbenchmark" />
         <option name="class" value="com.android.uibench.microbenchmark.UiBenchDialogListFlingMicrobenchmark#testDialogListFling" />
-        <option name="device-listeners" value="android.device.collectors.PerfettoListener" />
-        <option name="instrumentation-arg" key="per_run" value="true" />
+        <option name="device-listeners" value="android.device.collectors.PerfettoListener,android.device.collectors.SfStatsListener" />
         <option name="instrumentation-arg" key="perfetto_config_text_proto" value="true" />
         <option name="instrumentation-arg" key="perfetto_config_file" value="trace_config.textproto" />
         <option name="instrumentation-arg" key="newRunListenerMode" value="true" />
