@@ -13,18 +13,15 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.android.uibench.microbenchmark">
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.REAL_GET_TASKS" />
-
-    <application>
-        <uses-library android:name="android.test.runner" />
-    </application>
-
-    <instrumentation
-        android:name="androidx.test.runner.AndroidJUnitRunner"
-        android:targetPackage="com.android.uibench.microbenchmark"
-        android:label="Platform UiBench Scenario-Based microbenchmark Tests" />
-</manifest>
+<configuration description="Config for health testing utils test cases">
+    <option name="test-suite-tag" value="apct" />
+    <option name="test-suite-tag" value="apct-instrumentation" />
+    <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
+        <option name="cleanup-apks" value="true" />
+        <option name="test-file-name" value="HealthTestingUtilsTests.apk" />
+    </target_preparer>
+    <test class="com.android.tradefed.testtype.AndroidJUnitTest" >
+        <option name="package" value="android.platform.test.util.tests" />
+        <option name="runtime-hint" value="1m30s" />
+    </test>
+</configuration>

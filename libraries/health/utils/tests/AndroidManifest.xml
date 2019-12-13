@@ -13,18 +13,14 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.android.uibench.microbenchmark">
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.REAL_GET_TASKS" />
-
+    package="android.platform.test.util.tests">
+    <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="24" />
     <application>
-        <uses-library android:name="android.test.runner" />
+        <uses-library android:name="android.test.runner"/>
     </application>
-
     <instrumentation
         android:name="androidx.test.runner.AndroidJUnitRunner"
-        android:targetPackage="com.android.uibench.microbenchmark"
-        android:label="Platform UiBench Scenario-Based microbenchmark Tests" />
+        android:targetPackage="android.platform.test.util.tests"
+        android:label="Health Testing Utils Tests" />
 </manifest>
