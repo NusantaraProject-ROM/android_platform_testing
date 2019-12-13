@@ -59,7 +59,6 @@ platform_tests += \
     InternalLocTestApp \
     JankMicroBenchmarkTests \
     libbluetooth_gd \
-    long_trace_config.textproto \
     libgrpc++_unsecure \
     MemoryUsage \
     MultiDexLegacyTestApp \
@@ -80,7 +79,6 @@ platform_tests += \
     NotificationFunctionalTests \
     NotificationStressTests \
     OverviewFunctionalTests \
-    perfetto_trace_processor_shell \
     PerformanceAppTest \
     PerformanceLaunch \
     PermissionFunctionalTests \
@@ -98,7 +96,6 @@ platform_tests += \
     SmokeTestApp \
     SysAppJankTestsWear \
     TouchLatencyJankTestWear \
-    trace_config_detailed.textproto \
     UbSystemUiJankTests \
     UbWebViewJankTests \
     UiBench \
