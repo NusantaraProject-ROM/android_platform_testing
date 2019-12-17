@@ -112,6 +112,7 @@ native_tests := \
     prioritydumper_test \
     puffin_unittest \
     recovery_unit_test \
+    resolv_gold_test \
     resolv_integration_test \
     resolv_unit_test \
     scrape_mmap_addr \
