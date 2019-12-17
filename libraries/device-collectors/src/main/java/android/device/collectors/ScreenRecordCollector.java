@@ -37,12 +37,18 @@ import org.junit.runner.Description;
  */
 @OptionClass(alias = "screen-record-collector")
 public class ScreenRecordCollector extends BaseMetricListener {
+    @VisibleForTesting static final int MAX_RECORDING_PARTS = 5;
     private static final long VIDEO_TAIL_BUFFER = 2000;
 
     static final String OUTPUT_DIR = "run_listeners/videos";
 
     private UiDevice mDevice;
     private File mDestDir;
+
+    // Tracks multiple parts to a single recording.
+    private int mParts;
+    // Avoid recording after the test is finished.
+    private boolean mContinue;
 
     // Tracks the test iterations to ensure that each failure gets unique filenames.
     // Key: test description; value: number of iterations.
@@ -62,7 +68,9 @@ public class ScreenRecordCollector extends BaseMetricListener {
         // Track the number of iteration for this test.
         amendIterations(description);
         // Start the screen recording operation.
-        startScreenRecordThread(getOutputFile(description).getAbsolutePath());
+        mParts = 1;
+        mContinue = true;
+        startScreenRecordThread(description);
     }
 
     @Override
@@ -75,11 +83,14 @@ public class ScreenRecordCollector extends BaseMetricListener {
         // Add some extra time to the video end.
         SystemClock.sleep(getTailBuffer());
         // Ctrl + C all screen record processes.
+        mContinue = false;
         killScreenRecordProcesses();
 
-        // Add the output file to the data record.
-        File output = getOutputFile(description);
-        testData.addFileMetric(String.format("%s_%s", getTag(), output.getName()), output);
+        // Add the output files to the data record.
+        for (int i = 1; i < mParts; i++) {
+            File output = getOutputFile(description, i);
+            testData.addFileMetric(String.format("%s_%s", getTag(), output.getName()), output);
+        }
 
         // TODO(b/144869954): Delete when tests pass.
     }
@@ -91,31 +102,36 @@ public class ScreenRecordCollector extends BaseMetricListener {
         mTestIterations.computeIfAbsent(testName, name -> 1);
     }
 
-    private File getOutputFile(Description description) {
+    private File getOutputFile(Description description, int part) {
         final String baseName =
                 String.format("%s.%s", description.getClassName(), description.getMethodName());
         // Omit the iteration number for the first iteration.
         int iteration = mTestIterations.get(description.getDisplayName());
         final String fileName =
                 String.format(
-                        "%s-video.mp4",
+                        "%s-video%s.mp4",
                         iteration == 1
                                 ? baseName
-                                : String.join("-", baseName, String.valueOf(iteration)));
+                                : String.join("-", baseName, String.valueOf(iteration)),
+                        part == 1 ? "" : part);
         return Paths.get(mDestDir.getAbsolutePath(), fileName).toFile();
     }
 
     /** Spawns a thread to start screen recording that will save to the provided {@code path}. */
-    public void startScreenRecordThread(String path) {
-        Log.d(getTag(), String.format("Recording screen to %s", path));
+    public void startScreenRecordThread(final Description description) {
         new Thread("test-screenrecord-thread") {
             @Override
             public void run() {
                 try {
-                    // Make sure not to block on this background command.
-                    getDevice().executeShellCommand(String.format("screenrecord %s", path));
+                    for (int i = 0; i < MAX_RECORDING_PARTS && mContinue; i++) {
+                        String output = getOutputFile(description, mParts).getAbsolutePath();
+                        Log.d(getTag(), String.format("Recording screen to %s", output));
+                        // Make sure not to block on this background command so the test runs.
+                        getDevice().executeShellCommand(String.format("screenrecord %s", output));
+                        mParts++;
+                    }
                 } catch (IOException e) {
-                    throw new RuntimeException("Failed to start screen recording.");
+                    throw new RuntimeException("Caught exception while screen recording.");
                 }
             }
         }.start();
