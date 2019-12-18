@@ -81,8 +81,8 @@ public class ScheduledScenarioRunnerTest {
         }
     }
 
-    // Threshold above which missing a schedule is considered a failure.
-    private static final long TIMEOUT_ERROR_MARGIN_MS = 500;
+    // Threshold above which missing the expected timing is considered a failure.
+    private static final long TIMING_LEEWAY_MS = 500;
 
     // Holds the state of the instrumentation args before each test for restoring after, as one test
     // might affect the state of another otherwise.
@@ -144,7 +144,7 @@ public class ScheduledScenarioRunnerTest {
                                     long expectedTimeout =
                                             timeoutMs - ScheduledScenarioRunner.TEARDOWN_LEEWAY_MS;
                                     return abs(exceptionTimeout - expectedTimeout)
-                                            <= TIMEOUT_ERROR_MARGIN_MS;
+                                            <= TIMING_LEEWAY_MS;
                                 });
         Assert.assertTrue(correctTestTimedOutExceptionFired);
     }
@@ -197,8 +197,7 @@ public class ScheduledScenarioRunnerTest {
         verify(runner, times(1))
                 .performIdleBeforeNextScenario(
                         getWithinMarginMatcher(
-                                ScheduledScenarioRunner.TEARDOWN_LEEWAY_MS,
-                                TIMEOUT_ERROR_MARGIN_MS));
+                                ScheduledScenarioRunner.TEARDOWN_LEEWAY_MS, TIMING_LEEWAY_MS));
     }
 
     /** Test that a test set to stay in the app after the test idles after its @Test method. */
@@ -228,7 +227,7 @@ public class ScheduledScenarioRunnerTest {
                 .performIdleBeforeTeardown(
                         getWithinMarginMatcher(
                                 timeoutMs - 2 * ScheduledScenarioRunner.TEARDOWN_LEEWAY_MS,
-                                TIMEOUT_ERROR_MARGIN_MS));
+                                TIMING_LEEWAY_MS));
         // Test should have passed.
         verify(mRunNotifier, never()).fireTestFailure(any(Failure.class));
     }
@@ -257,8 +256,7 @@ public class ScheduledScenarioRunnerTest {
         verify(runner, never()).performIdleBeforeTeardown(anyLong());
         // Idles before the next scenario; duration should be roughly equal to the timeout.
         verify(runner, times(1))
-                .performIdleBeforeNextScenario(
-                        getWithinMarginMatcher(timeoutMs, TIMEOUT_ERROR_MARGIN_MS));
+                .performIdleBeforeNextScenario(getWithinMarginMatcher(timeoutMs, TIMING_LEEWAY_MS));
         // Test should have passed.
         verify(mRunNotifier, never()).fireTestFailure(any(Failure.class));
     }
@@ -295,8 +293,7 @@ public class ScheduledScenarioRunnerTest {
         verify(listener, times(1)).testIgnored(any());
         // Idles before the next scenario; duration should be roughly equal to the timeout.
         verify(runner, times(1))
-                .performIdleBeforeNextScenario(
-                        getWithinMarginMatcher(timeoutMs, TIMEOUT_ERROR_MARGIN_MS));
+                .performIdleBeforeNextScenario(getWithinMarginMatcher(timeoutMs, TIMING_LEEWAY_MS));
     }
 
     /** Test that the last test does not have idle after it, regardless of its AfterTest policy. */
@@ -368,6 +365,28 @@ public class ScheduledScenarioRunnerTest {
         runner.run(mRunNotifier);
         Bundle argsAfterTest = InstrumentationRegistry.getArguments();
         Assert.assertTrue(bundlesContainSameStringKeyValuePairs(argsBeforeTest, argsAfterTest));
+    }
+
+    /** Test that suspension-aware sleep will sleep for the expected duration. */
+    @Test
+    public void testSuspensionAwareSleep_sleepsForExpectedDurtaion() {
+        long expectedSleepMillis = TimeUnit.SECONDS.toMillis(5);
+        long timestampBeforeSleep = System.currentTimeMillis();
+        ScheduledScenarioRunner.suspensionAwareSleep(expectedSleepMillis);
+        long actualSleepDuration = System.currentTimeMillis() - timestampBeforeSleep;
+        Assert.assertTrue(abs(actualSleepDuration - expectedSleepMillis) <= TIMING_LEEWAY_MS);
+    }
+
+    /** Test that suspension-aware sleep will end due to alarm going off. */
+    @Test
+    public void testSuspensionAwareSleep_isWokenUpByAlarm() {
+        long expectedSleepMillis = TimeUnit.SECONDS.toMillis(5);
+        long timestampBeforeSleep = System.currentTimeMillis();
+        // Supply a longer CountDownLatch timeout so that the alarm will fire before the timeout is
+        // reached.
+        ScheduledScenarioRunner.suspensionAwareSleep(expectedSleepMillis, expectedSleepMillis * 2);
+        long actualSleepDuration = System.currentTimeMillis() - timestampBeforeSleep;
+        Assert.assertTrue(abs(actualSleepDuration - expectedSleepMillis) <= TIMING_LEEWAY_MS);
     }
 
     /**
