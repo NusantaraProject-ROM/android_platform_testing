@@ -16,13 +16,11 @@
 package android.platform.test.rule;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.fail;
 
 import org.junit.Test;
 import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
 
 import java.util.ArrayList;

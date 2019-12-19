@@ -21,13 +21,11 @@ import static android.device.preparers.GarbageCollectionPreparer.GC_WAIT_TIME_KE
 import static android.device.preparers.GarbageCollectionPreparer.PROCESS_NAMES_KEY;
 import static android.device.preparers.GarbageCollectionPreparer.PROCESS_SEPARATOR;
 
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 
 import android.app.Instrumentation;
-import android.device.collectors.DataRecord;
 import android.os.Bundle;
 
 import com.android.helpers.GarbageCollectionHelper;
