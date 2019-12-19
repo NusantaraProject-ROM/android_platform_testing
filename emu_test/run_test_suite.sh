@@ -142,11 +142,6 @@ else
   die "Could not find android-cts.zip, android-gts.zip or android-vts.zip in $BUILD_DIR/test_suite"
 fi
 
-EXTRA_OVERRIDES=
-
-if [[ "$GPU_FLAG" == "host" ]]; then
-  EXTRA_OVERRIDES="config.emulator.command_prefix='vglrun +v -c proxy'"
-fi
 
 # Setup the testing configuration
 $TRADEFED_MAKE_DIR/make-config \
@@ -171,10 +166,17 @@ $TRADEFED_MAKE_DIR/make-config \
     vars.tools.files.local_dir.sdk_tools=$SDK_TOOLS_DIR \
     vars.tradefed.files.download.build_id=$BUILD_ID \
     vars.tradefed.files.local_zip_path.$TEST_SUITE=$BUILD_DIR/test_suite/android-$TEST_SUITE.zip \
-    $EXTRA_OVERRIDES \
   --add \
     vars.emulator.flags.no-window=True \
 
+if [[ "$GPU_FLAG" == "host" ]]; then
+  $TRADEFED_MAKE_DIR/make-config \
+  $CONFIG_PATH \
+  --inline \
+  --override \
+    config.emulator.command_prefix='vglrun +v -c proxy' \
+
+fi
 
 # Start the tests
 set +x
