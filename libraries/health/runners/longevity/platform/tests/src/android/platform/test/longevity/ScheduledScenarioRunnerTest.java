@@ -31,7 +31,7 @@ import android.os.Bundle;
 import android.platform.test.longevity.proto.Configuration.Scenario;
 import android.platform.test.longevity.proto.Configuration.Scenario.AfterTest;
 import android.platform.test.longevity.proto.Configuration.Scenario.ExtraArg;
-import android.platform.test.longevity.samples.testing.SampleProfileSuite;
+import android.platform.test.longevity.samples.testing.SampleTimedProfileSuite;
 import androidx.test.InstrumentationRegistry;
 
 import org.junit.Assert;
@@ -114,13 +114,13 @@ public class ScheduledScenarioRunnerTest {
         Scenario testScenario =
                 Scenario.newBuilder()
                         .setAt("00:00:00")
-                        .setJourney(SampleProfileSuite.LongIdleTest.class.getName())
+                        .setJourney(SampleTimedProfileSuite.LongIdleTest.class.getName())
                         .setAfterTest(AfterTest.STAY_IN_APP)
                         .build();
         ScheduledScenarioRunner runner =
                 spy(
                         new ScheduledScenarioRunner(
-                                SampleProfileSuite.LongIdleTest.class,
+                                SampleTimedProfileSuite.LongIdleTest.class,
                                 testScenario,
                                 timeoutMs,
                                 true));
@@ -157,13 +157,13 @@ public class ScheduledScenarioRunnerTest {
         Scenario testScenario =
                 Scenario.newBuilder()
                         .setAt("00:00:00")
-                        .setJourney(SampleProfileSuite.LongIdleTest.class.getName())
+                        .setJourney(SampleTimedProfileSuite.LongIdleTest.class.getName())
                         .setAfterTest(AfterTest.STAY_IN_APP)
                         .build();
         ScheduledScenarioRunner runner =
                 spy(
                         new ScheduledScenarioRunner(
-                                SampleProfileSuite.LongIdleTest.class,
+                                SampleTimedProfileSuite.LongIdleTest.class,
                                 testScenario,
                                 TimeUnit.SECONDS.toMillis(6),
                                 true));
@@ -181,13 +181,13 @@ public class ScheduledScenarioRunnerTest {
         Scenario testScenario =
                 Scenario.newBuilder()
                         .setAt("00:00:00")
-                        .setJourney(SampleProfileSuite.LongIdleTest.class.getName())
+                        .setJourney(SampleTimedProfileSuite.LongIdleTest.class.getName())
                         .setAfterTest(AfterTest.STAY_IN_APP)
                         .build();
         ScheduledScenarioRunner runner =
                 spy(
                         new ScheduledScenarioRunner(
-                                SampleProfileSuite.LongIdleTest.class,
+                                SampleTimedProfileSuite.LongIdleTest.class,
                                 testScenario,
                                 TimeUnit.SECONDS.toMillis(6),
                                 true));
@@ -209,13 +209,13 @@ public class ScheduledScenarioRunnerTest {
         Scenario testScenario =
                 Scenario.newBuilder()
                         .setAt("00:00:00")
-                        .setJourney(SampleProfileSuite.PassingTest.class.getName())
+                        .setJourney(SampleTimedProfileSuite.PassingTest.class.getName())
                         .setAfterTest(AfterTest.STAY_IN_APP)
                         .build();
         ScheduledScenarioRunner runner =
                 spy(
                         new ScheduledScenarioRunner(
-                                SampleProfileSuite.PassingTest.class,
+                                SampleTimedProfileSuite.PassingTest.class,
                                 testScenario,
                                 timeoutMs,
                                 true));
@@ -241,13 +241,13 @@ public class ScheduledScenarioRunnerTest {
         Scenario testScenario =
                 Scenario.newBuilder()
                         .setAt("00:00:00")
-                        .setJourney(SampleProfileSuite.PassingTest.class.getName())
+                        .setJourney(SampleTimedProfileSuite.PassingTest.class.getName())
                         .setAfterTest(AfterTest.EXIT)
                         .build();
         ScheduledScenarioRunner runner =
                 spy(
                         new ScheduledScenarioRunner(
-                                SampleProfileSuite.PassingTest.class,
+                                SampleTimedProfileSuite.PassingTest.class,
                                 testScenario,
                                 timeoutMs,
                                 true));
@@ -268,17 +268,17 @@ public class ScheduledScenarioRunnerTest {
         Scenario testScenario =
                 Scenario.newBuilder()
                         .setAt("00:00:00")
-                        .setJourney(SampleProfileSuite.PassingTest.class.getName())
+                        .setJourney(SampleTimedProfileSuite.PassingTest.class.getName())
                         .setAfterTest(AfterTest.EXIT)
                         .build();
         Bundle ignores = new Bundle();
         ignores.putString(
                 LongevityClassRunner.FILTER_OPTION,
-                SampleProfileSuite.PassingTest.class.getCanonicalName());
+                SampleTimedProfileSuite.PassingTest.class.getCanonicalName());
         ScheduledScenarioRunner runner =
                 spy(
                         new ScheduledScenarioRunner(
-                                SampleProfileSuite.PassingTest.class,
+                                SampleTimedProfileSuite.PassingTest.class,
                                 testScenario,
                                 timeoutMs,
                                 true,
@@ -304,13 +304,13 @@ public class ScheduledScenarioRunnerTest {
         Scenario testScenario =
                 Scenario.newBuilder()
                         .setAt("00:00:00")
-                        .setJourney(SampleProfileSuite.PassingTest.class.getName())
+                        .setJourney(SampleTimedProfileSuite.PassingTest.class.getName())
                         .setAfterTest(AfterTest.STAY_IN_APP)
                         .build();
         ScheduledScenarioRunner runner =
                 spy(
                         new ScheduledScenarioRunner(
-                                SampleProfileSuite.PassingTest.class,
+                                SampleTimedProfileSuite.PassingTest.class,
                                 testScenario,
                                 TimeUnit.SECONDS.toMillis(6),
                                 false));
@@ -399,7 +399,7 @@ public class ScheduledScenarioRunnerTest {
 
     /**
      * Verify that no test failure is fired because of an assertion failure in the stubbed methods.
-     * If the verfication fails, check whether it's due the injected assertions failing. If yes,
+     * If the verification fails, check whether it's due the injected assertions failing. If yes,
      * throw that exception out; otherwise, throw the first exception.
      */
     private void verifyForAssertionFailures(final RunNotifier notifier) throws Throwable {
@@ -423,7 +423,7 @@ public class ScheduledScenarioRunnerTest {
 
     /**
      * Helper method to check whether two {@link Bundle}s are equal since the built-in {@code
-     * equals} is not properly overriden.
+     * equals} is not properly overridden.
      */
     private boolean bundlesContainSameStringKeyValuePairs(Bundle b1, Bundle b2) {
         if (b1.size() != b2.size()) {
