@@ -147,6 +147,11 @@ public class ProfileSuite extends LongevitySuite {
                         mProfile.getCurrentScenario(),
                         timeout,
                         mProfile.hasNextScheduledScenario());
+
+            case INDEXED:
+                return getIndexedRunner(
+                        (BlockJUnit4ClassRunner) runner, mProfile.getCurrentScenario());
+
             default:
                 throw new RuntimeException(
                         String.format(
@@ -169,6 +174,21 @@ public class ProfileSuite extends LongevitySuite {
             throw new RuntimeException(
                     String.format(
                             "Unable to run scenario %s with a scheduled runner.",
+                            runner.getDescription().getDisplayName()),
+                    e);
+        }
+    }
+
+    /** Replace a runner with {@link ScenarioRunner} for features specific to indexed profiles. */
+    @VisibleForTesting
+    protected ScenarioRunner getIndexedRunner(BlockJUnit4ClassRunner runner, Scenario scenario) {
+        Class<?> testClass = runner.getTestClass().getJavaClass();
+        try {
+            return new ScenarioRunner(testClass, scenario);
+        } catch (InitializationError e) {
+            throw new RuntimeException(
+                    String.format(
+                            "Unable to run scenario %s with an indexed runner.",
                             runner.getDescription().getDisplayName()),
                     e);
         }

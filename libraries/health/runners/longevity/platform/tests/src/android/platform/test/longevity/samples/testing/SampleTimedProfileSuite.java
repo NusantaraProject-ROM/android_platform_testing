@@ -31,11 +31,11 @@ import java.util.concurrent.TimeUnit;
 
 @RunWith(ProfileSuite.class)
 @SuiteClasses({
-    SampleProfileSuite.LongIdleTest.class,
-    SampleProfileSuite.PassingTest.class,
+    SampleTimedProfileSuite.LongIdleTest.class,
+    SampleTimedProfileSuite.PassingTest.class,
 })
 /** Sample device-side test cases using a profile. */
-public class SampleProfileSuite {
+public class SampleTimedProfileSuite {
     @Scenario
     @RunWith(JUnit4.class)
     public static class LongIdleTest {
