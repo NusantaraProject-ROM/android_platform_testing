@@ -17,6 +17,7 @@ package android.device.collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.AdditionalMatchers.not;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.endsWith;
 import static org.mockito.ArgumentMatchers.eq;
@@ -112,10 +113,16 @@ public class ScreenRecordCollectorTest {
         for (int i = 1; i <= NUM_TEST_CASE; i++) {
             // Verify a thread is started when the test starts.
             mListener.testStarted(mTestDesc);
-            verify(mListener, times(i)).startScreenRecordThread(anyString());
+            verify(mListener, times(i)).startScreenRecordThread(any());
             // Delay verification by 100 ms to ensure the thread was started.
             SystemClock.sleep(100);
-            verify(mDevice, times(i)).executeShellCommand(matches("screenrecord .*"));
+            // Expect all recordings to be finished because of mocked commands.
+            verify(mDevice, times(i)).executeShellCommand(matches("screenrecord .*video.mp4"));
+            for (int r = 2; r < ScreenRecordCollector.MAX_RECORDING_PARTS; r++) {
+                verify(mDevice, times(i))
+                        .executeShellCommand(
+                                matches(String.format("screenrecord .*video%d.mp4", r)));
+            }
 
             // Alternate between pass and fail for variety.
             if (i % 2 == 0) {
@@ -149,34 +156,42 @@ public class ScreenRecordCollectorTest {
                 if (key.contains("mp4")) videoCount++;
             }
         }
-        assertEquals(NUM_TEST_CASE, videoCount);
+        assertEquals(NUM_TEST_CASE * ScreenRecordCollector.MAX_RECORDING_PARTS, videoCount);
     }
 
     /** Test that screen recording is properly done for multiple tests and labels iterations. */
     @Test
-    public void testMultipleScreenRecords() throws Exception {
+    public void testScreenRecord_multipleTests() throws Exception {
         mListener = initListener();
 
         // Run through a sequence of `NUM_TEST_CASE` failing tests.
         mListener.testRunStarted(mRunDesc);
-        verify(mListener).createAndEmptyDirectory(ScreenRecordCollector.OUTPUT_DIR);
 
         // Walk through a number of test cases to simulate behavior.
         for (int i = 1; i <= NUM_TEST_CASE; i++) {
             mListener.testStarted(mTestDesc);
+            SystemClock.sleep(100);
             mListener.testFinished(mTestDesc);
         }
         mListener.testRunFinished(new Result());
 
         // Verify that videos are saved with iterations.
-        InOrder videoVerifier = inOrder(mListener);
+        InOrder videoVerifier = inOrder(mDevice);
         // The first video should not have an iteration number.
-        videoVerifier.verify(mListener).startScreenRecordThread(matches("^.*[^1].mp4$"));
+        videoVerifier
+                .verify(mDevice, times(ScreenRecordCollector.MAX_RECORDING_PARTS))
+                .executeShellCommand(matches("^.*[^1]-video.*.mp4$"));
         // The subsequent videos should have an iteration number.
         for (int i = 1; i < NUM_TEST_CASE; i++) {
             videoVerifier
-                    .verify(mListener)
-                    .startScreenRecordThread(endsWith(String.format("%d-video.mp4", i + 1)));
+                    .verify(mDevice)
+                    .executeShellCommand(endsWith(String.format("%d-video.mp4", i + 1)));
+            // Verify the iteration-specific and part-specific interactions too.
+            for (int p = 2; p <= ScreenRecordCollector.MAX_RECORDING_PARTS; p++) {
+                videoVerifier
+                        .verify(mDevice)
+                        .executeShellCommand(endsWith(String.format("%d-video%d.mp4", i + 1, p)));
+            }
         }
     }
 }

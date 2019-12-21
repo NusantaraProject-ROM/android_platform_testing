@@ -38,6 +38,8 @@ import org.junit.runners.model.Statement;
 /**
  * A {@link BlockJUnit4ClassRunner} that runs a test class with a specified timeout and optionally
  * performs an idle before teardown (staying inside the app for Android CUJs).
+ *
+ * <p>TODO(b/146215435): Refactor to extends the index-based {@link ScenarioRunner}.
  */
 public class ScheduledScenarioRunner extends LongevityClassRunner {
     // A leeway to ensure that the teardown steps in @After and @AfterClass has time to finish.
