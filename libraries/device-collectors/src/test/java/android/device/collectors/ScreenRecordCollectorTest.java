@@ -17,7 +17,6 @@ package android.device.collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.AdditionalMatchers.not;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.endsWith;
 import static org.mockito.ArgumentMatchers.eq;
@@ -111,9 +110,7 @@ public class ScreenRecordCollectorTest {
 
         // Walk through a number of test cases to simulate behavior.
         for (int i = 1; i <= NUM_TEST_CASE; i++) {
-            // Verify a thread is started when the test starts.
             mListener.testStarted(mTestDesc);
-            verify(mListener, times(i)).startScreenRecordThread(any());
             // Delay verification by 100 ms to ensure the thread was started.
             SystemClock.sleep(100);
             // Expect all recordings to be finished because of mocked commands.
@@ -131,7 +128,6 @@ public class ScreenRecordCollectorTest {
 
             // Verify all processes are killed when the test ends.
             mListener.testFinished(mTestDesc);
-            verify(mListener, times(i)).killScreenRecordProcesses();
             verify(mDevice, times(i)).executeShellCommand(eq("pidof screenrecord"));
             verify(mDevice, times(i)).executeShellCommand(matches("kill -2 1234"));
         }
