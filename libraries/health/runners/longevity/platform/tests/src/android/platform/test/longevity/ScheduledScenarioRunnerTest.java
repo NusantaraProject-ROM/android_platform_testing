@@ -369,7 +369,7 @@ public class ScheduledScenarioRunnerTest {
 
     /** Test that suspension-aware sleep will sleep for the expected duration. */
     @Test
-    public void testSuspensionAwareSleep_sleepsForExpectedDurtaion() {
+    public void testSuspensionAwareSleep_sleepsForExpectedDuration() {
         long expectedSleepMillis = TimeUnit.SECONDS.toMillis(5);
         long timestampBeforeSleep = System.currentTimeMillis();
         ScheduledScenarioRunner.suspensionAwareSleep(expectedSleepMillis);
