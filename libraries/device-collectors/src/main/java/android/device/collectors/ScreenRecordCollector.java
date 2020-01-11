@@ -15,6 +15,8 @@
  */
 package android.device.collectors;
 
+import static org.junit.Assert.assertNotNull;
+
 import android.device.collectors.annotations.OptionClass;
 import android.os.SystemClock;
 import android.support.test.uiautomator.UiDevice;
@@ -24,6 +26,8 @@ import androidx.annotation.VisibleForTesting;
 import java.io.IOException;
 import java.io.File;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -38,17 +42,14 @@ import org.junit.runner.Description;
 @OptionClass(alias = "screen-record-collector")
 public class ScreenRecordCollector extends BaseMetricListener {
     @VisibleForTesting static final int MAX_RECORDING_PARTS = 5;
-    private static final long VIDEO_TAIL_BUFFER = 2000;
+    private static final long VIDEO_TAIL_BUFFER = 500;
 
     static final String OUTPUT_DIR = "run_listeners/videos";
 
     private UiDevice mDevice;
-    private File mDestDir;
+    private static File mDestDir;
 
-    // Tracks multiple parts to a single recording.
-    private int mParts;
-    // Avoid recording after the test is finished.
-    private boolean mContinue;
+    private RecordingThread mCurrentThread;
 
     // Tracks the test iterations to ensure that each failure gets unique filenames.
     // Key: test description; value: number of iterations.
@@ -68,9 +69,8 @@ public class ScreenRecordCollector extends BaseMetricListener {
         // Track the number of iteration for this test.
         amendIterations(description);
         // Start the screen recording operation.
-        mParts = 1;
-        mContinue = true;
-        startScreenRecordThread(description);
+        mCurrentThread = new RecordingThread("test-screen-record", description);
+        mCurrentThread.start();
     }
 
     @Override
@@ -83,13 +83,19 @@ public class ScreenRecordCollector extends BaseMetricListener {
         // Add some extra time to the video end.
         SystemClock.sleep(getTailBuffer());
         // Ctrl + C all screen record processes.
-        mContinue = false;
-        killScreenRecordProcesses();
+        mCurrentThread.cancel();
+        // Wait for the thread to completely die.
+        try {
+            mCurrentThread.join();
+        } catch (InterruptedException ex) {
+            Log.e(getTag(), "Interrupted when joining the recording thread.", ex);
+        }
 
         // Add the output files to the data record.
-        for (int i = 1; i < mParts; i++) {
-            File output = getOutputFile(description, i);
-            testData.addFileMetric(String.format("%s_%s", getTag(), output.getName()), output);
+        for (File recording : mCurrentThread.getRecordings()) {
+            Log.d(getTag(), String.format("Adding video part: #%s", recording.getName()));
+            testData.addFileMetric(
+                    String.format("%s_%s", getTag(), recording.getName()), recording);
         }
 
         // TODO(b/144869954): Delete when tests pass.
@@ -102,6 +108,7 @@ public class ScreenRecordCollector extends BaseMetricListener {
         mTestIterations.computeIfAbsent(testName, name -> 1);
     }
 
+    /** Returns the recording's name for part {@code part} of test {@code description}. */
     private File getOutputFile(Description description, int part) {
         final String baseName =
                 String.format("%s.%s", description.getClassName(), description.getMethodName());
@@ -117,45 +124,6 @@ public class ScreenRecordCollector extends BaseMetricListener {
         return Paths.get(mDestDir.getAbsolutePath(), fileName).toFile();
     }
 
-    /** Spawns a thread to start screen recording that will save to the provided {@code path}. */
-    public void startScreenRecordThread(final Description description) {
-        new Thread("test-screenrecord-thread") {
-            @Override
-            public void run() {
-                try {
-                    for (int i = 0; i < MAX_RECORDING_PARTS && mContinue; i++) {
-                        String output = getOutputFile(description, mParts).getAbsolutePath();
-                        Log.d(getTag(), String.format("Recording screen to %s", output));
-                        // Make sure not to block on this background command so the test runs.
-                        getDevice().executeShellCommand(String.format("screenrecord %s", output));
-                        mParts++;
-                    }
-                } catch (IOException e) {
-                    throw new RuntimeException("Caught exception while screen recording.");
-                }
-            }
-        }.start();
-    }
-
-    /** Kills all screen recording processes that are actively running on the device. */
-    public void killScreenRecordProcesses() {
-        try {
-            // Identify the screenrecord PIDs and send SIGINT 2 (Ctrl + C) to each.
-            String[] pids = getDevice().executeShellCommand("pidof screenrecord").split(" ");
-            for (String pid : pids) {
-                // Avoid empty process ids, because of weird splitting behavior.
-                if (pid.isEmpty()) {
-                    continue;
-                }
-
-                getDevice().executeShellCommand(String.format("kill -2 %s", pid));
-                Log.d(getTag(), String.format("Sent SIGINT 2 to screenrecord process (%s)", pid));
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to kill screen recording process.");
-        }
-    }
-
     /** Returns a buffer duration for the end of the video. */
     @VisibleForTesting
     public long getTailBuffer() {
@@ -168,5 +136,74 @@ public class ScreenRecordCollector extends BaseMetricListener {
             mDevice = UiDevice.getInstance(getInstrumentation());
         }
         return mDevice;
+    }
+
+    private class RecordingThread extends Thread {
+        private final Description mDescription;
+        private final List<File> mRecordings;
+
+        private boolean mContinue;
+
+        public RecordingThread(String name, Description description) {
+            super(name);
+
+            mContinue = true;
+            mRecordings = new ArrayList<>();
+
+            assertNotNull("No test description provided for recording.", description);
+            mDescription = description;
+        }
+
+        @Override
+        public void run() {
+            try {
+                // Start at i = 1 to encode parts as X.mp4, X2.mp4, X3.mp4, etc.
+                for (int i = 1; i <= MAX_RECORDING_PARTS && mContinue; i++) {
+                    File output = getOutputFile(mDescription, i);
+                    Log.d(
+                            getTag(),
+                            String.format("Recording screen to %s", output.getAbsolutePath()));
+                    mRecordings.add(output);
+                    // Make sure not to block on this background command in the main thread so
+                    // that the test continues to run, but block in this thread so it does not
+                    // trigger a new screen recording session before the prior one completes.
+                    getDevice()
+                            .executeShellCommand(
+                                    String.format("screenrecord %s", output.getAbsolutePath()));
+                }
+            } catch (IOException e) {
+                throw new RuntimeException("Caught exception while screen recording.");
+            }
+        }
+
+        public void cancel() {
+            mContinue = false;
+
+            // Identify the screenrecord PIDs and send SIGINT 2 (Ctrl + C) to each.
+            try {
+                String[] pids = getDevice().executeShellCommand("pidof screenrecord").split(" ");
+                for (String pid : pids) {
+                    // Avoid empty process ids, because of weird splitting behavior.
+                    if (pid.isEmpty()) {
+                        continue;
+                    }
+
+                    getDevice().executeShellCommand(String.format("kill -2 %s", pid));
+                    Log.d(
+                            getTag(),
+                            String.format("Sent SIGINT 2 to screenrecord process (%s)", pid));
+                }
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to kill screen recording process.");
+            }
+        }
+
+        public List<File> getRecordings() {
+            return mRecordings;
+        }
+
+        private String getTag() {
+            return RecordingThread.class.getName();
+        }
     }
 }
