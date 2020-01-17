@@ -85,7 +85,25 @@ public class SfStatsCollectionHelperTest {
                     + "post2present histogram is as below:\n"
                     + "0ms=0 1ms=0 2ms=0 3ms=0 4ms=0 5ms=0 6ms=0 7ms=0 8ms=264 9ms=0\n"
                     + "post2acquire histogram is as below:\n"
-                    + "0ms=0 1ms=0 2ms=0 3ms=0 4ms=0 5ms=0 6ms=0 7ms=0 8ms=264 9ms=0";
+                    + "0ms=0 1ms=0 2ms=0 3ms=0 4ms=0 5ms=0 6ms=0 7ms=0 8ms=264 9ms=0\n"
+                    + "\n"
+                    + "layerName = SurfaceView - com.mxtech.videoplayer.ad/com.mxtech.videoplayer.ad.ActivityScreen#0\n"
+                    + "packageName = \n"
+                    + "totalFrames = 2352\n"
+                    + "droppedFrames = 0\n"
+                    + "averageFPS = 59.999\n"
+                    + "present2present histogram is as below:\n"
+                    + "0ms=0 1ms=0 2ms=0 3ms=0 4ms=0 5ms=0 6ms=0 7ms=0 8ms=2352 9ms=0\n"
+                    + "latch2present histogram is as below:\n"
+                    + "0ms=0 1ms=0 2ms=0 3ms=0 4ms=0 5ms=0 6ms=0 7ms=0 8ms=2352 9ms=0\n"
+                    + "desired2present histogram is as below:\n"
+                    + "0ms=0 1ms=0 2ms=0 3ms=0 4ms=0 5ms=0 6ms=0 7ms=0 8ms=2352 9ms=0\n"
+                    + "acquire2present histogram is as below:\n"
+                    + "0ms=0 1ms=0 2ms=0 3ms=0 4ms=0 5ms=0 6ms=0 7ms=0 8ms=2352 9ms=0\n"
+                    + "post2present histogram is as below:\n"
+                    + "0ms=0 1ms=0 2ms=0 3ms=0 4ms=0 5ms=0 6ms=0 7ms=0 8ms=2352 9ms=0\n"
+                    + "post2acquire histogram is as below:\n"
+                    + "0ms=0 1ms=0 2ms=0 3ms=0 4ms=0 5ms=0 6ms=0 7ms=0 8ms=2352 9ms=0";
 
     private static final String LOG_TAG = SfStatsCollectionHelperTest.class.getSimpleName();
 
@@ -135,6 +153,27 @@ public class SfStatsCollectionHelperTest {
                                         "GLOBAL",
                                         "missedFrames".toUpperCase())))
                 .isEqualTo(Double.valueOf(82));
+        assertThat(
+                        metrics.get(
+                                constructKey(
+                                        SFSTATS_METRICS_PREFIX,
+                                        "GLOBAL",
+                                        "clientCompositionFrames".toUpperCase())))
+                .isEqualTo(Double.valueOf(0));
+        assertThat(
+                        metrics.get(
+                                constructKey(
+                                        SFSTATS_METRICS_PREFIX,
+                                        "GLOBAL",
+                                        "displayOnTime".toUpperCase())))
+                .isEqualTo(Double.valueOf(2485421));
+        assertThat(
+                        metrics.get(
+                                constructKey(
+                                        SFSTATS_METRICS_PREFIX,
+                                        "GLOBAL",
+                                        "totalP2PTime".toUpperCase())))
+                .isEqualTo(Double.valueOf(2674034));
         assertThat(
                         metrics.get(
                                 constructKey(
@@ -191,6 +230,27 @@ public class SfStatsCollectionHelperTest {
                                         "com.google.android.nexuslauncher.NexusLauncherActivity#0",
                                         "AVERAGE_FPS")))
                 .isEqualTo(84.318);
+        assertThat(
+                        metrics.get(
+                                constructKey(
+                                        SFSTATS_METRICS_PREFIX,
+                                        "SurfaceView - com.mxtech.videoplayer.ad/com.mxtech.videoplayer.ad.ActivityScreen#0",
+                                        "TOTAL_FRAMES")))
+                .isEqualTo(Double.valueOf(2352));
+        assertThat(
+                        metrics.get(
+                                constructKey(
+                                        SFSTATS_METRICS_PREFIX,
+                                        "SurfaceView - com.mxtech.videoplayer.ad/com.mxtech.videoplayer.ad.ActivityScreen#0",
+                                        "DROPPED_FRAMES")))
+                .isEqualTo(Double.valueOf(0));
+        assertThat(
+                        metrics.get(
+                                constructKey(
+                                        SFSTATS_METRICS_PREFIX,
+                                        "SurfaceView - com.mxtech.videoplayer.ad/com.mxtech.videoplayer.ad.ActivityScreen#0",
+                                        "AVERAGE_FPS")))
+                .isEqualTo(59.999);
         mHelper.stopCollecting();
     }
 
