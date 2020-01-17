@@ -86,7 +86,6 @@ platform_tests += \
     PermissionFunctionalTests \
     PermissionTestAppMV1 \
     PermissionUtils \
-    PlatformScenarioTests \
     PowerPerfTest \
     root-canal \
     SettingsUITests \
