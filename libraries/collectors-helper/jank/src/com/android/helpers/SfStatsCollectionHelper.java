@@ -37,7 +37,8 @@ public class SfStatsCollectionHelper implements ICollectorHelper<Double> {
 
     private static final String LOG_TAG = SfStatsCollectionHelper.class.getSimpleName();
 
-    private static final Pattern KEY_VALUE_PATTERN = Pattern.compile("^(\\w+)\\s+=\\s+(\\S+)");
+    private static final Pattern KEY_VALUE_PATTERN =
+            Pattern.compile("^(\\w+)\\s+=\\s+(\\d+\\.?\\d*|.*).*");
     private static final Pattern HISTOGRAM_PATTERN =
             Pattern.compile("([^\\n]+)\\n((\\d+ms=\\d+\\s+)+)");
 
