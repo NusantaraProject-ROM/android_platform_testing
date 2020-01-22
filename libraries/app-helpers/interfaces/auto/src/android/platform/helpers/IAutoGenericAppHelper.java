@@ -16,7 +16,7 @@
 
 package android.platform.helpers;
 
-public interface IAutoGenericAppHelper extends IAppHelper {
+public interface IAutoGenericAppHelper extends IAppHelper, Scrollable {
     /**
      * Set the package to open. The application will be opened using the info activity or launcher
      * activity of the package that has been injected here. Either setPackage or setLaunchActivity
