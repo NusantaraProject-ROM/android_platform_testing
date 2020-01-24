@@ -16,18 +16,27 @@
 
 package android.platform.helpers;
 
+import java.util.Map;
+
+/**
+ * An interface to open any applications. One of the member methods must be invoked after creating
+ * an instance of this class.
+ */
 public interface IAutoGenericAppHelper extends IAppHelper, Scrollable {
     /**
      * Set the package to open. The application will be opened using the info activity or launcher
-     * activity of the package that has been injected here. Either setPackage or setLaunchActivity
-     * needs to be invoked after creating an instance of this class.
+     * activity of the package that has been injected here.
      */
     void setPackage(String pkg);
 
     /**
      * Set the launch activity. The application will be opened directly using the provided activity.
-     * Either setPackage or setLaunchActivity needs to be invoked after creating an instance of this
-     * class.
      */
     void setLaunchActivity(String pkg);
+
+    /**
+     * Set the launch action. The application will be opened using the provided launch action with
+     * given extra arguments.
+     */
+    void setLaunchAction(String action, Map<String, String> extraArgs);
 }
