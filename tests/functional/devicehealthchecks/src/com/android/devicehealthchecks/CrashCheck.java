@@ -31,39 +31,45 @@ import org.junit.runner.RunWith;
  */
 @GlobalPresubmit
 @RunWith(AndroidJUnit4.class)
-@Ignore("b/126760989")
 public class CrashCheck extends CrashCheckBase {
 
+    @Ignore("b/126760989")
     @Test
     public void system_server_crash() {
         checkCrash("system_server_crash");
     }
 
+    @Ignore("b/126760989")
     @Test
     public void system_server_native_crash() {
         checkCrash("system_server_native_crash");
     }
 
+    @Ignore("b/126760989")
     @Test
     public void system_server_anr() {
         checkCrash("system_server_anr");
     }
 
+    @Ignore("b/126760989")
     @Test
     public void system_app_crash() {
         checkCrash("system_app_crash");
     }
 
+    @Ignore("b/126760989")
     @Test
     public void system_app_native_crash() {
         checkCrash("system_app_native_crash");
     }
 
+    @Ignore("b/126760989")
     @Test
     public void system_app_anr() {
         checkCrash("system_app_anr");
     }
 
+    @Ignore("b/126760989")
     @Test
     public void system_tombstone() {
         checkCrash("SYSTEM_TOMBSTONE");
