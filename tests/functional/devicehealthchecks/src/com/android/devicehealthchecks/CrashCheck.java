@@ -16,18 +16,22 @@
 package com.android.devicehealthchecks;
 
 import android.platform.test.annotations.GlobalPresubmit;
-import android.support.test.runner.AndroidJUnit4;
+
+import androidx.test.runner.AndroidJUnit4;
 
 import org.junit.Test;
+import org.junit.Ignore;
 import org.junit.runner.RunWith;
 
 /**
  * Tests used for basic device health validation after the device boot is completed. This test class
  * can be used to add more tests in the future for additional basic device health validation after
  * the device boot is completed. This test is used for global presubmit, any dropbox label checked
- * showing failures must be resolved immediately, or have corresponding tests filtered out. */
+ * showing failures must be resolved immediately, or have corresponding tests filtered out.
+ */
 @GlobalPresubmit
 @RunWith(AndroidJUnit4.class)
+@Ignore("b/126760989")
 public class CrashCheck extends CrashCheckBase {
 
     @Test

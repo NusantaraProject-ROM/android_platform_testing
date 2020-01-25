@@ -17,6 +17,7 @@
 package android.platform.helpers;
 
 import android.app.Notification;
+import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.UiObject2;
 
 import androidx.annotation.Nullable;
@@ -185,6 +186,16 @@ public interface INotificationHelper extends IAppHelper {
      * @param notification Notification.
      */
     default void hideGuts(UiObject2 notification) {
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
+
+    /**
+     * Setup expectations: Notification shade opened.
+     *
+     * <p>Find the screenshot notification; expand the notification if it's collapsed and click on
+     * the "share" button.
+     */
+    default void shareScreenshotFromNotification(BySelector pageSelector) {
         throw new UnsupportedOperationException("Not yet implemented.");
     }
 }
