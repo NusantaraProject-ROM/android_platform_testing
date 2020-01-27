@@ -18,9 +18,6 @@ package com.android.server.wm.flicker.monitor;
 
 import static android.os.SystemClock.sleep;
 
-import static com.android.server.wm.flicker.monitor.ScreenRecorder.DEFAULT_OUTPUT_PATH;
-import static com.android.server.wm.flicker.monitor.ScreenRecorder.getPath;
-
 import static com.google.common.truth.Truth.assertThat;
 
 import androidx.test.runner.AndroidJUnit4;
@@ -33,6 +30,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 
 import java.io.File;
+import java.nio.file.Path;
 
 /**
  * Contains {@link ScreenRecorder} tests. To run this test: {@code atest
@@ -43,6 +41,7 @@ import java.io.File;
 public class ScreenRecorderTest {
     private static final String TEST_VIDEO_FILENAME = "test.mp4";
     private ScreenRecorder mScreenRecorder;
+    private Path mSavedVideoPath = null;
 
     @Before
     public void setup() {
@@ -51,8 +50,10 @@ public class ScreenRecorderTest {
 
     @After
     public void teardown() {
-        DEFAULT_OUTPUT_PATH.toFile().delete();
-        getPath(TEST_VIDEO_FILENAME).toFile().delete();
+        mScreenRecorder.getPath().toFile().delete();
+        if (mSavedVideoPath != null) {
+            mSavedVideoPath.toFile().delete();
+        }
     }
 
     @Test
@@ -60,7 +61,7 @@ public class ScreenRecorderTest {
         mScreenRecorder.start();
         sleep(100);
         mScreenRecorder.stop();
-        File file = DEFAULT_OUTPUT_PATH.toFile();
+        File file = mScreenRecorder.getPath().toFile();
         assertThat(file.exists()).isTrue();
     }
 
@@ -69,8 +70,7 @@ public class ScreenRecorderTest {
         mScreenRecorder.start();
         sleep(100);
         mScreenRecorder.stop();
-        mScreenRecorder.save(TEST_VIDEO_FILENAME);
-        File file = getPath(TEST_VIDEO_FILENAME).toFile();
+        File file = mScreenRecorder.save(TEST_VIDEO_FILENAME).toFile();
         assertThat(file.exists()).isTrue();
     }
 }
