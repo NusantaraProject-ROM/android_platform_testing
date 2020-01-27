@@ -114,9 +114,13 @@ public class Assertions {
         private String prettyTimestamp(long timestamp_ns) {
             StringBuilder prettyTimestamp = new StringBuilder();
             TimeUnit[] timeUnits = {
-                TimeUnit.HOURS, TimeUnit.MINUTES, TimeUnit.SECONDS, TimeUnit.MILLISECONDS
+                TimeUnit.DAYS,
+                TimeUnit.HOURS,
+                TimeUnit.MINUTES,
+                TimeUnit.SECONDS,
+                TimeUnit.MILLISECONDS
             };
-            String[] unitSuffixes = {"h", "m", "s", "ms"};
+            String[] unitSuffixes = {"d", "h", "m", "s", "ms"};
 
             for (int i = 0; i < timeUnits.length; i++) {
                 long convertedTime = timeUnits[i].convert(timestamp_ns, TimeUnit.NANOSECONDS);
