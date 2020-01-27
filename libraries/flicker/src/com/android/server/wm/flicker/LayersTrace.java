@@ -126,6 +126,33 @@ public class LayersTrace {
             this.mRootLayers = rootLayers;
         }
 
+        /**
+         * Determines the id of the root element.
+         *
+         * <p>On some files, such as the ones used in the FlickerLib testdata, the root nodes are
+         * those that have parent=0, on newer traces, the root nodes are those that have parent=-1
+         *
+         * <p>This function keeps compatibility with both new and older traces by searching for a
+         * known root layer (Display Root) and considering its parent Id as overall root.
+         */
+        private static Layer getRootLayer(SparseArray<Layer> layerMap) {
+            Layer knownRoot = null;
+            int numKeys = layerMap.size();
+            for (int i = 0; i < numKeys; ++i) {
+                Layer currentLayer = layerMap.valueAt(i);
+                if (currentLayer.getName().contains("Display Root")) {
+                    knownRoot = currentLayer;
+                    break;
+                }
+            }
+
+            if (knownRoot == null) {
+                throw new IllegalStateException("Display root layer not found.");
+            }
+
+            return layerMap.get(knownRoot.getParentId());
+        }
+
         /** Constructs the layer hierarchy from a flattened list of layers. */
         public static Entry fromFlattenedLayers(long timestamp, LayerProto[] protos,
                 Consumer<Layer> orphanLayerCallback) {
@@ -156,13 +183,14 @@ public class LayersTrace {
                 newLayer.addParent(layerMap.get(parentId));
             }
 
-            // Remove root node (id = 0)
-            orphans.remove(layerMap.get(-1));
+            // Remove root node
+            Layer rootLayer = getRootLayer(layerMap);
+            orphans.remove(rootLayer);
             // Fail if we find orphan layers.
             orphans.forEach(
                     orphan -> {
                         if (orphanLayerCallback != null) {
-                            // Workaround for b/141326137, ignore the existance of an orphan layer
+                            // Workaround for b/141326137, ignore the existence of an orphan layer
                             orphanLayerCallback.accept(orphan);
                             return;
                         }
@@ -171,7 +199,7 @@ public class LayersTrace {
                                         .stream()
                                         .map(node -> Integer.toString(node.getId()))
                                         .collect(Collectors.joining(", "));
-                        int orphanId = orphan.mChildren.get(0).mProto.parent;
+                        int orphanId = orphan.mChildren.get(0).getParentId();
                         throw new RuntimeException(
                                 "Failed to parse layers trace. Found orphan layers with parent "
                                         + "layer id:"
@@ -180,7 +208,7 @@ public class LayersTrace {
                                         + childNodes);
                     });
 
-            return new Entry(timestamp, layerMap.get(-1).mChildren);
+            return new Entry(timestamp, rootLayer.mChildren);
         }
 
         /** Extracts {@link Rect} from {@link RectProto}. */
@@ -361,6 +389,18 @@ public class LayersTrace {
 
         public int getId() {
             return mProto.id;
+        }
+
+        public int getParentId() {
+            return mProto.parent;
+        }
+
+        public String getName() {
+            if (mProto != null) {
+                return mProto.name;
+            }
+
+            return "";
         }
 
         public boolean isActiveBufferEmpty() {
