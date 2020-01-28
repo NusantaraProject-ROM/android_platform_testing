@@ -33,6 +33,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 
 import java.nio.file.Paths;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Contains {@link LayersTraceSubject} tests. To run this test: {@code atest
@@ -89,7 +91,9 @@ public class LayersTraceSubjectTest {
             assertWithMessage("Contains path to trace")
                     .that(e.getMessage())
                     .contains("layers_trace_invalid_layer_visibility.pb");
-            assertWithMessage("Contains timestamp").that(e.getMessage()).contains("70h13m14s303ms");
+            assertWithMessage("Contains timestamp")
+                    .that(e.getMessage())
+                    .contains("2d22h13m14s303ms");
             assertWithMessage("Contains assertion function")
                     .that(e.getMessage())
                     .contains("!isVisible");
@@ -99,5 +103,38 @@ public class LayersTraceSubjectTest {
                             "com.android.server.wm.flicker.testapp/com.android.server.wm.flicker.testapp"
                                     + ".SimpleActivity#0 is visible");
         }
+    }
+
+    private void detectRootLayer(String fileName) {
+        LayersTrace layersTrace = readLayerTraceFromFile(fileName);
+
+        for (LayersTrace.Entry entry : layersTrace.getEntries()) {
+            List<LayersTrace.Layer> flattened = entry.asFlattenedLayers();
+            List<LayersTrace.Layer> rootLayers =
+                    flattened
+                            .stream()
+                            .filter(LayersTrace.Layer::isRootLayer)
+                            .collect(Collectors.toList());
+
+            assertWithMessage("Does not have any root layer")
+                    .that(rootLayers.size())
+                    .isGreaterThan(0);
+
+            int firstParentId = rootLayers.get(0).getParentId();
+
+            assertWithMessage("Has multiple root layers")
+                    .that(rootLayers.stream().allMatch(p -> p.getParentId() == firstParentId))
+                    .isTrue();
+        }
+    }
+
+    @Test
+    public void testCanDetectRootLayer() {
+        detectRootLayer("layers_trace_root.pb");
+    }
+
+    @Test
+    public void testCanDetectRootLayerAOSP() {
+        detectRootLayer("layers_trace_root_aosp.pb");
     }
 }
