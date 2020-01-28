@@ -140,7 +140,7 @@ public class LayersTrace {
             int numKeys = layerMap.size();
             for (int i = 0; i < numKeys; ++i) {
                 Layer currentLayer = layerMap.valueAt(i);
-                if (currentLayer.getName().contains("Display Root")) {
+                if (currentLayer.isRootLayer()) {
                     knownRoot = currentLayer;
                     break;
                 }
@@ -434,7 +434,7 @@ public class LayersTrace {
         }
 
         public boolean isRootLayer() {
-            return mParent == null || mParent.mProto == null;
+            return mParent != null && mParent.mProto == null;
         }
 
         public boolean isInvisible() {
