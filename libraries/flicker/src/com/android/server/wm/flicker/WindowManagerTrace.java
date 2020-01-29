@@ -19,7 +19,7 @@ package com.android.server.wm.flicker;
 import androidx.annotation.Nullable;
 
 import com.android.server.wm.flicker.Assertions.Result;
-import com.android.server.wm.nano.AppWindowTokenProto;
+import com.android.server.wm.nano.ActivityRecordProto;
 import com.android.server.wm.nano.StackProto;
 import com.android.server.wm.nano.TaskProto;
 import com.android.server.wm.nano.WindowManagerTraceFileProto;
@@ -144,10 +144,10 @@ public class WindowManagerTrace {
                             .stacks;
             for (StackProto stack : stacks) {
                 for (TaskProto task : stack.tasks) {
-                    for (AppWindowTokenProto token : task.appWindowTokens) {
-                        for (WindowStateProto windowState : token.windowToken.windows) {
+                    for (ActivityRecordProto activity : task.activity) {
+                        for (WindowStateProto windowState : activity.windowToken.windows) {
                             if (windowState.windowContainer.visible) {
-                                return task.appWindowTokens[0].name;
+                                return task.activity[0].name;
                             }
                         }
                     }
@@ -210,16 +210,16 @@ public class WindowManagerTrace {
                             .stacks;
             for (StackProto stack : stacks) {
                 for (TaskProto task : stack.tasks) {
-                    for (AppWindowTokenProto token : task.appWindowTokens) {
-                        if (token.name.contains(windowTitle)) {
+                    for (ActivityRecordProto activity : task.activity) {
+                        if (activity.name.contains(windowTitle)) {
                             titleFound = true;
-                            for (WindowStateProto windowState : token.windowToken.windows) {
+                            for (WindowStateProto windowState : activity.windowToken.windows) {
                                 if (windowState.windowContainer.visible) {
                                     return new Result(
                                             true /* success */,
                                             getTimestamp(),
                                             assertionName,
-                                            "Window " + token.name + "is visible");
+                                            "Window " + activity.name + "is visible");
                                 }
                             }
                         }
