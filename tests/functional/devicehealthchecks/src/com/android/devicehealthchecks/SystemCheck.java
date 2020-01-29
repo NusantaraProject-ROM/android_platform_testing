@@ -34,25 +34,21 @@ import org.junit.runner.RunWith;
 @RunWith(AndroidJUnit4.class)
 public class SystemCheck extends CrashCheckBase {
 
-    @Ignore("b/126760989")
     @Test
     public void system_server_crash() {
         checkCrash("system_server_crash");
     }
 
-    @Ignore("b/126760989")
     @Test
     public void system_server_native_crash() {
         checkCrash("system_server_native_crash");
     }
 
-    @Ignore("b/126760989")
     @Test
     public void system_server_anr() {
         checkCrash("system_server_anr");
     }
 
-    @Ignore("b/126760989")
     @Test
     public void system_tombstone() {
         checkCrash("SYSTEM_TOMBSTONE");
