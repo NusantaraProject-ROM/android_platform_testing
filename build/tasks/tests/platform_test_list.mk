@@ -90,7 +90,6 @@ platform_tests += \
     PermissionTestAppMV1 \
     PermissionUtils \
     PowerPerfTest \
-    root-canal \
     SettingsUITests \
     SimpleServiceTestApp \
     SimpleTestApp \
@@ -127,4 +126,8 @@ ifneq ($(filter vsoc_arm vsoc_arm64 vsoc_x86 vsoc_x86_64, $(TARGET_BOARD_PLATFOR
   platform_tests += \
     CuttlefishRilTests \
     CuttlefishWifiTests
+endif
+
+ifeq ($(HOST_OS),linux)
+platform_tests += root-canal
 endif
