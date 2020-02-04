@@ -107,7 +107,7 @@ public class FreeMemHelper implements ICollectorHelper<Long> {
         for (String process : cachedProcList) {
             Log.i(TAG, "Cached Process" + process);
             Matcher match;
-            if (((match = matches(PID_PATTERN, process))) != null) {
+            if ((match = matches(PID_PATTERN, process)) != null) {
                 String processId = match.group(PROCESS_ID);
                 String processDumpSysMemInfo = String.format(DUMPSYS_PROCESS, processId);
                 String processInfoStr;
@@ -173,7 +173,7 @@ public class FreeMemHelper implements ICollectorHelper<Long> {
                 Log.i(TAG, currLine);
                 Matcher match;
                 if (!isCacheProcSection
-                        && ((match = matches(CACHE_PROC_START_PATTERN, currLine))) == null) {
+                        && (match = matches(CACHE_PROC_START_PATTERN, currLine)) == null) {
                     // Continue untill the start of cache proc section.
                     continue;
                 } else {
