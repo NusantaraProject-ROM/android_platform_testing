@@ -20,8 +20,6 @@ platform_tests += \
     BandwidthEnforcementTest \
     BandwidthTests \
     BluetoothTests \
-    bluetooth_cert_stack \
-    bluetooth_stack_with_facade \
     BootHelperApp \
     BusinessCard \
     CalculatorFunctionalTests \
@@ -58,9 +56,7 @@ platform_tests += \
     FrameworksUtilTests \
     InternalLocTestApp \
     JankMicroBenchmarkTests \
-    libbluetooth_gd \
     long_trace_config.textproto \
-    libgrpc++_unsecure \
     MemoryUsage \
     MultiDexLegacyTestApp \
     MultiDexLegacyTestApp2 \
@@ -87,7 +83,6 @@ platform_tests += \
     PermissionTestAppMV1 \
     PermissionUtils \
     PowerPerfTest \
-    root-canal \
     SettingsUITests \
     SimpleTestApp \
     skia_dm \
