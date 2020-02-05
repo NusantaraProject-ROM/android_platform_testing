@@ -56,7 +56,7 @@ public class UiBenchJankHelper extends AbstractStandardAppHelper implements IUiB
     private static final int SLOW_FLING_SPEED = 3000; // compare to UiObject2#DEFAULT_FLING_SPEED
 
     // Main UiObject2 exercised by the test.
-    private UiObject2 mContents;
+    private UiObject2 mContents, mNavigation;
 
     public UiBenchJankHelper(Instrumentation instr) {
         super(instr);
@@ -107,6 +107,15 @@ public class UiBenchJankHelper extends AbstractStandardAppHelper implements IUiB
         Assert.assertNotNull(activityName + " isn't found", mContents);
     }
 
+    int getEdgeSensitivity() {
+        int resId =
+                mInstrumentation
+                        .getContext()
+                        .getResources()
+                        .getIdentifier("config_backGestureInset", "dimen", "android");
+        return mInstrumentation.getContext().getResources().getDimensionPixelSize(resId) + 1;
+    }
+
     /** To perform the fling down and up on given content for flingCount number of times */
     @Override
     public void flingUpDown(int flingCount) {
@@ -119,6 +128,7 @@ public class UiBenchJankHelper extends AbstractStandardAppHelper implements IUiB
     }
 
     void flingUpDown(int flingCount, boolean reverse) {
+        mContents.setGestureMargin(getEdgeSensitivity());
         for (int count = 0; count < flingCount; count++) {
             SystemClock.sleep(SHORT_TIMEOUT);
             mContents.fling(reverse ? Direction.UP : Direction.DOWN);
@@ -130,9 +140,13 @@ public class UiBenchJankHelper extends AbstractStandardAppHelper implements IUiB
     /** To perform the swipe right and left on given content for swipeCount number of times */
     @Override
     public void swipeRightLeft(int swipeCount) {
+        mNavigation =
+                mDevice.wait(
+                        Until.findObject(By.desc("Open navigation drawer")), FIND_OBJECT_TIMEOUT);
+        mContents.setGestureMargin(getEdgeSensitivity());
         for (int count = 0; count < swipeCount; count++) {
             SystemClock.sleep(SHORT_TIMEOUT);
-            mContents.swipe(Direction.RIGHT, 1);
+            mNavigation.click();
             SystemClock.sleep(SHORT_TIMEOUT);
             mContents.swipe(Direction.LEFT, 1);
         }
@@ -143,6 +157,7 @@ public class UiBenchJankHelper extends AbstractStandardAppHelper implements IUiB
         SystemClock.sleep(SHORT_TIMEOUT);
         Context context = mInstrumentation.getContext();
         DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
+        mContents.setGestureMargin(getEdgeSensitivity());
         mContents.fling(Direction.DOWN, (int) (SLOW_FLING_SPEED * displayMetrics.density));
         mDevice.waitForIdle();
     }
