@@ -429,9 +429,8 @@ public class BaseMetricListener extends InstrumentationRunListener {
         }
 
         // Check for iteration interval metric collection criteria.
-        if ((mTestIdInvocationCount.containsKey(desc.toString()))
-                && (mTestIdInvocationCount.get(desc.toString())
-                        % mCollectIterationInterval != 0)) {
+        if (mTestIdInvocationCount.containsKey(desc.toString())
+                && (mTestIdInvocationCount.get(desc.toString()) % mCollectIterationInterval != 0)) {
             return false;
         }
         return true;
