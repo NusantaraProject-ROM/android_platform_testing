@@ -14,6 +14,7 @@
 
 instrumentation_metric_tests := \
     AutofillPerfTests \
+    BlobStorePerfTests \
     crashcollector \
     CorePerfTests \
     DocumentsUIAppPerfTests \
