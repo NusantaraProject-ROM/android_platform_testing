@@ -18,18 +18,20 @@ package com.android.helpers;
 
 import static com.android.helpers.MetricUtility.constructKey;
 
-import android.icu.text.NumberFormat;
 import android.support.test.uiautomator.UiDevice;
 import android.util.Log;
 import androidx.test.InstrumentationRegistry;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.InputMismatchException;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -40,16 +42,19 @@ public class RssSnapshotHelper implements ICollectorHelper<String> {
 
   private static final String DROP_CACHES_CMD = "echo %d > /proc/sys/vm/drop_caches";
   private static final String PIDOF_CMD = "pidof %s";
+  public static final String ALL_PROCESSES_CMD = "ps -A";
   private static final String SHOWMAP_CMD = "showmap -v %d";
 
   public static final String RSS_METRIC_PREFIX = "showmap_rss_bytes";
   public static final String OUTPUT_FILE_PATH_KEY = "showmap_output_file";
+  public static final String RSS_PROCESS_COUNT = "rss_process_count";
 
   private String[] mProcessNames = null;
   private String mTestOutputDir = null;
   private String mTestOutputFile = null;
 
   private int mDropCacheOption;
+  private boolean mCollectForAllProcesses = false;
   private UiDevice mUiDevice;
 
   // Map to maintain per-process rss.
@@ -64,7 +69,7 @@ public class RssSnapshotHelper implements ICollectorHelper<String> {
 
   @Override
   public boolean startCollecting() {
-    if (mTestOutputDir == null || mProcessNames == null) {
+    if (mTestOutputDir == null) {
       Log.e(TAG, String.format("Invalid test setup"));
       return false;
     }
@@ -111,32 +116,44 @@ public class RssSnapshotHelper implements ICollectorHelper<String> {
         dropCache(mDropCacheOption);
       }
 
-      if (mProcessNames.length == 0) {
-        // No processes specified, just return
+      if (mCollectForAllProcesses) {
+         Log.i(TAG, "Collecting RSS metrics for all processes.");
+         mProcessNames = getAllProcessNames();
+      } else if (mProcessNames.length > 0) {
+         Log.i(TAG, "Collecting RSS only for given list of process");
+      } else if (mProcessNames.length == 0) {
+        // No processes specified, just return empty map
         return mRssMap;
       }
 
       FileWriter writer = new FileWriter(new File(mTestOutputFile), true);
       for (String processName : mProcessNames) {
-        long pid, rss;
-        String showmapOutput;
+        List<Integer> pids = new ArrayList<>();
 
+        long totalrss = 0;
         // Collect required data
         try {
-          pid = getPid(processName);
-          showmapOutput = execShowMap(processName, pid);
-          rss = extractTotalRss(processName, showmapOutput);
+          pids = getPids(processName);
+
+          for (Integer pid: pids) {
+            String showmapOutput = execShowMap(processName, pid);
+            long rss = extractTotalRss(processName, showmapOutput);
+            // Track the total rss for the processes with the same process name.
+            totalrss += rss;
+            // Store showmap output into file. If there are more than one process
+            // with same name write the individual showmap associated with pid.
+            storeToFile(mTestOutputFile, processName, pid, showmapOutput, writer);
+          }
         } catch (RuntimeException e) {
           Log.e(TAG, e.getMessage(), e.getCause());
           // Skip this process and continue with the next one
           continue;
         }
 
-        // Store showmap output into file
-        storeToFile(mTestOutputFile, processName, pid, showmapOutput, writer);
-
         // Store metrics
-        mRssMap.put(constructKey(RSS_METRIC_PREFIX, processName), Long.toString(rss * 1024));
+        mRssMap.put(constructKey(RSS_METRIC_PREFIX, processName), Long.toString(totalrss * 1024));
+        // Store the unique process count.
+        mRssMap.put(RSS_PROCESS_COUNT, Integer.toString(mProcessNames.length));
       }
       writer.close();
       mRssMap.put(OUTPUT_FILE_PATH_KEY, mTestOutputFile);
@@ -184,17 +201,25 @@ public class RssSnapshotHelper implements ICollectorHelper<String> {
   }
 
   /**
-   * Get pid of the process with {@code processName} name.
+   * Get pid's of the process with {@code processName} name.
    *
    * @param processName name of the process to get pid
-   * @return pid of the specified process
+   * @return pid's of the specified process
    */
-  private int getPid(String processName) throws RuntimeException {
+  private List<Integer> getPids(String processName) throws RuntimeException {
     try {
-      // Note that only the first pid returned by "pidof" will be used.
       String pidofOutput = mUiDevice.executeShellCommand(String.format(PIDOF_CMD, processName));
-      return NumberFormat.getInstance().parse(pidofOutput).intValue();
-    } catch (IOException | ParseException e) {
+
+      // Sample output for the process with more than 1 pid.
+      // Sample command : "pidof init"
+      // Sample output : 1 559
+      String[] pids = pidofOutput.split("\\s+");
+      List<Integer> pidList = new ArrayList<>();
+      for (String pid: pids) {
+          pidList.add(Integer.parseInt(pid.trim()));
+      }
+      return pidList;
+    } catch (IOException e) {
       throw new RuntimeException(String.format("Unable to get pid of %s ", processName), e);
     }
   }
@@ -253,5 +278,46 @@ public class RssSnapshotHelper implements ICollectorHelper<String> {
     } catch (IOException e) {
       throw new RuntimeException(String.format("Unable to write file %s ", fileName), e);
     }
+  }
+
+  /**
+   * Enables RSS collection for all processes.
+   */
+  public void setAllProcesses() {
+      mCollectForAllProcesses = true;
+  }
+
+  /**
+   * Get all process names running in the system.
+   */
+  private String[] getAllProcessNames() {
+      Set<String> allProcessNames = new LinkedHashSet<>();
+      try {
+          String psOutput = mUiDevice.executeShellCommand(ALL_PROCESSES_CMD);
+          // Split the lines
+          String allProcesses[] = psOutput.split("\\n");
+          for (String invidualProcessDetails : allProcesses) {
+              Log.i(TAG, String.format("Process detail: %s", invidualProcessDetails));
+              // Sample process detail line
+              // system         603     1   41532   5396 SyS_epoll+          0 S servicemanager
+              String processSplit[] = invidualProcessDetails.split("\\s+");
+              // Parse process name
+              String processName = processSplit[processSplit.length - 1].trim();
+              // Include the process name which are not enclosed in [].
+              if (!processName.startsWith("[") && !processName.endsWith("]")) {
+                  // Skip the first (i.e header) line from "ps -A" output.
+                  if (processName.equalsIgnoreCase("NAME")) {
+                      continue;
+                  }
+                  Log.i(TAG, String.format("Including the process %s", processName));
+                  allProcessNames.add(processName);
+              }
+          }
+      } catch (IOException ioe) {
+          throw new RuntimeException(
+                  String.format("Unable execute all processes command %s ", ALL_PROCESSES_CMD),
+                  ioe);
+      }
+      return allProcessNames.toArray(new String[0]);
   }
 }
