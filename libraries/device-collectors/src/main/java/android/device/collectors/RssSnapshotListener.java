@@ -74,12 +74,15 @@ public class RssSnapshotListener extends BaseCollectionListener<String> {
   public void setupAdditionalArgs() {
     Bundle args = getArgsBundle();
     String testOutputDir = args.getString(OUTPUT_DIR_KEY, DEFAULT_OUTPUT_DIR);
+    // Collect for all processes if process list is empty or null.
     String procsString = args.getString(PROCESS_NAMES_KEY);
-    if (procsString == null) {
-      Log.e(TAG, "No processes provided to sample");
-      return;
+
+    String[] procs = null;
+    if (procsString == null || procsString.isEmpty()) {
+      mRssSnapshotHelper.setAllProcesses();
+    } else {
+      procs = procsString.split(PROCESS_SEPARATOR);
     }
-    String[] procs = procsString.split(PROCESS_SEPARATOR);
 
     mRssSnapshotHelper.setUp(testOutputDir, procs);
 
