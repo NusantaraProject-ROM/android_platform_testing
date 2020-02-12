@@ -46,6 +46,7 @@ public class RssSnapshotHelperTest {
   private static final String[] EMPTY_PROCESS_LIST = {};
   private static final String[] ONE_PROCESS_LIST = {"com.android.systemui"};
   private static final String[] TWO_PROCESS_LIST = {"com.android.systemui", "system_server"};
+  private static final String[] NO_PROCESS_LIST = {null};
 
   private RssSnapshotHelper mRssSnapshotHelper;
 
@@ -125,6 +126,21 @@ public class RssSnapshotHelperTest {
   public void testGetMetrics_MultipleProcesses() {
     testProcessList(TWO_PROCESS_LIST);
   }
+
+  /**
+   * Test all process flag return more than 2 processes metrics atleast.
+   */
+  @Test
+  public void testGetMetrics_AllProcess() {
+    mRssSnapshotHelper.setUp(VALID_OUTPUT_DIR, NO_PROCESS_LIST);
+    mRssSnapshotHelper.setAllProcesses();
+    assertTrue(mRssSnapshotHelper.startCollecting());
+    Map<String, String> metrics = mRssSnapshotHelper.getMetrics();
+    assertTrue(metrics.size() > 2);
+    assertTrue(metrics.containsKey(RssSnapshotHelper.OUTPUT_FILE_PATH_KEY));
+
+  }
+
 
   private void testProcessList(String... processNames) {
     mRssSnapshotHelper.setUp(VALID_OUTPUT_DIR, processNames);
