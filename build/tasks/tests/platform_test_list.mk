@@ -85,6 +85,7 @@ platform_tests += \
     PermissionFunctionalTests \
     PermissionTestAppMV1 \
     PermissionUtils \
+    PlatformCommonScenarioTests \
     PowerPerfTest \
     SettingsUITests \
     SimpleServiceTestApp \
