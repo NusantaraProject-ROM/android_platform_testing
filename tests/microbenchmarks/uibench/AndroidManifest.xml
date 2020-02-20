@@ -19,6 +19,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.REAL_GET_TASKS" />
 
+    <uses-sdk android:targetSdkVersion="28" />
     <application>
         <uses-library android:name="android.test.runner" />
     </application>
