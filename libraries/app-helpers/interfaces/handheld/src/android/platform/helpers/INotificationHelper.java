@@ -96,6 +96,18 @@ public interface INotificationHelper extends IAppHelper {
     }
 
     /**
+     * Setup Expectations: Shade is open
+     *
+     * <p>Posts a conversation notification. This notification is associated with a conversation
+     * shortcut and in {@link android.app.Notification.MessagingStyle}.
+     *
+     * @param pkg App to launch, when clicking on notification.
+     */
+    default UiObject2 postConversationNotification(String pkg) {
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
+
+    /**
      * Setup Expectations: None
      *
      * <p>Posts a number of notifications to the device with a package to launch. Successive calls
