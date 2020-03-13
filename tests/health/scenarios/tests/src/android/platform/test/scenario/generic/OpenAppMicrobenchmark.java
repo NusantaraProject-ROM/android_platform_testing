@@ -18,6 +18,7 @@ package android.platform.test.scenario.generic;
 import android.platform.test.microbenchmark.Microbenchmark;
 import android.platform.test.rule.CompilationFilterRule;
 import android.platform.test.rule.DropCachesRule;
+import android.platform.test.rule.IorapCompilationRule;
 import android.platform.test.rule.KillAppsRule;
 import android.platform.test.rule.PressHomeRule;
 
@@ -33,5 +34,6 @@ public class OpenAppMicrobenchmark extends OpenApp {
             RuleChain.outerRule(new KillAppsRule(sPkgOption.get()))
                     .around(new DropCachesRule())
                     .around(new CompilationFilterRule(sPkgOption.get()))
-                    .around(new PressHomeRule());
+                    .around(new PressHomeRule())
+                    .around(new IorapCompilationRule(sPkgOption.get()));
 }
