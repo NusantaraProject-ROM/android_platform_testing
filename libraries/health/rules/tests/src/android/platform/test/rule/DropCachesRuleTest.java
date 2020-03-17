@@ -42,7 +42,7 @@ public class DropCachesRuleTest {
         rule.apply(rule.getTestStatement(), Description.createTestDescription("clzz", "mthd"))
             .evaluate();
         assertThat(rule.getOperations()).containsExactly(
-                "echo 3 > /proc/sys/vm/drop_caches", "test")
+                rule.getDropCacheScriptPath(), "test")
             .inOrder();
     }
 
@@ -91,6 +91,11 @@ public class DropCachesRuleTest {
                     mOperations.add("test");
                 }
             };
+        }
+
+        @Override
+        public String getDropCacheScriptPath() {
+            return super.getDropCacheScriptPath();
         }
     }
 }
