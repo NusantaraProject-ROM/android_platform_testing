@@ -150,7 +150,7 @@ public class BaseCollectionListenerTest {
 
         mListener.onTestRunStart(mListener.createDataRecord(), FAKE_DESCRIPTION);
         verify(helper, times(0)).startCollecting();
-        mListener.onTestStart(mListener.createDataRecord(), FAKE_TEST_DESCRIPTION);
+        mListener.testStarted(FAKE_TEST_DESCRIPTION);
         verify(helper, times(1)).startCollecting();
         Failure failureDesc = new Failure(FAKE_TEST_DESCRIPTION,
                 new Exception());
@@ -171,7 +171,7 @@ public class BaseCollectionListenerTest {
 
         mListener.onTestRunStart(mListener.createDataRecord(), FAKE_DESCRIPTION);
         verify(helper, times(0)).startCollecting();
-        mListener.onTestStart(mListener.createDataRecord(), FAKE_TEST_DESCRIPTION);
+        mListener.testStarted(FAKE_TEST_DESCRIPTION);
         verify(helper, times(1)).startCollecting();
         Failure failureDesc = new Failure(FAKE_TEST_DESCRIPTION,
                 new Exception());
@@ -195,7 +195,7 @@ public class BaseCollectionListenerTest {
 
         mListener.onTestRunStart(mListener.createDataRecord(), FAKE_DESCRIPTION);
         verify(helper, times(0)).startCollecting();
-        mListener.onTestStart(mListener.createDataRecord(), FAKE_TEST_DESCRIPTION);
+        mListener.testStarted(FAKE_TEST_DESCRIPTION);
         verify(helper, times(1)).startCollecting();
         Failure failureDesc = new Failure(FAKE_TEST_DESCRIPTION,
                 new Exception());
