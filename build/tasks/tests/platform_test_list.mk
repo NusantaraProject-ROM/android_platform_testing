@@ -97,7 +97,9 @@ platform_tests += \
     SmokeTestApp \
     SysAppJankTestsWear \
     TouchLatencyJankTestWear \
+    trace_config.textproto \
     trace_config_detailed.textproto \
+    trace_config_experimental.textproto \
     UbSystemUiJankTests \
     UbWebViewJankTests \
     UiBench \
