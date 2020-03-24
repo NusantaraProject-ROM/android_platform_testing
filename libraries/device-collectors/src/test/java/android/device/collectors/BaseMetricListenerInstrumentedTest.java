@@ -478,6 +478,66 @@ public class BaseMetricListenerInstrumentedTest {
     }
 
     /**
+     * Metric collection does not happen on the skipped iterations.
+     */
+    @MetricOption(group = "testGroup")
+    @Test
+    public void testSameMethodNameWithSkipIterationOption() throws Exception {
+        Bundle args = new Bundle();
+        args.putString(BaseMetricListener.SKIP_METRIC_UNTIL_ITERATION, "2");
+        mListener = createWithArgs(args);
+        mListener.setInstrumentation(mMockInstrumentation);
+
+        // Skip until iteration is set to 2.
+        // Metric will not be collected for 1st and 2nd iterations.
+        Description runDescription = Description.createSuiteDescription("run");
+        mListener.testRunStarted(runDescription);
+        Description testDescription = Description.createTestDescription("class", "method");
+        mListener.testStarted(testDescription);
+        mListener.testFinished(testDescription);
+        mListener.testStarted(testDescription);
+        mListener.testFinished(testDescription);
+        mListener.testStarted(testDescription);
+        mListener.testFinished(testDescription);
+        mListener.testStarted(testDescription);
+        mListener.testFinished(testDescription);
+        mListener.testStarted(testDescription);
+        mListener.testFinished(testDescription);
+        mListener.testRunFinished(new Result());
+        // AJUR runner is then gonna call instrumentationRunFinished
+        Bundle resultBundle = new Bundle();
+        mListener.instrumentationRunFinished(System.out, resultBundle, new Result());
+
+        // Check instrumentation status inprogress called only 3 times.
+        ArgumentCaptor<Bundle> capture = ArgumentCaptor.forClass(Bundle.class);
+        Mockito.verify(mMockInstrumentation, Mockito.times(3))
+                .sendStatus(Mockito.eq(
+                        SendToInstrumentation.INST_STATUS_IN_PROGRESS), capture.capture());
+
+        List<Bundle> capturedBundle = capture.getAllValues();
+        assertEquals(3, capturedBundle.size());
+        Bundle check = capturedBundle.get(0);
+        assertEquals(TEST_START_VALUE + "method", check.getString(TEST_START_KEY));
+        assertEquals(TEST_END_VALUE + "method", check.getString(TEST_END_KEY));
+        assertEquals(2, check.size());
+
+        Bundle check2 = capturedBundle.get(1);
+        assertEquals(TEST_START_VALUE + "method", check2.getString(TEST_START_KEY));
+        assertEquals(TEST_END_VALUE + "method", check2.getString(TEST_END_KEY));
+        assertEquals(2, check2.size());
+
+        Bundle check3 = capturedBundle.get(2);
+        assertEquals(TEST_START_VALUE + "method", check3.getString(TEST_START_KEY));
+        assertEquals(TEST_END_VALUE + "method", check3.getString(TEST_END_KEY));
+        assertEquals(2, check2.size());
+
+        // Check that final bundle contains run results
+        assertEquals(RUN_START_VALUE, resultBundle.getString(RUN_START_KEY));
+        assertEquals(RUN_END_VALUE, resultBundle.getString(RUN_END_KEY));
+        assertEquals(2, resultBundle.size());
+    }
+
+    /**
      * Metric collection happens on all the iteration if the interval is
      * invalid (i.e less than 1).
      */
