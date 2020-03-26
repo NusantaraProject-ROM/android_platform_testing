@@ -43,6 +43,7 @@ native_tests := \
     dvr_buffer_queue-test \
     dvr_display-test \
     gpuservice_unittest \
+    gwp_asan_unittest \
     hello_world_test \
     hwui_unit_tests \
     incident_helper_test \
