@@ -43,6 +43,7 @@ native_tests := \
     dvr_buffer_queue-test \
     dvr_display-test \
     gpuservice_unittest \
+    gwp_asan_unittest \
     hello_world_test \
     hwui_unit_tests \
     incident_helper_test \
@@ -67,7 +68,6 @@ native_tests := \
     liblog-unit-tests \
     libminijail_unittest_gtest \
     libnetdbpf_test \
-    libperfmgr_test \
     libprocinfo_test \
     libtextclassifier_tests \
     libsurfaceflinger_unittest \
