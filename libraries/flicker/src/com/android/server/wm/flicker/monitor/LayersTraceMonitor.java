@@ -16,7 +16,10 @@
 
 package com.android.server.wm.flicker.monitor;
 
+import android.os.IBinder;
+import android.os.Parcel;
 import android.os.RemoteException;
+import android.os.ServiceManager;
 import android.view.IWindowManager;
 import android.view.WindowManagerGlobal;
 
@@ -25,6 +28,7 @@ import java.nio.file.Path;
 /** Captures Layers trace from SurfaceFlinger. */
 public class LayersTraceMonitor extends TraceMonitor {
     private IWindowManager mWm = WindowManagerGlobal.getWindowManagerService();
+    private static final int TRACE_FLAGS = 0x7; // TRACE_CRITICAL|TRACE_INPUT|TRACE_COMPOSITION
 
     public LayersTraceMonitor() {
         this(OUTPUT_DIR);
@@ -36,6 +40,7 @@ public class LayersTraceMonitor extends TraceMonitor {
 
     @Override
     public void start() {
+        setTraceFlags(TRACE_FLAGS);
         setEnabled(true);
     }
 
@@ -59,6 +64,25 @@ public class LayersTraceMonitor extends TraceMonitor {
             mWm.setLayerTracing(isEnabled);
         } catch (RemoteException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void setTraceFlags(int flags) {
+        Parcel data = null;
+        IBinder sf = ServiceManager.getService("SurfaceFlinger");
+        if (sf != null) {
+            data = Parcel.obtain();
+            data.writeInterfaceToken("android.ui.ISurfaceComposer");
+            data.writeInt(TRACE_FLAGS);
+            try {
+                sf.transact(1033 /* LAYER_TRACE_FLAGS_CODE */, data, null, 0 /* flags */);
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            } finally {
+                if (data != null) {
+                    data.recycle();
+                }
+            }
         }
     }
 }
