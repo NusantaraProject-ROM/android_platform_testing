@@ -132,6 +132,7 @@ native_tests := \
     NeuralNetworksTest_mt_static \
     NeuralNetworksTest_operations \
     NeuralNetworksTest_static \
+    NeuralNetworksTest_utils \
     SurfaceFlinger_test \
     lmkd_unit_test \
     vrflinger_test
