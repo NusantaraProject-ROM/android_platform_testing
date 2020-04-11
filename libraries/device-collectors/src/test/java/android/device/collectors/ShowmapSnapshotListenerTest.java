@@ -16,16 +16,17 @@
 
 package android.device.collectors;
 
-import static android.device.collectors.RssSnapshotListener.DROP_CACHE_KEY;
-import static android.device.collectors.RssSnapshotListener.OUTPUT_DIR_KEY;
-import static android.device.collectors.RssSnapshotListener.PROCESS_NAMES_KEY;
-import static android.device.collectors.RssSnapshotListener.PROCESS_SEPARATOR;
+import static android.device.collectors.ShowmapSnapshotListener.DROP_CACHE_KEY;
+import static android.device.collectors.ShowmapSnapshotListener.METRIC_NAME_INDEX;
+import static android.device.collectors.ShowmapSnapshotListener.OUTPUT_DIR_KEY;
+import static android.device.collectors.ShowmapSnapshotListener.PROCESS_NAMES_KEY;
+import static android.device.collectors.ShowmapSnapshotListener.PROCESS_SEPARATOR;
 import static org.mockito.Mockito.verify;
 
 import android.app.Instrumentation;
 import android.os.Bundle;
 import androidx.test.runner.AndroidJUnit4;
-import com.android.helpers.RssSnapshotHelper;
+import com.android.helpers.ShowmapSnapshotHelper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.Description;
@@ -34,20 +35,21 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 /**
- * Android Unit tests for {@link RssSnapshotListener}.
+ * Android Unit tests for {@link ShowmapSnapshotListener}.
  *
  * To run:
- * atest CollectorDeviceLibTest:android.device.collectors.RssSnapshotListenerTest
+ * atest CollectorDeviceLibTest:android.device.collectors.ShowmapSnapshotListenerTest
  */
 @RunWith(AndroidJUnit4.class)
-public class RssSnapshotListenerTest {
+public class ShowmapSnapshotListenerTest {
   @Mock private Instrumentation mInstrumentation;
-  @Mock private RssSnapshotHelper mRssSnapshotHelper;
+  @Mock private ShowmapSnapshotHelper mShowmapSnapshotHelper;
 
-  private RssSnapshotListener mListener;
+  private ShowmapSnapshotListener mListener;
   private Description mRunDesc;
 
   private static final String VALID_OUTPUT_DIR = "/data/local/tmp";
+  private static final String SAMPLE_METRIC_INDEX = "rss:1,pss:2";
 
   @Before
   public void setUp() {
@@ -55,8 +57,8 @@ public class RssSnapshotListenerTest {
     mRunDesc = Description.createSuiteDescription("run");
   }
 
-  private RssSnapshotListener initListener(Bundle b) {
-    RssSnapshotListener listener = new RssSnapshotListener(b, mRssSnapshotHelper);
+  private ShowmapSnapshotListener initListener(Bundle b) {
+    ShowmapSnapshotListener listener = new ShowmapSnapshotListener(b, mShowmapSnapshotHelper);
     listener.setInstrumentation(mInstrumentation);
     return listener;
   }
@@ -71,21 +73,23 @@ public class RssSnapshotListenerTest {
 
     mListener.testRunStarted(mRunDesc);
 
-    verify(mRssSnapshotHelper).setUp(VALID_OUTPUT_DIR, "process1", "process2");
+    verify(mShowmapSnapshotHelper).setUp(VALID_OUTPUT_DIR, "process1", "process2");
   }
 
   @Test
   public void testAdditionalOptions() throws Exception {
     Bundle b = new Bundle();
     b.putString(PROCESS_NAMES_KEY, "process1");
+    b.putString(METRIC_NAME_INDEX, "rss:1,pss:2");
     b.putString(OUTPUT_DIR_KEY, VALID_OUTPUT_DIR);
     b.putString(DROP_CACHE_KEY, "all");
     mListener = initListener(b);
 
     mListener.testRunStarted(mRunDesc);
 
-    verify(mRssSnapshotHelper).setUp(VALID_OUTPUT_DIR, "process1");
+    verify(mShowmapSnapshotHelper).setUp(VALID_OUTPUT_DIR, "process1");
+    verify(mShowmapSnapshotHelper).setMetricNameIndex(SAMPLE_METRIC_INDEX);
     // DROP_CACHE_KEY values: "pagecache" = 1, "slab" = 2, "all" = 3
-    verify(mRssSnapshotHelper).setDropCacheOption(3);
+    verify(mShowmapSnapshotHelper).setDropCacheOption(3);
   }
 }
