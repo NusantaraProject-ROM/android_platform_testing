@@ -30,24 +30,23 @@ import java.util.InputMismatchException;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
 import java.util.Set;
 import java.util.UUID;
 
 /**
- * Helper to collect rss snapshot for a list of processes.
+ * Helper to collect memory information for a list of processes from showmap.
  */
-public class RssSnapshotHelper implements ICollectorHelper<String> {
-  private static final String TAG = RssSnapshotHelper.class.getSimpleName();
+public class ShowmapSnapshotHelper implements ICollectorHelper<String> {
+  private static final String TAG = ShowmapSnapshotHelper.class.getSimpleName();
 
   private static final String DROP_CACHES_CMD = "echo %d > /proc/sys/vm/drop_caches";
   private static final String PIDOF_CMD = "pidof %s";
   public static final String ALL_PROCESSES_CMD = "ps -A";
   private static final String SHOWMAP_CMD = "showmap -v %d";
 
-  public static final String RSS_METRIC_PREFIX = "showmap_rss_bytes";
+  public static final String OUTPUT_METRIC_PATTERN = "showmap_%s_bytes";
   public static final String OUTPUT_FILE_PATH_KEY = "showmap_output_file";
-  public static final String RSS_PROCESS_COUNT = "rss_process_count";
+  public static final String PROCESS_COUNT = "process_count";
 
   private String[] mProcessNames = null;
   private String mTestOutputDir = null;
@@ -57,8 +56,12 @@ public class RssSnapshotHelper implements ICollectorHelper<String> {
   private boolean mCollectForAllProcesses = false;
   private UiDevice mUiDevice;
 
-  // Map to maintain per-process rss.
-  private Map<String, String> mRssMap = new HashMap<>();
+  // Map to maintain per-process memory info
+  private Map<String, String> mMemoryMap = new HashMap<>();
+  
+  // Maintain metric name and the index it corresponds to in the showmap output
+  // summary
+  private Map<Integer, String> mMetricNameIndexMap = new HashMap<>();
 
   public void setUp(String testOutputDir, String... processNames) {
     mProcessNames = processNames;
@@ -76,7 +79,7 @@ public class RssSnapshotHelper implements ICollectorHelper<String> {
 
     File directory = new File(mTestOutputDir);
     String filePath =
-        String.format("%s/rss_snapshot%d.txt", mTestOutputDir, UUID.randomUUID().hashCode());
+        String.format("%s/showmap_snapshot%d.txt", mTestOutputDir, UUID.randomUUID().hashCode());
     File file = new File(filePath);
 
     // Make sure directory exists and file does not
@@ -117,29 +120,25 @@ public class RssSnapshotHelper implements ICollectorHelper<String> {
       }
 
       if (mCollectForAllProcesses) {
-         Log.i(TAG, "Collecting RSS metrics for all processes.");
+         Log.i(TAG, "Collecting memory metrics for all processes.");
          mProcessNames = getAllProcessNames();
       } else if (mProcessNames.length > 0) {
-         Log.i(TAG, "Collecting RSS only for given list of process");
+         Log.i(TAG, "Collecting memory only for given list of process");
       } else if (mProcessNames.length == 0) {
         // No processes specified, just return empty map
-        return mRssMap;
+        return mMemoryMap;
       }
 
       FileWriter writer = new FileWriter(new File(mTestOutputFile), true);
       for (String processName : mProcessNames) {
         List<Integer> pids = new ArrayList<>();
 
-        long totalrss = 0;
         // Collect required data
         try {
           pids = getPids(processName);
-
           for (Integer pid: pids) {
             String showmapOutput = execShowMap(processName, pid);
-            long rss = extractTotalRss(processName, showmapOutput);
-            // Track the total rss for the processes with the same process name.
-            totalrss += rss;
+            parseAndUpdateMemoryInfo(processName, showmapOutput);
             // Store showmap output into file. If there are more than one process
             // with same name write the individual showmap associated with pid.
             storeToFile(mTestOutputFile, processName, pid, showmapOutput, writer);
@@ -148,22 +147,19 @@ public class RssSnapshotHelper implements ICollectorHelper<String> {
           Log.e(TAG, e.getMessage(), e.getCause());
           // Skip this process and continue with the next one
           continue;
-        }
-
-        // Store metrics
-        mRssMap.put(constructKey(RSS_METRIC_PREFIX, processName), Long.toString(totalrss * 1024));
-        // Store the unique process count.
-        mRssMap.put(RSS_PROCESS_COUNT, Integer.toString(mProcessNames.length));
+        }   
       }
+      // Store the unique process count. -1 to exclude the "ps" process name.
+      mMemoryMap.put(PROCESS_COUNT, Integer.toString(mProcessNames.length - 1));
       writer.close();
-      mRssMap.put(OUTPUT_FILE_PATH_KEY, mTestOutputFile);
+      mMemoryMap.put(OUTPUT_FILE_PATH_KEY, mTestOutputFile);
     } catch (RuntimeException e) {
       Log.e(TAG, e.getMessage(), e.getCause());
     } catch (IOException e) {
       Log.e(TAG, String.format("Failed to write output file %s", mTestOutputFile), e);
     }
 
-    return mRssMap;
+    return mMemoryMap;
   }
 
   @Override
@@ -241,19 +237,39 @@ public class RssSnapshotHelper implements ICollectorHelper<String> {
   }
 
   /**
-   * Extract total RSS from showmap command output for the process with {@code processName} name.
+   * Extract memory metrics from showmap command output for the process with {@code processName}
+   * name.
    *
-   * @param processName name of the process to extract RSS for
+   * @param processName name of the process to extract memory info for
    * @param showmapOutput showmap command output
-   * @return total RSS of the process
    */
-  private long extractTotalRss(String processName, String showmapOutput) throws RuntimeException {
+  private void parseAndUpdateMemoryInfo(String processName, String showmapOutput)
+          throws RuntimeException {
     try {
+      
+      // -------- -------- -------- -------- -------- -------- -------- -------- ----- ------ ----
+      // virtual                     shared   shared  private  private
+      //  size      RSS      PSS    clean    dirty    clean    dirty     swap  swapPSS flags object
+      // ------- -------- -------- -------- -------- -------- -------- -------- ------ -----  ----
+      //10810272     5400     1585     3800      168      264     1168        0        0      TOTAL
+      
       int pos = showmapOutput.lastIndexOf("----");
-      Scanner sc = new Scanner(showmapOutput.substring(pos));
-      sc.next();
-      sc.nextLong();
-      return sc.nextLong();
+      String summarySplit[] = showmapOutput.substring(pos).trim().split("\\s+");
+
+      for (Map.Entry<Integer, String> entry : mMetricNameIndexMap.entrySet()) {
+          String metricKey = constructKey(String.format(OUTPUT_METRIC_PATTERN, entry.getValue()),
+                  processName);
+          // If there are multiple pids associated with the process name then update the
+          // existing entry in the map otherwise add new entry in the map.
+          if(mMemoryMap.containsKey(metricKey)) {
+              long currValue = Long.parseLong(mMemoryMap.get(metricKey));
+              mMemoryMap.put(metricKey, Long.toString(currValue +
+                      (Long.parseLong(summarySplit[entry.getKey() + 1]) * 1024)));
+          } else {
+              mMemoryMap.put(metricKey, Long.toString(Long.parseLong(
+                      summarySplit[entry.getKey() + 1]) * 1024));
+          }   
+      } 
     } catch (IndexOutOfBoundsException | InputMismatchException e) {
       throw new RuntimeException(
           String.format("Unexpected showmap format for %s ", processName), e);
@@ -281,7 +297,26 @@ public class RssSnapshotHelper implements ICollectorHelper<String> {
   }
 
   /**
-   * Enables RSS collection for all processes.
+   * Set the memory metric name and corresponding index to parse from the showmap output summary.
+   * @param metricNameIndexStr comma separated metric_name:index
+   *
+   * TODO: Pre-process the string into map and pass the map to this method.
+   */
+  public void setMetricNameIndex(String metricNameIndexStr) {
+      Log.i(TAG, String.format("Metric Name index %s", metricNameIndexStr));
+      String metricDetails[] = metricNameIndexStr.split(",");
+      for (String metricDetail : metricDetails) {
+          String metricDetailsSplit[] = metricDetail.split(":");
+          if (metricDetailsSplit.length == 2) {
+              mMetricNameIndexMap.put(Integer.parseInt(
+                      metricDetailsSplit[1]), metricDetailsSplit[0]);
+          }
+      }
+      Log.i(TAG, String.format("Metric Name index map size %s", mMetricNameIndexMap.size()));
+  }
+
+  /**
+   * Enables memory collection for all processes.
    */
   public void setAllProcesses() {
       mCollectForAllProcesses = true;
