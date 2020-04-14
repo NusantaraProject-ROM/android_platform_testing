@@ -126,8 +126,6 @@ native_tests := \
     vintf_object_test \
     wificond_unit_test \
     ziparchive-tests \
-    BufferHub_test \
-    BufferHubServer_test \
     GraphicBuffer_test \
     NeuralNetworksTest_mt_static \
     NeuralNetworksTest_operations \
