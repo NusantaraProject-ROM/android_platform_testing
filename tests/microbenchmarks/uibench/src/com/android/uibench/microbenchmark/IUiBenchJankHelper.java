@@ -85,6 +85,8 @@ public interface IUiBenchJankHelper extends IAppHelper {
 
     void openResizeHWLayer();
 
+    void openWindowInsetsController();
+
     void scrollDownAndUp(int count);
 
     void slowSingleFlingDown();
