@@ -338,6 +338,11 @@ public class UiBenchJankHelper extends AbstractStandardAppHelper implements IUiB
         launchActivity("ActivityTransition", "Transitions/Activity Transition");
     }
 
+    @Override
+    public void openWindowInsetsController() {
+        launchActivityAndAssert("WindowInsetsControllerActivity", "WindowInsetsControllerActivity");
+    }
+
     // Get the image to click
     @Override
     public void clickImage(String imageName) {
