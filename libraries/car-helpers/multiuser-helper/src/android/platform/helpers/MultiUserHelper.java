@@ -27,7 +27,9 @@ import android.os.UserManager;
 import android.os.SystemClock;
 
 import androidx.test.InstrumentationRegistry;
+import androidx.test.uiautomator.UiDevice;
 
+import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -139,6 +141,21 @@ public class MultiUserHelper {
 
     public UserInfo getCurrentForegroundUserInfo() {
         return mUserManager.getUserInfo(ActivityManager.getCurrentUser());
+    }
+
+    /**
+     * Get default initial user
+     *
+     * @return user ID of initial user
+     */
+    public int getInitialUser() {
+        UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+        try {
+            String userId = device.executeShellCommand("cmd car_service get-initial-user").trim();
+            return Integer.parseInt(userId);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to get initial user", e);
+        }
     }
 
     /**
