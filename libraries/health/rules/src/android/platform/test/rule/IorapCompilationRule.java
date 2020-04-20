@@ -32,18 +32,17 @@ public class IorapCompilationRule extends TestWatcher {
     @VisibleForTesting static final String ARGUMENT_IORAPD_ENABLED = "iorapd-enabled";
 
     @VisibleForTesting
-    static final String IORAP_COMPILE_CMD = "cmd jobscheduler run -f android 283673059";
+    static final String IORAP_COMPILE_CMD = "dumpsys iorapd --compile-package %s";
     @VisibleForTesting
-    static final String IORAP_MAINTENANCE_CMD =
-            "iorap.cmd.maintenance --purge-package %s /data/misc/iorapd/sqlite.db";
+    static final String IORAP_MAINTENANCE_CMD = "dumpsys iorapd --purge-package %s";
     @VisibleForTesting
     static final String IORAP_DUMPSYS_CMD = "dumpsys iorapd";
 
-    private static final int IORAP_COMPILE_CMD_TIMEOUT_SEC = 600;  // in seconds: 10 minutes
+    private static final int IORAP_COMPILE_CMD_TIMEOUT_SEC = 60;  // in seconds: 1 minutes
+    private static final int IORAP_COMPILE_MIN_TRACES = 1;  // configure iorapd to need 1 trace.
+    private static final int IORAP_COMPILE_RETRIES = 3;  // retry compiler 3 times if it fails.
     private static final int IORAP_TRACE_DURATION_TIMEOUT = 7000; // Allow 7s for trace to complete.
     private static final int IORAP_TRIAL_LAUNCH_ITERATIONS = 3;  // min 3 launches to merge traces.
-
-    private static final String DROP_CACHE_SCRIPT = "/data/local/tmp/dropCache.sh";
 
     // Global static counter. Each junit instrument command must launch 1 package with
     // 1 compiler filter.
@@ -95,12 +94,9 @@ public class IorapCompilationRule extends TestWatcher {
             throw new IllegalStateException("Must be root to toggle iorapd; try adb root?");
         }
 
-        executeShellCommand("stop iorapd");
-        sleep(100);  // give iorapd enough time to stop.
+        Log.v(TAG, "Purge iorap package: " + packageName);
         executeShellCommand(String.format(IORAP_MAINTENANCE_CMD, packageName));
         Log.v(TAG, "Executed: " + String.format(IORAP_MAINTENANCE_CMD, packageName));
-        executeShellCommand("start iorapd");
-        sleep(2000);  // give iorapd enough time to start up.
     }
 
     /**
@@ -123,11 +119,11 @@ public class IorapCompilationRule extends TestWatcher {
             throw new IllegalStateException("Must be root to toggle iorapd; try adb root?");
         }
 
-        executeShellCommand("stop iorapd");
         executeShellCommand(String.format("setprop iorapd.perfetto.enable %b", enable));
         executeShellCommand(String.format("setprop iorapd.readahead.enable %b", enable));
-        executeShellCommand("start iorapd");
-        sleep(2000);  // give enough time for iorapd to start back up.
+        executeShellCommand(String.format(
+                "setprop iorapd.maintenance.min_traces %d", IORAP_COMPILE_MIN_TRACES));
+        executeShellCommand(String.format("dumpsys iorapd --refresh-properties"));
 
         if (enable) {
             sIorapStatus = IorapStatus.ENABLED;
@@ -137,26 +133,48 @@ public class IorapCompilationRule extends TestWatcher {
     }
 
     /**
+     * Compile the app package using compilerFilter,
+     * retrying if the compilation command fails in between.
+     */
+    private void compileAppForIorapWithRetries(String appPkgName, int retries) {
+        for (int i = 0; i < retries; ++i) {
+            if (compileAppForIorap(appPkgName)) {
+                return;
+            }
+            sleep(1000);
+        }
+
+        throw new IllegalStateException("compileAppForIorapWithRetries: timed out after "
+                + retries + " retries");
+    }
+
+    /**
      * Compile the app package using iorap.cmd.maintenance and return false
      * if the compilation failed for some reason.
      */
     private boolean compileAppForIorap(String appPkgName) {
-        executeShellCommand(IORAP_COMPILE_CMD);
+        executeShellCommand(String.format(IORAP_COMPILE_CMD, appPkgName));
 
-        for (int i = 0; i < IORAP_COMPILE_CMD_TIMEOUT_SEC; ++i) {
+        int i = 0;
+        for (i = 0; i < IORAP_COMPILE_CMD_TIMEOUT_SEC; ++i) {
             IorapCompilationStatus status = waitForIorapCompiled(appPkgName);
             if (status == IorapCompilationStatus.COMPLETE) {
-                Log.v(TAG, "compileAppForIorap: complete");
-                return true;
+                Log.v(TAG, "compileAppForIorap: success");
+                break;
             } else if (status == IorapCompilationStatus.INSUFFICIENT_TRACES) {
-                Log.v(TAG, "compileAppForIorap: insufficient traces");
-                return false;
+                Log.e(TAG, "compileAppForIorap: failed due to insufficient traces");
+                throw new IllegalStateException(
+                        "compileAppForIorap: failed due to insufficient traces");
             } // else INCOMPLETE. keep asking iorapd if it's done yet.
             sleep(1000);
         }
 
-        Log.v(TAG, "compileAppForIorap: timed out");
-        return false;
+        if (i == IORAP_COMPILE_CMD_TIMEOUT_SEC) {
+            Log.e(TAG, "compileAppForIorap: failed due to timeout");
+            return false;
+        }
+
+        return true;
     }
 
     private IorapCompilationStatus waitForIorapCompiled(String appPkgName) {
@@ -254,7 +272,9 @@ public class IorapCompilationRule extends TestWatcher {
             sleep(IORAP_TRACE_DURATION_TIMEOUT);
 
             if (isLastIorapTraceCollection()) {
-                compileAppForIorap(mApplication);
+                // run the iorap compiler and wait for iorap to compile fully.
+                // this throws an exception if it fails.
+                compileAppForIorapWithRetries(mApplication, IORAP_COMPILE_RETRIES);
             }
         }
 
