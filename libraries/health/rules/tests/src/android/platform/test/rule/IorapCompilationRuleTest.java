@@ -75,10 +75,10 @@ public class IorapCompilationRuleTest {
         rule.apply(rule.getTestStatement(), Description.createTestDescription("clzz", "mthd"))
                 .evaluate();
         assertThat(rule.getOperations()).containsExactly(
-                "stop iorapd",
                 "setprop iorapd.perfetto.enable false",
                 "setprop iorapd.readahead.enable false",
-                "start iorapd",
+                "setprop iorapd.maintenance.min_traces 1",
+                "dumpsys iorapd --refresh-properties",
                 "test")
                 .inOrder();
     }
@@ -95,13 +95,11 @@ public class IorapCompilationRuleTest {
         rule.apply(rule.getTestStatement(), Description.createTestDescription("clzz", "mthd"))
                 .evaluate();
         assertThat(rule.getOperations()).containsExactly(
-                "stop iorapd",
                 "setprop iorapd.perfetto.enable true",
                 "setprop iorapd.readahead.enable true",
-                "start iorapd",
-                "stop iorapd",
+                "setprop iorapd.maintenance.min_traces 1",
+                "dumpsys iorapd --refresh-properties",
                 String.format(IorapCompilationRule.IORAP_MAINTENANCE_CMD, "example.package.name"),
-                "start iorapd",
                 "test")
                 .inOrder();
     }
@@ -119,13 +117,11 @@ public class IorapCompilationRuleTest {
                 .evaluate();
         // The first iteration turns on iorapd and will trace the app.
         assertThat(rule.getOperations()).containsExactly(
-                "stop iorapd",
                 "setprop iorapd.perfetto.enable true",
                 "setprop iorapd.readahead.enable true",
-                "start iorapd",
-                "stop iorapd",
+                "setprop iorapd.maintenance.min_traces 1",
+                "dumpsys iorapd --refresh-properties",
                 String.format(IorapCompilationRule.IORAP_MAINTENANCE_CMD, "example.package.name"),
-                "start iorapd",
                 "test")
                 .inOrder();
 
@@ -145,7 +141,7 @@ public class IorapCompilationRuleTest {
                 .evaluate();
         assertThat(rule3.getOperations()).containsExactly(
                 "test",
-                IorapCompilationRule.IORAP_COMPILE_CMD,
+                String.format(IorapCompilationRule.IORAP_COMPILE_CMD, "example.package.name"),
                 IorapCompilationRule.IORAP_DUMPSYS_CMD)
                 .inOrder();
 
