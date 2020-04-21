@@ -122,4 +122,10 @@ public interface IAutoMediaHelper extends IAppHelper {
      * This method is to go back to the Media Player main page from any sub-page.
      */
     void goBackToMediaHomePage();
+
+    /**
+     * This method is used to check if media is currently playing Returns true if media is playing
+     * else returns false
+     */
+    boolean isPlaying();
 }

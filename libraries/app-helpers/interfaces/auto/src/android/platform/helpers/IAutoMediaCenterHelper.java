@@ -78,4 +78,9 @@ public interface IAutoMediaCenterHelper extends IAppHelper {
    */
   void search(String title);
 
+    /**
+     * This method is used to check if media is currently playing Returns true if media is playing
+     * else returns false
+     */
+    boolean isPlaying();
 }
