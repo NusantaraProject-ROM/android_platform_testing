@@ -40,11 +40,13 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.Description;
+import org.junit.runner.notification.Failure;
 import org.junit.runner.Result;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+
 
 /**
  * Android Unit tests for {@link PerfettoListener}.
@@ -57,6 +59,9 @@ public class PerfettoListenerTest {
 
     // A {@code Description} to pass when faking a test run start call.
     private static final Description FAKE_DESCRIPTION = Description.createSuiteDescription("run");
+
+    private static final Description FAKE_TEST_DESCRIPTION = Description
+            .createTestDescription("class", "method");
 
     private Description mRunDesc;
     private Description mTest1Desc;
@@ -124,6 +129,62 @@ public class PerfettoListenerTest {
         verify(mPerfettoHelper, times(1)).startCollecting(anyString(), anyBoolean());
         mListener.onTestEnd(mDataRecord, mTest1Desc);
         verify(mPerfettoHelper, times(1)).stopCollecting(anyLong(), anyString());
+
+    }
+
+    /*
+     * Verify stop collecting called exactly once when the test failed and the
+     * skip test failure mmetrics is enabled.
+     */
+    @Test
+    public void testPerfettoPerTestFailureFlowDefault() throws Exception {
+        Bundle b = new Bundle();
+        b.putString(PerfettoListener.SKIP_TEST_FAILURE_METRICS, "false");
+        mListener = initListener(b);
+
+        doReturn(true).when(mPerfettoHelper).startCollecting(anyString(), anyBoolean());
+        doReturn(true).when(mPerfettoHelper).stopCollecting(anyLong(), anyString());
+        // Test run start behavior
+        mListener.testRunStarted(mRunDesc);
+
+        // Test test start behavior
+        mListener.testStarted(mTest1Desc);
+        verify(mPerfettoHelper, times(1)).startCollecting(anyString(), anyBoolean());
+
+        // Test fail behaviour
+        Failure failureDesc = new Failure(FAKE_TEST_DESCRIPTION,
+                new Exception());
+        mListener.onTestFail(mDataRecord, mTest1Desc, failureDesc);
+        mListener.onTestEnd(mDataRecord, mTest1Desc);
+        verify(mPerfettoHelper, times(1)).stopCollecting(anyLong(), anyString());
+
+    }
+
+    /*
+     * Verify stop perfetto called exactly once when the test failed and the
+     * skip test failure metrics is enabled.
+     */
+    @Test
+    public void testPerfettoPerTestFailureFlowWithSkipMmetrics() throws Exception {
+        Bundle b = new Bundle();
+        b.putString(PerfettoListener.SKIP_TEST_FAILURE_METRICS, "true");
+        mListener = initListener(b);
+
+        doReturn(true).when(mPerfettoHelper).startCollecting(anyString(), anyBoolean());
+        doReturn(true).when(mPerfettoHelper).stopPerfetto();
+        // Test run start behavior
+        mListener.testRunStarted(mRunDesc);
+
+        // Test test start behavior
+        mListener.testStarted(mTest1Desc);
+        verify(mPerfettoHelper, times(1)).startCollecting(anyString(), anyBoolean());
+
+        // Test fail behaviour
+        Failure failureDesc = new Failure(FAKE_TEST_DESCRIPTION,
+                new Exception());
+        mListener.onTestFail(mDataRecord, mTest1Desc, failureDesc);
+        mListener.onTestEnd(mDataRecord, mTest1Desc);
+        verify(mPerfettoHelper, times(1)).stopPerfetto();
 
     }
 
