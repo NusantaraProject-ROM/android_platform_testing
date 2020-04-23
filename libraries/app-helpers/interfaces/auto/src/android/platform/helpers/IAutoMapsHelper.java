@@ -17,6 +17,14 @@
 package android.platform.helpers;
 
 public interface IAutoMapsHelper extends IAppHelper {
+
+    /**
+     * Setup expectations: Maps app is open
+     *
+     * <p>This method is used to verify whether search bar is present.
+     */
+    boolean isSearchBarPresent();
+
     /**
      * Setup expectations: Maps app is open
      *

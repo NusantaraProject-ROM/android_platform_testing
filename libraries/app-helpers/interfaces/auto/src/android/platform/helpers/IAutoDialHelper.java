@@ -224,4 +224,10 @@ public interface IAutoDialHelper extends IAppHelper {
      * @param contact Contact's details page to be opened.
      */
     void openDetailsPage(String contact);
+    /**
+     * Setup expectations: The app is open.
+     *
+     * <p>This method is used to check if phone is paired.
+     */
+    boolean isPhonePaired();
 }
