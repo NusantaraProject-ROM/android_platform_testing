@@ -448,7 +448,8 @@ public class BaseMetricListener extends InstrumentationRunListener {
         // Skip metric collection if current iteration is lesser than or equal to
         // given skip until iteration count.
         // mTestIdInvocationCount uses 1 indexing.
-        if (mTestIdInvocationCount.get(desc.toString()) <= mSkipMetricUntilIteration) {
+        if (mTestIdInvocationCount.containsKey(desc.toString())
+                && mTestIdInvocationCount.get(desc.toString()) <= mSkipMetricUntilIteration) {
             Log.i(getTag(), String.format("Skipping metric collection. Current iteration is %d."
                     + "Requested to skip metric until %d",
                     mTestIdInvocationCount.get(desc.toString()),
