@@ -149,7 +149,7 @@ public class PerfettoHelper {
      *
      * @return true if perfetto is stopped successfully.
      */
-    private boolean stopPerfetto() throws IOException {
+    public boolean stopPerfetto() throws IOException {
         String stopOutput = mUIDevice.executeShellCommand(PERFETTO_STOP_CMD);
         Log.i(LOG_TAG, String.format("Perfetto stop command output - %s", stopOutput));
         int waitCount = 0;
