@@ -14,9 +14,6 @@
 
 native_tests := \
     adbd_test \
-    apex_file_test \
-    apex_manifest_test \
-    apexservice_test \
     audio_health_tests \
     backtrace_test \
     bionic-unit-tests \
