@@ -83,4 +83,18 @@ public interface IAutoMediaCenterHelper extends IAppHelper {
      * else returns false
      */
     boolean isPlaying();
+
+    /**
+     * Setup expectations: media test app is open.
+     *
+     * clicks on a particular album
+     */
+    void clickAlbum();
+
+    /**
+     * Setup expectations: media test app is open.
+     *
+     * clicks to go back to previous screen
+     */
+    void clickBackButton();
 }
