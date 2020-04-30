@@ -23,7 +23,9 @@
     </target_preparer>
     <test class="com.android.tradefed.testtype.AndroidJUnitTest" >
         <option name="package" value="android.platform.test.longevity.tests" />
-        <option name="exclude-filter" value="android.platform.test.longevity.samples.testing.SampleProfileSuite" />
+        <option name="exclude-filter" value="android.platform.test.longevity.samples.testing.SampleBasicProfileSuite" />
+        <option name="exclude-filter" value="android.platform.test.longevity.samples.testing.SampleExtraArgsSuite" />
+        <option name="exclude-filter" value="android.platform.test.longevity.samples.testing.SampleTimedProfileSuite" />
         <option name="exclude-filter" value="android.platform.test.scenario" />
         <option name="runtime-hint" value="1m30s" />
     </test>
