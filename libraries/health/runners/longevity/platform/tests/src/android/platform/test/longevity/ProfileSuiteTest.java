@@ -15,10 +15,12 @@
  */
 package android.platform.test.longevity;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -31,9 +33,12 @@ import android.host.test.longevity.listener.TimeoutTerminator;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.platform.test.longevity.samples.testing.SampleBasicProfileSuite;
+import android.platform.test.longevity.samples.testing.SampleExtraArgsSuite;
 import android.platform.test.longevity.samples.testing.SampleTimedProfileSuite;
 import android.platform.test.scenario.annotation.Scenario;
+import androidx.test.InstrumentationRegistry;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -52,6 +57,7 @@ import org.junit.runners.model.TestTimedOutException;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.Mock;
+import org.mockito.exceptions.base.MockitoAssertionError;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -71,10 +77,22 @@ public class ProfileSuiteTest {
     // Threshold above which missing a schedule is considered a failure.
     private static final long SCHEDULE_LEEWAY_MS = 500;
 
+    // Holds the state of the instrumentation args before each test for restoring after, as one test
+    // might affect the state of another otherwise.
+    // TODO(b/124239142): Avoid manipulating the instrumentation args here.
+    private Bundle mArgumentsBeforeTest;
+
     @Before
     public void setUpSuite() throws InitializationError {
         initMocks(this);
         mRunNotifier = spy(new RunNotifier());
+        mArgumentsBeforeTest = InstrumentationRegistry.getArguments();
+    }
+
+    @After
+    public void restoreSuite() {
+        InstrumentationRegistry.registerInstance(
+                InstrumentationRegistry.getInstrumentation(), mArgumentsBeforeTest);
     }
 
     /** Test that profile suites with classes that aren't scenarios are rejected. */
@@ -357,5 +375,69 @@ public class ProfileSuiteTest {
                                                 .getDisplayName()
                                                 .equals(thirdScenarioName)),
                         argThat(notifier -> notifier.equals(mRunNotifier)));
+    }
+
+    /** Test that extra args for a scenario are registered before tests. */
+    @Test
+    public void testExtraArgs_registeredBeforeTest() throws Throwable {
+        // Arguments with the profile under test.
+        Bundle args = new Bundle();
+        args.putString(Profile.PROFILE_OPTION_NAME, "testExtraArgs_registeredBeforeTest");
+        ProfileSuite suite =
+                new ProfileSuite(
+                        SampleExtraArgsSuite.class,
+                        new AllDefaultPossibilitiesBuilder(true),
+                        mInstrumentation,
+                        mContext,
+                        args);
+        // Run the suite, which is expected to pass.
+        suite.run(mRunNotifier);
+        // If it doesn't, fire what caused the tests within the suite to fail.
+        verifyForAssertionFailures(mRunNotifier);
+    }
+
+    /** Test that extra args for a scenario are unregistered after tests. */
+    @Test
+    public void testExtraArgs_unregisteredAfterTest() throws Throwable {
+        // Arguments with the profile under test.
+        Bundle args = new Bundle();
+        args.putString(Profile.PROFILE_OPTION_NAME, "testExtraArgs_unregisteredAfterTest");
+        ProfileSuite suite =
+                new ProfileSuite(
+                        SampleExtraArgsSuite.class,
+                        new AllDefaultPossibilitiesBuilder(true),
+                        mInstrumentation,
+                        mContext,
+                        args);
+        // Run the suite, which is expected to pass.
+        suite.run(mRunNotifier);
+        // If it doesn't, fire what caused the tests within the suite to fail.
+        verifyForAssertionFailures(mRunNotifier);
+    }
+
+    /**
+     * Verify that no failures are fired to the test notifier. If the verification fails, check
+     * whether it's due to assertions made in a dummy test. If yes, throw that exception out;
+     * otherwise, throw the first exception.
+     */
+    private void verifyForAssertionFailures(final RunNotifier notifier) throws Throwable {
+        try {
+            verify(notifier, never()).fireTestFailure(any());
+        } catch (MockitoAssertionError e) {
+            ArgumentCaptor<Failure> failureCaptor = ArgumentCaptor.forClass(Failure.class);
+            verify(notifier, atLeastOnce()).fireTestFailure(failureCaptor.capture());
+            List<Failure> failures = failureCaptor.getAllValues();
+            // Go through the failures, look for an known failure case from the above exceptions
+            // and throw the exception in the first one out if any.
+            for (Failure failure : failures) {
+                if (failure.getException()
+                        .getMessage()
+                        .contains(SampleExtraArgsSuite.ASSERTION_FAILURE_MESSAGE)) {
+                    throw failure.getException();
+                }
+            }
+            // Otherwise, throw the exception from the first failure reported.
+            throw failures.get(0).getException();
+        }
     }
 }
