@@ -13,52 +13,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// TODO(b/129771420): Use different package name for car-helper packages
 package android.platform.helpers;
 
 import android.annotation.Nullable;
 import android.app.ActivityManager;
-import android.app.UserSwitchObserver;
-import android.car.userlib.CarUserManagerHelper;
+import android.car.Car;
+import android.car.user.CarUserManager;
+import android.car.user.CarUserManager.UserLifecycleListener;
+import android.car.user.UserSwitchResult;
 import android.content.Context;
 import android.content.pm.UserInfo;
-import android.os.RemoteException;
-import android.os.UserManager;
 import android.os.SystemClock;
+import android.os.UserManager;
+import android.support.test.uiautomator.UiDevice;
 
 import androidx.test.InstrumentationRegistry;
-import androidx.test.uiautomator.UiDevice;
+
+import com.android.internal.infra.AndroidFuture;
 
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Helper class that is used by integration test only. It is wrapping around {@link
- * CarUserManagerHelper} to expose user management functions. Unlike {@link CarUserManagerHelper} ,
- * some user management functions such as user switch will be synchronous calls in order to meet
- * testing requirements.
+ * Helper class that is used by integration test only. It is wrapping around exiting platform APIs
+ * {@link CarUserManager}, {@link UserManager} to expose functions for user switch end-to-end tests.
  */
 public class MultiUserHelper {
-    private static final String TAG = MultiUserHelper.class.getSimpleName();
-
     /** For testing purpose we allow a wide range of switching time. */
     private static final int USER_SWITCH_TIMEOUT_SECOND = 300;
 
     private static MultiUserHelper sMultiUserHelper;
-    private CarUserManagerHelper mUserManagerHelper;
+    private CarUserManager mCarUserManager;
     private UserManager mUserManager;
 
     private MultiUserHelper() {
         Context context = InstrumentationRegistry.getTargetContext();
-        mUserManagerHelper = new CarUserManagerHelper(context);
         mUserManager = UserManager.get(context);
-    }
-
-    public enum UserType {
-        GUEST,
-        ADMIN,
-        NON_ADMIN
+        Car car = Car.createCar(context);
+        mCarUserManager = (CarUserManager) car.getCarManager(Car.CAR_USER_SERVICE);
     }
 
     /**
@@ -74,24 +67,18 @@ public class MultiUserHelper {
     }
 
     /**
-     * Creates a user given the user name and type, e.g. guest, admin or non-admin
+     * Creates a regular user or guest
      *
-     * @param name the name of the user
-     * @param userType the type of user as defined by the helper
-     * @return A {@link UserInfo} for newly created user or {@code null} if fail to create one
+     * @param name the name of the user or guest
+     * @param isGuestUser true if want to create a guest, otherwise create a regular user
+     * @return User Id for newly created user
      */
-    @Nullable
-    public UserInfo createUser(String name, UserType userType) throws Exception {
-        switch (userType) {
-            case GUEST:
-                return createNewOrFindExistingGuest(name);
-            case ADMIN:
-                return mUserManager.createUser(name, UserInfo.FLAG_ADMIN);
-            case NON_ADMIN:
-                return mUserManagerHelper.createNewNonAdminUser(name);
-            default:
-                throw new Exception("Unsupported user type: " + userType);
+    public int createUser(String name, boolean isGuestUser) throws Exception {
+        if (isGuestUser) {
+            return mUserManager.createUser(name, UserManager.USER_TYPE_FULL_GUEST, /* flags= */ 0)
+                    .id;
         }
+        return mUserManager.createUser(name, /* flags= */ 0).id;
     }
 
     /**
@@ -117,16 +104,36 @@ public class MultiUserHelper {
      */
     public void switchToUserId(int id) throws Exception {
         final CountDownLatch latch = new CountDownLatch(1);
-        registerUserSwitchObserver(latch, id);
-        if (!mUserManagerHelper.switchToUserId(id)) {
-            throw new Exception(String.format("Failed to switch to user: %d", id));
+        // A UserLifeCycleListener to wait for user switch event. It is equivalent to
+        // UserSwitchObserver#onUserSwitchComplete callback
+        // TODO(b/155434907): Should eventually wait for "user unlocked" event which is better
+        UserLifecycleListener userSwitchListener =
+                e -> {
+                    if (e.getEventType() == CarUserManager.USER_LIFECYCLE_EVENT_TYPE_SWITCHING) {
+                        latch.countDown();
+                    }
+                };
+        mCarUserManager.addListener(Runnable::run, userSwitchListener);
+        AndroidFuture<UserSwitchResult> future = mCarUserManager.switchUser(id);
+        UserSwitchResult result = null;
+        try {
+            result = future.get(USER_SWITCH_TIMEOUT_SECOND, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            throw new Exception(
+                    String.format("Exception when switching to target user: %d", id), e);
         }
+        // TODO(b/154966308): Use result.isSuccess() once issue fixed
+        if (result.getStatus() != UserSwitchResult.STATUS_SUCCESSFUL) {
+            throw new Exception(String.format("User switch failed: %s", result));
+        }
+        // Wait for user switch complete event, which seems to happen later than UserSwitchResult.
         if (!latch.await(USER_SWITCH_TIMEOUT_SECOND, TimeUnit.SECONDS)) {
             throw new Exception(
                     String.format(
                             "Timeout while switching to user %d after %d seconds",
                             id, USER_SWITCH_TIMEOUT_SECOND));
         }
+        mCarUserManager.removeListener(userSwitchListener);
     }
 
     /**
@@ -172,33 +179,5 @@ public class MultiUserHelper {
                 .filter(user -> user.name.equals(name))
                 .findFirst()
                 .orElse(null);
-    }
-
-    private void registerUserSwitchObserver(final CountDownLatch switchLatch, final int userId)
-            throws RemoteException {
-        ActivityManager.getService()
-                .registerUserSwitchObserver(
-                        new UserSwitchObserver() {
-                            @Override
-                            public void onUserSwitchComplete(int newUserId) {
-                                if (switchLatch != null && userId == newUserId) {
-                                    switchLatch.countDown();
-                                }
-                            }
-                        },
-                        TAG);
-    }
-
-    @Nullable
-    private UserInfo createNewOrFindExistingGuest(String guestName) {
-        Context context = InstrumentationRegistry.getTargetContext();
-
-        // CreateGuest will return null if a guest already exists.
-        UserInfo newGuest = mUserManager.createGuest(context, guestName);
-        if (newGuest != null) {
-            return newGuest;
-        }
-
-        return mUserManager.findCurrentGuestUser();
     }
 }
