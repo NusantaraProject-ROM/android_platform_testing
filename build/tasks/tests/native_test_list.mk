@@ -131,3 +131,7 @@ native_tests := \
     SurfaceFlinger_test \
     lmkd_unit_test \
     vrflinger_test
+
+ifeq ($(BOARD_IS_AUTOMOTIVE), true)
+native_tests += libwatchdog_test
+endif
