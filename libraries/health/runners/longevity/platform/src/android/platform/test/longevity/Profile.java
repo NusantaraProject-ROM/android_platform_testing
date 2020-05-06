@@ -25,16 +25,12 @@ import android.util.Log;
 import androidx.annotation.VisibleForTesting;
 import androidx.test.InstrumentationRegistry;
 
-import org.junit.runner.Description;
-import org.junit.runner.Runner;
-import org.junit.runner.notification.RunListener;
-
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.InputStream;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
+import java.io.InputStream;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -43,6 +39,10 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import org.junit.runner.Description;
+import org.junit.runner.Runner;
+import org.junit.runner.notification.RunListener;
 
 /** A profile composer for device-side testing. */
 public class Profile extends RunListener {
@@ -68,10 +68,10 @@ public class Profile extends RunListener {
     // to this timestamp.
     private long mFirstScenarioTimestampMs = 0;
 
-    // Comparator for sorting timstamped CUJs.
+    // Comparator for sorting timestamped CUJs.
     private static class ScenarioTimestampComparator implements Comparator<Scenario> {
         public int compare(Scenario s1, Scenario s2) {
-            if (! (s1.hasAt() && s2.hasAt())) {
+            if (!(s1.hasAt() && s2.hasAt())) {
                 throw new IllegalArgumentException(
                       "Scenarios in scheduled profiles must have timestamps.");
             }
@@ -92,7 +92,7 @@ public class Profile extends RunListener {
 
     public Profile(Bundle args) {
         super();
-        // Set the timestamp parser to UTC to get test timstamps as "time elapsed since zero".
+        // Set the timestamp parser to UTC to get test timestamps as "time elapsed since zero".
         TIMESTAMP_FORMATTER.setTimeZone(TimeZone.getTimeZone("UTC"));
 
         // Load configuration from arguments and stored the list of scenarios sorted according to

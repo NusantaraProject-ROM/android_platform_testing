@@ -20,14 +20,14 @@ import android.os.SystemClock;
 import android.platform.test.longevity.ProfileSuite;
 import android.platform.test.scenario.annotation.Scenario;
 
+import java.util.concurrent.TimeUnit;
+
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.junit.runners.Suite.SuiteClasses;
-
-import java.util.concurrent.TimeUnit;
 
 @RunWith(ProfileSuite.class)
 @SuiteClasses({

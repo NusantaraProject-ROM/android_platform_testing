@@ -21,10 +21,10 @@ import android.os.Bundle;
 import androidx.annotation.VisibleForTesting;
 import androidx.test.InstrumentationRegistry;
 
+import java.util.concurrent.TimeUnit;
+
 import org.junit.rules.Stopwatch;
 import org.junit.runner.Description;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * The rule measures the test execution time by extending {@link org.junit.rules.Stopwatch}. It will
