@@ -162,14 +162,19 @@ public class StatsdHelper {
      * @return
      */
     private static StatsdConfig.Builder getSimpleSources(long configId) {
-        return StatsdConfig.newBuilder().setId(configId)
+        return StatsdConfig.newBuilder()
+                .setId(configId)
                 .addAllowedLogSource("AID_ROOT")
                 .addAllowedLogSource("AID_SYSTEM")
                 .addAllowedLogSource("AID_RADIO")
                 .addAllowedLogSource("AID_BLUETOOTH")
                 .addAllowedLogSource("AID_GRAPHICS")
                 .addAllowedLogSource("AID_STATSD")
-                .addAllowedLogSource("AID_INCIENTD");
+                .addAllowedLogSource("AID_INCIENTD")
+                .addDefaultPullPackages("AID_SYSTEM")
+                .addDefaultPullPackages("AID_RADIO")
+                .addDefaultPullPackages("AID_STATSD")
+                .addDefaultPullPackages("AID_GPU_SERVICE");
     }
 
     /**
