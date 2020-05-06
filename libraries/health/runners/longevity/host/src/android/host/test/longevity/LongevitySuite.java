@@ -15,10 +15,15 @@
  */
 package android.host.test.longevity;
 
-import android.host.test.longevity.listener.ErrorTerminator;
-import android.host.test.longevity.listener.TimeoutTerminator;
 import android.host.test.composer.Iterate;
 import android.host.test.composer.Shuffle;
+import android.host.test.longevity.listener.ErrorTerminator;
+import android.host.test.longevity.listener.TimeoutTerminator;
+
+import java.util.List;
+import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 import org.junit.runner.Runner;
 import org.junit.runner.notification.RunNotifier;
@@ -26,11 +31,6 @@ import org.junit.runner.notification.StoppedByUserException;
 import org.junit.runners.Suite;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
-
-import java.util.List;
-import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 
 /**
  * Using the {@code LongevitySuite} as a runner allows you to run test sequences repeatedly and with
@@ -104,8 +104,9 @@ public class LongevitySuite extends Suite {
     @Override
     public void run(final RunNotifier notifier) {
         // Add action terminators for custom runner logic.
-        if (mArguments.containsKey(QUITTER_OPTION) ?
-                Boolean.parseBoolean(mArguments.get(QUITTER_OPTION)) : QUITTER_DEFAULT) {
+        if (mArguments.containsKey(QUITTER_OPTION)
+                ? Boolean.parseBoolean(mArguments.get(QUITTER_OPTION))
+                : QUITTER_DEFAULT) {
             notifier.addListener(getErrorTerminator(notifier));
         }
         notifier.addListener(getTimeoutTerminator(notifier));
@@ -114,8 +115,9 @@ public class LongevitySuite extends Suite {
             super.run(notifier);
         } catch (StoppedByUserException e) {
             // Invalidate the test run if terminated early and the option is set.
-            if (mArguments.containsKey(INVALIDATE_OPTION) ?
-                Boolean.parseBoolean(mArguments.get(INVALIDATE_OPTION)) : INVALIDATE_DEFAULT) {
+            if (mArguments.containsKey(INVALIDATE_OPTION)
+                    ? Boolean.parseBoolean(mArguments.get(INVALIDATE_OPTION))
+                    : INVALIDATE_DEFAULT) {
                 throw e;
             } else {
                 return;

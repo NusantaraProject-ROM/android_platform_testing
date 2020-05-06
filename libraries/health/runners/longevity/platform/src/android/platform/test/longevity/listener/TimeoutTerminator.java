@@ -26,7 +26,8 @@ import org.junit.runner.notification.RunNotifier;
  * A {@link RunTerminator} for terminating early on test end due to long duration for platform
  * suites.
  */
-public final class TimeoutTerminator extends android.host.test.longevity.listener.TimeoutTerminator {
+public final class TimeoutTerminator
+        extends android.host.test.longevity.listener.TimeoutTerminator {
     public TimeoutTerminator(RunNotifier notifier, Map<String, String> args) {
         super(notifier, args);
     }

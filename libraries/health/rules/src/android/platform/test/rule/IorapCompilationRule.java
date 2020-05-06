@@ -17,7 +17,6 @@
 package android.platform.test.rule;
 
 import android.os.SystemClock;
-import android.platform.test.rule.DropCachesRule;
 import android.util.Log;
 import androidx.annotation.VisibleForTesting;
 
@@ -190,8 +189,8 @@ public class IorapCompilationRule extends TestWatcher {
                 // Compiled Status: Raw traces pending compilation (3)
                 if (line.contains("Compiled Status: Usable compiled trace")) {
                     return IorapCompilationStatus.COMPLETE;
-                } else if (line.contains("Compiled Status: ") &&
-                        line.contains("more traces for compilation")) {
+                } else if (line.contains("Compiled Status: ")
+                        && line.contains("more traces for compilation")) {
                     //      Compiled Status: Need 1 more traces for compilation
                     // No amount of waiting will help here because there were
                     // insufficient traces made.
@@ -283,7 +282,10 @@ public class IorapCompilationRule extends TestWatcher {
     }
 
     private void logStatus(String status) {
-        Log.v(TAG, String.format("%s iteration %s for app %s", status, sIterationCounter, mApplication));
+        Log.v(
+                TAG,
+                String.format(
+                        "%s iteration %s for app %s", status, sIterationCounter, mApplication));
     }
 }
 
