@@ -31,11 +31,11 @@ import androidx.annotation.VisibleForTesting;
 import androidx.test.InstrumentationRegistry;
 
 import java.lang.reflect.Field;
-import java.util.function.BiFunction;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 
 import org.junit.internal.runners.ErrorReportingRunner;
 import org.junit.runner.Description;
