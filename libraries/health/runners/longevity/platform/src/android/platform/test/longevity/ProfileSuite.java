@@ -20,6 +20,7 @@ import android.app.Instrumentation;
 import android.content.Context;
 import android.os.Bundle;
 import android.platform.test.longevity.proto.Configuration.Scenario;
+import android.platform.test.longevity.proto.Configuration.Scenario.ExtraArg;
 import androidx.annotation.VisibleForTesting;
 import androidx.test.InstrumentationRegistry;
 
@@ -118,10 +119,37 @@ public class ProfileSuite extends LongevitySuite {
         super.run(notifier);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     *
+     * <p>The "extras" are injected here before the entire child test class is run to ensure that
+     * test options passed in as class-level rules still work.
+     */
     @Override
     protected void runChild(Runner runner, final RunNotifier notifier) {
+        // Fall back to LongevitySuite behavior if no profile is supplied.
+        if (mProfile.getConfiguration() == null) {
+            super.runChild(runner, notifier);
+            return;
+        }
+        Bundle existingArguments = InstrumentationRegistry.getArguments().deepCopy();
+        Bundle modifiedArguments = InstrumentationRegistry.getArguments().deepCopy();
+        for (ExtraArg argPair : mProfile.getCurrentScenario().getExtrasList()) {
+            if (argPair.getKey() == null || argPair.getValue() == null) {
+                throw new IllegalArgumentException(
+                        String.format(
+                                "Each extra arg entry in scenario must have both a key and a value,"
+                                        + " but scenario is %s.",
+                                mProfile.getCurrentScenario().toString()));
+            }
+            modifiedArguments.putString(argPair.getKey(), argPair.getValue());
+        }
+        // Swap the arguments, run the scenario, and then restore arguments.
+        InstrumentationRegistry.registerInstance(
+                InstrumentationRegistry.getInstrumentation(), modifiedArguments);
         super.runChild(runner, notifier);
+        InstrumentationRegistry.registerInstance(
+                InstrumentationRegistry.getInstrumentation(), existingArguments);
     }
 
     /**
@@ -149,8 +177,9 @@ public class ProfileSuite extends LongevitySuite {
                         mProfile.hasNextScheduledScenario());
 
             case INDEXED:
-                return getIndexedRunner(
-                        (BlockJUnit4ClassRunner) runner, mProfile.getCurrentScenario());
+                // A LongevityClassRunner, which the superclass method already returns, is suitable
+                // for an indexed profile.
+                return super.getSuiteRunner(runner);
 
             default:
                 throw new RuntimeException(
@@ -174,21 +203,6 @@ public class ProfileSuite extends LongevitySuite {
             throw new RuntimeException(
                     String.format(
                             "Unable to run scenario %s with a scheduled runner.",
-                            runner.getDescription().getDisplayName()),
-                    e);
-        }
-    }
-
-    /** Replace a runner with {@link ScenarioRunner} for features specific to indexed profiles. */
-    @VisibleForTesting
-    protected ScenarioRunner getIndexedRunner(BlockJUnit4ClassRunner runner, Scenario scenario) {
-        Class<?> testClass = runner.getTestClass().getJavaClass();
-        try {
-            return new ScenarioRunner(testClass, scenario);
-        } catch (InitializationError e) {
-            throw new RuntimeException(
-                    String.format(
-                            "Unable to run scenario %s with an indexed runner.",
                             runner.getDescription().getDisplayName()),
                     e);
         }
