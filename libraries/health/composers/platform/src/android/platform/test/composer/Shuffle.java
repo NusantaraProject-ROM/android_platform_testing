@@ -36,8 +36,7 @@ public class Shuffle<U> extends ShuffleBase<Bundle, U> {
         try {
             return Long.parseLong(seed);
         } catch (NumberFormatException e) {
-            throw new RuntimeException(
-                    String.format("Failed to parse seed option: %s", seed, e));
+            throw new RuntimeException(String.format("Failed to parse seed option: %s", seed), e);
         }
     }
 }

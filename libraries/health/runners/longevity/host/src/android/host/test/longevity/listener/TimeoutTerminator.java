@@ -15,11 +15,11 @@
  */
 package android.host.test.longevity.listener;
 
-import org.junit.runner.Description;
-import org.junit.runner.notification.RunNotifier;
-
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import org.junit.runner.Description;
+import org.junit.runner.notification.RunNotifier;
 
 /**
  * A {@link RunTerminator} for terminating early on test end due to long duration for host suites.

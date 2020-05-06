@@ -55,7 +55,7 @@ public final class BatteryTerminator extends RunTerminator {
         if (level < 0 || scale <= 0) {
             throw new RuntimeException("Failed to get proper battery levels.");
         }
-        return (double)level / (double)scale;
+        return (double) level / (double) scale;
     }
 
     @Override

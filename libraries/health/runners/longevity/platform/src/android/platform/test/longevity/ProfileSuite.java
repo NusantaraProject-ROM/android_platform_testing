@@ -135,7 +135,7 @@ public class ProfileSuite extends LongevitySuite {
         Bundle existingArguments = InstrumentationRegistry.getArguments().deepCopy();
         Bundle modifiedArguments = InstrumentationRegistry.getArguments().deepCopy();
         for (ExtraArg argPair : mProfile.getCurrentScenario().getExtrasList()) {
-            if (argPair.getKey() == null || argPair.getValue() == null) {
+            if (!argPair.hasKey() || !argPair.hasValue()) {
                 throw new IllegalArgumentException(
                         String.format(
                                 "Each extra arg entry in scenario must have both a key and a value,"
