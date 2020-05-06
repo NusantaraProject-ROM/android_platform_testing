@@ -25,7 +25,8 @@ instrumentation_metric_tests := \
     MultiUserPerfTests \
     NeuralNetworksApiBenchmark \
     PackageManagerPerfTests \
-    TextClassifierPerfTests
+    TextClassifierPerfTests \
+    WmPerfTests
 
     # TODO(b/72332760): Uncomment when fixed
     #DocumentsUIPerfTests
