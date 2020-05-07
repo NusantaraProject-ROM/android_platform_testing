@@ -19,11 +19,11 @@ import android.os.Bundle;
 import androidx.annotation.VisibleForTesting;
 import androidx.test.InstrumentationRegistry;
 
-import org.junit.runners.JUnit4;
-import org.junit.runner.Runner;
-import org.junit.runners.model.RunnerBuilder;
-
 import java.lang.reflect.Constructor;
+
+import org.junit.runner.Runner;
+import org.junit.runners.JUnit4;
+import org.junit.runners.model.RunnerBuilder;
 
 /**
  * A {@link RunnerBuilder} that enables using a specified runner to run tests in a suite.

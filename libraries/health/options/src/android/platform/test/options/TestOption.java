@@ -16,11 +16,11 @@
 package android.platform.test.option;
 
 import android.os.Bundle;
-import androidx.test.InstrumentationRegistry;
 import androidx.annotation.VisibleForTesting;
+import androidx.test.InstrumentationRegistry;
 
-import org.junit.runner.Description;
 import org.junit.rules.TestRule;
+import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 /**

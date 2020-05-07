@@ -15,17 +15,17 @@
  */
 package android.platform.test.rule;
 
+import android.os.SystemClock;
+import android.util.Log;
 import androidx.annotation.VisibleForTesting;
 import androidx.test.platform.app.InstrumentationRegistry;
-import org.junit.runner.Description;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import android.os.SystemClock;
-import android.util.Log;
+import org.junit.runner.Description;
 
 /**
  * This rule will drop caches before running each test method.
