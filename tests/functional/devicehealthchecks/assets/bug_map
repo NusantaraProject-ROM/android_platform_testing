@@ -1,6 +1,7 @@
 <test_name> <regex.no.spaces> <only_bug_number>
 system_tombstone android.hardware.vibrator-service.drv2624 151884322
 system_app_anr com.google.android.googlequicksearchbox:search 151164399
+system_app_crash -1\|android\|26\|null\|1000 155073214
 system_app_crash android.database.sqlite.SQLiteCantOpenDatabaseException: 150248286
 system_app_crash com.android.vending:download_service 153462682
 system_app_native_crash com.google.android.apps.safetyhub 154358781
