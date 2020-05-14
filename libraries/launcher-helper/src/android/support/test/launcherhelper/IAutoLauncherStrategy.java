@@ -68,6 +68,9 @@ public interface IAutoLauncherStrategy extends ILauncherStrategy {
     /** This method is to open Bluetooth Audio application */
     void openBluetoothAudioApp();
 
+    /** This method is to open Google Play Store application */
+    void openGooglePlayStore();
+
     /** Open Quick Settings. */
     void openQuickSettings();
 
