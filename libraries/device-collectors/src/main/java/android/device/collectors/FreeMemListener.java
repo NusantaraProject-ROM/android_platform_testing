@@ -28,13 +28,31 @@ import com.android.helpers.FreeMemHelper;
  */
 @OptionClass(alias = "freemem-listener")
 public class FreeMemListener extends BaseCollectionListener<Long> {
+    private static final String DROP_CACHE_ARG = "drop-cache";
+
+    private FreeMemHelper mFreeMemHelper = new FreeMemHelper();
 
     public FreeMemListener() {
-        createHelperInstance(new FreeMemHelper());
+        createHelperInstance(mFreeMemHelper);
     }
 
     @VisibleForTesting
     public FreeMemListener(Bundle args, FreeMemHelper helper) {
         super(args, helper);
+    }
+
+    /**
+     * Adds the options for free memory collector.
+     */
+    @Override
+    public void setupAdditionalArgs() {
+        Bundle args = getArgsBundle();
+        // By default set to false
+        boolean isDropCache = Boolean.parseBoolean(args.getString(DROP_CACHE_ARG));
+
+        // Set the flag to drop the cache before taking the memory measurement.
+        if (isDropCache) {
+            mFreeMemHelper.setDropCache();
+        }
     }
 }
