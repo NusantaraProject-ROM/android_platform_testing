@@ -103,6 +103,17 @@ public class VolvoLauncherStrategy extends AutoLauncherStrategy {
     }
 
     @Override
+    public void openGooglePlayStore() {
+        mDevice.pressHome();
+        mDevice.waitForIdle();
+        mCommandsHelper.executeShellCommand(
+                "am start -a android.intent.action.MAIN "
+                        + "-c android.intent.category.LAUNCHER "
+                        + "-n com.android.vending/"
+                        + "com.google.android.finsky.carmainactivity.MainActivity");
+    }
+
+    @Override
     public boolean checkApplicationExists(String appName) {
         openAppGridFacet();
         UiObject2 app = findApplication(appName);

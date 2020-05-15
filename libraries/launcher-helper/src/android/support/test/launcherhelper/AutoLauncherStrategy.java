@@ -90,7 +90,7 @@ public class AutoLauncherStrategy implements IAutoLauncherStrategy {
 
     protected UiDevice mDevice;
     private Instrumentation mInstrumentation;
-    private CommandsHelper mCommandsHelper;
+    protected CommandsHelper mCommandsHelper;
 
     /**
      * {@inheritDoc}
@@ -350,6 +350,12 @@ public class AutoLauncherStrategy implements IAutoLauncherStrategy {
         } else {
             throw new RuntimeException(String.format("Application %s not found", appName));
         }
+    }
+
+    @Override
+    public void openGooglePlayStore() {
+        openApp("Play Store");
+        SystemClock.sleep(APP_LAUNCH_TIMEOUT);
     }
 
     private UiObject2 findApplication(String appName) {
