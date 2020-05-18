@@ -31,10 +31,10 @@ import org.junit.runner.Description;
  * This rule will drop caches before running each test method.
  */
 public class DropCachesRule extends TestWatcher {
+
     private static final String LOG_TAG = DropCachesRule.class.getSimpleName();
 
     @VisibleForTesting static final String KEY_DROP_CACHE = "drop-cache";
-    private static boolean mDropCache = true;
 
     private String mDropCacheScriptPath;
 
@@ -77,9 +77,8 @@ public class DropCachesRule extends TestWatcher {
 
     @Override
     protected void starting(Description description) {
-        // Identify the filter option to use.
-        mDropCache = Boolean.parseBoolean(getArguments().getString(KEY_DROP_CACHE, "true"));
-        if (mDropCache == false) {
+        boolean dropCache = Boolean.parseBoolean(getArguments().getString(KEY_DROP_CACHE, "true"));
+        if (!dropCache) {
             return;
         }
 

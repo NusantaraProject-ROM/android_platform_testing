@@ -26,13 +26,12 @@ import org.junit.runner.Description;
 public class PressHomeRule extends TestWatcher {
 
     static final String GO_HOME = "press-home";
-    private static boolean mGoHome;
 
     @Override
     protected void finished(Description description) {
         // Navigate to home after the test method is executed.
-        mGoHome = Boolean.parseBoolean(getArguments().getString(GO_HOME, "true"));
-        if (!mGoHome) {
+        boolean goHome = Boolean.parseBoolean(getArguments().getString(GO_HOME, "true"));
+        if (!goHome) {
             return;
         }
 

@@ -16,12 +16,12 @@
 
 package android.platform.test.rule;
 
+import static java.util.stream.Collectors.joining;
+
 import android.util.Log;
 import androidx.annotation.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
-
-import java.util.stream.Collectors;
 
 import org.junit.runner.Description;
 import org.junit.runners.model.InitializationError;
@@ -37,7 +37,7 @@ public class CompilationFilterRule extends TestWatcher {
     @VisibleForTesting static final String COMPILE_FILTER_OPTION = "compilation-filter";
     @VisibleForTesting static final String COMPILE_SUCCESS = "Success";
 
-    private String[] mApplications;
+    private final String[] mApplications;
 
     public CompilationFilterRule() throws InitializationError {
         throw new InitializationError("Must supply an application to compile.");
@@ -56,7 +56,7 @@ public class CompilationFilterRule extends TestWatcher {
             Log.d(LOG_TAG, "Skipping complation because filter option is unset.");
             return;
         } else if (!COMPILE_FILTER_LIST.contains(filter)) {
-            String filterOptions = COMPILE_FILTER_LIST.stream().collect(Collectors.joining(", "));
+            String filterOptions = COMPILE_FILTER_LIST.stream().collect(joining(", "));
             throw new IllegalArgumentException(
                     String.format(
                             "Unknown compiler filter: %s, not part of %s", filter, filterOptions));
