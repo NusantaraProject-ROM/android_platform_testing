@@ -16,13 +16,17 @@
 
 package com.android.helpers;
 
+import android.os.SystemClock;
 import android.support.test.uiautomator.UiDevice;
 import android.util.Log;
 
 import androidx.test.InstrumentationRegistry;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -60,8 +64,10 @@ public class FreeMemHelper implements ICollectorHelper<Long> {
     public static final String PROC_MEMINFO_MEM_AVAILABLE= "proc_meminfo_memavailable_bytes";
     public static final String PROC_MEMINFO_MEM_FREE= "proc_meminfo_memfree_bytes";
     public static final String DUMPSYS_CACHED_PROC_MEMORY= "dumpsys_cached_procs_memory_bytes";
+    public static final int DROPCACHE_WAIT_MSECS= 10000; // Wait for 10 secs after dropping cache
 
     private UiDevice mUiDevice;
+    private boolean mDropCache = false;
 
     @Override
     public boolean startCollecting() {
@@ -76,6 +82,10 @@ public class FreeMemHelper implements ICollectorHelper<Long> {
 
     @Override
     public Map<String, Long> getMetrics() {
+        // Drop the cache and wait for 10 secs before collecting the metrics.
+        if (mDropCache) {
+            executeDropCachesImpl();
+        }
         String memInfo;
         try {
             memInfo = mUiDevice.executeShellCommand(PROC_MEMINFO);
@@ -202,5 +212,43 @@ public class FreeMemHelper implements ICollectorHelper<Long> {
             e.printStackTrace();
         }
         return cachedProcessList;
+    }
+
+    /**
+     * Drop the cache and wait for 10 secs before collecting the memory details.
+     */
+    private void executeDropCachesImpl() {
+        // Create a temporary file which contains the dropCaches command.
+        // Do this because we cannot write to /proc/sys/vm/drop_caches directly,
+        // as executeShellCommand parses the '>' character as a literal.
+        try {
+            File outputDir = InstrumentationRegistry.getInstrumentation().
+                    getContext().getCacheDir();
+            File outputFile = File.createTempFile("drop_cache_script", ".sh", outputDir);
+            outputFile.setWritable(true);
+            outputFile.setExecutable(true, /*ownersOnly*/false);
+
+            String dropCacheScriptPath = outputFile.toString();
+
+            // If this works correctly, the next log-line will print 'Success'.
+            String str = "echo 3 > /proc/sys/vm/drop_caches && echo Success || echo Failure";
+            BufferedWriter writer = new BufferedWriter(new FileWriter(dropCacheScriptPath));
+            writer.write(str);
+            writer.close();
+
+            String result = mUiDevice.executeShellCommand(dropCacheScriptPath);
+            Log.v(TAG, "dropCaches output was: " + result);
+            outputFile.delete();
+            SystemClock.sleep(DROPCACHE_WAIT_MSECS);
+        } catch (IOException e) {
+            throw new AssertionError (e);
+        }
+    }
+
+    /**
+     * Enables the drop cache before taking the memory measurement.
+     */
+    public void setDropCache() {
+        mDropCache = true;
     }
 }
