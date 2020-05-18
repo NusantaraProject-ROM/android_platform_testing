@@ -15,6 +15,10 @@
  */
 package android.platform.test.longevity;
 
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
+
 import android.content.res.AssetManager;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -38,7 +42,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.junit.runner.Description;
 import org.junit.runner.Runner;
@@ -63,13 +66,14 @@ public class Profile extends RunListener {
     // constructed. Can be overridden by {@link setTestRunStartTimeMs}.
     private long mRunStartTimeMs = SystemClock.elapsedRealtime();
     // The profile configuration.
-    private Configuration mConfiguration;
+    private final Configuration mConfiguration;
     // The timestamp of the first scenario in milliseconds. All scenarios will be scheduled relative
     // to this timestamp.
     private long mFirstScenarioTimestampMs = 0;
 
     // Comparator for sorting timestamped CUJs.
     private static class ScenarioTimestampComparator implements Comparator<Scenario> {
+        @Override
         public int compare(Scenario s1, Scenario s2) {
             if (!(s1.hasAt() && s2.hasAt())) {
                 throw new IllegalArgumentException(
@@ -81,6 +85,7 @@ public class Profile extends RunListener {
 
     // Comparator for sorting indexed CUJs.
     private static class ScenarioIndexedComparator implements Comparator<Scenario> {
+        @Override
         public int compare(Scenario s1, Scenario s2) {
             if (!(s1.hasIndex() && s2.hasIndex())) {
                 throw new IllegalArgumentException(
@@ -103,7 +108,7 @@ public class Profile extends RunListener {
         if (mConfiguration == null) {
             return;
         }
-        mOrderedScenariosList = new ArrayList<Scenario>(mConfiguration.getScenariosList());
+        mOrderedScenariosList = new ArrayList<>(mConfiguration.getScenariosList());
         if (mOrderedScenariosList.isEmpty()) {
             throw new IllegalArgumentException("Profile must have at least one scenario.");
         }
@@ -134,34 +139,42 @@ public class Profile extends RunListener {
     protected List<Runner> getTestSequenceFromConfiguration(
             Configuration config, List<Runner> input) {
         Map<String, Runner> nameToRunner =
-                input.stream().collect(
-                        Collectors.toMap(
-                                r -> r.getDescription().getDisplayName(), Function.identity()));
-        Log.i(LOG_TAG, String.format(
-                "Available journeys: %s",
-                nameToRunner.keySet().stream().collect(Collectors.joining(", "))));
-        List<Runner> result = mOrderedScenariosList
-                .stream()
-                .map(Configuration.Scenario::getJourney)
-                .map(
-                        journeyName -> {
-                            if (nameToRunner.containsKey(journeyName)) {
-                                return nameToRunner.get(journeyName);
-                            } else {
-                                throw new IllegalArgumentException(
-                                        String.format(
+                input.stream()
+                        .collect(
+                                toMap(
+                                        r -> r.getDescription().getDisplayName(),
+                                        Function.identity()));
+        Log.i(
+                LOG_TAG,
+                String.format(
+                        "Available journeys: %s",
+                        nameToRunner.keySet().stream().collect(joining(", "))));
+        List<Runner> result =
+                mOrderedScenariosList
+                        .stream()
+                        .map(Configuration.Scenario::getJourney)
+                        .map(
+                                journeyName -> {
+                                    if (nameToRunner.containsKey(journeyName)) {
+                                        return nameToRunner.get(journeyName);
+                                    } else {
+                                        // Write error message here to trick the auto-formatter.
+                                        String errorFmtMessage =
                                                 "Journey %s in profile not found. "
-                                                + "Check logcat to see available journeys.",
-                                                journeyName));
-                            }
-                        })
-                .collect(Collectors.toList());
-        Log.i(LOG_TAG, String.format(
-                "Returned runners: %s",
-                result.stream()
-                            .map(Runner::getDescription)
-                            .map(Description::getDisplayName)
-                            .collect(Collectors.toList())));
+                                                + "Check logcat to see available journeys.";
+                                        throw new IllegalArgumentException(
+                                                String.format(errorFmtMessage, journeyName));
+                                    }
+                                })
+                        .collect(toList());
+        Log.i(
+                LOG_TAG,
+                String.format(
+                        "Returned runners: %s",
+                        result.stream()
+                                .map(Runner::getDescription)
+                                .map(Description::getDisplayName)
+                                .collect(toList())));
         return result;
     }
 

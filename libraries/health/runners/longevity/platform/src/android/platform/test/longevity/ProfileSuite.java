@@ -39,14 +39,9 @@ import org.junit.runners.model.RunnerBuilder;
  * profile.
  */
 public class ProfileSuite extends LongevitySuite {
-    private static final String LOG_TAG = ProfileSuite.class.getSimpleName();
 
     // Profile instance for scheduling tests.
-    private Profile mProfile;
-    // Suite timeout for timing out the last scenario.
-    private long mSuiteTimeout;
-    // Cached {@link android.host.test.longevity.listener.TimeoutTerminator} instance.
-    private android.host.test.longevity.listener.TimeoutTerminator mTimeoutTerminator;
+    private final Profile mProfile;
 
     /**
      * Called reflectively on classes annotated with {@code @RunWith(LongevitySuite.class)}
@@ -140,7 +135,7 @@ public class ProfileSuite extends LongevitySuite {
                         String.format(
                                 "Each extra arg entry in scenario must have both a key and a value,"
                                         + " but scenario is %s.",
-                                mProfile.getCurrentScenario().toString()));
+                                mProfile.getCurrentScenario()));
             }
             modifiedArguments.putString(argPair.getKey(), argPair.getValue());
         }
@@ -180,13 +175,12 @@ public class ProfileSuite extends LongevitySuite {
                 // A LongevityClassRunner, which the superclass method already returns, is suitable
                 // for an indexed profile.
                 return super.getSuiteRunner(runner);
-
-            default:
-                throw new RuntimeException(
-                        String.format(
-                                "Schedule type %s is not yet supported.",
-                                mProfile.getConfiguration().getSchedule().toString()));
         }
+
+        throw new RuntimeException(
+                String.format(
+                        "Schedule type %s is not yet supported.",
+                        mProfile.getConfiguration().getSchedule()));
     }
 
     /**

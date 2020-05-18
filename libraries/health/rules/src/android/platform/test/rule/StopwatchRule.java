@@ -16,12 +16,12 @@
 
 package android.platform.test.rule;
 
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+
 import android.app.Instrumentation;
 import android.os.Bundle;
 import androidx.annotation.VisibleForTesting;
 import androidx.test.InstrumentationRegistry;
-
-import java.util.concurrent.TimeUnit;
 
 import org.junit.rules.Stopwatch;
 import org.junit.runner.Description;
@@ -43,7 +43,7 @@ public class StopwatchRule extends Stopwatch {
 
     @VisibleForTesting static final String METRIC_FORMAT = "duration_ms_%s#%s";
 
-    private Bundle mResult = new Bundle();
+    private final Bundle mResult = new Bundle();
     private Instrumentation mInstrumentation = InstrumentationRegistry.getInstrumentation();
 
     /**
@@ -56,7 +56,7 @@ public class StopwatchRule extends Stopwatch {
         String metricKey =
                 String.format(
                         METRIC_FORMAT, description.getClassName(), description.getMethodName());
-        long millis = TimeUnit.NANOSECONDS.toMillis(nanos);
+        long millis = NANOSECONDS.toMillis(nanos);
         mResult.putLong(metricKey, millis);
         mInstrumentation.sendStatus(INST_STATUS_IN_PROGRESS, mResult);
     }
