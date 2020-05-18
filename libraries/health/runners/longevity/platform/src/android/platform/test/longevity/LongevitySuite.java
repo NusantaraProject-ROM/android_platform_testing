@@ -54,21 +54,20 @@ public class LongevitySuite extends android.host.test.longevity.LongevitySuite {
     private static final String LOG_TAG = LongevitySuite.class.getSimpleName();
 
     public static final String RENAME_ITERATION_OPTION = "rename-iterations";
-    private boolean mRenameIterations;
+    private final boolean mRenameIterations;
 
-    private Instrumentation mInstrumentation;
     private Context mContext;
 
     // Cached {@link TimeoutTerminator} instance.
     private TimeoutTerminator mTimeoutTerminator;
 
-    private Map<Description, Integer> mIterations = new HashMap<>();
+    private final Map<Description, Integer> mIterations = new HashMap<>();
 
     /**
      * Takes a {@link Bundle} and maps all String K/V pairs into a {@link Map<String, String>}.
      *
      * @param bundle the input arguments to return in a {@link Map}
-     * @return Map<String, String> all String-to-String key, value pairs in the {@link Bundle}
+     * @return a {@code Map<String, String>} of all key, value pairs in {@code bundle}.
      */
     protected static final Map<String, String> toMap(Bundle bundle) {
         Map<String, String> result = new HashMap<>();
@@ -116,11 +115,10 @@ public class LongevitySuite extends android.host.test.longevity.LongevitySuite {
     protected LongevitySuite(Class<?> klass, List<Runner> runners, Bundle args)
             throws InitializationError {
         super(klass, runners, toMap(args));
-        mInstrumentation = InstrumentationRegistry.getInstrumentation();
         mContext = InstrumentationRegistry.getContext();
 
         // Parse out additional options.
-        mRenameIterations = Boolean.valueOf(args.getString(RENAME_ITERATION_OPTION));
+        mRenameIterations = Boolean.parseBoolean(args.getString(RENAME_ITERATION_OPTION));
     }
 
     /** Used to pass in mock-able Android features for testing. */
@@ -135,7 +133,6 @@ public class LongevitySuite extends android.host.test.longevity.LongevitySuite {
             throws InitializationError {
         this(klass, constructClassRunners(klass, additional, builder, arguments), arguments);
         // Overwrite instrumentation and context here with the passed-in objects.
-        mInstrumentation = instrumentation;
         mContext = context;
     }
 

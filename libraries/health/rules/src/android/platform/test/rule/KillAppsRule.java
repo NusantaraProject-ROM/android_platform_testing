@@ -27,7 +27,6 @@ public class KillAppsRule extends TestWatcher {
 
     @VisibleForTesting
     static final String KILL_APP = "kill-app";
-    private static boolean mKillApp;
 
     public KillAppsRule() throws InitializationError {
         throw new InitializationError("Must supply an application to kill.");
@@ -40,8 +39,8 @@ public class KillAppsRule extends TestWatcher {
     @Override
     protected void starting(Description description) {
         // Check if killing the app after launch is selected or not.
-        mKillApp = Boolean.parseBoolean(getArguments().getString(KILL_APP, "true"));
-        if (!mKillApp) {
+        boolean killApp = Boolean.parseBoolean(getArguments().getString(KILL_APP, "true"));
+        if (!killApp) {
             return;
         }
 

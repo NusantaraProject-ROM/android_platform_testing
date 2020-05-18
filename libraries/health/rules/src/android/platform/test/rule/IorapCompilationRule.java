@@ -46,7 +46,6 @@ public class IorapCompilationRule extends TestWatcher {
     // Global static counter. Each junit instrument command must launch 1 package with
     // 1 compiler filter.
     private static int sIterationCounter = 0;
-    private String mApplication;
 
     private enum IorapStatus {
         UNDEFINED,
@@ -60,6 +59,8 @@ public class IorapCompilationRule extends TestWatcher {
         COMPLETE,
         INSUFFICIENT_TRACES,
     }
+
+    private final String mApplication;
 
     @VisibleForTesting
     protected static void resetState() {
@@ -104,8 +105,7 @@ public class IorapCompilationRule extends TestWatcher {
      * If iorapd is already disabled and enable is false, does nothing.
      */
     private void toggleIorapStatus(boolean enable) {
-        boolean currentlyEnabled = false;
-        Log.v(TAG, "toggleIorapStatus " + Boolean.toString(enable));
+        Log.v(TAG, "toggleIorapStatus " + enable);
 
         // Do nothing if we are already enabled or disabled.
         if (sIorapStatus == IorapStatus.ENABLED && enable) {
@@ -205,15 +205,15 @@ public class IorapCompilationRule extends TestWatcher {
     /**
      * The first {@code IORAP_TRIAL_LAUNCH_ITERATIONS} are used for collecting an iorap trace file.
      */
-    private boolean isIorapTraceBeingCollected() {
+    private static boolean isIorapTraceBeingCollected() {
         return sIterationCounter < IORAP_TRIAL_LAUNCH_ITERATIONS;
     }
 
-    private boolean isLastIorapTraceCollection() {
+    private static boolean isLastIorapTraceCollection() {
         return sIterationCounter == IORAP_TRIAL_LAUNCH_ITERATIONS - 1;
     }
 
-    private boolean isFirstIorapTraceCollection() {
+    private static boolean isFirstIorapTraceCollection() {
         return sIterationCounter == 0;
     }
 
@@ -237,9 +237,9 @@ public class IorapCompilationRule extends TestWatcher {
             Log.d(TAG, "Skipping iorapd toggling because 'iorapd-enabled' option is unset.");
             return;
         }
+
         logStatus("starting");
         // Compile each application in sequence.
-        String app = mApplication;
 
         toggleIorapStatus(enabled);
 
