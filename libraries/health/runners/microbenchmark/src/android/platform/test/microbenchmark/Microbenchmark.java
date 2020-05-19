@@ -45,7 +45,6 @@ import org.junit.runners.model.Statement;
  * soon to follow.
  */
 public class Microbenchmark extends BlockJUnit4ClassRunner {
-    private Bundle mArguments;
 
     @VisibleForTesting static final String ITERATION_SEP_OPTION = "iteration-separator";
     @VisibleForTesting static final String ITERATION_SEP_DEFAULT = "$";
@@ -53,10 +52,10 @@ public class Microbenchmark extends BlockJUnit4ClassRunner {
     @VisibleForTesting static final int ITERATION_NOT_SET = -1;
     public static final String RENAME_ITERATION_OPTION = "rename-iterations";
 
-    private String mIterationSep = ITERATION_SEP_DEFAULT;
-
-    private boolean mRenameIterations;
-    private Map<Description, Integer> mIterations = new HashMap<>();
+    private final String mIterationSep;
+    private final Bundle mArguments;
+    private final boolean mRenameIterations;
+    private final Map<Description, Integer> mIterations = new HashMap<>();
 
     /**
      * Called reflectively on classes annotated with {@code @RunWith(Microbenchmark.class)}.
@@ -73,11 +72,11 @@ public class Microbenchmark extends BlockJUnit4ClassRunner {
         super(klass);
         mArguments = arguments;
         // Parse out additional options.
-        mRenameIterations = Boolean.valueOf(arguments.getString(RENAME_ITERATION_OPTION));
+        mRenameIterations = Boolean.parseBoolean(arguments.getString(RENAME_ITERATION_OPTION));
         mIterationSep =
                 arguments.containsKey(ITERATION_SEP_OPTION)
                         ? arguments.getString(ITERATION_SEP_OPTION)
-                        : mIterationSep;
+                        : ITERATION_SEP_DEFAULT;
     }
 
     /**
@@ -136,7 +135,7 @@ public class Microbenchmark extends BlockJUnit4ClassRunner {
      * tests, where collection is isolated to just the method under test. This is important for when
      * {@link Before} and {@link After} methods will obscure signal reliability.
      *
-     * <p> Currently these are only registered from inside a test class as follows, but should soon
+     * <p>Currently these are only registered from inside a test class as follows, but should soon
      * be extended for command-line support.
      *
      * ```
@@ -145,15 +144,13 @@ public class Microbenchmark extends BlockJUnit4ClassRunner {
      *     @TightMethodRule
      *     public ExampleRule exampleRule = new ExampleRule();
      *
-     *     @Test
-     *     ...
+     *     @Test ...
      * }
      * ```
      */
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.FIELD, ElementType.METHOD})
-    public @interface TightMethodRule { }
-
+    public @interface TightMethodRule {}
 
     /**
      * Rename the child class name to add iterations if the renaming iteration option is enabled.

@@ -17,6 +17,8 @@ package android.platform.test.rule;
 
 import android.os.Trace;
 
+import com.google.common.base.Strings;
+
 import org.junit.runner.Description;
 
 /**
@@ -61,8 +63,8 @@ public class TracePointRule extends TestWatcher {
      * Returns the section name used for the applied {@code TestWatcher}.
      */
     protected String getSectionName(Description description) {
-        if (mSectionTag == null || mSectionTag.isEmpty()) {
-            return String.format("%s", description.getDisplayName());
+        if (Strings.isNullOrEmpty(mSectionTag)) {
+            return description.getDisplayName();
         } else {
             return mSectionTag;
         }

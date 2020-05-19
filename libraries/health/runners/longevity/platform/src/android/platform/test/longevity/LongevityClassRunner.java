@@ -51,7 +51,7 @@ public class LongevityClassRunner extends BlockJUnit4ClassRunner {
     // A constant to indicate that the iteration number is not set.
     @VisibleForTesting static final int ITERATION_NOT_SET = -1;
 
-    private String[] mExcludedClasses;
+    private final String[] mExcludedClasses;
     private String mIterationSep = ITERATION_SEP_DEFAULT;
 
     private boolean mTestFailed = true;
@@ -116,7 +116,7 @@ public class LongevityClassRunner extends BlockJUnit4ClassRunner {
      */
     @Override
     protected Statement withBefores(FrameworkMethod method, Object target, Statement statement) {
-        List<FrameworkMethod> allBeforeMethods = new ArrayList<FrameworkMethod>();
+        List<FrameworkMethod> allBeforeMethods = new ArrayList<>();
         allBeforeMethods.addAll(getTestClass().getAnnotatedMethods(BeforeClass.class));
         allBeforeMethods.addAll(getTestClass().getAnnotatedMethods(Before.class));
         return allBeforeMethods.isEmpty()
