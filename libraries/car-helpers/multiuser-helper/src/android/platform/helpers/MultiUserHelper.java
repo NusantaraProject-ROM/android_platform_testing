@@ -122,8 +122,8 @@ public class MultiUserHelper {
             throw new Exception(
                     String.format("Exception when switching to target user: %d", id), e);
         }
-        // TODO(b/154966308): Use result.isSuccess() once issue fixed
-        if (result.getStatus() != UserSwitchResult.STATUS_SUCCESSFUL) {
+
+        if (!result.isSuccess()) {
             throw new Exception(String.format("User switch failed: %s", result));
         }
         // Wait for user switch complete event, which seems to happen later than UserSwitchResult.
