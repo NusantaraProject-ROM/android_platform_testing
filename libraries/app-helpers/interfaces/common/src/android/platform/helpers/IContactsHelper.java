@@ -16,6 +16,8 @@
 
 package android.platform.helpers;
 
+import android.support.test.uiautomator.Direction;
+
 public interface IContactsHelper extends IAppHelper {
     /**
      * Setup expectation: Contacts is open
@@ -58,6 +60,17 @@ public interface IContactsHelper extends IAppHelper {
      * @param index The index of contact to select.
      */
     public default void chooseContactByIndex(int index) {
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
+
+    /**
+     * Setup expectations: Contacts is open.
+     *
+     * <p>Fling contacts page.
+     *
+     * @param direction The direction to fling the page.
+     */
+    public default void flingPage(Direction direction) {
         throw new UnsupportedOperationException("Not yet implemented.");
     }
 }
