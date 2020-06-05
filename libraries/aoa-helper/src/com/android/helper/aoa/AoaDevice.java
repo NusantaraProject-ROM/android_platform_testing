@@ -24,6 +24,7 @@ import com.google.common.util.concurrent.Uninterruptibles;
 
 import java.awt.*;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Objects;
@@ -80,8 +81,6 @@ public class AoaDevice implements AutoCloseable {
     private static final Duration ACTION_DELAY = Duration.ofSeconds(3L);
     private static final Duration STEP_DELAY = Duration.ofMillis(10L);
     static final Duration LONG_CLICK = Duration.ofSeconds(1L);
-    static final int SCROLL_STEPS = 40;
-    static final int FLING_STEPS = 10;
 
     private final UsbHelper mHelper;
     private UsbDevice mDelegate;
@@ -183,6 +182,12 @@ public class AoaDevice implements AutoCloseable {
                 && ADB_PID.contains(mDelegate.getProductId());
     }
 
+    /** Get current time. */
+    @VisibleForTesting
+    Instant now() {
+        return Instant.now();
+    }
+
     /** Wait for a specified duration. */
     public void sleep(@Nonnull Duration duration) {
         Uninterruptibles.sleepUninterruptibly(duration.toNanos(), TimeUnit.NANOSECONDS);
@@ -204,30 +209,26 @@ public class AoaDevice implements AutoCloseable {
         touch(TOUCH_UP, point, ACTION_DELAY);
     }
 
-    /** Scroll from one location to another. */
-    public void scroll(@Nonnull Point from, @Nonnull Point to) {
-        swipe(from, to, SCROLL_STEPS);
-    }
-
-    /** Fling from one location to another. */
-    public void fling(@Nonnull Point from, @Nonnull Point to) {
-        swipe(from, to, FLING_STEPS);
-    }
-
-    /** Drag from one location to another. */
-    public void drag(@Nonnull Point from, @Nonnull Point to) {
-        touch(TOUCH_DOWN, from, LONG_CLICK);
-        scroll(from, to);
-    }
-
-    // Move from one location to another using discrete steps
-    private void swipe(Point from, Point to, int steps) {
-        steps = Math.max(steps, 1);
-        float xStep = ((float) (to.x - from.x)) / steps;
-        float yStep = ((float) (to.y - from.y)) / steps;
-
-        for (int i = 0; i <= steps; i++) {
-            Point point = new Point((int) (from.x + xStep * i), (int) (from.y + yStep * i));
+    /**
+     * Swipe from one position to another in the specified duration.
+     *
+     * @param from starting position
+     * @param to final position
+     * @param duration swipe motion duration
+     */
+    public void swipe(@Nonnull Point from, @Nonnull Point to, @Nonnull Duration duration) {
+        Instant start = now();
+        touch(TOUCH_DOWN, from, STEP_DELAY);
+        while (true) {
+            Duration elapsed = Duration.between(start, now());
+            if (duration.compareTo(elapsed) < 0) {
+                break;
+            }
+            double progress = (double) elapsed.toMillis() / duration.toMillis();
+            Point point =
+                    new Point(
+                            (int) (progress * to.x + (1 - progress) * from.x),
+                            (int) (progress * to.y + (1 - progress) * from.y));
             touch(TOUCH_DOWN, point, STEP_DELAY);
         }
         touch(TOUCH_UP, to, ACTION_DELAY);

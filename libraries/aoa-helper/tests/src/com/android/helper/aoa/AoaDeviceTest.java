@@ -22,10 +22,8 @@ import static com.android.helper.aoa.AoaDevice.ACCESSORY_START;
 import static com.android.helper.aoa.AoaDevice.ACCESSORY_START_MAX_RETRIES;
 import static com.android.helper.aoa.AoaDevice.ACCESSORY_UNREGISTER_HID;
 import static com.android.helper.aoa.AoaDevice.DEVICE_NOT_FOUND;
-import static com.android.helper.aoa.AoaDevice.FLING_STEPS;
 import static com.android.helper.aoa.AoaDevice.GOOGLE_VID;
 import static com.android.helper.aoa.AoaDevice.LONG_CLICK;
-import static com.android.helper.aoa.AoaDevice.SCROLL_STEPS;
 import static com.android.helper.aoa.AoaDevice.SYSTEM_BACK;
 import static com.android.helper.aoa.AoaDevice.SYSTEM_HOME;
 import static com.android.helper.aoa.AoaDevice.SYSTEM_WAKE;
@@ -63,11 +61,11 @@ import org.mockito.verification.VerificationMode;
 
 import java.awt.*;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Nonnull;
 
@@ -230,52 +228,19 @@ public class AoaDeviceTest {
     }
 
     @Test
-    public void testScroll() {
+    public void testSwipe() {
         mDevice = createDevice();
-        mDevice.scroll(new Point(0, 0), new Point(0, SCROLL_STEPS));
+        mDevice.swipe(new Point(20, 0), new Point(70, 100), Duration.ofMillis(50));
 
-        // generate an event for each step, spaced one pixel apart
         List<Touch> events =
-                Stream.iterate(0, i -> i + 1)
-                        .limit(SCROLL_STEPS + 1)
-                        .map(i -> new Touch(TOUCH_DOWN, 0, i))
-                        .collect(Collectors.toList());
-        events.add(new Touch(TOUCH_UP, 0, SCROLL_STEPS));
-
-        verifyTouches(events);
-    }
-
-    @Test
-    public void testFling() {
-        mDevice = createDevice();
-        mDevice.fling(new Point(0, 0), new Point(FLING_STEPS, 0));
-
-        // generate an event for each step, spaced one pixel apart
-        List<Touch> events =
-                Stream.iterate(0, i -> i + 1)
-                        .limit(FLING_STEPS + 1)
-                        .map(i -> new Touch(TOUCH_DOWN, i, 0))
-                        .collect(Collectors.toList());
-        events.add(new Touch(TOUCH_UP, FLING_STEPS, 0));
-
-        verifyTouches(events);
-    }
-
-    @Test
-    public void testDrag() {
-        mDevice = createDevice();
-        mDevice.drag(new Point(0, 0), new Point(SCROLL_STEPS, 0));
-
-        // generate an event for each step, spaced one pixel apart
-        List<Touch> events =
-                Stream.iterate(0, i -> i + 1)
-                        .limit(SCROLL_STEPS + 1)
-                        .map(i -> new Touch(TOUCH_DOWN, i, 0))
-                        .collect(Collectors.toList());
-        // drag is a long click followed by a scroll
-        events.add(0, new Touch(TOUCH_DOWN, 0, 0));
-        events.add(new Touch(TOUCH_UP, SCROLL_STEPS, 0));
-
+                List.of(
+                        new Touch(TOUCH_DOWN, 20, 0),
+                        new Touch(TOUCH_DOWN, 30, 20),
+                        new Touch(TOUCH_DOWN, 40, 40),
+                        new Touch(TOUCH_DOWN, 50, 60),
+                        new Touch(TOUCH_DOWN, 60, 80),
+                        new Touch(TOUCH_DOWN, 70, 100),
+                        new Touch(TOUCH_UP, 70, 100));
         verifyTouches(events);
     }
 
@@ -347,11 +312,25 @@ public class AoaDeviceTest {
 
     // Helpers
 
+    /** Creates a mock device with predictable timestamps. */
     private AoaDevice createDevice() {
-        AoaDevice device = new AoaDevice(mHelper, mDelegate) {
-            @Override
-            public void sleep(@Nonnull Duration duration) {}
-        };
+        AoaDevice device =
+                new AoaDevice(mHelper, mDelegate) {
+                    private Instant mInstant;
+
+                    @Override
+                    Instant now() {
+                        if (mInstant == null) {
+                            mInstant = Instant.MIN;
+                        }
+                        return mInstant;
+                    }
+
+                    @Override
+                    public void sleep(@Nonnull Duration duration) {
+                        mInstant = now().plus(duration);
+                    }
+                };
         return spy(device);
     }
 
