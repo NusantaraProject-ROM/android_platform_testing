@@ -245,17 +245,9 @@ public class AoaDeviceTest {
     }
 
     @Test
-    public void testWrite() {
-        mDevice = spy(createDevice());
-        mDevice.write("Test #0123!");
-
-        verify(mDevice).key(0x17, 0x08, 0x16, 0x17, 0x2C, null, 0x27, 0x1E, 0x1F, 0x20, null);
-    }
-
-    @Test
-    public void testKey() {
+    public void testPressKeys() {
         mDevice = createDevice();
-        mDevice.key(1, null, 2);
+        mDevice.pressKeys(1, null, 2);
 
         InOrder order = inOrder(mDelegate);
         // press and release 1
