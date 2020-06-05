@@ -22,11 +22,12 @@ import com.google.common.collect.Range;
 import com.google.common.primitives.Bytes;
 import com.google.common.util.concurrent.Uninterruptibles;
 
-import java.awt.*;
+import java.awt.Point;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -243,38 +244,23 @@ public class AoaDevice implements AutoCloseable {
     }
 
     /**
-     * Write a string by pressing keys. Only alphanumeric characters and whitespace is supported.
+     * Press a combination of keys.
      *
-     * @param value string to write
+     * @param keys key HID usages, see <a
+     *     https://source.android.com/devices/input/keyboard-devices">Keyboard devices</a>
      */
-    public void write(@Nonnull String value) {
-        // map characters to HID usages
-        Integer[] keyCodes =
-                value.codePoints()
-                        .mapToObj(
-                                c -> {
-                                    if (Character.isSpaceChar(c)) {
-                                        return 0x2C;
-                                    } else if (Character.isAlphabetic(c)) {
-                                        return Character.toLowerCase(c) - 'a' + 0x04;
-                                    } else if (Character.isDigit(c)) {
-                                        return c == '0' ? 0x27 : c - '1' + 0x1E;
-                                    }
-                                    return null;
-                                })
-                        .toArray(Integer[]::new);
-        // press the keys
-        key(keyCodes);
+    public void pressKeys(Integer... keys) {
+        pressKeys(Arrays.asList(keys));
     }
 
     /**
-     * Press a key.
+     * Press a combination of keys.
      *
-     * @param keyCodes key HID usages, see <a
+     * @param keys list of key HID usages, see <a
      *     https://source.android.com/devices/input/keyboard-devices">Keyboard devices</a>
      */
-    public void key(Integer... keyCodes) {
-        Iterator<Integer> it = Arrays.stream(keyCodes).filter(Objects::nonNull).iterator();
+    public void pressKeys(@Nonnull List<Integer> keys) {
+        Iterator<Integer> it = keys.stream().filter(Objects::nonNull).iterator();
         while (it.hasNext()) {
             Integer keyCode = it.next();
             send(HID.KEYBOARD, new byte[] {keyCode.byteValue()}, STEP_DELAY);
