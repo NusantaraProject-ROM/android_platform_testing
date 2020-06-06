@@ -22,10 +22,12 @@ import com.google.common.collect.Range;
 import com.google.common.primitives.Bytes;
 import com.google.common.util.concurrent.Uninterruptibles;
 
-import java.awt.*;
+import java.awt.Point;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -80,8 +82,6 @@ public class AoaDevice implements AutoCloseable {
     private static final Duration ACTION_DELAY = Duration.ofSeconds(3L);
     private static final Duration STEP_DELAY = Duration.ofMillis(10L);
     static final Duration LONG_CLICK = Duration.ofSeconds(1L);
-    static final int SCROLL_STEPS = 40;
-    static final int FLING_STEPS = 10;
 
     private final UsbHelper mHelper;
     private UsbDevice mDelegate;
@@ -183,6 +183,12 @@ public class AoaDevice implements AutoCloseable {
                 && ADB_PID.contains(mDelegate.getProductId());
     }
 
+    /** Get current time. */
+    @VisibleForTesting
+    Instant now() {
+        return Instant.now();
+    }
+
     /** Wait for a specified duration. */
     public void sleep(@Nonnull Duration duration) {
         Uninterruptibles.sleepUninterruptibly(duration.toNanos(), TimeUnit.NANOSECONDS);
@@ -204,30 +210,26 @@ public class AoaDevice implements AutoCloseable {
         touch(TOUCH_UP, point, ACTION_DELAY);
     }
 
-    /** Scroll from one location to another. */
-    public void scroll(@Nonnull Point from, @Nonnull Point to) {
-        swipe(from, to, SCROLL_STEPS);
-    }
-
-    /** Fling from one location to another. */
-    public void fling(@Nonnull Point from, @Nonnull Point to) {
-        swipe(from, to, FLING_STEPS);
-    }
-
-    /** Drag from one location to another. */
-    public void drag(@Nonnull Point from, @Nonnull Point to) {
-        touch(TOUCH_DOWN, from, LONG_CLICK);
-        scroll(from, to);
-    }
-
-    // Move from one location to another using discrete steps
-    private void swipe(Point from, Point to, int steps) {
-        steps = Math.max(steps, 1);
-        float xStep = ((float) (to.x - from.x)) / steps;
-        float yStep = ((float) (to.y - from.y)) / steps;
-
-        for (int i = 0; i <= steps; i++) {
-            Point point = new Point((int) (from.x + xStep * i), (int) (from.y + yStep * i));
+    /**
+     * Swipe from one position to another in the specified duration.
+     *
+     * @param from starting position
+     * @param to final position
+     * @param duration swipe motion duration
+     */
+    public void swipe(@Nonnull Point from, @Nonnull Point to, @Nonnull Duration duration) {
+        Instant start = now();
+        touch(TOUCH_DOWN, from, STEP_DELAY);
+        while (true) {
+            Duration elapsed = Duration.between(start, now());
+            if (duration.compareTo(elapsed) < 0) {
+                break;
+            }
+            double progress = (double) elapsed.toMillis() / duration.toMillis();
+            Point point =
+                    new Point(
+                            (int) (progress * to.x + (1 - progress) * from.x),
+                            (int) (progress * to.y + (1 - progress) * from.y));
             touch(TOUCH_DOWN, point, STEP_DELAY);
         }
         touch(TOUCH_UP, to, ACTION_DELAY);
@@ -242,38 +244,23 @@ public class AoaDevice implements AutoCloseable {
     }
 
     /**
-     * Write a string by pressing keys. Only alphanumeric characters and whitespace is supported.
+     * Press a combination of keys.
      *
-     * @param value string to write
+     * @param keys key HID usages, see <a
+     *     https://source.android.com/devices/input/keyboard-devices">Keyboard devices</a>
      */
-    public void write(@Nonnull String value) {
-        // map characters to HID usages
-        Integer[] keyCodes =
-                value.codePoints()
-                        .mapToObj(
-                                c -> {
-                                    if (Character.isSpaceChar(c)) {
-                                        return 0x2C;
-                                    } else if (Character.isAlphabetic(c)) {
-                                        return Character.toLowerCase(c) - 'a' + 0x04;
-                                    } else if (Character.isDigit(c)) {
-                                        return c == '0' ? 0x27 : c - '1' + 0x1E;
-                                    }
-                                    return null;
-                                })
-                        .toArray(Integer[]::new);
-        // press the keys
-        key(keyCodes);
+    public void pressKeys(Integer... keys) {
+        pressKeys(Arrays.asList(keys));
     }
 
     /**
-     * Press a key.
+     * Press a combination of keys.
      *
-     * @param keyCodes key HID usages, see <a
+     * @param keys list of key HID usages, see <a
      *     https://source.android.com/devices/input/keyboard-devices">Keyboard devices</a>
      */
-    public void key(Integer... keyCodes) {
-        Iterator<Integer> it = Arrays.stream(keyCodes).filter(Objects::nonNull).iterator();
+    public void pressKeys(@Nonnull List<Integer> keys) {
+        Iterator<Integer> it = keys.stream().filter(Objects::nonNull).iterator();
         while (it.hasNext()) {
             Integer keyCode = it.next();
             send(HID.KEYBOARD, new byte[] {keyCode.byteValue()}, STEP_DELAY);
