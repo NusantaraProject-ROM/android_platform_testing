@@ -9,5 +9,5 @@ system_app_crash com.android.service.ims.RcsService.registerImsCallbacksAndSetAs
 system_app_crash com.google.android.inputmethod.latin 157051520
 system_app_native_crash com.google.android.apps.safetyhub 154358781
 system_app_native_crash com.google.android.providers.media.module 154416156
-system_tombstone android.hardware.vibrator-service.drv2624 151884322
-system_tombstone /vendor/bin/hw/android.hardware.gnss@1.0-service-qti 129282808
+SYSTEM_TOMBSTONE android.hardware.vibrator-service.drv2624 151884322
+SYSTEM_TOMBSTONE /vendor/bin/hw/android.hardware.gnss@1.0-service-qti 129282808
