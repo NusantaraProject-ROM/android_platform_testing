@@ -21,6 +21,7 @@ instrumentation_metric_tests := \
     MtpServicePerfTests \
     RsBlasBenchmark \
     ImageProcessingJB \
+    MediaProviderClientTests \
     MultiUserPerfDummyApp \
     MultiUserPerfTests \
     NeuralNetworksApiBenchmark \
