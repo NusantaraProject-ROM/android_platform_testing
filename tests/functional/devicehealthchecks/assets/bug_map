@@ -7,6 +7,7 @@ system_app_crash com.android.vending:download_service 153462682
 system_app_crash pzd.a.:com.google.android.gms@ 145798275
 system_app_crash com.android.service.ims.RcsService.registerImsCallbacksAndSetAssociatedSubscription 156402275
 system_app_crash com.google.android.inputmethod.latin 157051520
+system_app_crash com.android.vending/com.google.android.finsky.verifier.impl.PackageVerificationService 156670156
 system_app_native_crash com.google.android.apps.safetyhub 154358781
 system_app_native_crash com.google.android.providers.media.module 154416156
 SYSTEM_TOMBSTONE android.hardware.vibrator-service.drv2624 151884322
