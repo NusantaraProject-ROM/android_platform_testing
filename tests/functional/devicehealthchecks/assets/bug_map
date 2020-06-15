@@ -12,3 +12,4 @@ system_app_native_crash com.google.android.apps.safetyhub 154358781
 system_app_native_crash com.google.android.providers.media.module 154416156
 SYSTEM_TOMBSTONE android.hardware.vibrator-service.drv2624 151884322
 SYSTEM_TOMBSTONE /vendor/bin/hw/android.hardware.gnss@1.0-service-qti 129282808
+SYSTEM_TOMBSTONE /system/product/priv-app/SafetyHubLprPrebuilt/SafetyHubLprPrebuilt.apk 158504050
