@@ -10,6 +10,7 @@ system_app_crash com.android.service.ims.RcsService.registerImsCallbacksAndSetAs
 system_app_crash com.google.android.inputmethod.latin 157051520
 system_app_crash com.android.vending/com.google.android.finsky.verifier.impl.PackageVerificationService 156670156
 system_app_crash com.google.android.apps.youtube.music.mediabrowser.MusicBrowserService.a 157917208
+system_app_crash android.database.sqlite.SQLiteCloseable.acquireReference 159658068
 system_app_native_crash com.google.android.apps.safetyhub 154358781
 system_app_native_crash com.google.android.providers.media.module 154416156
 system_server_crash void.com.android.server.location.gnss.GnssBatchingProvider.enable 159504970
