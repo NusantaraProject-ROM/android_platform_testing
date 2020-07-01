@@ -1,6 +1,8 @@
 <test_name> <regex.no.spaces> <only_bug_number>
 system_app_anr com.google.android.googlequicksearchbox:search 151164399
 system_app_anr com.google.oslo/.service.OsloService 159025912
+system_app_anr com.google.android.as/com.google.android.apps.miphone.aiai.common.superpacks.impl.AiAiSuperpacksService 159058706
+system_app_anr act=android.telephony.action.CARRIER_CONFIG_CHANGED 159921750
 system_app_crash -1\|android\|26\|null\|1000 155073214
 system_app_crash -1\|android\|32\|null\|1000 155073214
 system_app_crash android.database.sqlite.SQLiteCantOpenDatabaseException: 150248286
