@@ -59,7 +59,7 @@ public class StatsdHelper {
      * Add simple event configurations using a list of atom ids.
      *
      * @param atomIdList uniquely identifies the information that we need to track by statsManager.
-     * @return true if the configuration is added successfully other wise false.
+     * @return true if the configuration is added successfully, otherwise false.
      */
     public boolean addEventConfig(List<Integer> atomIdList) {
         long configId = System.currentTimeMillis();
@@ -105,6 +105,7 @@ public class StatsdHelper {
         // Needed for collecting gauge metric based on trigger events.
         statsConfigBuilder.addAtomMatcher(getSimpleAtomMatcher(appBreadCrumbUniqueId,
                 Atom.APP_BREADCRUMB_REPORTED_FIELD_NUMBER));
+        statsConfigBuilder.addWhitelistedAtomIds(Atom.APP_BREADCRUMB_REPORTED_FIELD_NUMBER);
 
         for (Integer atomId : atomIdList) {
             int atomUniqueId = getUniqueId();
