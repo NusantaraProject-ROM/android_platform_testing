@@ -45,7 +45,7 @@ public class AutoLauncherStrategy implements IAutoLauncherStrategy {
     private static final String APP_SWITCH_ID = "app_switch_container";
     private static final String APP_LIST_ID = "apps_grid";
 
-    private static final long APP_LAUNCH_TIMEOUT = 10000;
+    private static final long APP_LAUNCH_TIMEOUT = 30000;
     private static final long UI_WAIT_TIMEOUT = 5000;
     private static final long POLL_INTERVAL = 100;
 
