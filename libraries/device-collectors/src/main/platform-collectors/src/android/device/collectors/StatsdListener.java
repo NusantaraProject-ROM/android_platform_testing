@@ -28,6 +28,7 @@ import androidx.annotation.VisibleForTesting;
 import androidx.test.InstrumentationRegistry;
 
 import com.android.internal.os.StatsdConfigProto.StatsdConfig;
+import com.android.os.AtomsProto.Atom;
 import com.android.os.StatsLog.ConfigMetricsReportList;
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -178,6 +179,7 @@ public class StatsdListener extends BaseMetricListener {
             long configId = getUniqueIdForConfig(configs.get(configName));
             StatsdConfig newConfig = configs.get(configName).toBuilder().setId(configId).build();
             try {
+                Log.i(LOG_TAG, String.format("Adding config %s with ID %d.", configName, configId));
                 addStatsConfig(configId, newConfig.toByteArray());
                 configIds.put(configName, configId);
             } catch (StatsUnavailableException e) {
@@ -217,9 +219,21 @@ public class StatsdListener extends BaseMetricListener {
             // Dump the metric report to external storage.
             ConfigMetricsReportList reportList;
             try {
+                Log.i(
+                        LOG_TAG,
+                        String.format(
+                                "Pulling metrics for config %s with ID %d.",
+                                configName, configIds.get(configName)));
                 reportList =
                         ConfigMetricsReportList.parseFrom(
                                 getStatsReports(configIds.get(configName)));
+                Log.i(
+                        LOG_TAG,
+                        String.format(
+                                "Found %d metric %s from config %s.",
+                                reportList.getReportsCount(),
+                                reportList.getReportsCount() == 1 ? "report" : "reports",
+                                configName));
                 File reportFile =
                         new File(
                                 saveDirectory,
@@ -249,6 +263,11 @@ public class StatsdListener extends BaseMetricListener {
 
             // Remove the statsd config.
             try {
+                Log.i(
+                        LOG_TAG,
+                        String.format(
+                                "Removing config %s with ID %d.",
+                                configName, configIds.get(configName)));
                 removeStatsConfig(configIds.get(configName));
             } catch (StatsUnavailableException e) {
                 Log.e(
@@ -400,11 +419,11 @@ public class StatsdListener extends BaseMetricListener {
             final AssetManager manager, String optionName, String configName) {
         try (InputStream configStream = openConfigWithAssetManager(manager, configName)) {
             try {
-                return StatsdConfig.parseFrom(configStream);
+                return fixPermissions(StatsdConfig.parseFrom(configStream));
             } catch (IOException e) {
                 throw new RuntimeException(
                         String.format(
-                                "Cannot parse profile %s in option %s.", configName, optionName),
+                                "Cannot parse config %s in option %s.", configName, optionName),
                         e);
             }
         } catch (IOException e) {
@@ -457,5 +476,20 @@ public class StatsdListener extends BaseMetricListener {
     @VisibleForTesting
     protected boolean logStop(int label) {
         return StatsLog.logStop(label);
+    }
+
+    /**
+     * Add a few permission-related options to the statsd config.
+     *
+     * <p>This is related to some new permission restrictions in RVC.
+     */
+    private StatsdConfig fixPermissions(StatsdConfig config) {
+        StatsdConfig.Builder builder = config.toBuilder();
+        // Allow system power stats to be pulled.
+        builder.addDefaultPullPackages("AID_SYSTEM");
+        // Gauge metrics rely on AppBreadcrumbReported as metric dump triggers.
+        builder.addWhitelistedAtomIds(Atom.APP_BREADCRUMB_REPORTED_FIELD_NUMBER);
+
+        return builder.build();
     }
 }
