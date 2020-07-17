@@ -33,6 +33,7 @@ import android.content.res.AssetManager;
 import android.os.Bundle;
 
 import com.android.internal.os.StatsdConfigProto.StatsdConfig;
+import com.android.os.AtomsProto.Atom;
 import com.android.os.StatsLog.ConfigMetricsReportList;
 import com.android.os.StatsLog.ConfigMetricsReportList.ConfigKey;
 import com.google.common.collect.ImmutableMap;
@@ -553,5 +554,33 @@ public class StatsdListenerTest {
                                 && f.getName().contains(component)
                                 && Arrays.stream(moreComponents)
                                         .allMatch(c -> f.getName().contains(c)));
+    }
+
+    /** Test that configs are parsed and applied with correct permission fixes. */
+    @Test
+    public void testConfigsHavePermissionFixes() throws Exception {
+        // Stub a config for testing.
+        ByteArrayInputStream configStream = new ByteArrayInputStream(CONFIG_1.toByteArray());
+        doReturn(configStream)
+                .when(mListener)
+                .openConfigWithAssetManager(any(AssetManager.class), eq(CONFIG_NAME_1));
+
+        Bundle args = new Bundle();
+        args.putString(StatsdListener.OPTION_CONFIGS_RUN_LEVEL, CONFIG_NAME_1);
+        doReturn(args).when(mListener).getArguments();
+
+        Map<String, StatsdConfig> configs =
+                mListener.getConfigsFromOption(StatsdListener.OPTION_CONFIGS_RUN_LEVEL);
+        Assert.assertTrue(configs.containsKey(CONFIG_NAME_1));
+        Assert.assertTrue(
+                configs.get(CONFIG_NAME_1)
+                        .getWhitelistedAtomIdsList()
+                        .stream()
+                        .anyMatch(id -> id == Atom.APP_BREADCRUMB_REPORTED_FIELD_NUMBER));
+        Assert.assertTrue(
+                configs.get(CONFIG_NAME_1)
+                        .getDefaultPullPackagesList()
+                        .stream()
+                        .anyMatch(name -> "AID_SYSTEM".equals(name)));
     }
 }
