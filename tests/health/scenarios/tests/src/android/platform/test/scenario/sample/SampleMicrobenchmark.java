@@ -17,7 +17,12 @@
 package android.platform.test.scenario.sample;
 
 import android.platform.test.microbenchmark.Microbenchmark;
+import android.platform.test.microbenchmark.Microbenchmark.NoMetricAfter;
+import android.platform.test.microbenchmark.Microbenchmark.NoMetricBefore;
+import android.platform.test.option.BooleanOption;
+import android.util.Log;
 
+import org.junit.ClassRule;
 import org.junit.runner.RunWith;
 
 /**
@@ -26,4 +31,25 @@ import org.junit.runner.RunWith;
  * <p>Run this test with the listener alongside, {@link PrintListener}, to see how they interact.
  */
 @RunWith(Microbenchmark.class)
-public class SampleMicrobenchmark extends SampleTest {}
+public class SampleMicrobenchmark extends SampleTest {
+
+    @ClassRule
+    public static BooleanOption failNoMetricBefore =
+            new BooleanOption("fail-no-metric-before").setRequired(false).setDefault(false);
+
+    @ClassRule
+    public static BooleanOption failNoMetricAfter =
+            new BooleanOption("fail-no-metric-after").setRequired(false).setDefault(false);
+
+    @NoMetricBefore
+    public void noMetricBefore() {
+        SampleTest.failIfRequested(failNoMetricBefore, "@NoMetricBefore");
+        Log.d(SampleTest.LOG_TAG, "@NoMetricBefore");
+    }
+
+    @NoMetricAfter
+    public void noMetricAfter() {
+        SampleTest.failIfRequested(failNoMetricAfter, "@NoMetricAfter");
+        Log.d(SampleTest.LOG_TAG, "@NoMetricAfter");
+    }
+}
