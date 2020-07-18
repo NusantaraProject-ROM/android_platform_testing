@@ -42,7 +42,7 @@ public class AutoLauncherStrategy implements IAutoLauncherStrategy {
     private static final String DIAL_PACKAGE = "com.android.car.dialer";
     private static final String ASSISTANT_PACKAGE = "com.google.android.googlequicksearchbox";
     private static final String SETTINGS_PACKAGE = "com.android.car.settings";
-    private static final String APP_SWITCH_ID = "app_switch_container";
+    private static final String APP_SWITCH_ID = "car_ui_toolbar_menu_item_icon_container";
     private static final String APP_LIST_ID = "apps_grid";
 
     private static final long APP_LAUNCH_TIMEOUT = 30000;
@@ -157,7 +157,15 @@ public class AutoLauncherStrategy implements IAutoLauncherStrategy {
         openMediaFacet();
 
         // Click on app switch to open app list.
-        UiObject2 appSwitch = mDevice.wait(Until.findObject(APP_SWITCH), APP_LAUNCH_TIMEOUT);
+        List<UiObject2> buttons = mDevice.wait(
+                Until.findObjects(APP_SWITCH), APP_LAUNCH_TIMEOUT);
+        int lastIndex = buttons.size() - 1;
+        /*
+         * On some media app page, there are two buttons with the same ID, 
+         * while on other media app page, only the app switch button presents.
+         * The app switch button is always the last button if not the only button.
+         */
+        UiObject2 appSwitch = buttons.get(lastIndex);
         if (appSwitch == null) {
             throw new RuntimeException("Failed to find app switch.");
         }

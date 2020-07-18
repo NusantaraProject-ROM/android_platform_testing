@@ -17,6 +17,7 @@
 package android.platform.test.scenario.sample;
 
 import android.util.Log;
+import android.platform.test.option.BooleanOption;
 import android.platform.test.rule.TestWatcher;
 import android.platform.test.scenario.annotation.Scenario;
 
@@ -57,29 +58,63 @@ public class SampleTest {
                     .around(new PrintRule("@Rule #2"))
                     .around(new PrintRule("@Rule #3"));
 
+    @ClassRule
+    public static BooleanOption failBeforeClass =
+            new BooleanOption("fail-before-class").setRequired(false).setDefault(false);
+
+    @Rule
+    public BooleanOption failBefore =
+            new BooleanOption("fail-before").setRequired(false).setDefault(false);
+
+    @Rule
+    public BooleanOption failTest =
+            new BooleanOption("fail-test").setRequired(false).setDefault(false);
+
+    @Rule
+    public BooleanOption failAfter =
+            new BooleanOption("fail-after").setRequired(false).setDefault(false);
+
+    @ClassRule
+    public static BooleanOption failAfterClass =
+            new BooleanOption("fail-after-class").setRequired(false).setDefault(false);
+
     @BeforeClass
     public static void beforeClassMethod() {
+        failIfRequested(failBeforeClass, "@BeforeClass");
         Log.d(LOG_TAG, "@BeforeClass");
     }
 
     @Before
     public void beforeMethod() {
+        failIfRequested(failBefore, "@Before");
         Log.d(LOG_TAG, "@Before");
     }
 
     @Test
     public void testMethod() {
+        failIfRequested(failTest, "@Test");
         Log.d(LOG_TAG, "@Test");
     }
 
     @After
     public void afterMethod() {
+        failIfRequested(failAfter, "@After");
         Log.d(LOG_TAG, "@After");
     }
 
     @AfterClass
     public static void afterClassMethod() {
+        failIfRequested(failAfterClass, "@AfterClass");
         Log.d(LOG_TAG, "@AfterClass");
+    }
+
+    /** Log and throw a failure if the provided {@code option} is set. */
+    public static void failIfRequested(BooleanOption option, String location) {
+        if (option.get()) {
+            String message = String.format("Failed %s", location);
+            Log.d(LOG_TAG, message);
+            throw new RuntimeException(message);
+        }
     }
 
     /** A {@link TestWatcher} that prints the methods it executes. */
