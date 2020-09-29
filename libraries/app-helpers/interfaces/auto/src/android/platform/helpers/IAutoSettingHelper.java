@@ -191,4 +191,32 @@ public interface IAutoSettingHelper extends IAppHelper, Scrollable {
      * <p>get day/night mode status.
      */
     DayNightMode getDayNightModeStatus();
+
+    /**
+     * Setup expectations: full settings facet is open.
+     *
+     * <p>search in settings app and select the first search result.
+     *
+     * @param item to be searched.
+     */
+    void searchAndSelect(String item);
+
+    /**
+     * Setup expectations: full settings facet is open.
+     *
+     * <p>search in settings app.
+     *
+     * @param item to be searched.
+     * @param selectedIndex determines which search result to select.
+     */
+    void searchAndSelect(String item, int selectedIndex);
+
+    /**
+     * Setup expectations: search result is open.
+     *
+     * <p>verify page title contains the searched item.
+     *
+     * @param item to be verified.
+     */
+    boolean isValidPageTitle(String item);
 }
