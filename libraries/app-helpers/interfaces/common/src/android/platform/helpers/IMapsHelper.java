@@ -16,7 +16,9 @@
 
 package android.platform.helpers;
 
+import android.graphics.Rect;
 import android.support.test.uiautomator.Direction;
+import android.support.test.uiautomator.UiObject2;
 
 public interface IMapsHelper extends IAppHelper {
     /**
@@ -125,9 +127,18 @@ public interface IMapsHelper extends IAppHelper {
     /**
      * Setup expectation: On the home screen.
      *
+     * <p>Get the UiObject2 of explore tab home bottom sheet.
+     */
+    public default UiObject2 getExploreTabHomeBottomSheet() {
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
+
+    /**
+     * Setup expectation: On the home screen.
+     *
      * <p>Scroll the page to view the map.
      */
-    public default void scrollPage(Direction dir, float percent) {
+    public default void scrollPage(Rect bounds, Direction dir, float percent) {
         throw new UnsupportedOperationException("Not yet implemented.");
     }
 
