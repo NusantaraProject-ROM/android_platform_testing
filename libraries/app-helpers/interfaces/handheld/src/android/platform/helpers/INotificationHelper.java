@@ -18,6 +18,7 @@ package android.platform.helpers;
 
 import android.app.Notification;
 import android.support.test.uiautomator.BySelector;
+import android.support.test.uiautomator.Direction;
 import android.support.test.uiautomator.UiObject2;
 
 import androidx.annotation.Nullable;
@@ -208,6 +209,40 @@ public interface INotificationHelper extends IAppHelper {
      * the "share" button.
      */
     default void shareScreenshotFromNotification(BySelector pageSelector) {
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
+
+    /**
+     * Setup expectation: On the expanding notification screen.
+     *
+     * <p>Get the UiObject2 of expanding notification screen.
+     */
+    default UiObject2 getNotificationShadeScrollContainer() {
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
+
+    /**
+     * Scroll feeds on Notifications screen
+     *
+     * <p>Setup expectations: Notification is open with lots of notifications.
+     *
+     * @param container The container with scrollable elements.
+     * @param dir The direction of the fling, must be UP or DOWN.
+     */
+    default void flingFeed(UiObject2 container, Direction dir) {
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
+
+    /**
+     * Scroll feeds on Notifications screen
+     *
+     * <p>Setup expectations: Notification is open with lots of notifications.
+     *
+     * @param container The container with scrollable elements.
+     * @param dir The direction of the scroll, must be UP or DOWN.
+     * @param speed The speed of fling.
+     */
+    default void flingFeed(UiObject2 container, Direction dir, int speed) {
         throw new UnsupportedOperationException("Not yet implemented.");
     }
 }
