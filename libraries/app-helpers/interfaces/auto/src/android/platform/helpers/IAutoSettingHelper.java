@@ -219,4 +219,13 @@ public interface IAutoSettingHelper extends IAppHelper, Scrollable {
      * @param item to be verified.
      */
     boolean isValidPageTitle(String item);
+
+    /**
+     * Setup expectations: Setting is open.
+     *
+     * <p>check whether a setting menu in Settings is enabled or not.
+     *
+     * @param name of the setting menu.
+     */
+    boolean isSettingMenuEnabled(String menu);
 }
