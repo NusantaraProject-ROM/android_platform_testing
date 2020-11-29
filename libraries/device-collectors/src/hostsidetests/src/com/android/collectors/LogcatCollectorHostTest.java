@@ -50,13 +50,13 @@ import java.util.Arrays;
  * <p>tradefed.sh run commandAndExit template/local_min --template:map test=CollectorHostsideLibTest
  */
 @RunWith(DeviceJUnit4ClassRunner.class)
-public class LogcatOnFailureCollectorHostTest extends BaseHostJUnit4Test {
+public class LogcatCollectorHostTest extends BaseHostJUnit4Test {
     private static final String TEST_APK = "CollectorDeviceLibTest.apk";
     private static final String PACKAGE_NAME = "android.device.collectors";
     private static final String AJUR_RUNNER = "androidx.test.runner.AndroidJUnitRunner";
 
     private static final String LOGCAT_COLLECTOR =
-            "android.device.collectors.LogcatOnFailureCollector";
+            "android.device.collectors.LogcatCollector";
 
     private IInvocationContext mContext;
     private DeviceTestRunOptions mOptions = null;
