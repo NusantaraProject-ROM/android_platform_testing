@@ -24,6 +24,9 @@ import static org.junit.Assert.assertTrue;
 import androidx.test.runner.AndroidJUnit4;
 import com.android.helpers.ShowmapSnapshotHelper;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -142,7 +145,7 @@ public class ShowmapSnapshotHelperTest {
     }
 
     /**
-     * Test all process flag return more than 2 processes metrics atleast.
+     * Test all process flag return more than 2 processes metrics at least.
      */
     @Test
     public void testGetMetrics_AllProcess() {
@@ -169,8 +172,9 @@ public class ShowmapSnapshotHelperTest {
         mShowmapSnapshotHelper.setAllProcesses();
         assertTrue(mShowmapSnapshotHelper.startCollecting());
         Map<String, String> metrics = mShowmapSnapshotHelper.getMetrics();
-        // process count and path to snapshot file in the output by default.
-        assertTrue(metrics.size() == 2);
+        // process count, process with child process count and path to snapshot file in the output
+        // by default.
+        assertTrue(verifyDefaultMetrics(metrics));
     }
 
     @Test
@@ -181,8 +185,49 @@ public class ShowmapSnapshotHelperTest {
         mShowmapSnapshotHelper.setAllProcesses();
         assertTrue(mShowmapSnapshotHelper.startCollecting());
         Map<String, String> metrics = mShowmapSnapshotHelper.getMetrics();
-        // process count and path to snapshot file in the output by default.
-        assertTrue(metrics.size() == 2);
+        // process count, process with child process count and path to snapshot file in the output
+        // by default.
+        assertTrue(verifyDefaultMetrics(metrics));
+    }
+
+    @Test
+    public void testGetMetrics_verify_child_processes_metrics() {
+        mShowmapSnapshotHelper.setUp(VALID_OUTPUT_DIR, NO_PROCESS_LIST);
+        mShowmapSnapshotHelper.setMetricNameIndex(METRIC_EMPTY_INDEX_STR);
+
+        mShowmapSnapshotHelper.setAllProcesses();
+        assertTrue(mShowmapSnapshotHelper.startCollecting());
+        Map<String, String> metrics = mShowmapSnapshotHelper.getMetrics();
+
+        assertTrue(metrics.size() != 0);
+
+        // process count, process with child process count and path to snapshot file in the output
+        // by default.
+        assertTrue(metrics.containsKey(ShowmapSnapshotHelper.PROCESS_WITH_CHILD_PROCESS_COUNT));
+
+        Set<String> parentWithChildProcessSet = metrics.keySet()
+                .stream()
+                .filter(s -> s.startsWith(ShowmapSnapshotHelper.CHILD_PROCESS_COUNT_PREFIX))
+                .collect(Collectors.toSet());
+
+        // At least one process (i.e init) will have child process
+        assertTrue(parentWithChildProcessSet.size() > 0);
+        assertTrue(metrics.containsKey(ShowmapSnapshotHelper.CHILD_PROCESS_COUNT_PREFIX + "_init"));
+    }
+
+    private boolean verifyDefaultMetrics(Map<String, String> metrics) {
+        if(metrics.size() == 0) {
+            return false;
+        }
+        for (String key : metrics.keySet()) {
+            if (!(key.equals(ShowmapSnapshotHelper.PROCESS_COUNT)
+                    || key.equals(ShowmapSnapshotHelper.OUTPUT_FILE_PATH_KEY)
+                    || key.equals(ShowmapSnapshotHelper.PROCESS_WITH_CHILD_PROCESS_COUNT)
+                    || key.startsWith(ShowmapSnapshotHelper.CHILD_PROCESS_COUNT_PREFIX))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void testProcessList(String metricIndexStr, String... processNames) {

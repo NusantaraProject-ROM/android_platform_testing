@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Helper to collect memory information for a list of processes from showmap.
@@ -43,10 +44,15 @@ public class ShowmapSnapshotHelper implements ICollectorHelper<String> {
     private static final String PIDOF_CMD = "pidof %s";
     public static final String ALL_PROCESSES_CMD = "ps -A";
     private static final String SHOWMAP_CMD = "showmap -v %d";
+    private static final String CHILD_PROCESSES_CMD = "ps -A --ppid %d";
 
     public static final String OUTPUT_METRIC_PATTERN = "showmap_%s_bytes";
     public static final String OUTPUT_FILE_PATH_KEY = "showmap_output_file";
     public static final String PROCESS_COUNT = "process_count";
+    public static final String CHILD_PROCESS_COUNT_PREFIX = "child_processes_count";
+    public static final String OUTPUT_CHILD_PROCESS_COUNT_KEY = CHILD_PROCESS_COUNT_PREFIX + "_%s";
+    public static final String PROCESS_WITH_CHILD_PROCESS_COUNT =
+            "process_with_child_process_count";
 
     private String[] mProcessNames = null;
     private String mTestOutputDir = null;
@@ -144,12 +150,25 @@ public class ShowmapSnapshotHelper implements ICollectorHelper<String> {
                         // Store showmap output into file. If there are more than one process
                         // with same name write the individual showmap associated with pid.
                         storeToFile(mTestOutputFile, processName, pid, showmapOutput, writer);
+                        // Parse number of child processes for the given pid and update the
+                        // total number of child process count for the process name that pid
+                        // is associated with.
+                        updateChildProcessesCount(processName, pid);
                     }
                 } catch (RuntimeException e) {
                     Log.e(TAG, e.getMessage(), e.getCause());
                     // Skip this process and continue with the next one
                     continue;
                 }
+            }
+            // To track total number of process with child processes.
+            if (mMemoryMap.size() != 0) {
+                Set<String> parentWithChildProcessSet = mMemoryMap.keySet()
+                        .stream()
+                        .filter(s -> s.startsWith(CHILD_PROCESS_COUNT_PREFIX))
+                        .collect(Collectors.toSet());
+                mMemoryMap.put(PROCESS_WITH_CHILD_PROCESS_COUNT,
+                        Long.toString(parentWithChildProcessSet.size()));
             }
             // Store the unique process count. -1 to exclude the "ps" process name.
             mMemoryMap.put(PROCESS_COUNT, Integer.toString(mProcessNames.length - 1));
@@ -319,6 +338,37 @@ public class ShowmapSnapshotHelper implements ICollectorHelper<String> {
             }
         }
         Log.i(TAG, String.format("Metric Name index map size %s", mMetricNameIndexMap.size()));
+    }
+
+    /**
+     * Retrieves the number of child processes for the given process id and updates the total
+     * process count for the process name that pid is associated with.
+     *
+     * @param processName
+     * @param pid
+     */
+    private void updateChildProcessesCount(String processName, long pid) {
+        try {
+            Log.i(TAG,
+                    String.format("Retrieving child processes count for process name: %s with"
+                            + " process id %d.", processName, pid));
+            String childProcessesStr = mUiDevice
+                    .executeShellCommand(String.format(CHILD_PROCESSES_CMD, pid));
+            Log.i(TAG, String.format("Child processes cmd output: %s", childProcessesStr));
+            String[] childProcessStrSplit = childProcessesStr.split("\\n");
+            // To discard the header line in the command output.
+            int childProcessCount = childProcessStrSplit.length - 1;
+            String childCountMetricKey = String.format(OUTPUT_CHILD_PROCESS_COUNT_KEY, processName);
+
+            if (childProcessCount > 0) {
+                mMemoryMap.put(childCountMetricKey,
+                        Long.toString(
+                                Long.parseLong(mMemoryMap.getOrDefault(childCountMetricKey, "0"))
+                                        + childProcessCount));
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to run child process count command.", e);
+        }
     }
 
     /**
