@@ -34,4 +34,10 @@ public @interface RootPermissionTest {
     // TODO : Remove the default value. Need one in the interim whilst we undertake
     // the effort to annotate the existing tests with a corresponding patch-level.
     String minPatchLevel() default "";
+
+    // Denotes the CVE ID(s), comma-separated, to which this test applies.
+    String cve() default "";
+
+    // Denotes the scope (platform/kernel/vendor) to which this test applies.
+    String scope() default "";
 }
