@@ -23,6 +23,7 @@ import androidx.annotation.VisibleForTesting;
 
 import org.junit.runner.Description;
 import org.junit.runner.notification.Failure;
+import org.junit.runner.Result;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,31 +33,44 @@ import java.util.HashMap;
 import java.text.SimpleDateFormat;
 
 /**
- * A {@link BaseMetricListener} that captures logcat after each test case failure.
+ * A {@link LogcatCollector} that captures logcat after each test.
  *
  * This class needs external storage permission. See {@link BaseMetricListener} how to grant
  * external storage permission, especially at install time.
  *
  */
-@OptionClass(alias = "logcat-failure-collector")
-public class LogcatOnFailureCollector extends BaseMetricListener {
+@OptionClass(alias = "logcat-collector")
+public class LogcatCollector extends BaseMetricListener {
     @VisibleForTesting
     static final SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("MM-dd HH:mm:ss.SSS");
 
     @VisibleForTesting static final String METRIC_SEP = "-";
     @VisibleForTesting static final String FILENAME_SUFFIX = "logcat";
+    @VisibleForTesting static final String BEFORE_LOGCAT_DURATION_SECS =
+            "before-logcat-duration-secs";
+    @VisibleForTesting static final String COLLECT_ON_FAILURE_ONLY = "collect-on-failure-only";
+    @VisibleForTesting static final String RETURN_LOGCAT_DIR = "return-logcat-directory";
+    @VisibleForTesting static final String DEFAULT_DIR = "run_listeners/logcats";
 
-    public static final String DEFAULT_DIR = "run_listeners/logcats";
     private static final int BUFFER_SIZE = 16 * 1024;
+
 
     private File mDestDir;
     private String mStartTime = null;
     private boolean mTestFailed = false;
+    // Logcat duration to include before the test starts.
+    private long mBeforeLogcatDurationInSecs = 0;
+    // Use this flag to enable logcat collection only when the test fails.
+    private boolean mCollectOnlyTestFailed = false;
+    // Use this flag to return the root directory of the logcat files in run metrics
+    // otherwise individual logcat file will be reported associated with the test.
+    // The final directory which contains all the logcat files will be <DEFAULT_DIR>_all.
+    private boolean mReturnLogcatDir = false;
 
     // Map to keep track of test iterations for multiple test iterations.
     private HashMap<Description, Integer> mTestIterations = new HashMap<>();
 
-    public LogcatOnFailureCollector() {
+    public LogcatCollector() {
         super();
     }
 
@@ -65,23 +79,25 @@ public class LogcatOnFailureCollector extends BaseMetricListener {
      * for testing.
      */
     @VisibleForTesting
-    LogcatOnFailureCollector(Bundle args) {
+    LogcatCollector(Bundle args) {
         super(args);
     }
 
     @Override
     public void onTestRunStart(DataRecord runData, Description description) {
+        setupAdditionalArgs();
         mDestDir = createAndEmptyDirectory(DEFAULT_DIR);
         // Capture the start time in case onTestStart() is never called due to failure during
         // @BeforeClass.
-        mStartTime = getCurrentDate();
+        mStartTime = getLogcatStartTime();
     }
 
     @Override
     public void onTestStart(DataRecord testData, Description description) {
         // Capture the start time for logcat purpose.
-        // Overwrites any start time set prior to the test.
-        mStartTime = getCurrentDate();
+        // Overwrites any start time set prior to the test and adds custom
+        // duration to capture before current start time.
+        mStartTime = getLogcatStartTime();
         // Keep track of test iterations.
         mTestIterations.computeIfPresent(description, (desc, iteration) -> iteration + 1);
         mTestIterations.computeIfAbsent(description, desc -> 1);
@@ -96,10 +112,13 @@ public class LogcatOnFailureCollector extends BaseMetricListener {
         mTestFailed = true;
     }
 
-    /** If the test fails, collect logcat since test start time. */
+    /**
+     * Collect the logcat at the end of each test or collect the logcat only on test
+     * failed if the flag is enabled.
+     */
     @Override
     public void onTestEnd(DataRecord testData, Description description) {
-        if (mTestFailed) {
+        if (!mCollectOnlyTestFailed || (mCollectOnlyTestFailed && mTestFailed)) {
             // Capture logcat from start time
             if (mDestDir == null) {
                 return;
@@ -108,14 +127,20 @@ public class LogcatOnFailureCollector extends BaseMetricListener {
                 int iteration = mTestIterations.get(description);
                 final String fileName =
                         String.format(
-                                "%s.%s%s%s-logcat-on-failure.txt",
+                                "%s.%s%s%s-logcat.txt",
                                 description.getClassName(),
                                 description.getMethodName(),
                                 iteration == 1 ? "" : (METRIC_SEP + String.valueOf(iteration)),
                                 METRIC_SEP + FILENAME_SUFFIX);
                 File logcat = new File(mDestDir, fileName);
                 getLogcatSince(mStartTime, logcat);
-                testData.addFileMetric(String.format("%s_%s", getTag(), logcat.getName()), logcat);
+                if (!mReturnLogcatDir) {
+                    // Do not return individual logcat file path if the logcat directory
+                    // option is enabled. Logcat root directory path will be returned in the
+                    // test run status.
+                    testData.addFileMetric(String.format("%s_%s", getTag(), logcat.getName()),
+                            logcat);
+                }
             } catch (IOException | InterruptedException e) {
                 Log.e(getTag(), "Error trying to retrieve logcat.", e);
             }
@@ -125,7 +150,14 @@ public class LogcatOnFailureCollector extends BaseMetricListener {
         mTestFailed = false;
         // Update the start time here in case onTestStart() is not called for the next test. If it
         // is called, the start time will be overwritten.
-        mStartTime = getCurrentDate();
+        mStartTime = getLogcatStartTime();
+    }
+
+    @Override
+    public void onTestRunEnd(DataRecord runData, Result result) {
+        if (mReturnLogcatDir) {
+            runData.addStringMetric(getTag(), mDestDir.getAbsolutePath().toString());
+        }
     }
 
     /** @hide */
@@ -143,11 +175,36 @@ public class LogcatOnFailureCollector extends BaseMetricListener {
         proc.waitFor();
     }
 
-    /** @hide */
     @VisibleForTesting
-    protected String getCurrentDate() {
-        // Get time using system (wall clock) time since this is the time that logcat is based on.
+    protected String getLogcatStartTime() {
         Date date = new Date(System.currentTimeMillis());
+        Log.i(getTag(), "Current Date:" + DATE_FORMATTER.format(date));
+        if (mBeforeLogcatDurationInSecs > 0) {
+            date = new Date(System.currentTimeMillis() - (mBeforeLogcatDurationInSecs * 1000));
+            Log.i(getTag(), "Date including the before duration:" + DATE_FORMATTER.format(date));
+        }
         return DATE_FORMATTER.format(date);
+    }
+
+    /**
+     * Add custom options if available.
+     */
+    private void setupAdditionalArgs() {
+        Bundle args = getArgsBundle();
+
+        if (args.getString(BEFORE_LOGCAT_DURATION_SECS) != null) {
+            mBeforeLogcatDurationInSecs = Long
+                    .parseLong(args.getString(BEFORE_LOGCAT_DURATION_SECS));
+        }
+
+        if (args.getString(COLLECT_ON_FAILURE_ONLY) != null) {
+            mCollectOnlyTestFailed = Boolean.parseBoolean(args.getString(COLLECT_ON_FAILURE_ONLY));
+        }
+
+        if (args.getString(RETURN_LOGCAT_DIR) != null) {
+            mReturnLogcatDir = Boolean
+                    .parseBoolean(args.getString(RETURN_LOGCAT_DIR));
+        }
+
     }
 }

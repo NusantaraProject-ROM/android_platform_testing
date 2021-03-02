@@ -16,6 +16,8 @@
 
 package android.platform.helpers;
 
+import android.support.test.uiautomator.UiObject2;
+
 /** Helper class for functional tests of Settings facet */
 public interface IAutoSettingHelper extends IAppHelper, Scrollable {
 
@@ -47,6 +49,13 @@ public interface IAutoSettingHelper extends IAppHelper, Scrollable {
         INCREASE,
         DECREASE
     }
+
+    /**
+     * Setup expectations: The settings app is open
+     *
+     * @param setting option to find.
+     */
+    UiObject2 findSettingMenu(String setting);
 
     /**
      * Setup expectations: The app is open and the settings facet is open
@@ -191,4 +200,41 @@ public interface IAutoSettingHelper extends IAppHelper, Scrollable {
      * <p>get day/night mode status.
      */
     DayNightMode getDayNightModeStatus();
+
+    /**
+     * Setup expectations: full settings facet is open.
+     *
+     * <p>search in settings app and select the first search result.
+     *
+     * @param item to be searched.
+     */
+    void searchAndSelect(String item);
+
+    /**
+     * Setup expectations: full settings facet is open.
+     *
+     * <p>search in settings app.
+     *
+     * @param item to be searched.
+     * @param selectedIndex determines which search result to select.
+     */
+    void searchAndSelect(String item, int selectedIndex);
+
+    /**
+     * Setup expectations: search result is open.
+     *
+     * <p>verify page title contains the searched item.
+     *
+     * @param item to be verified.
+     */
+    boolean isValidPageTitle(String item);
+
+    /**
+     * Setup expectations: Setting is open.
+     *
+     * <p>check whether a setting menu in Settings is enabled or not.
+     *
+     * @param name of the setting menu.
+     */
+    boolean isSettingMenuEnabled(String menu);
 }

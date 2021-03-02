@@ -106,9 +106,8 @@ public class AppTransitionTests extends Instrumentation {
 
     @Before
     public void setUp() throws Exception {
-        androidx.test.InstrumentationRegistry.registerInstance(this, new Bundle());
         mArgs = InstrumentationRegistry.getArguments();
-        mDevice = UiDevice.getInstance(getInstrumentation());
+        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
         LauncherStrategyFactory factory = LauncherStrategyFactory.getInstance(mDevice);
         mLauncherStrategy = factory.getLauncherStrategy();
         mLauncher = new LauncherInstrumentation(getInstrumentation());

@@ -85,8 +85,7 @@ public class LatencyTests extends Instrumentation {
 
     @Before
     public void setUp() throws Exception {
-        androidx.test.InstrumentationRegistry.registerInstance(this, new Bundle());
-        mDevice = UiDevice.getInstance(getInstrumentation());
+        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
         Bundle mArgs = InstrumentationRegistry.getArguments();
         mIterationCount = Integer.parseInt(mArgs.getString(KEY_ITERATION_COUNT,
                 Integer.toString(DEFAULT_ITERATION_COUNT)));

@@ -28,7 +28,7 @@ public interface ISettingsIntelligenceHelper extends IAppHelper {
     /**
      * Setup expectations: Settings homepage is open
      *
-     * This method opens search page.
+     * <p>This method opens search page.
      */
     void openSearch();
 }

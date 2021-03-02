@@ -41,20 +41,25 @@ import java.io.FileReader;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-/** Unit tests for {@link LogcatOnFailureCollector}. */
+/** Unit tests for {@link LogcatCollector}. */
 @RunWith(AndroidJUnit4.class)
-public final class LogcatOnFailureCollectorTest {
+public final class LogcatCollectorTest {
 
     // A {@code Description} to pass when faking a test run start call.
     private static final Description RUN_DESCRIPTION = Description.createSuiteDescription("run");
     private static final Description TEST_DESCRIPTION =
             Description.createTestDescription("run", "test");
+    private static final Description TEST_2_DESCRIPTION =
+            Description.createTestDescription("run", "test-2");
+    private static final Description TEST_FAILURE_DESCRIPTION =
+            Description.createTestDescription("run", "test-failed");
     // A template for a logcat line for the purpose of this test. The three parameters are type (
     // info, warning, etc.), log tag and message.
     private static final String LOGCAT_REGEX_TEMPLATE =
@@ -64,15 +69,15 @@ public final class LogcatOnFailureCollectorTest {
     // logcat itself does not include year by default, and it is better not to enable it there
     // as it will just end up being visual noise for the user.
     private static final SimpleDateFormat DATE_FORMATTER =
-            new SimpleDateFormat("yyyy " + LogcatOnFailureCollector.DATE_FORMATTER.toPattern());
+            new SimpleDateFormat("yyyy " + LogcatCollector.DATE_FORMATTER.toPattern());
+    private static final String RUN_METRIC_KEY = "android.device.collectors.LogcatCollector";
 
     private File mLogDir;
-    private LogcatOnFailureCollector mCollector;
+    private LogcatCollector mCollector;
     private Instrumentation mMockInstrumentation;
 
     @Before
     public void setUp() throws Exception {
-        mCollector = new LogcatOnFailureCollector();
         mMockInstrumentation = Mockito.mock(Instrumentation.class);
         mLogDir = new File(Environment.getExternalStorageDirectory(), "test_logcat");
         mLogDir.mkdirs();
@@ -83,38 +88,134 @@ public final class LogcatOnFailureCollectorTest {
         mCollector.recursiveDelete(mLogDir);
     }
 
-    private LogcatOnFailureCollector initListener() {
-        LogcatOnFailureCollector listener = Mockito.spy(mCollector);
+    private LogcatCollector initListener(Bundle bundle) {
+        mCollector = new LogcatCollector(bundle);
+        LogcatCollector listener = Mockito.spy(mCollector);
         listener.setInstrumentation(mMockInstrumentation);
         Mockito.doReturn(mLogDir).when(listener).createAndEmptyDirectory(Mockito.anyString());
         return listener;
     }
 
     @Test
-    public void testLogcatOnFailure_nofailure() throws Exception {
-        LogcatOnFailureCollector listener = initListener();
+    public void testLogcatCollectionOnEveryTestEnd() throws Exception {
+        LogcatCollector listener = initListener(new Bundle());
         Mockito.doNothing()
                 .when(listener)
                 .getLogcatSince(Mockito.any(String.class), Mockito.any(File.class));
         // Test run start behavior
         listener.testRunStarted(RUN_DESCRIPTION);
+
+        // Test 1 start behavior
+        listener.testStarted(TEST_DESCRIPTION);
+        listener.testFinished(TEST_DESCRIPTION);
+
+        // Test 2 test start behavior
+        listener.testStarted(TEST_2_DESCRIPTION);
+        listener.testFinished(TEST_2_DESCRIPTION);
+
+        listener.testRunFinished(new Result());
+        // AJUR runner is then gonna call instrumentationRunFinished
+
+        Bundle resultBundle = new Bundle();
+        listener.instrumentationRunFinished(System.out, resultBundle, new Result());
+        assertEquals(0, resultBundle.size());
+
+        ArgumentCaptor<Bundle> capture = ArgumentCaptor.forClass(Bundle.class);
+        Mockito.verify(mMockInstrumentation, Mockito.times(2))
+                .sendStatus(Mockito.eq(
+                        SendToInstrumentation.INST_STATUS_IN_PROGRESS), capture.capture());
+        List<Bundle> capturedBundle = capture.getAllValues();
+        assertEquals(2, capturedBundle.size());
+
+        Bundle check1 = capturedBundle.get(0);
+        // Ensure we received the file
+        assertEquals(1, check1.size());
+        // The only key is ours
+        for (String key : check1.keySet()) {
+            assertTrue(
+                    key.contains(
+                            String.join(
+                                    "",
+                                    "run.test",
+                                    LogcatCollector.METRIC_SEP
+                                            + LogcatCollector.FILENAME_SUFFIX,
+                                    "-logcat.txt")));
+
+        }
+
+        Bundle check2 = capturedBundle.get(1);
+        // Ensure we received the file
+        assertEquals(1, check2.size());
+        // The only key is ours
+        for (String key : check2.keySet()) {
+            assertTrue(
+                    key.contains(
+                            String.join(
+                                    "",
+                                    "run.test-2",
+                                    LogcatCollector.METRIC_SEP
+                                            + LogcatCollector.FILENAME_SUFFIX,
+                                    "-logcat.txt")));
+
+        }
+    }
+
+    @Test
+    public void testLogcatCollectionWithBeforeDuration() throws Exception {
+
+        Bundle bundle = new Bundle();
+        bundle.putString(LogcatCollector.BEFORE_LOGCAT_DURATION_SECS, "6");
+        LogcatCollector listener = initListener(bundle);
+
+        ArgumentCaptor<String> captureFinalTime = ArgumentCaptor.forClass(String.class);
+        Mockito.doNothing()
+                .when(listener)
+                .getLogcatSince(captureFinalTime.capture(), Mockito.any(File.class));
+
+        String logTag = this.getClass().getSimpleName() + "_testLogcatCollectionWithBeforeDuration";
+        Log.i(logTag, "Sample Message");
+
+        // Log three lines after a short delay.
+        SystemClock.sleep(4000);
+
+        // Test run start behavior
+        listener.testRunStarted(RUN_DESCRIPTION);
+        Date date = new Date(System.currentTimeMillis());
 
         // Test test start behavior
         listener.testStarted(TEST_DESCRIPTION);
         listener.testFinished(TEST_DESCRIPTION);
         listener.testRunFinished(new Result());
         // AJUR runner is then gonna call instrumentationRunFinished
+
         Bundle resultBundle = new Bundle();
         listener.instrumentationRunFinished(System.out, resultBundle, new Result());
+        assertEquals(0, resultBundle.size());
 
-        Mockito.verify(mMockInstrumentation, Mockito.never())
+        ArgumentCaptor<Bundle> capture = ArgumentCaptor.forClass(Bundle.class);
+        Mockito.verify(mMockInstrumentation)
                 .sendStatus(Mockito.eq(
-                        SendToInstrumentation.INST_STATUS_IN_PROGRESS), Mockito.any());
+                        SendToInstrumentation.INST_STATUS_IN_PROGRESS), capture.capture());
+
+        // Verify logcat since time is 60 secs before the test started time.
+        List<String> capturedList = captureFinalTime.getAllValues();
+        assertEquals(1, capturedList.size());
+        int year = Calendar.getInstance().get(Calendar.YEAR);
+        String finalDateWithYear = year + " " + capturedList.get(0);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy MM-dd HH:mm:ss.SSS");
+        Date finallogcatSinceDate = dateFormat.parse(finalDateWithYear);
+        Log.i("Time Difference in msecs",
+                String.valueOf(date.getTime() - finallogcatSinceDate.getTime()));
+        assertTrue((date.getTime() - finallogcatSinceDate.getTime()) >= 4000);
     }
 
     @Test
-    public void testLogcatOnFailure() throws Exception {
-        LogcatOnFailureCollector listener = initListener();
+    public void testLogcatCollectionWithDirectoryOption() throws Exception {
+
+        Bundle bundle = new Bundle();
+        bundle.putString(LogcatCollector.RETURN_LOGCAT_DIR, "true");
+        LogcatCollector listener = initListener(bundle);
+
         Mockito.doNothing()
                 .when(listener)
                 .getLogcatSince(Mockito.any(String.class), Mockito.any(File.class));
@@ -123,9 +224,52 @@ public final class LogcatOnFailureCollectorTest {
 
         // Test test start behavior
         listener.testStarted(TEST_DESCRIPTION);
-        Failure f = new Failure(TEST_DESCRIPTION, new RuntimeException("I failed."));
-        listener.testFailure(f);
         listener.testFinished(TEST_DESCRIPTION);
+
+        // Test test start behavior
+        listener.testStarted(TEST_DESCRIPTION);
+        listener.testFinished(TEST_DESCRIPTION);
+        listener.testRunFinished(new Result());
+
+        // Results available in run metrics.
+        Bundle resultBundle = new Bundle();
+        listener.instrumentationRunFinished(System.out, resultBundle, new Result());
+        assertEquals(1, resultBundle.size());
+
+        // The only key is ours
+        for (String key : resultBundle.keySet()) {
+            assertTrue(key.contains(RUN_METRIC_KEY));
+        }
+
+        ArgumentCaptor<Bundle> capture = ArgumentCaptor.forClass(Bundle.class);
+        Mockito.verify(mMockInstrumentation, Mockito.times(0))
+                .sendStatus(Mockito.eq(
+                        SendToInstrumentation.INST_STATUS_IN_PROGRESS), capture.capture());
+    }
+
+    @Test
+    public void testLogcatOnlyOnTestFailureOption() throws Exception {
+
+        Bundle bundle = new Bundle();
+        bundle.putString(LogcatCollector.COLLECT_ON_FAILURE_ONLY, "true");
+        LogcatCollector listener = initListener(bundle);
+
+        Mockito.doNothing()
+                .when(listener)
+                .getLogcatSince(Mockito.any(String.class), Mockito.any(File.class));
+        // Test run start behavior
+        listener.testRunStarted(RUN_DESCRIPTION);
+
+        // Successful test
+        listener.testStarted(TEST_DESCRIPTION);
+        listener.testFinished(TEST_DESCRIPTION);
+
+        // Failed test.
+        listener.testStarted(TEST_FAILURE_DESCRIPTION);
+        Failure f = new Failure(TEST_FAILURE_DESCRIPTION, new RuntimeException("I failed."));
+        listener.testFailure(f);
+        listener.testFinished(TEST_FAILURE_DESCRIPTION);
+
         listener.testRunFinished(new Result());
         // AJUR runner is then gonna call instrumentationRunFinished
         Bundle resultBundle = new Bundle();
@@ -147,17 +291,17 @@ public final class LogcatOnFailureCollectorTest {
                     key.contains(
                             String.join(
                                     "",
-                                    "run.test",
-                                    LogcatOnFailureCollector.METRIC_SEP
-                                            + LogcatOnFailureCollector.FILENAME_SUFFIX,
-                                    "-logcat-on-failure.txt")));
+                                    "run.test-failed",
+                                    LogcatCollector.METRIC_SEP
+                                            + LogcatCollector.FILENAME_SUFFIX,
+                                    "-logcat.txt")));
         }
     }
 
     /** Test that the collector can actually retrieve logcat. */
     @Test
     public void testRetrievingLogcat() throws Exception {
-        LogcatOnFailureCollector listener = initListener();
+        LogcatCollector listener = initListener(new Bundle());
         // Test run start behavior
         listener.testRunStarted(RUN_DESCRIPTION);
 
@@ -171,8 +315,6 @@ public final class LogcatOnFailureCollectorTest {
         Log.w(logTag, "Message 2");
         Log.e(logTag, "Message 3");
         SystemClock.sleep(10);
-        Failure f = new Failure(testDescription, new RuntimeException("I failed."));
-        listener.testFailure(f);
         listener.testFinished(testDescription);
         listener.testRunFinished(new Result());
         // AJUR runner is then gonna call instrumentationRunFinished
@@ -227,7 +369,7 @@ public final class LogcatOnFailureCollectorTest {
     @Ignore
     @Test
     public void testLogcatTimespan() throws Exception {
-        LogcatOnFailureCollector listener = initListener();
+        LogcatCollector listener = initListener(new Bundle());
 
         listener.testRunStarted(RUN_DESCRIPTION);
         // Store the start time of the test. The logcat should begin after this time.
@@ -241,8 +383,6 @@ public final class LogcatOnFailureCollectorTest {
         Log.i(logTag, "Message");
         Log.i(logTag, "Another message");
         SystemClock.sleep(10);
-        listener.testFailure(new Failure(testDescription, new RuntimeException("I failed.")));
-        listener.testFinished(testDescription);
         // Store the end time of the test. The logcat should end before this time.
         long endTimeMillis = System.currentTimeMillis();
         listener.testRunFinished(new Result());
@@ -311,7 +451,7 @@ public final class LogcatOnFailureCollectorTest {
     /** Test that the logcat collection supports multiple iterations. */
     @Test
     public void testMultipleIterations() throws Exception {
-        LogcatOnFailureCollector listener = initListener();
+        LogcatCollector listener = initListener(new Bundle());
         Mockito.doNothing()
                 .when(listener)
                 .getLogcatSince(Mockito.any(String.class), Mockito.any(File.class));
@@ -339,13 +479,13 @@ public final class LogcatOnFailureCollectorTest {
         assertEquals(0, resultBundle.size());
 
         ArgumentCaptor<Bundle> capture = ArgumentCaptor.forClass(Bundle.class);
-        Mockito.verify(mMockInstrumentation, Mockito.times(2))
+        Mockito.verify(mMockInstrumentation, Mockito.times(3))
                 .sendStatus(
                         Mockito.eq(SendToInstrumentation.INST_STATUS_IN_PROGRESS),
                         capture.capture());
         List<Bundle> capturedBundles = capture.getAllValues();
         // 2 bundles as we have two tests that failed (and thus has metrics).
-        assertEquals(2, capturedBundles.size());
+        assertEquals(3, capturedBundles.size());
 
         // The first bundle should have the first logcat file, for the first iteration.
         Bundle check1 = capturedBundles.get(0);
@@ -354,27 +494,42 @@ public final class LogcatOnFailureCollectorTest {
                 String.join(
                         "",
                         "run.test",
-                        LogcatOnFailureCollector.METRIC_SEP
-                                + LogcatOnFailureCollector.FILENAME_SUFFIX,
-                        "-logcat-on-failure.txt");
+                        LogcatCollector.METRIC_SEP
+                                + LogcatCollector.FILENAME_SUFFIX,
+                        "-logcat.txt");
         for (String key : check1.keySet()) {
             // The first iteration should not have an iteration number.
             assertTrue(key.contains(expectedKey1));
         }
 
-        // The second bundle should have the second logcat file, for the third iteration.
+        // The second bundle should have the second logcat file, for the second iteration.
         Bundle check2 = capturedBundles.get(1);
         assertEquals(1, check2.size());
         String expectedKey2 =
                 String.join(
                         "",
-                        "run.test-3",
-                        LogcatOnFailureCollector.METRIC_SEP
-                                + LogcatOnFailureCollector.FILENAME_SUFFIX,
-                        "-logcat-on-failure.txt");
+                        "run.test-2",
+                        LogcatCollector.METRIC_SEP
+                                + LogcatCollector.FILENAME_SUFFIX,
+                        "-logcat.txt");
         for (String key : check2.keySet()) {
             // The third iteration should have an iteration number, 3.
             assertTrue(key.contains(expectedKey2));
+        }
+
+        // The second bundle should have the second logcat file, for the third iteration.
+        Bundle check3 = capturedBundles.get(2);
+        assertEquals(1, check3.size());
+        String expectedKey3 =
+                String.join(
+                        "",
+                        "run.test-3",
+                        LogcatCollector.METRIC_SEP
+                                + LogcatCollector.FILENAME_SUFFIX,
+                        "-logcat.txt");
+        for (String key : check3.keySet()) {
+            // The third iteration should have an iteration number, 3.
+            assertTrue(key.contains(expectedKey3));
         }
     }
 }
