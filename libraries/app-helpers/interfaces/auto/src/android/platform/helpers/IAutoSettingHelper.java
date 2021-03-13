@@ -237,4 +237,20 @@ public interface IAutoSettingHelper extends IAppHelper, Scrollable {
      * @param name of the setting menu.
      */
     boolean isSettingMenuEnabled(String menu);
+
+    /**
+     * Setup expectations: Setting is open.
+     *
+     * <p>Get the current page title text.
+     */
+    String getPageTitleText();
+
+    /**
+     * Setup expectations: Setting is open.
+     *
+     * <p>Find the setting menu and perform a click action.
+     *
+     * @param name of the setting menu.
+     */
+    void findSettingMenuAndClick(String setting);
 }
