@@ -23,3 +23,4 @@ system_server_crash void.com.android.server.location.gnss.GnssBatchingProvider.e
 SYSTEM_TOMBSTONE android.hardware.vibrator-service.drv2624 151884322
 SYSTEM_TOMBSTONE /vendor/bin/hw/android.hardware.gnss@1.0-service-qti 129282808
 SYSTEM_TOMBSTONE /system/product/priv-app/SafetyHubLprPrebuilt/SafetyHubLprPrebuilt.apk 158504050
+SYSTEM_TOMBSTONE AsyncTask\s+#1\s+>>>\s+com.android.nfc\s+<<<[\S\s]*nfc_main_handle_hal_evt 179110580
