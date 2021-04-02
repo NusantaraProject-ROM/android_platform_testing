@@ -83,4 +83,22 @@ public interface IAutoAppInfoSettingsHelper extends IAppHelper {
      * Get the current enabled permission summary in String format for an application
      */
     String getCurrentPermissions();
+
+    /**
+     * Setup expectation: None
+     *
+     * <p>This method is to check if an application has been disabled.
+     *
+     * @param packageName - package of the application to be checked.
+     */
+    boolean isApplicationDisabled(String packageName);
+
+    /**
+     * Setup expectation: None
+     *
+     * <p>This method is to check open an application.
+     *
+     * @param appName - Name of the app to be opened.
+     */
+    void openApp(String packageName);
 }
