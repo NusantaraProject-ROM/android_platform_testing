@@ -236,4 +236,11 @@ public interface IAutoDialHelper extends IAppHelper {
      * <p>This method is used to open contact list
      */
     void openContacts();
+
+    /**
+     * This method is used to open the Phone App
+     *
+     * @param No parameters.
+     */
+    void OpenPhoneApp();
 }
