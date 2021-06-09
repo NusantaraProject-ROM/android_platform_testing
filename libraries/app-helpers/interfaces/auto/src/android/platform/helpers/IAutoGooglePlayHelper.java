@@ -19,6 +19,13 @@ package android.platform.helpers;
 public interface IAutoGooglePlayHelper extends IAppHelper, Scrollable {
 
     /**
+     * Setup expectations: Launch Google Play Store app.
+     *
+     * <p>This method is used to Open Google Play Store app.
+     */
+    void openGooglePlayStore();
+
+    /**
      * Setup expectations: Google Play app is open.
      *
      * <p>This method is used to search an app and click it in Google Play.
@@ -60,4 +67,11 @@ public interface IAutoGooglePlayHelper extends IAppHelper, Scrollable {
      */
     @Deprecated
     void openApp();
+
+    /**
+     * Setup expectations: None.
+     *
+     * <p>This method is used to check if the given application package is installed.
+     */
+    boolean checkIfApplicationExists(String packageName);
 }

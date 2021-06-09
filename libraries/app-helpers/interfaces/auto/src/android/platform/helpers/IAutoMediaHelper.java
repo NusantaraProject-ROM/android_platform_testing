@@ -128,4 +128,11 @@ public interface IAutoMediaHelper extends IAppHelper {
      * else returns false
      */
     boolean isPlaying();
+
+    /**
+     * Setup expectations: Launch Media App.
+     *
+     * @param - String packagename - Android media package to be opened.
+     */
+    void openMediaApp(String packagename);
 }

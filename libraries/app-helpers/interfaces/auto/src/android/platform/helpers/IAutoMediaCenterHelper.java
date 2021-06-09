@@ -110,4 +110,11 @@ public interface IAutoMediaCenterHelper extends IAppHelper {
      * @param - menuOptions used to pass multiple level of menu options in one go.
      */
     void selectMediaTrack(String... menuOptions);
+
+    /**
+     * Setup expectations: Launch Media App.
+     *
+     * @param - String packagename - Android media package to be opened.
+     */
+    void openMediaApp(String packagename);
 }

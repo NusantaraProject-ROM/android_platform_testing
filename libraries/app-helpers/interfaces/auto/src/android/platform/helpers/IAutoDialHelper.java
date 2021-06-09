@@ -230,4 +230,17 @@ public interface IAutoDialHelper extends IAppHelper {
      * <p>This method is used to check if phone is paired.
      */
     boolean isPhonePaired();
+    /**
+     * Setup expectations: The app is open.
+     *
+     * <p>This method is used to open contact list
+     */
+    void openContacts();
+
+    /**
+     * This method is used to open the Phone App
+     *
+     * @param No parameters.
+     */
+    void OpenPhoneApp();
 }
